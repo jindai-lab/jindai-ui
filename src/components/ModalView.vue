@@ -6,8 +6,10 @@
 
               <div class="modal-header">
                 <slot name="header">
-                  default header
                 </slot>
+                <a class="modal-close-button" @click="$emit('close')">
+                  <i class="fa fa-times"></i>
+                </a>
               </div>
 
               <div class="modal-body">
@@ -18,10 +20,7 @@
 
               <div class="modal-footer">
                 <slot name="footer">
-                  &nbsp;
-                  <button class="modal-default-button" @click="$emit('close')">
-                    OK
-                  </button>
+                  <span style="color: white">....</span>
                 </slot>
               </div>
             </div>
@@ -33,7 +32,7 @@
 <style scoped>
 .modal-mask {
   position: fixed;
-  z-index: 9998;
+  z-index: 1024;
   top: 0;
   left: 0;
   width: 100%;
@@ -49,7 +48,8 @@
 }
 
 .modal-container {
-  width: 300px;
+  width: 80%;
+  height: 80vh;
   margin: 0px auto;
   padding: 20px 30px;
   background-color: #fff;
@@ -57,6 +57,7 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.33);
   transition: all 0.3s ease;
   font-family: Helvetica, Arial, sans-serif;
+  overflow: auto;
 }
 
 .modal-header h3 {
@@ -64,8 +65,13 @@
   color: #42b983;
 }
 
-.modal-body {
+.modal-mask {
   margin: 20px 0;
+  color: black;
+}
+
+.modal-mask a {
+  color: black !important;
 }
 
 .modal-default-button {
@@ -93,6 +99,13 @@
 .modal-leave-active .modal-container {
   -webkit-transform: scale(1.1);
   transform: scale(1.1);
+}
+
+.modal-close-button {
+  position: absolute;
+  top: 12vh;
+  right: 10%;
+  cursor: pointer;
 }
 
 </style>

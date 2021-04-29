@@ -20,6 +20,10 @@ export default {
 
     result_url(id) {
         return apiBase + 'queue/' + id
+    },
+
+    pdf_image(pdffile, pdfpage) {
+        return apiBase + 'pdfimage?pdffile=' + encodeURIComponent(pdffile) + '&pdfpage=' + pdfpage
     }
 
 }

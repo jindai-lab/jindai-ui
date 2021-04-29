@@ -1,29 +1,36 @@
 <template>
   <div>
-    <h3>任务</h3>
-    <button class="mui-btn mui-btn--primary" @click="create_task()">
+    <h3>任务
+      <button class="mui-btn mui-btn--primary" @click="create_task()">
         <i class="fa fa-plus"></i> 新建任务
-    </button>
-    <ol>
-      <li v-for="task in tasks" :key="task._id">
-        <span class="name">{{ task.name }}</span>
-        <span class="opers">
-          <router-link :to="'/tasks/' + task._id" class="mui-btn mui-btn--primary">
-            <i class="fa fa-edit"></i>
-          </router-link>
-          
-          <button @click="duplicate_task(task)" class="mui-btn">
+      </button></h3>
+    <div>
+      <ol>
+        <li v-for="task in tasks" :key="task._id" class="mui-panel">
+          <span class="name">{{ task.name }}</span>
+          <span class="opers">
+            <router-link
+              :to="'/tasks/' + task._id"
+              class="mui-btn mui-btn"
+            >
+              <i class="fa fa-edit"></i>
+            </router-link>
+
+            <button @click="duplicate_task(task)" class="mui-btn">
               <i class="fa fa-copy"></i>
-          </button>
-          
-          <button @click="delete_task(task._id)" class="mui-btn mui-btn--danger">
+            </button>
+
+            <button
+              @click="delete_task(task._id)"
+              class="mui-btn mui-btn--danger"
+            >
               <i class="fa fa-trash"></i>
-          </button>
-          
-        </span><br>
-        <span class="id">{{ task._id }}</span>
-      </li>
-    </ol>
+            </button> </span
+          ><br />
+          <span class="id">{{ task._id }}</span>
+        </li>
+      </ol>
+    </div>
   </div>
 </template>
 
@@ -65,22 +72,22 @@ export default {
 
 <style scoped>
 span.name {
-    display: inline-block;
-    font-size: 20px;
-    min-width: 300px;
+  display: inline-block;
+  font-size: 20px;
+  min-width: 300px;
 }
 
 span.name::before {
-    content: '■ ';
-    font-size: 20px;
+  content: "■ ";
+  font-size: 20px;
 }
 
 ol {
-    list-style-type: none;
-    padding: 0;
+  list-style-type: none;
+  padding: 0;
 }
 
 span.id::before {
-    content: "ID: ";
+  content: "ID: ";
 }
 </style>

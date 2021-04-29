@@ -1,14 +1,30 @@
 <template>
   <body id="app">
     <div id="sidedrawer" class="mui--no-user-select">
-      <div>
-        <h2 class="mui--appbar-line-height"><a href="/">近现代作家语料库</a></h2>
-        <div class="mui-divider"></div>
+      <h2 class="mui--appbar-line-height"><a href="/">近现代作家语料库</a></h2>
+      <div class="mui-divider"></div>
       <ul>
-        <li><router-link :to="'/'" id="search">搜索</router-link></li>
-        <li><router-link :to="'/tasks'" id="tasks">任务</router-link></li>
+        <li>
+          <strong>文献</strong>
+          <ul>
+            <li><router-link :to="'/'" id="search">搜索</router-link></li>
+            <li><router-link :to="'/tasks'" id="tasks">任务</router-link></li>
+          </ul>
+        </li>
+        <li>
+          <strong>用户</strong>
+          <ul>
+            <li><router-link :to="'/security'">账户</router-link></li>
+            <li><router-link :to="'/history'">历史</router-link></li>
+          </ul>
+        </li>
+        <li>
+          <strong>管理</strong>
+          <ul>
+            <li><router-link :to="'/collections'" id="tasks">文献集</router-link></li>
+          </ul>
+        </li>
       </ul>
-      </div>
     </div>
 
     <header id="header">
@@ -22,6 +38,8 @@
     <div id="content-wrapper">
       <router-view></router-view>
     </div>
+
+    <div style="height: 40px"></div>
 
     <footer id="footer">
       <div class="mui-container-fluid">
@@ -107,9 +125,18 @@ button {
   transition: margin-left 0.2s;
 }
 
-header a {
+header>div>div>div>a {
   color: white;
   text-decoration: none;
+}
+
+.mui-btn {
+  box-shadow: 0 0 4px rgb(0 0 0 / 12%), 1px 3px 4px rgb(0 0 0 / 20%);
+}
+
+.mui-select__menu {
+    top: 0 !important;
+    max-height: 400px;
 }
 
 @media (min-width: 768px) {
@@ -189,14 +216,15 @@ header a {
 
 #sidedrawer ul {
   list-style: none;
-}
-
-#sidedrawer > ul {
   padding-left: 0px;
 }
 
 #sidedrawer > ul > li:first-child {
   padding-top: 15px;
+}
+
+#sidedrawer > ul > li > ul > li {
+  padding-left: 40px;
 }
 
 #sidedrawer strong {
@@ -205,11 +233,21 @@ header a {
   cursor: pointer;
 }
 
-#sidedrawer strong:hover {
+#slidedrawer a, #sidedrawer a:hover {
+  text-decoration: none;
+}
+
+#sidedrawer strong:hover, #sidedrawer>ul>li>ul>li:hover {
   background-color: #E0E0E0;
+  cursor: pointer;
 }
 
 #sidedrawer strong + ul > li {
   padding: 6px 0px;
+}
+
+em {
+  background-color: yellow;
+  font-style: normal;
 }
 </style>

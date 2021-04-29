@@ -1,10 +1,10 @@
 <template>
   <div class="stage">
     <div class="mui-select">
-    <select v-model="value[0]" @change="update_stage_doc">
+    <select v-model="value[0]" @change="update_input">
       <optgroup v-for="(sts, group) in stages" :key="group" :label="group">
-        <option v-for="st in sts" :key="st" :value="st">
-          {{ st }}
+        <option v-for="st in sts" :key="st.name" :value="st.name">
+          {{ st.name }} {{ st.doc }}
         </option>
       </optgroup>
     </select>
@@ -14,7 +14,7 @@
     </blockquote>
     <div class="stage-arg">
       <div v-for="arg in stage_doc.args" :key="arg.name">
-        <ParamInput :arg="arg" v-model="value[1][arg.name]" />
+        <ParamInput :arg="arg" v-model="value[1][arg.name]" @validation="update_valid('stage_' + arg.name, $event)" />
         <blockquote>{{ arg.description }}</blockquote>
       </div>
     </div>
@@ -22,35 +22,40 @@
 </template>
 
 <script>
-import api from "../api";
 import ParamInput from "./ParamInput";
 
 export default {
   inheritAttrs: false,
   props: ["stages", "value"],
   components: { ParamInput },
+  events: ["validation"],
+  data () {
+    return { valid: [] }
+  },
   methods: {
-    update_stage_doc() {
-      api
-        .call("pipelines/" + this.value[0])
-        .then((resp) => (this.stage_doc = resp.data.result));
-      this.update_input();
-    },
     update_input() {
       this.$emit("input", this.value);
     },
+    update_valid(name, valid) {
+      var l = this.valid.indexOf(name)
+      if (l >= 0)
+        this.valid.splice(l, 1)
+      if (!valid)
+        this.valid.push(name)
+      this.$emit("validation", this.valid.length == 0)
+    }
   },
-  mounted() {
-    this.update_stage_doc();
-  },
-  data() {
-    return {
-      stage_doc: {},
-    };
+  computed: {
+    stage_doc () {
+      for (var x in this.stages) 
+        if (this.stages[x][this.value[0]])
+          return this.stages[x][this.value[0]]
+      return {}
+    }
   },
   watch: {
     value () {
-      this.update_stage_doc()
+      this.update_input()
     }
   }
 };
