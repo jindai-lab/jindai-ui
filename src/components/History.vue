@@ -6,7 +6,7 @@
       <div class="mui-col-md-2">{{ h.created_at }}</div>
       <div class="mui-col-md-6">{{ h.querystr }}</div>
       <div class="mui-col-md-2">
-        <button class="mui-btn" @click="export_query(h.querystr)">
+        <button class="mui-btn" @click="export_query(h)">
           <i class="fa fa-share"></i>
         </button>
       </div>
@@ -22,18 +22,18 @@ export default {
     return { history: [] };
   },
   mounted() {
-    api.call("history").then((resp) => (this.history = resp.data.result));
+    api.call("history").then((data) => (this.history = data.result));
   },
   methods: {
-    export_query(q) {
+    export_query(h) {
       api
         .put("tasks/", {
           datasource_config: {
-            query: q,
+            query: h.querystr
           },
-          name: '搜索 ' + q
+          name: '搜索 ' + h.querystr
         })
-        .then((resp) => this.$router.push("/tasks/" + resp.data.result));
+        .then((data) => this.$router.push("/tasks/" + data.result));
     },
   },
 };

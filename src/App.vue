@@ -21,7 +21,9 @@
         <li>
           <strong>管理</strong>
           <ul>
-            <li><router-link :to="'/collections'" id="tasks">文献集</router-link></li>
+            <li>
+              <router-link :to="'/collections'" id="tasks">数据集</router-link>
+            </li>
           </ul>
         </li>
       </ul>
@@ -36,28 +38,54 @@
     </header>
 
     <div id="content-wrapper">
-      <router-view></router-view>
+      <ul class="mui-tabs__bar mui-tabs__bar--justified">
+        <li class="mui--is-active">
+          <a data-mui-toggle="tab" data-mui-controls="pane-main">操作</a>
+        </li>
+        <li><a data-mui-toggle="tab" data-mui-controls="pane-view">查看</a></li>
+      </ul>
+      <div class="mui-tabs__pane mui--is-active" id="pane-main">
+        <keep-alive :include="['QueueResult']">
+          <router-view />
+        </keep-alive>
+      </div>
+      <div class="mui-tabs__pane" id="pane-view">
+        <PageView ref="viewer" />
+      </div>
     </div>
 
     <div style="height: 40px"></div>
 
+    <notifications group="sys" />
+
     <footer id="footer">
       <div class="mui-container-fluid">
         <br />
-        近现代作家语料库 - 文献利用系统<br>
-        &copy; 2018-{{ new Date().getFullYear() }} 科技人文研究室 &amp; contributors
+        近现代作家语料库 - 文献利用系统<br />
+        &copy; 2018-{{ new Date().getFullYear() }} 科技人文研究室 &amp;
+        contributors
       </div>
     </footer>
   </body>
 </template>
 
 <script>
-import QueueView from "./components/QueueView.vue";
+import QueueView from "./components/QueueView";
+import PageView from "./components/PageView";
+import Notifications from "vue-notification";
+import Vue from "vue";
+import api from "./api";
+
+Vue.use(Notifications);
 
 export default {
   name: "app",
   components: {
     QueueView,
+    PageView,
+  },
+  mounted() {
+    api.logined().catch(() => (localStorage.token = ""));
   },
 };
 </script>
@@ -125,7 +153,7 @@ button {
   transition: margin-left 0.2s;
 }
 
-header>div>div>div>a {
+header > div > div > div > a {
   color: white;
   text-decoration: none;
 }
@@ -135,8 +163,8 @@ header>div>div>div>a {
 }
 
 .mui-select__menu {
-    top: 0 !important;
-    max-height: 400px;
+  top: 0 !important;
+  max-height: 400px;
 }
 
 @media (min-width: 768px) {
@@ -209,7 +237,6 @@ header>div>div>div>a {
   text-decoration: underline;
 }
 
-
 #sidedrawer-brand {
   padding-left: 20px;
 }
@@ -233,12 +260,14 @@ header>div>div>div>a {
   cursor: pointer;
 }
 
-#slidedrawer a, #sidedrawer a:hover {
+#slidedrawer a,
+#sidedrawer a:hover {
   text-decoration: none;
 }
 
-#sidedrawer strong:hover, #sidedrawer>ul>li>ul>li:hover {
-  background-color: #E0E0E0;
+#sidedrawer strong:hover,
+#sidedrawer > ul > li > ul > li:hover {
+  background-color: #e0e0e0;
   cursor: pointer;
 }
 

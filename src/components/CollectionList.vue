@@ -1,6 +1,6 @@
 <template>
 <div>
-<h3>文献集</h3>
+<h3>数据集</h3>
 <div v-for="(coll, index) in collections" :key="coll[0]" class="mui-row">
     <div class="opers mui-col-md-2">
           <button @click="move(index, -1)" :disabled="index == 0" class="mui-btn">
@@ -38,12 +38,12 @@ export default {
         }
     },
     mounted () {
-        api.call('meta').then(resp => {
-            this.collections = resp.data.result.collections
+        api.call('meta').then(data => {
+            this.collections = data.result.collections
             api.call('quicktask', {q: '??group(_id=$collection)', raw: true}).then(
-                resp => {
+                data => {
                     var colls = this.collections.map(x => x[0])
-                    for (var coll of resp.data.result) {
+                    for (var coll of data.result) {
                         if (colls.indexOf(coll._id) < 0) this.collections.push([coll._id, coll._id])
                     }
                 }

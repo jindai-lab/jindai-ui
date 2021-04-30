@@ -5,6 +5,7 @@
         :value="value"
         v-bind="$attrs"
         v-on="inputListeners"
+        @change="inputListeners.input"
         :required="!arg.default"
       >
         <option value="" v-if="arg.default">默认</option>

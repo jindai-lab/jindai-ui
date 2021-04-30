@@ -45,15 +45,16 @@ export default {
   },
   methods: {
     delete_task(id) {
-      api.delete("tasks/" + id).then((resp) => {
-        if (resp.data.result.ok)
+      if (!confirm('确实要删除吗？')) return
+      api.delete("tasks/" + id).then((data) => {
+        if (data.result.ok)
           this.tasks = this.tasks.filter((x) => x._id != id);
       });
     },
     create_task() {
       api
         .put("tasks/", { name: "新建任务 " + new Date() })
-        .then((resp) => this.$router.push("/tasks/" + resp.data.result));
+        .then((data) => this.$router.push("/tasks/" + data.result));
     },
     duplicate_task(task) {
       var otask = Object.assign({}, task);
@@ -61,11 +62,11 @@ export default {
       otask.name += " 复制";
       api
         .put("tasks/", otask)
-        .then((resp) => this.$router.push("/tasks/" + resp.data.result));
+        .then((data) => this.$router.push("/tasks/" + data.result));
     },
   },
   mounted() {
-    api.call("tasks").then((resp) => (this.tasks = resp.data.result));
+    api.call("tasks/").then((data) => (this.tasks = data.result));
   },
 };
 </script>
@@ -75,11 +76,6 @@ span.name {
   display: inline-block;
   font-size: 20px;
   min-width: 300px;
-}
-
-span.name::before {
-  content: "■ ";
-  font-size: 20px;
 }
 
 ol {

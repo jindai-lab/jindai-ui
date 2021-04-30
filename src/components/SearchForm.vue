@@ -34,7 +34,7 @@
       </div>
       <div id="search">
         <div class="mui-textfield">
-          <input type="text" v-model="q" />
+          <input type="text" v-model="q" @keyup.enter="search" />
         </div>
       </div>
       <div
@@ -56,33 +56,21 @@
       <div class="clear"></div>
       <button id="search" class="mui-btn" @click="search">查询</button>
     </div>
-    <div v-if="results.length > 0">
-      <div>
-        共找到 {{ results.length == 100 ? "100+" : results.length }} 个结果。
-      </div>
-      <div v-for="r in results" :key="r._id" class="mui-panel">
-        <p class=""
-          >数据集: {{ r.collection }} 大纲: {{ r.outline }} 来源: {{ r.pdffile }} 页码:
-          {{ r.pagenum }} 年份: {{ r.year }}</p>
-        <div class="mui-divider"></div>
-        <br>
-        <div v-html="r.matched_content"></div>
-        <br>
-        <button class="mui-btn" @click="$router.push('/view/' + r.pdffile + '/' + r.pdfpage)">
-          <i class="fa fa-file" aria-hidden="true"></i> 查看
-        </button>
-      </div>
+    <div v-if="results.length">
+      共找到 {{ results.length == 100 ? results.length + '+' : results.length }} 个结果。
+      <button class="mui-btn" @click="export_query"><i class="fa fa-share"></i> 导出为任务</button>
     </div>
-    <div v-else>未找到匹配的结果。</div>
+    <ResultsView :value="results" />
   </div>
 </template>
     
 <script>
 import api from "../api";
+import ResultsView from "./ResultsView"
 
 export default {
   name: "SearchForm",
-  components: {},
+  components: {ResultsView},
   data() {
     return {
       collections: [],
@@ -94,11 +82,12 @@ export default {
       q: "",
       sort: "",
       querystr: "",
+      reqstr: ""
     };
   },
   mounted() {
-    api.call("meta").then((resp) => {
-      this.collections = resp.data.result.collections.map((x) => {
+    api.call("meta").then((data) => {
+      this.collections = data.result.collections.map((x) => {
         return { name: x[1], id: x[0] };
       });
     });
@@ -106,24 +95,42 @@ export default {
   methods: {
     search() {
       var req = {};
-      if (this.selected_pdffile) req.pdffile = this.selected_pdffile;
-      if (this.selected_collection) req.collection = this.selected_collection;
-      else if (this.selected_collections.length > 0)
+      if (this.selected_pdffile) {
+        req.pdffile = this.selected_pdffile;
+        this.reqstr += ',pdffile=`' + this.selected_pdffile + '`'
+      }
+      if (this.selected_collection) {
+        req.collection = this.selected_collection;
+        this.reqstr += ',collection=`' + this.selected_collection + '`'
+      }
+      else if (this.selected_collections.length > 0) {
         req.collection = {
           $in: this.selected_collections,
         };
-      api.call("search", { q: this.q, sort: this.sort, req }).then((resp) => {
+        this.reqstr += ',collection=in(_json(`' + JSON.stringify(this.selected_collections) + '`))'
+      }
+      api.call("search", { q: this.q, sort: this.sort, req }).then((data) => {
         var reg = new RegExp(
-          "(" + resp.data.result.query.replace(/[,&]/, "|") + ")",
+          "(" + data.result.query.replace(/[,&]/, "|") + ")",
           "g"
         );
-        this.results = resp.data.result.results.map((x) => {
+        this.results = data.result.results.map((x) => {
           x.matched_content = x.content.replace(reg, "<em>$1</em>");
           return x;
         });
-        this.querystr = resp.data.result.query;
+        this.querystr = data.result.query;
       });
     },
+    export_query() {
+      api
+        .put("tasks/", {
+          datasource_config: {
+            query: this.querystr + this.reqstr
+          },
+          name: '搜索 ' + this.querystr
+        })
+        .then((data) => this.$router.push("/tasks/" + data.result));
+    }
   },
   watch: {
     selected_collection() {
@@ -135,8 +142,8 @@ export default {
             "`)=>group(_id=$pdffile)",
           raw: true,
         })
-        .then((resp) => {
-          this.pdffiles = resp.data.result.map((x) => x._id);
+        .then((data) => {
+          this.pdffiles = data.result.map((x) => x._id);
         });
     },
   },

@@ -1,12 +1,14 @@
 <template>
   <div>
     <div class="mui-row">
-      <h3 class="mui-col-md-10">{{ pdffile }}</h3>
+      <h3 class="mui-col-md-10">
+        <!-- <a href="javascript:void(0)"><i class="fa fa-arrow-left" @click="$router.back()"></i></a> -->
+        {{ pdffile }}</h3>
       <div class="mui-col-md-1 mui-textfield">
         <input
           type="text"
           :value="pdfpage"
-          @keyup.enter="$router.push('./' + parseInt($event.target.value))"
+          @keyup.enter="pdfpage = parseInt($event.target.value)"
         />
       </div>
     </div>
@@ -16,11 +18,12 @@
           {{ p.content }}
         </p>
       </div>
-      <div class="image mui-col-md-6">
-        <img
-          :src="pdf_image(pdffile, pdfpage)"
-          alt=""
+      <div class="image mui-col-md-6" 
           @click="show_modal = true"
+      >
+        <img
+          :src="pdf_image"
+          alt=""
           style="width: 100%"
         />
       </div>
@@ -28,7 +31,7 @@
     <Modal v-if="show_modal" @close="show_modal = false">
       <h3 slot="header"></h3>
       <div slot="body">
-        <img :src="pdf_image(pdffile, pdfpage)" alt="" style="width: 100%" />
+        <img :src="pdf_image" alt="" style="width: 100%" />
       </div>
     </Modal>
   </div>
@@ -40,28 +43,30 @@ import Modal from "./ModalView";
 
 export default {
   name: "PageView",
-  props: ["pdffile", "pdfpage"],
   components: {
     Modal,
   },
   data() {
     return {
+      pdffile: '',
+      pdfpage: 0,
       paragraphs: [],
       show_modal: false,
+      pdf_image: '',
+      loading_image: require('../../public/assets/loading.png')
     };
   },
   created() {
-    const component = this;
-    this.handler = function (e) {
-      component.$emit("keyup", e);
+    this.handler = e => {
+      this.$emit("keyup", e);
       if (e.target.tagName == 'INPUT') return
       switch (e.key) {
         case "ArrowRight":
-          component.$router.push("./" + (+component.pdfpage + 1));
+          this.pdfpage = (+this.pdfpage + 1);
           break;
         case "ArrowLeft":
-          if (+component.pdfpage > 0)
-            component.$router.push("./" + (+component.pdfpage - 1));
+          if (+this.pdfpage > 0)
+            this.pdfpage = (+this.pdfpage - 1);
           break;
         default:
           break;
@@ -74,6 +79,10 @@ export default {
   },
   mounted() {
     this.update_pdfpage();
+    this.$root.$on('view', (pdffile, pdfpage) => {
+      this.pdffile = pdffile
+      this.pdfpage = pdfpage
+    })
   },
   watch: {
     pdfpage() {
@@ -81,15 +90,15 @@ export default {
     },
   },
   methods: {
-    pdf_image(pdffile, pdfpage) {
-      return api.pdf_image(pdffile, pdfpage);
-    },
     update_pdfpage() {
+      this.pdf_image = this.loading_image
+      if (!this.pdffile) return
       api
         .call("quicktask", {
           q: "pdffile=`" + this.pdffile + "`,pdfpage=" + this.pdfpage,
         })
-        .then((resp) => (this.paragraphs = resp.data.result));
+        .then((data) => (this.paragraphs = data.result));
+      api.pdf_image(this.pdffile, this.pdfpage, this);
     },
   },
 };

@@ -1,14 +1,25 @@
 <template>
   <div>
-    处理队列: <a @click="show_finished = true" href="javascript:void(0)">{{ finished.length }} 已完成</a> - {{ waiting }} 等待中 - 正在运行:
-    {{ running || '无' }}
+    处理队列:
+    <a @click="show_finished = true" href="javascript:void(0)"
+      >{{ finished.length }} 已完成</a
+    >
+    - {{ waiting }} 等待中 - 正在运行:
+    {{ running || "无" }}
     <Modal v-if="show_finished" @close="show_finished = false">
-        <h3 slot="header">Finished Tasks</h3>
-        <div slot="body" v-if="finished.length > 0">
-            <div v-for="id in finished" :key="id">
-                <a :href="result_url(id)" target="_blank">{{ id }}</a>
-            </div>
+      <h3 slot="header">已完成的任务</h3>
+      <div slot="body" v-if="finished.length > 0">
+        <div v-for="id in finished" :key="id">
+          <h4>{{ id.split('/')[1].split("_").slice(0, -1).join("\t") }}</h4>
+          <span>{{ id.split('/')[0] }}</span>
+          完成于:
+          {{ new Date(1000 * id.split("_").slice(-1)[0]).toLocaleString() }}<br>
+          <a :href="result_url(id)" class="mui-btn" target="_blank"><i class="fa fa-download"></i> 下载</a>
+          <button class="mui-btn" @click="view_result(id)"><i class="fa fa-eye"></i> 查看</button>
+          <button class="mui-btn" @click="delete_result(id)"><i class="fa fa-trash"></i> 删除</button>
         </div>
+        <div class="mui-divide"></div>
+      </div>
     </Modal>
   </div>
 </template>
@@ -36,16 +47,31 @@ export default {
         clearInterval(this.timer);
       } else {
         this.timer = setInterval(() => {
-          api.call("queue/").then((resp) => {
-            this.finished = resp.data.result.finished;
-            this.running = resp.data.result.running;
-            this.waiting = resp.data.result.waiting;
+          api.call("queue/").then((data) => {
+            if (this.finished.length < data.result.finished.length) {
+              data.result.finished
+                .filter((x) => this.finished.indexOf(x) < 0)
+                .forEach((x) => api.notify({ title: x + " 已完成" }));
+            }
+            this.finished = data.result.finished;
+            this.running = data.result.running;
+            this.waiting = data.result.waiting;
           });
         }, 5000);
       }
     },
     result_url(id) {
       return api.result_url(id)
+    },
+    delete_result(id) {
+      api.delete('queue/' + id).then(() => {
+        api.notify({title: '成功删除'})
+        this.finished = this.finished.filter(x => x != id)
+      })
+    },
+    view_result(id) {
+      this.$router.push('/results/' + id)
+      this.show_finished = false
     }
   },
   mounted() {

@@ -108,4 +108,8 @@
   cursor: pointer;
 }
 
+.modal-body {
+  line-height: 200%;
+}
+
 </style>
