@@ -47,7 +47,8 @@ export default {
         clearInterval(this.timer);
       } else {
         this.timer = setInterval(() => {
-          api.call("queue/").then((data) => {
+          api.queue().then((resp) => {
+            let data = resp.data
             if (this.finished.length < data.result.finished.length) {
               data.result.finished
                 .filter((x) => this.finished.indexOf(x) < 0)

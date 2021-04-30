@@ -12,9 +12,9 @@
                 </a>
               </div>
 
-              <div class="modal-body">
+              <div class="modal-body" @blur="$emit('close')">
                 <slot name="body">
-                  No results.
+                  
                 </slot>
               </div>
 
@@ -66,7 +66,7 @@
 }
 
 .modal-mask {
-  margin: 20px 0;
+  margin: 0;
   color: black;
 }
 

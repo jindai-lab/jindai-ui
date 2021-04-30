@@ -1,35 +1,34 @@
 <template>
   <body id="app">
-    <div id="sidedrawer" class="mui--no-user-select">
+    <div id="sidedrawer" class="mui--no-user-select" v-if="!viewer">
       <h2 class="mui--appbar-line-height"><a href="/">近现代作家语料库</a></h2>
       <div class="mui-divider"></div>
-      <ul>
+      <ul @click="nav_click">
         <li>
           <strong>文献</strong>
           <ul>
-            <li><router-link :to="'/'" id="search">搜索</router-link></li>
-            <li><router-link :to="'/tasks'" id="tasks">任务</router-link></li>
+            <li :to="'/'">搜索</li>
+            <li :to="'/tasks'">任务</li>
           </ul>
         </li>
         <li>
           <strong>用户</strong>
           <ul>
-            <li><router-link :to="'/security'">账户</router-link></li>
-            <li><router-link :to="'/history'">历史</router-link></li>
+            <li :to="'/security'">账户</li>
+            <li :to="'/history'">历史</li>
           </ul>
         </li>
         <li>
           <strong>管理</strong>
           <ul>
-            <li>
-              <router-link :to="'/collections'" id="tasks">数据集</router-link>
-            </li>
+            <li :to="'/collections'">数据集</li>
+            <li :to="'/storage'">文件</li>
           </ul>
         </li>
       </ul>
     </div>
 
-    <header id="header">
+    <header id="header" v-if="!viewer">
       <div class="mui-appbar mui--appbar-line-height">
         <div class="mui-container-fluid">
           <QueueView />
@@ -37,28 +36,21 @@
       </div>
     </header>
 
-    <div id="content-wrapper">
-      <ul class="mui-tabs__bar mui-tabs__bar--justified">
-        <li class="mui--is-active">
-          <a data-mui-toggle="tab" data-mui-controls="pane-main">操作</a>
-        </li>
-        <li><a data-mui-toggle="tab" data-mui-controls="pane-view">查看</a></li>
-      </ul>
-      <div class="mui-tabs__pane mui--is-active" id="pane-main">
-        <keep-alive :include="['QueueResult']">
-          <router-view />
-        </keep-alive>
-      </div>
-      <div class="mui-tabs__pane" id="pane-view">
-        <PageView ref="viewer" />
-      </div>
+    <div :id="viewer ? 'viewer' : 'content-wrapper'">
+      <keep-alive :include="['SearchForm']">
+        <router-view />
+      </keep-alive>
     </div>
 
     <div style="height: 40px"></div>
 
     <notifications group="sys" />
 
-    <footer id="footer">
+    <div class="loading">
+      <img src="../public/assets/loading.gif" alt="">
+    </div>
+
+    <footer :id="viewer ? '' : 'footer'">
       <div class="mui-container-fluid">
         <br />
         近现代作家语料库 - 文献利用系统<br />
@@ -71,7 +63,6 @@
 
 <script>
 import QueueView from "./components/QueueView";
-import PageView from "./components/PageView";
 import Notifications from "vue-notification";
 import Vue from "vue";
 import api from "./api";
@@ -82,11 +73,20 @@ export default {
   name: "app",
   components: {
     QueueView,
-    PageView,
   },
   mounted() {
     api.logined().catch(() => (localStorage.token = ""));
   },
+  computed: {
+    viewer() {
+      return location.href.indexOf("/view/") > 0;
+    }
+  },
+  methods: {
+    nav_click(e) {
+      this.$router.push(e.target.getAttribute('to'))
+    }
+  }
 };
 </script>
 
@@ -275,8 +275,31 @@ header > div > div > div > a {
   padding: 6px 0px;
 }
 
+#viewer {
+  max-width: 80%;
+  margin: 0 auto;
+}
+
 em {
   background-color: yellow;
   font-style: normal;
+}
+
+.loading {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 999;
+  background: rgba(0, 0, 0, 0.6);
+  margin: 0 auto;
+  display: none;
+}
+
+.loading>img {
+  position: absolute;
+  top: 50%;
+  left: 50%;
 }
 </style>

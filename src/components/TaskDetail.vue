@@ -76,6 +76,9 @@
     <button @click="save().then(notify('保存成功'))" class="mui-btn mui-btn--primary">
       <i class="fa fa-check"></i> 保存
     </button>
+    <button @click="delete_task()" class="mui-btn mui-btn--danger">
+      <i class="fa fa-trash"></i> 删除
+    </button>
   </div>
 </template>
 
@@ -141,6 +144,15 @@ export default {
       var st = this.task.pipeline[current];
       this.task.pipeline.splice(current, 1);
       this.task.pipeline.splice(current + inc, 0, st);
+    },
+    delete_task() {
+      if (!confirm('确认要删除此任务吗？')) return
+      api.delete('tasks/' + this.task._id).then(data => {
+        if (data.result.ok) {
+          api.notify('删除成功')
+          this.$router.push('./')
+        }
+      })
     },
     save() {
       if (this.valid.length > 0) {

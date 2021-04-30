@@ -19,13 +19,7 @@
             <button @click="duplicate_task(task)" class="mui-btn">
               <i class="fa fa-copy"></i>
             </button>
-
-            <button
-              @click="delete_task(task._id)"
-              class="mui-btn mui-btn--danger"
-            >
-              <i class="fa fa-trash"></i>
-            </button> </span
+             </span
           ><br />
           <span class="id">{{ task._id }}</span>
         </li>
@@ -44,13 +38,6 @@ export default {
     };
   },
   methods: {
-    delete_task(id) {
-      if (!confirm('确实要删除吗？')) return
-      api.delete("tasks/" + id).then((data) => {
-        if (data.result.ok)
-          this.tasks = this.tasks.filter((x) => x._id != id);
-      });
-    },
     create_task() {
       api
         .put("tasks/", { name: "新建任务 " + new Date() })
@@ -75,6 +62,7 @@ export default {
 span.name {
   display: inline-block;
   font-size: 20px;
+  padding-right: 20px;
   min-width: 300px;
 }
 

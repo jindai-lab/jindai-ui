@@ -1,27 +1,30 @@
 <template>
-<div>
+  <div>
     <h3>任务结果 {{ id }}</h3>
     <ResultsView :value="results" />
-    </div>
+  </div>
 </template>
 
 <script>
-import api from '../api'
-import ResultsView from './ResultsView'
+import api from "../api";
+import ResultsView from "./ResultsView";
 
 export default {
-    name: 'QueueResult',
-    props: ['id'],
-    components: { ResultsView },
-    data () {
-        return {
-            results: []
-        }
-    },
-    mounted () {
-        api.call('queue/' + this.id).then(data =>
-            this.results = data
-        )
+  name: "QueueResult",
+  props: ["id"],
+  components: { ResultsView },
+  data() {
+    return {
+      results: [],
+    };
+  },
+  mounted() {
+    api.call("queue/" + this.id).then((data) => (this.results = data));
+  },
+  watch: {
+    id () {
+      api.call("queue/" + this.id).then((data) => (this.results = data));
     }
-}
+  }
+};
 </script>

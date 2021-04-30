@@ -78,11 +78,10 @@ export default {
     window.removeEventListener("keyup", this.handler);
   },
   mounted() {
+    let params = window.location.href.split('/').slice(-2)
+    this.pdffile = decodeURIComponent(params[0])
+    this.pdfpage = +params[1]
     this.update_pdfpage();
-    this.$root.$on('view', (pdffile, pdfpage) => {
-      this.pdffile = pdffile
-      this.pdfpage = pdfpage
-    })
   },
   watch: {
     pdfpage() {
