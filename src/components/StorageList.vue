@@ -49,7 +49,7 @@ export default {
       })
     },
     file_link(f) {
-      return f
+      return api.file_url(f)
     }
   },
   mounted() {

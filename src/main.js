@@ -12,6 +12,7 @@ import History from './components/History.vue'
 import Login from './components/Login.vue'
 import QueueResult from './components/QueueResult.vue'
 import StorageList from './components/StorageList.vue'
+import UserList from './components/UserList.vue'
 
 Vue.use(VueRouter)
 
@@ -25,6 +26,7 @@ const routes = [
   { path: '/history', component: History },
   { path: '/results/:id(.*)', component: QueueResult, props: true },
   { path: '/storage', component: StorageList },
+  { path: '/users', component: UserList },
 ]
 
 const router = new VueRouter({

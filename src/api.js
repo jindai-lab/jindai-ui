@@ -114,6 +114,10 @@ export default {
         })
     },
 
+    file_url(f) {
+        return apiBase + 'storage/' + f
+    },
+
     queue() {
         return axios.get(apiBase + '/queue/', this._config())
     }

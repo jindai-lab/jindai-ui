@@ -59,6 +59,7 @@
     <div v-if="results.length">
       共找到 {{ results.length == 100 ? results.length + '+' : results.length }} 个结果。
       <button class="mui-btn" @click="export_query"><i class="fa fa-share"></i> 导出为任务</button>
+      <button class="mui-btn" @click="export_xlsx"><i class="fa fa-download"></i> 直接导出 Excel</button>
     </div>
     <ResultsView :value="results" />
   </div>
@@ -95,6 +96,7 @@ export default {
   methods: {
     search() {
       var req = {};
+      this.reqstr = ''
       if (this.selected_pdffile) {
         req.pdffile = this.selected_pdffile;
         this.reqstr += ',pdffile=`' + this.selected_pdffile + '`'
@@ -121,15 +123,28 @@ export default {
         this.querystr = data.result.query;
       });
     },
-    export_query() {
+    export_query(callback) {
+      if (typeof(callback) !== 'function') 
+        callback = (data) => this.$router.push("/tasks/" + data.result)
       api
         .put("tasks/", {
           datasource_config: {
             query: this.querystr + this.reqstr
           },
-          name: '搜索 ' + this.querystr
+          name: '搜索 ' + this.querystr,
+          pipeline: [
+            ['AccumulateParagraphs', {}],
+            ['Export', {format: 'xlsx'}]
+          ]
         })
-        .then((data) => this.$router.push("/tasks/" + data.result));
+        .then(callback);
+    },
+    export_xlsx() {
+      this.export_query(data => {
+        api.put('queue/', {id: data.result}).then(() => 
+        api.notify({title: '已加入到任务队列', text: '请注意查看处理结果'})
+        )
+      })
     }
   },
   watch: {

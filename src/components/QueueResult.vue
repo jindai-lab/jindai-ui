@@ -1,7 +1,8 @@
 <template>
   <div>
     <h3>任务结果 {{ id }}</h3>
-    <ResultsView :value="results" />
+    <ResultsView :value="results" v-if="Array.isArray(results)" />
+    <div v-else>结果为文件或其他类型，请直接下载</div>
   </div>
 </template>
 

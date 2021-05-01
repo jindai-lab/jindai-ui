@@ -7,22 +7,23 @@
         <li>
           <strong>文献</strong>
           <ul>
-            <li :to="'/'">搜索</li>
-            <li :to="'/tasks'">任务</li>
+            <li to="/">搜索</li>
+            <li to="/tasks">任务</li>
           </ul>
         </li>
         <li>
           <strong>用户</strong>
           <ul>
-            <li :to="'/security'">账户</li>
-            <li :to="'/history'">历史</li>
+            <li to="/security">账户</li>
+            <li to="/history">历史</li>
           </ul>
         </li>
         <li>
           <strong>管理</strong>
           <ul>
-            <li :to="'/collections'">数据集</li>
-            <li :to="'/storage'">文件</li>
+            <li to="/collections">数据集</li>
+            <li to="/storage">文件</li>
+            <li to="/users" v-if="admin">用户</li>
           </ul>
         </li>
       </ul>
@@ -38,7 +39,7 @@
 
     <div :id="viewer ? 'viewer' : 'content-wrapper'">
       <keep-alive :include="['SearchForm']">
-        <router-view />
+        <router-view @logined="$emit('logined')" />
       </keep-alive>
     </div>
 
@@ -74,12 +75,22 @@ export default {
   components: {
     QueueView,
   },
+  created() {
+    this.$on('logined', () => {
+      api.logined().then((data) => this.admin = data.result.roles.indexOf('admin') >= 0).catch(() => (localStorage.token = ""));
+    })
+  },
   mounted() {
-    api.logined().catch(() => (localStorage.token = ""));
+    this.$emit('logined')
   },
   computed: {
     viewer() {
       return location.href.indexOf("/view/") > 0;
+    }
+  },
+  data () {
+    return {
+      admin: false
     }
   },
   methods: {

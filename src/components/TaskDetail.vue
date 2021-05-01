@@ -73,7 +73,7 @@
         </div>
       </div>
     </div>
-    <button @click="save().then(notify('保存成功'))" class="mui-btn mui-btn--primary">
+    <button @click="save().then(()=>notify('保存成功'))" class="mui-btn mui-btn--primary">
       <i class="fa fa-check"></i> 保存
     </button>
     <button @click="delete_task()" class="mui-btn mui-btn--danger">
