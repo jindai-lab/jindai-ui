@@ -48,7 +48,7 @@
     <notifications group="sys" />
 
     <div class="loading">
-      <img src="../public/assets/loading.gif" alt="">
+      <Spinner />
     </div>
 
     <footer :id="viewer ? '' : 'footer'">
@@ -65,6 +65,7 @@
 <script>
 import QueueView from "./components/QueueView";
 import Notifications from "vue-notification";
+import Spinner from 'vue-simple-spinner'
 import Vue from "vue";
 import api from "./api";
 
@@ -74,6 +75,7 @@ export default {
   name: "app",
   components: {
     QueueView,
+    Spinner
   },
   created() {
     this.$on('logined', () => {
@@ -303,12 +305,12 @@ em {
   width: 100%;
   height: 100%;
   z-index: 999;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(255, 255, 255, 0.6);
   margin: 0 auto;
   display: none;
 }
 
-.loading>img {
+.loading>div {
   position: absolute;
   top: 50%;
   left: 50%;

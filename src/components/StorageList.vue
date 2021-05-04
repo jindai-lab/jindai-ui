@@ -1,21 +1,40 @@
 <template>
   <div>
-    <h3>文件
+    <h3>文件</h3>
+    <div>
       <button class="mui-btn mui-btn--primary" @click="open_file_dialog()">
-        <i class="fa fa-upload"></i> 上传文件
-      </button></h3>
-      <input type="file" value="" id="file" @change="upload_file" hidden>
+        <font-awesome-icon icon="upload" /> 上传文件
+      </button>
+      <ProgressBar :val="progress" />
+      <input type="file" value="" id="file" @change="upload_file" hidden multiple />
+    </div>
     <div>
       <ol>
-        <li v-for="f in files" :key="f" class="mui-panel">
-          <span class="name">{{ f }}</span>
+        <li v-for="f in files" :key="f.name" class="mui-panel">
+          <div>
+          <span class="name">
+            <font-awesome-icon :icon="f.folder ? 'folder' : 'file'" /> 
+            {{ f.name }}</span>
           <span class="opers">
-            
-            <a class="mui-btn" :href="file_link(f)">
-              <i class="fa fa-download"></i>
-            </a>
-             </span
-          >
+            <button class="mui-btn" @click="file_link(f)" v-if="!f.folder">
+              <font-awesome-icon icon="download" />
+            </button>
+            <button class="mui-btn" v-else @click="enter(f.name)">
+              <font-awesome-icon icon="folder-open" />
+            </button>
+            <button
+              class="mui-btn copy"
+              :data-clipboard-text="copy_file_path(f)"
+            >
+              <font-awesome-icon icon="copy" />
+            </button>
+          </span>
+          </div>
+          <div v-if="!f.folder">
+            大小: {{ (f.size / 1024 / 1024).toFixed(2) }} MB
+            创建于: {{ new Date(f.ctime * 1000).toLocaleString() }}
+            修改于: {{ new Date(f.mtime * 1000).toLocaleString() }}
+          </div>
         </li>
       </ol>
     </div>
@@ -23,37 +42,74 @@
 </template>
 
 <script>
-import api from "../api";
+import api from "../api"
+import axios from 'axios'
+import Clipboard from "clipboard"
+import ProgressBar from "vue-simple-progress"
 
 export default {
-  name: 'StorageList',
+  name: "StorageList",
+  components: {
+    ProgressBar,
+  },
   data() {
     return {
       files: [],
+      selected_dir: "",
+      progress: 0,
     };
   },
   methods: {
     open_file_dialog() {
-      document.getElementById('file').click()
+      document.getElementById("file").click();
     },
     upload_file(e) {
       let formData = new FormData();
-      formData.append('file', e.target.files[0]);
-      let config = {
-        headers:{'Content-Type':'multipart/form-data'}
-      };
-      api.put('storage/', formData, api._config(config)).then((data) => {
-        console.log(data.result)
-        for (var r of data.result)
-          this.files.push(r)
-      })
+      for (var i =0 ; i < e.target.files.length; ++i)
+        formData.append("file" + i, e.target.files[i]);
+      
+      api._catch_and_then(axios
+        .put(api.apiBase + "storage/" + this.selected_dir, formData, api._config({
+          onUploadProgress: (e) => {
+            this.progress = (e.loaded * 100 / e.total) | 0;
+          }
+        })))
+        .then((data) => {
+          this.progress = 0;
+          for (var r of data.result) this.files.splice(this.selected_dir != '' ? 1 : 0, 0, r);
+        })
     },
     file_link(f) {
-      return api.file_url(f)
-    }
+      let path = 'storage/' + f.fullpath.split('/').slice(1).join('/');
+      api.download(path, f.name)
+    },
+    update_files() {
+      api
+        .call("storage/" + this.selected_dir)
+        .then((data) => {
+          this.files = data.result
+          if (this.selected_dir !== '')
+            this.files.splice(0, 0, {name: '..', folder: true})
+          });
+    },
+    copy_file_path(f) {
+      return 'sources' + f.fullpath
+    },
+    enter(d) {
+      if (d === '..')
+        this.selected_dir = this.selected_dir.split('/').slice(0, -1).join('/')
+      else
+        this.selected_dir = this.selected_dir.split('/').filter(x => x).concat(d).join('/')
+    },
   },
   mounted() {
-    api.call("storage/").then((data) => (this.files = data.result));
+    this.update_files();
+    new Clipboard("button.copy");
+  },
+  watch: {
+    selected_dir() {
+      this.update_files();
+    },
   },
 };
 </script>

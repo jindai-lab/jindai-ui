@@ -5,7 +5,7 @@
       <span>ID: {{ task._id }}</span
       ><br />
       <button class="mui-btn" @click="enqueue">
-        <i class="fa fa-play"></i> 加入队列
+        <font-awesome-icon icon="play" /> 后台执行
       </button>
     </div>
     <h2>数据源</h2>
@@ -40,7 +40,7 @@
     <div id="pipeline">
       <h2>处理流程</h2>
       <button @click="append_stage()" class="mui-btn">
-        <i class="fa fa-plus"></i>
+        <font-awesome-icon icon="plus" />
       </button>
       <div
         v-for="(stage, index) in task.pipeline"
@@ -54,30 +54,33 @@
         />
         <div class="opers">
           <button @click="remove_stage(index)" class="mui-btn">
-            <i class="fa fa-trash"></i>
+            <font-awesome-icon icon="trash" />
           </button>
           <button
             @click="move_stage(index, -1)"
             v-show="index > 0"
             class="mui-btn"
           >
-            <i class="fa fa-arrow-up"></i>
+            <font-awesome-icon icon="arrow-up" />
           </button>
           <button
             @click="move_stage(index, 1)"
             v-show="index < task.pipeline.length - 1"
             class="mui-btn"
           >
-            <i class="fa fa-arrow-down"></i>
+            <font-awesome-icon icon="arrow-down" />
           </button>
         </div>
       </div>
     </div>
-    <button @click="save().then(()=>notify('保存成功'))" class="mui-btn mui-btn--primary">
-      <i class="fa fa-check"></i> 保存
+    <button
+      @click="save().then(() => notify('保存成功'))"
+      class="mui-btn mui-btn--primary"
+    >
+      <font-awesome-icon icon="check" /> 保存
     </button>
     <button @click="delete_task()" class="mui-btn mui-btn--danger">
-      <i class="fa fa-trash"></i> 删除
+      <font-awesome-icon icon="trash" /> 删除
     </button>
   </div>
 </template>
@@ -146,37 +149,32 @@ export default {
       this.task.pipeline.splice(current + inc, 0, st);
     },
     delete_task() {
-      if (!confirm('确认要删除此任务吗？')) return
-      api.delete('tasks/' + this.task._id).then(data => {
+      if (!confirm("确认要删除此任务吗？")) return;
+      api.delete("tasks/" + this.task._id).then((data) => {
         if (data.result.ok) {
-          api.notify('删除成功')
-          this.$router.push('./')
+          api.notify("删除成功");
+          this.$router.push("./");
         }
-      })
+      });
     },
     save() {
       if (this.valid.length > 0) {
         alert("有错误的输入值，请检查");
         return;
       }
-      return new Promise((resolve, reject) =>
-        api
-          .call("tasks/" + this.task._id, this.task)
-          .then((data) => {
-            var id = this.task._id;
-            this.task = data.result.updated;
-            this.task._id = id;            
-            resolve(id);
-          })
-          .catch(reject)
-      );
+      return api.call("tasks/" + this.task._id, this.task).then((data) => {
+        var id = this.task._id;
+        this.task = data.result.updated;
+        this.task._id = id;
+        return id;
+      });
     },
     notify(title) {
-      api.notify({title})
+      api.notify({ title });
     },
     enqueue() {
-      this.save().then(
-        api.put("queue/", { id: this.task._id }).then((data) => {
+      this.save().then(id =>
+        api.put("queue/", { id }).then((data) => {
           this.notify(data.result + " 已成功加入后台处理队列。");
         })
       );

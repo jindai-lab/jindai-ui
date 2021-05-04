@@ -2,7 +2,7 @@
   <div>
     <div class="mui-row">
       <h3 class="mui-col-md-10">
-        <!-- <a href="javascript:void(0)"><i class="fa fa-arrow-left" @click="$router.back()"></i></a> -->
+        <!-- <a href="javascript:void(0)"><font-awesome-icon icon="arrow-left" @click="$router.back()" /></a> -->
         {{ pdffile }}</h3>
       <div class="mui-col-md-1 mui-textfield">
         <input
@@ -94,10 +94,10 @@ export default {
       if (!this.pdffile) return
       api
         .call("quicktask", {
-          q: "pdffile=`" + this.pdffile + "`,pdfpage=" + this.pdfpage,
+          q: "?pdffile=`" + this.pdffile + "`,pdfpage=" + this.pdfpage,
         })
         .then((data) => (this.paragraphs = data.result));
-      api.pdf_image(this.pdffile, this.pdfpage, this);
+      api.blob('pdfimage?pdffile=' + encodeURIComponent(this.pdffile) + '&pdfpage=' + this.pdfpage).then(u => this.pdf_image = u);
     },
   },
 };

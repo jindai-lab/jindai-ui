@@ -14,10 +14,10 @@
         :href="'/view/' + r.pdffile + '/' + r.pdfpage"
         target="_blank"
       >
-        <i class="fa fa-file" aria-hidden="true"></i> 查看
+        <font-awesome-icon icon="file" aria-hidden="true" /> 查看
       </a>
       <button class="mui-btn" @click="show_meta[index] = !show_meta[index]; $forceUpdate()">
-        <i :class="['fa', 'fa-caret-' + (!show_meta[index] ? 'down' : 'up')]"></i> 其他元数据
+        <i :class="['fa', 'fa-caret-' + (!show_meta[index] ? 'down' : 'up')]" /> 其他元数据
       </button>
       <div class="mui-textfield" v-show="!!show_meta[index]">
         <textarea readonly :value="metas(r)" rows="5"></textarea>
@@ -47,6 +47,11 @@ export default {
           p.push(i)
         }
         return p
+      }
+    },
+    watch: {
+      value () {
+        this.page = 1
       }
     },
     methods: {

@@ -2,7 +2,7 @@
   <div>
     <h3>用户
       <button class="mui-btn mui-btn--primary" @click="show_modify = false; new_user = { roles: [] }; show_modal = true; ">
-        <i class="fa fa-plus"></i> 添加用户
+        <font-awesome-icon icon="plus" /> 添加用户
       </button></h3>
     <div>
       <ol>
@@ -10,10 +10,10 @@
           <span class="name">{{ u.username }}</span>
           <span class="opers">
             <button class="mui-btn" @click="show_modify = true; new_user = Object.assign(u, {'password': ''}); show_modal = true;">
-              <i class="fa fa-edit"></i> 用户角色
+              <font-awesome-icon icon="edit" /> 用户角色
             </button>
             <button class="mui-btn" @click="del_user(u)">
-              <i class="fa fa-trash"></i> 删除用户
+              <font-awesome-icon icon="trash" /> 删除用户
             </button>
              </span
           >

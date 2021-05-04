@@ -8,7 +8,7 @@
                 <slot name="header">
                 </slot>
                 <a class="modal-close-button" @click="$emit('close')">
-                  <i class="fa fa-times"></i>
+                  <font-awesome-icon icon="times" />
                 </a>
               </div>
 

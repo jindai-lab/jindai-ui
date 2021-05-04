@@ -7,7 +7,7 @@
             </div>
             <div class="mui-textfield">
                 <label>密码</label>
-                <input type="password" v-model="password">
+                <input type="password" v-model="password" @keyup.enter="login">
             </div>
             <button class="mui-btn mui-btn--primary" @click="login">登录</button>
             <button class="mui-btn" disabled>管理</button>

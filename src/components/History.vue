@@ -7,7 +7,7 @@
       <div class="mui-col-md-6">{{ h.querystr }}</div>
       <div class="mui-col-md-2">
         <button class="mui-btn" @click="export_query(h)">
-          <i class="fa fa-share"></i>
+          <font-awesome-icon icon="share" />
         </button>
       </div>
     </div>

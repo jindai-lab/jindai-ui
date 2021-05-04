@@ -17,36 +17,33 @@ export default {
 
     stack: _stack,
 
+    apiBase,
+
     notify(notice) { Vue.notify(Object.assign(notice, { group: 'sys' })) },
 
     _catch_and_then(promise) {
-        return new Promise((resolve, reject) => {
-            promise.then(resp => {
-                if (_stack.length > 0) {
-                    _stack.pop()
-                    _set_loading()
+        return promise.then(resp => {
+            if (_stack.length > 0) {
+                _stack.pop()
+                _set_loading()
+            }
+            if (resp.data.exception) {
+                if (resp.data.exception == 'Forbidden.') {
+                    localStorage.token = ''
+                    resp.data.exception = '登录失效，请重新登录。'
+                    if (!location.href.endsWith('/login')) location.href = '/login'
                 }
-                if (resp.data.exception) {
-                    if (resp.data.exception == 'Forbidden.') {
-                        localStorage.token = ''
-                        resp.data.exception = '登录失效，请重新登录。'
-                        if (!location.href.endsWith('/login')) location.href = '/login'
-                    }
-                    this.notify({
-                        title: resp.data.exception,
-                        type: 'warn'
-                    })
-                    reject(resp.data)
-                } else {
-                    resolve(resp.data)
-                }
-            }).catch(ex => {
-                if (_stack.length > 0) {
-                    _stack.pop()
-                    _set_loading()
-                }
-                this.notify({ title: '网络故障', text: ex })
-            })
+                throw new Error(resp.data.exception)
+            } else {
+                return resp.data
+            }
+        }).catch(ex => {
+            if (_stack.length > 0) {
+                _stack.pop()
+                _set_loading()
+            }
+            this.notify({ title: '错误', text: ex, type: 'warn' })
+            throw ex
         })
     },
 
@@ -101,25 +98,44 @@ export default {
         return this._catch_and_then(axios.put(apiBase + name, params, this._config()))
     },
 
-    result_url(id) {
-        return apiBase + 'queue/' + id
+    blob(name) {
+        _stack.push('url')
+        _set_loading()
+        return this._catch_and_then(
+            axios.get(apiBase + name, this._config(
+                { responseType: 'blob' }
+            ))).then(data => {
+                var objectURL = URL.createObjectURL(data);
+                return objectURL
+            })
     },
 
-    pdf_image(pdffile, pdfpage, dataobj) {
-        axios.get(apiBase + 'pdfimage?pdffile=' + encodeURIComponent(pdffile) + '&pdfpage=' + pdfpage, this._config(
-            { responseType: 'blob' }
-        )).then(resp => {
-            var objectURL = URL.createObjectURL(resp.data);
-            dataobj.pdf_image = objectURL;
+    download(path, filename) {
+        this.blob(path).then(url => {
+
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+
+            // this is necessary as link.click() does not work on the latest firefox
+            link.dispatchEvent(
+                new MouseEvent('click', {
+                    bubbles: true,
+                    cancelable: true,
+                    view: window
+                })
+            );
+
+            setTimeout(() => {
+                // For Firefox it is necessary to delay revoking the ObjectURL
+                window.URL.revokeObjectURL(url);
+                link.remove();
+            }, 100);
         })
     },
 
-    file_url(f) {
-        return apiBase + 'storage/' + f
-    },
-
     queue() {
-        return axios.get(apiBase + '/queue/', this._config())
+        return axios.get(apiBase + 'queue/', this._config())
     }
 
 }

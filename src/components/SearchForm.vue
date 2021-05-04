@@ -58,8 +58,8 @@
     </div>
     <div v-if="results.length">
       共找到 {{ results.length == 100 ? results.length + '+' : results.length }} 个结果。
-      <button class="mui-btn" @click="export_query"><i class="fa fa-share"></i> 导出为任务</button>
-      <button class="mui-btn" @click="export_xlsx"><i class="fa fa-download"></i> 直接导出 Excel</button>
+      <button class="mui-btn" @click="export_query"><font-awesome-icon icon="share" /> 导出为任务</button>
+      <button class="mui-btn" @click="export_xlsx"><font-awesome-icon icon="download" /> 直接导出 Excel</button>
     </div>
     <ResultsView :value="results" />
   </div>
@@ -113,7 +113,7 @@ export default {
       }
       api.call("search", { q: this.q, sort: this.sort, req }).then((data) => {
         var reg = new RegExp(
-          "(" + data.result.query.replace(/[,&]/, "|") + ")",
+          "(" + data.result.query.replace(/[,&]/g, "|").replace(/`/g, "") + ")",
           "g"
         );
         this.results = data.result.results.map((x) => {
@@ -129,7 +129,7 @@ export default {
       api
         .put("tasks/", {
           datasource_config: {
-            query: this.querystr + this.reqstr
+            query: '?' + this.querystr + this.reqstr
           },
           name: '搜索 ' + this.querystr,
           pipeline: [
@@ -159,6 +159,32 @@ export default {
         })
         .then((data) => {
           this.pdffiles = data.result.map((x) => x._id);
+          this.pdffiles.sort((a, b) => {
+            const rd = /\d+|[零一二三四五六七八九十百]+/
+            var num_a = a.match(rd) || ['999'], num_b = b.match(rd) || ['999']
+
+            function chndigit(v) {
+              var digits = '零一二三四五六七八九十'
+              var r = 0, n = 0
+              for (var c of v + '零') {
+                var t = digits.indexOf(c)
+                if (t < 0) {
+                  n *= (({'百': 100, '千': 1000, '万': 10000})[c] || 1)
+                } else if (t == 10 && n != 0) {
+                  n *= 10
+                } else {
+                  r += n
+                  n = t
+                }
+              }
+              return r
+            }
+
+            if (num_a[0].match(/\d+/))
+              return (num_a | 0) - (num_b | 0)
+            else
+              return chndigit(num_a) - chndigit(num_b)
+          })
         });
     },
   },

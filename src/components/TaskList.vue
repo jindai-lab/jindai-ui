@@ -2,7 +2,7 @@
   <div>
     <h3>任务
       <button class="mui-btn mui-btn--primary" @click="create_task()">
-        <i class="fa fa-plus"></i> 新建任务
+        <font-awesome-icon icon="plus" /> 新建任务
       </button></h3>
     <div>
       <ol>
@@ -13,11 +13,11 @@
               :to="'/tasks/' + task._id"
               class="mui-btn mui-btn"
             >
-              <i class="fa fa-edit"></i>
+              <font-awesome-icon icon="edit" />
             </router-link>
 
             <button @click="duplicate_task(task)" class="mui-btn">
-              <i class="fa fa-copy"></i>
+              <font-awesome-icon icon="copy" />
             </button>
              </span
           ><br />

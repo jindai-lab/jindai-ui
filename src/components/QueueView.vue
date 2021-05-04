@@ -15,14 +15,13 @@
           运行于:
           {{ new Date(1000 * id.split("_").slice(-1)[0]).toLocaleString()
           }}<br />
-          <a :href="result_url(id)" class="mui-btn" target="_blank"
-            ><i class="fa fa-download"></i> 下载</a
-          >
+          <button @click="download(id)" class="mui-btn" target="_blank"
+            ><font-awesome-icon icon="download" /> 下载</button>
           <button class="mui-btn" @click="view_result(id)">
-            <i class="fa fa-eye"></i> 查看
+            <font-awesome-icon icon="eye" /> 查看
           </button>
           <button class="mui-btn" @click="delete_result(id)">
-            <i class="fa fa-trash"></i> 删除
+            <font-awesome-icon icon="trash" /> 删除
           </button>
         </div>
         <div class="mui-divide"></div>
@@ -74,8 +73,8 @@ export default {
         }, 5000);
       }
     },
-    result_url(id) {
-      return api.result_url(id);
+    download(id) {
+      api.call('queue/meta/' + id).then(data => api.download('queue/' + id, data.result.filename));
     },
     delete_result(id) {
       api.delete("queue/" + id).then(() => {
