@@ -56,12 +56,12 @@
       <div class="clear"></div>
       <button id="search" class="mui-btn" @click="search">查询</button>
     </div>
-    <div v-if="results.length">
-      共找到 {{ results.length == 100 ? results.length + '+' : results.length }} 个结果。
+    <div v-if="total">
+      共找到 {{ total }} 个结果。
       <button class="mui-btn" @click="export_query"><font-awesome-icon icon="share" /> 导出为任务</button>
       <button class="mui-btn" @click="export_xlsx"><font-awesome-icon icon="download" /> 直接导出 Excel</button>
     </div>
-    <ResultsView :value="results" />
+    <ResultsView :total="total" @load="load_search" ref="results" />
   </div>
 </template>
     
@@ -75,15 +75,16 @@ export default {
   data() {
     return {
       collections: [],
-      results: [],
       pdffiles: [],
       selected_collection: "",
       selected_collections: [],
       selected_pdffile: "",
       q: "",
+      req: {},
       sort: "",
       querystr: "",
-      reqstr: ""
+      reqstr: "",
+      total: 0
     };
   },
   mounted() {
@@ -111,7 +112,11 @@ export default {
         };
         this.reqstr += ',collection=in(_json(`' + JSON.stringify(this.selected_collections) + '`))'
       }
-      api.call("search", { q: this.q, sort: this.sort, req }).then((data) => {
+      this.req = req
+      this.$refs.results.start()
+    },
+    load_search(e) {
+      api.call('search', { q: this.q, sort: this.sort, req: this.req, offset: e.offset, limit: e.limit }).then(data => {
         var reg = new RegExp(
           "(" + data.result.query.replace(/[,&]/g, "|").replace(/`/g, "") + ")",
           "g"
@@ -120,8 +125,10 @@ export default {
           x.matched_content = x.content.replace(reg, "<em>$1</em>");
           return x;
         });
+        this.total = data.result.total;
         this.querystr = data.result.query;
-      });
+        e.callback({result: data.result.results, offset: e.offset})
+      })
     },
     export_query(callback) {
       if (typeof(callback) !== 'function') 

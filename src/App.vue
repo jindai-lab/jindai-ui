@@ -38,7 +38,7 @@
     </header>
 
     <div :id="viewer ? 'viewer' : 'content-wrapper'">
-      <keep-alive :include="['SearchForm']">
+      <keep-alive :include="['SearchForm', 'ResultsView']">
         <router-view @logined="$emit('logined')" />
       </keep-alive>
     </div>
