@@ -7,6 +7,11 @@
       <button class="mui-btn" @click="enqueue">
         <font-awesome-icon icon="play" /> 后台执行
       </button>
+      <div class="mui-checkbox">
+        <label>
+        <input type="checkbox" v-model="task.resume_next">
+          忽略运行中间的错误</label>
+      </div>
     </div>
     <h2>数据源</h2>
     <div id="datasource" class="mui-panel">
