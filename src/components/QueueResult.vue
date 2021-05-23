@@ -2,7 +2,7 @@
   <div>
     <h3>任务结果 {{ id }}</h3>
     <ResultsView @load="load_data" :total="total" v-if="typeof(total) === 'number'" ref="results" />
-    <div v-else>结果为文件或其他类型，请直接下载</div>
+    <div v-else v-html="prompt || '结果为文件或其他类型，请直接下载'"></div>
   </div>
 </template>
 
@@ -16,7 +16,8 @@ export default {
   components: { ResultsView },
   data() {
     return {
-      total: 0
+      total: 0,
+      prompt: ''
     };
   },
   mounted() {
@@ -29,12 +30,15 @@ export default {
   },
   methods: {
     load_data(e) {
-      api.call("queue/" + this.id + '?offset=' + e.offset + '&limit=' + e.limit).then(data => {
+      api.call("queue/" + encodeURIComponent(this.id) + '?offset=' + e.offset + '&limit=' + e.limit).then(data => {
         this.total = data.result.total
         e.callback({
           offset: e.offset,
           result: data.result.results
         })
+      }).catch(ex => {
+        this.prompt = '<h4>' + ex.message + '</h4><p>' + ex.stack.replace(/\n/g, '<br>') + '</p>'
+        this.total = undefined
       })
     }
   }

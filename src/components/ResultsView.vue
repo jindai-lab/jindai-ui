@@ -1,5 +1,5 @@
 <template>
-  <div v-if="value.length > 0" ref="results">
+  <div v-if="total > 0" ref="results">
     <div v-for="(r, index) in visible_data" :key="r._id" class="mui-panel">
       <p class="">
         数据集: {{ r.collection }} 大纲: {{ r.outline }} 来源:

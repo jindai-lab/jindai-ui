@@ -1,8 +1,8 @@
 <template>
   <div>
     处理队列:
-    <a @click="show_finished = true" href="javascript:void(0)"
-      >{{ finished.length }} 已完成</a
+    <a @click="show_finished = true" href="javascript:void(0)" :class="finished.length > 0 ? 'click-here' : ''"
+      ><span>{{ finished.length }}</span> 已完成</a
     >
     - {{ waiting }} 等待中 - 正在运行:
     {{ running || "无" }}
@@ -74,15 +74,18 @@ export default {
       }
     },
     download(id) {
+      id = encodeURIComponent(id)
       api.call('queue/meta/' + id).then(data => api.download('queue/' + id, data.result.filename));
     },
     delete_result(id) {
+      id = encodeURIComponent(id)
       api.delete("queue/" + id).then(() => {
         api.notify({ title: "成功删除" });
         this.finished = this.finished.filter((x) => x != id);
       });
     },
     view_result(id) {
+      id = encodeURIComponent(id)
       this.$router.push("/results/" + id);
       this.show_finished = false;
     },
@@ -92,3 +95,10 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+.click-here > span {
+  border-radius: 5px;
+  background-color: green
+}
+</style>

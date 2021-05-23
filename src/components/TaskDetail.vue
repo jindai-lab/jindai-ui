@@ -44,39 +44,7 @@
     </div>
     <div id="pipeline">
       <h2>处理流程</h2>
-      <button @click="append_stage()" class="mui-btn">
-        <font-awesome-icon icon="plus" />
-      </button>
-      <div
-        v-for="(stage, index) in task.pipeline"
-        :key="index"
-        class="stage-opers mui-panel"
-      >
-        <StageDetail
-          :stages="stages"
-          v-model="task.pipeline[index]"
-          @validation="update_valid('stage_' + index, $event)"
-        />
-        <div class="opers">
-          <button @click="remove_stage(index)" class="mui-btn">
-            <font-awesome-icon icon="trash" />
-          </button>
-          <button
-            @click="move_stage(index, -1)"
-            v-show="index > 0"
-            class="mui-btn"
-          >
-            <font-awesome-icon icon="arrow-up" />
-          </button>
-          <button
-            @click="move_stage(index, 1)"
-            v-show="index < task.pipeline.length - 1"
-            class="mui-btn"
-          >
-            <font-awesome-icon icon="arrow-down" />
-          </button>
-        </div>
-      </div>
+      <Pipeline v-model="task.pipeline" />
     </div>
     <button
       @click="save().then(() => notify('保存成功'))"
@@ -92,15 +60,15 @@
 
 
 <script>
-import api from "../api";
-import ParamInput from "./ParamInput";
-import StageDetail from "./StageDetail";
+import api from "../api"
+import ParamInput from './ParamInput.vue';
+import Pipeline from "./Pipeline"
 
 export default {
   name: "TaskDetail",
   components: {
-    ParamInput,
-    StageDetail,
+    Pipeline,
+    ParamInput
   },
   props: ["id"],
   data() {
@@ -121,9 +89,6 @@ export default {
     api.call("help/datasources").then((data) => {
       this.datasources = data.result;
     });
-    api.call("help/pipelines").then((data) => {
-      this.stages = data.result;
-    });
     api.call("tasks/" + this.id).then((data) => {
       this.task = data.result;
     });
@@ -141,17 +106,6 @@ export default {
       var l = this.valid.indexOf(name);
       if (l >= 0) this.valid.splice(l, 1);
       if (!valid) this.valid.push(name);
-    },
-    append_stage() {
-      this.task.pipeline.push(["Passthrough", {}]);
-    },
-    remove_stage(current) {
-      this.task.pipeline.splice(current, 1);
-    },
-    move_stage(current, inc) {
-      var st = this.task.pipeline[current];
-      this.task.pipeline.splice(current, 1);
-      this.task.pipeline.splice(current + inc, 0, st);
     },
     delete_task() {
       if (!confirm("确认要删除此任务吗？")) return;
@@ -187,13 +141,3 @@ export default {
   },
 };
 </script>
-
-<style scoped>
-.opers {
-  visibility: hidden;
-}
-
-.stage-opers:hover .opers {
-  visibility: visible;
-}
-</style>

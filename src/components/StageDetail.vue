@@ -14,20 +14,29 @@
     </blockquote>
     <div class="stage-arg">
       <div v-for="arg in stage_doc.args" :key="arg.name">
-        <ParamInput :arg="arg" v-model="value[1][arg.name]" @validation="update_valid('stage_' + arg.name, $event)" />
-        <blockquote>{{ arg.description }}</blockquote>
+        <div v-if="arg.type !== 'pipeline'">
+          <ParamInput :arg="arg" v-model="value[1][arg.name]" @validation="update_valid('stage_' + arg.name, $event)" />
+          <blockquote>{{ arg.description }}</blockquote>
+        </div>
+        <div class="mui-textfield" v-else>
+          <label>{{ arg.name }}</label>
+          <blockquote>{{ arg.description }}</blockquote>
+          <Pipeline v-model="value[1][arg.name]" />
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import ParamInput from "./ParamInput";
+import ParamInput from "./ParamInput"
+import Pipeline from './Pipeline'
 
 export default {
+  name: 'StageDetail',
   inheritAttrs: false,
   props: ["stages", "value"],
-  components: { ParamInput },
+  components: { ParamInput, Pipeline },
   events: ["validation"],
   data () {
     return { valid: [] }

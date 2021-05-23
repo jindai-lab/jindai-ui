@@ -22,6 +22,15 @@ export default {
     notify(notice) { Vue.notify(Object.assign(notice, { group: 'sys' })) },
 
     _catch_and_then(promise) {
+
+        function DataError(message, stack) {
+            this.name = 'DataError'
+            this.message = message
+            this.stack = stack
+        }
+        DataError.prototype = Object.create(Error.prototype);
+        DataError.prototype.constructor = DataError;
+        
         return promise.then(resp => {
             if (_stack.length > 0) {
                 _stack.pop()
@@ -33,7 +42,7 @@ export default {
                     resp.data.exception = '登录失效，请重新登录。'
                     if (!location.href.endsWith('/login')) location.href = '/login'
                 }
-                throw new Error(resp.data.exception)
+                throw new DataError(resp.data.exception, resp.data.tracestack.join('\n'))
             } else {
                 return resp.data
             }

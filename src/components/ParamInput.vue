@@ -61,7 +61,7 @@ function input_func(vm) {
       vm.prompt = "";
     }
     vm.$emit("validation", vm.prompt === "");
-    vm.$emit("input", val);
+    vm.$emit("input", val || event.target.value);
   };
 }
 

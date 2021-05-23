@@ -19,6 +19,10 @@
             <button @click="duplicate_task(task)" class="mui-btn">
               <font-awesome-icon icon="copy" />
             </button>
+
+            <button class="mui-btn" @click="delete_task(task)">
+              <font-awesome-icon icon="trash" />
+            </button>
              </span
           ><br />
           <span class="id">{{ task._id }}</span>
@@ -51,9 +55,12 @@ export default {
         .put("tasks/", otask)
         .then((data) => this.$router.push("/tasks/" + data.result));
     },
+    delete_task(task) {
+      api.delete("tasks/" + task._id).then(() => this.tasks = this.tasks.filter((x) => x._id != task._id))
+    }
   },
   mounted() {
-    api.call("tasks/").then((data) => (this.tasks = data.result));
+    api.call("tasks/0/100").then((data) => (this.tasks = data.result));
   },
 };
 </script>
