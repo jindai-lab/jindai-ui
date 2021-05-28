@@ -9,18 +9,17 @@
     <Modal v-if="show_finished" @close="show_finished = false">
       <h3 slot="header">已完成的任务</h3>
       <div slot="body" v-if="finished.length > 0">
-        <div v-for="id in finished" :key="id">
-          <h4>{{ id.split("/")[1].split("_").slice(0, -1).join("\t") }}</h4>
-          <span>{{ id.split("/")[0] }}</span>
+        <div v-for="task in finished" :key="task.id">
+          <h4>{{ task.name }}</h4>
+          <span>{{ task.id.split('/')[0] }}</span>
           运行于:
-          {{ new Date(1000 * id.split("_").slice(-1)[0]).toLocaleString()
-          }}<br />
-          <button @click="download(id)" class="mui-btn" target="_blank"
+          {{ task.last_run }}<br />
+          <button @click="download(task)" class="mui-btn" target="_blank"
             ><font-awesome-icon icon="download" /> 下载</button>
-          <button class="mui-btn" @click="view_result(id)">
+          <button class="mui-btn" @click="view_result(task)" v-if="task.viewable">
             <font-awesome-icon icon="eye" /> 查看
           </button>
-          <button class="mui-btn" @click="delete_result(id)">
+          <button class="mui-btn" @click="delete_result(task)">
             <font-awesome-icon icon="trash" /> 删除
           </button>
         </div>
@@ -60,7 +59,7 @@ export default {
               if (this.finished.length < data.result.finished.length) {
                 data.result.finished
                   .filter((x) => this.finished.indexOf(x) < 0)
-                  .forEach((x) => api.notify({ title: x + " 已完成" }));
+                  .forEach((x) => api.notify({ title: x.name + " 已完成" }));
               }
               this.finished = data.result.finished;
               this.running = data.result.running;
@@ -73,19 +72,19 @@ export default {
         }, 5000);
       }
     },
-    download(id) {
-      id = encodeURIComponent(id)
-      api.call('queue/meta/' + id).then(data => api.download('queue/' + id, data.result.filename));
+    download(task) {
+      var id = encodeURIComponent(task.id)
+      api.download('queue/' + id, id + '.' + task.file_ext);
     },
-    delete_result(id) {
-      id = encodeURIComponent(id)
+    delete_result(task) {
+      var id = encodeURIComponent(task.id)
       api.delete("queue/" + id).then(() => {
         api.notify({ title: "成功删除" });
         this.finished = this.finished.filter((x) => x != id);
       });
     },
-    view_result(id) {
-      id = encodeURIComponent(id)
+    view_result(task) {
+      var id = encodeURIComponent(task.id)
       this.$router.push("/results/" + id);
       this.show_finished = false;
     },

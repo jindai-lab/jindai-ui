@@ -21,7 +21,7 @@
         <div class="mui-textfield" v-else>
           <label>{{ arg.name }}</label>
           <blockquote>{{ arg.description }}</blockquote>
-          <Pipeline v-model="value[1][arg.name]" />
+          <Pipeline v-model="value[1][arg.name]" @validation="update_valid('pipeline_' + arg.name, $event)" />
         </div>
       </div>
     </div>

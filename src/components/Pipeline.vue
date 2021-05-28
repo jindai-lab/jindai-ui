@@ -51,11 +51,18 @@ export default {
   data() {
     return {
         stages: {},
-        show_code: false
+        show_code: false,
+        valid: []
     }
   },
   props: ["value"],
   methods: {
+    update_valid(name, valid) {
+      var l = this.valid.indexOf(name);
+      if (l >= 0) this.valid.splice(l, 1);
+      if (!valid) this.valid.push(name);
+      this.$emit("validation", this.valid.length == 0)
+    },
     append_stage() {
         this.value.push(["Passthrough", {}]);
     },

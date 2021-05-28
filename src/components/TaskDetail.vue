@@ -44,7 +44,9 @@
     </div>
     <div id="pipeline">
       <h2>处理流程</h2>
-      <Pipeline v-model="task.pipeline" />
+      <Pipeline v-model="task.pipeline" 
+        @validation="update_valid('pipeline_main', $event)"
+      />
     </div>
     <button
       @click="save().then(() => notify('保存成功'))"

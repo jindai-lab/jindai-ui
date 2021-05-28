@@ -119,7 +119,7 @@ export default {
       api.call('search', { q: this.q, sort: this.sort, req: this.req, offset: e.offset, limit: e.limit }).then(data => {
         var reg = new RegExp(
           "(" + data.result.query.replace(/[,&]/g, "|").replace(/`/g, "") + ")",
-          "g"
+          "ig"
         );
         this.results = data.result.results.map((x) => {
           x.matched_content = x.content.replace(reg, "<em>$1</em>");
