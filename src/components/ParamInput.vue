@@ -25,7 +25,7 @@
     </div>
 
     <div class="mui-textfield" v-else-if="arg.type == 'str'">
-      <textarea
+      <textarea v-if="arg.name !== 'query' && arg.name !== 'cond'"
         :value="value"
         v-bind="$attrs"
         v-on="inputListeners"
@@ -34,6 +34,11 @@
         rows="4"
         cols="40"
       ></textarea>
+      <prism-editor v-else class="my-editor"
+        v-model="code"
+        @input="$emit('input', code)"
+        :highlight="highlighter"
+        line-numbers />
       <label>{{ arg.name }}</label>
     </div>
     <div class="mui-textfield" v-else>
@@ -65,10 +70,21 @@ function input_func(vm) {
   };
 }
 
+import { PrismEditor } from 'vue-prism-editor';
+import 'vue-prism-editor/dist/prismeditor.min.css'; // import the styles somewhere
+
+// import highlighting library (you can use any library you want just return html string)
+import { highlight, languages } from 'prismjs/components/prism-core';
+import 'prismjs/components/prism-clike';
+import 'prismjs/themes/prism-tomorrow.css'; // import syntax highlighting styles
+
 export default {
   inheritAttrs: false,
   props: ["value", "arg"],
   events: ["validation"],
+  components: {
+    PrismEditor
+  },
   computed: {
     inputListeners: function () {
       var vm = this;
@@ -80,6 +96,7 @@ export default {
   data() {
     return {
       prompt: "",
+      code: "",
     };
   },
   methods: {
@@ -107,13 +124,36 @@ export default {
       this.prompt = "请输入一个符合 " + this.arg.type + " 类型的值";
       return;
     },
+    highlighter(code) {
+      return highlight(code, languages.clike); // languages.<insert language> to return html with markup
+    },
   },
-  mounted() {},
+  mounted() {
+    this.code = this.value
+  },
 };
 </script>
 
 <style scoped>
 blockquote {
   color: red;
+}
+
+/* required class */
+.my-editor {
+  /* we dont use `language-` classes anymore so thats why we need to add background and text color manually */
+  background: #2d2d2d;
+  color: #ccc;
+
+  /* you must provide font-family font-size line-height. Example: */
+  font-family: Fira code, Fira Mono, Consolas, Menlo, Courier, monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  padding: 5px;
+}
+
+/* optional class for removing the outline */
+.prism-editor__textarea:focus {
+  outline: none;
 }
 </style>

@@ -57,6 +57,10 @@
     <button @click="delete_task()" class="mui-btn mui-btn--danger">
       <font-awesome-icon icon="trash" /> 删除
     </button>
+    <button @click="show_code = !show_code" class="mui-btn">
+      <font-awesome-icon icon="code" />
+    </button>
+    <pre v-if="show_code">{{ querify(value) }}</pre>
   </div>
 </template>
 
@@ -85,6 +89,7 @@ export default {
         pipeline: [],
       },
       valid: [],
+      show_code: false
     };
   },
   mounted() {
@@ -139,6 +144,41 @@ export default {
           this.notify(data.result + " 已成功加入后台处理队列。");
         })
       );
+    },
+    querify() {
+      function _values(x, indent) {
+        if (Array.isArray(x)) {
+          if (x.length > 0 && x.filter(y => y.length == 2).length == x.length)
+            return '([]' + _querify(x, indent + '  ') + '\n' + indent + ')'
+          return '([]' + (x.length > 0 ? ' => ' + x.map(_values).join(' => ') : '') + ')'
+        } else if (typeof(x) === 'object') {
+          return '(' + _params(x, indent + '  ') + ')'
+        } else if (typeof(x) === 'string') {
+          return '`' + JSON.stringify(x).replace(/^"|"$/g, '').replace(/`/g, '\\`') + '`'
+        } else
+          return JSON.stringify(x)
+      }
+      function _params(c, indent) {
+        var r = []
+        for (var k in c) {
+          console.log(typeof(c[k]))
+          if (typeof(c[k]) === 'undefined') continue
+          r.push(indent + k + '=' + _values(c[k], indent))
+        }
+        r = r.join(',\n')
+        if (r !== '') r = '\n' + r + '\n'
+        return r
+      }
+      function _querify(v, indent) {
+        var s = ''
+        for (var i of v) {
+          var c = _params(i[1], indent + '  ')
+          if (c !== '') c += indent
+          s += ' =>\n' + indent + i[0] + '(' + c + ')'
+        }
+        return s
+      }
+      return _querify([[this.task.datasource, this.task.datasource_config]], '').substr(4) + _querify(this.task.pipeline, '')
     },
   },
 };

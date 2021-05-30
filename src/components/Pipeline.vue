@@ -3,9 +3,6 @@
     <button @click="append_stage()" class="mui-btn">
       <font-awesome-icon icon="plus" />
     </button>
-    <button @click="show_code = !show_code" class="mui-btn">
-      <font-awesome-icon icon="code" />
-    </button>
     <div
       v-for="(stage, index) in value"
       :key="index"
@@ -36,7 +33,6 @@
         </button>
       </div>
     </div>
-    <pre v-show="show_code">{{ JSON.stringify(value, undefined, 2) }}</pre>
   </div>
 </template>
 
