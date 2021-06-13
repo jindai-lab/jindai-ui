@@ -1,7 +1,7 @@
 <template>
   <body id="app">
     <div id="sidedrawer" class="mui--no-user-select" v-if="!viewer">
-      <h2 class="mui--appbar-line-height"><a href="/">近现代作家语料库</a></h2>
+      <h2 class="fs22 mui--appbar-line-height"><a href="/">多语种文献利用平台</a></h2>
       <div class="mui-divider"></div>
       <ul @click="nav_click">
         <li>
@@ -54,7 +54,7 @@
     <footer :id="viewer ? '' : 'footer'">
       <div class="mui-container-fluid">
         <br />
-        近现代作家语料库 - 文献利用系统<br />
+        多语种文献利用平台<br />
         &copy; 2018-{{ new Date().getFullYear() }} 科技人文研究室 &amp;
         contributors
       </div>
@@ -121,6 +121,10 @@ button {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.004);
+}
+
+.fs22 {
+  font-size: 22px;
 }
 
 /**
