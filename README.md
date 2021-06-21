@@ -1,24 +1,19 @@
 # jindai-ui
 
-## Project setup
-```
-npm install
-```
+Frontend for [Jindai](https://github.com/zhuth/jindai/): a platform for textual analysis designed for (pre-)modern Chinese authors
 
-### Compiles and hot-reloads for development
-```
-npm run serve
-```
+## Acknowledgment
 
-### Compiles and minifies for production
-```
-npm run build
-```
+This project was made possible through following works:
 
-### Lints and fixes files
-```
-npm run lint
-```
+- axios
+- prismjs
+- vue.js
+- vue-notification
+- vue-prism-editor
+- vue-router
+- vue-simple-progress
+- vue-simple-spinner
+- clipboard
 
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+License: MIT
