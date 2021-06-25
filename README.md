@@ -1,6 +1,6 @@
 # jindai-ui
 
-Frontend for [Jindai](https://github.com/zhuth/jindai/): a platform for textual analysis designed for (pre-)modern Chinese authors
+Frontend for [Jindai](https://github.com/zhuth/jindai/).
 
 ## Acknowledgment
 
