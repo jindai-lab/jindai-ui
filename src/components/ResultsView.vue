@@ -26,6 +26,10 @@
         <i :class="['fa', 'fa-caret-' + (!show_meta[index] ? 'down' : 'up')]" />
         其他元数据
       </button>
+      <button class="mui-btn" @click="edit_target = r">
+        <font-awesome-icon icon="edit"></font-awesome-icon>
+        编辑
+      </button>
       <div class="mui-textfield" v-show="!!show_meta[index]">
         <textarea readonly :value="metas(r)" rows="5"></textarea>
       </div>
@@ -61,11 +65,33 @@
         </div>
       </div>
     </div>
+    
+    <Modal v-if="edit_target !== null" @close="edit_target = null">
+      <h3 slot="header">编辑 {{ edit_target._id }}</h3>
+      <div slot="body">
+        <div v-for="field, key in edit_target" :key="key">
+          <ParamInput v-model="edit_target[key]" :arg="{type: typeof(field), name: key, default: '\'\''}" v-if="['_id', 'matched_content'].indexOf(key) < 0 && typeof(field) !== 'object'" />
+        </div>
+        <div class="mui-row">
+          <ParamInput class="mui-col-md-8" v-model="edit_new_field" :arg="{type: 'string', name: '新字段', default: '\'\''}" />
+          <button class="mui-btn mui-col-md4" @click="edit_target[edit_new_field]=''; $forceUpdate()">
+            <font-awesome-icon icon="plus"></font-awesome-icon>
+          </button>
+        </div>
+        <div class="mui-divide"></div>
+        <button class="mui-btn mui-btn--primary" @click="save()">保存</button>
+        <button class="mui-btn" @click="edit_target = null">取消</button>
+      </div>
+    </Modal>
+
   </div>
   <div v-else ref="results">未找到匹配的结果。</div>
 </template>
 
 <script>
+import Modal from './ModalView'
+import ParamInput from './ParamInput'
+import api from '../api'
 export default {
   name: "ResultsView",
   props: {
@@ -73,11 +99,16 @@ export default {
     total: { default: 0 },
     page_size: { default: 20 },
   },
+  components: {
+    Modal, ParamInput
+  },
   data() {
     return {
       page: 1,
       value: [],
       show_meta: {},
+      edit_target: null,
+      edit_new_field: '',
       page_range: [0, 0],
     };
   },
@@ -100,7 +131,7 @@ export default {
     },
     offset() {
       return (this.page - 1) * this.page_size;
-    },
+    }
   },
   methods: {
     _fetched() {
@@ -146,6 +177,12 @@ export default {
       }
       return s;
     },
+    save() {
+      api.call('paragraphs/' + this.edit_target._id, this.edit_target).then(() => {
+        this.edit_target = null
+        api.notify({ title: "保存成功" });
+      })
+    }
   },
 };
 </script>

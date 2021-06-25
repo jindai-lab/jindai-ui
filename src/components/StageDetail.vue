@@ -4,7 +4,7 @@
     <select v-model="value[0]" @change="update_input">
       <optgroup v-for="(sts, group) in stages" :key="group" :label="group">
         <option v-for="st in sts" :key="st.name" :value="st.name">
-          {{ st.name }} {{ st.doc }}
+          {{ st.name }} {{ st.doc.split('\n')[0] }}
         </option>
       </optgroup>
     </select>

@@ -24,14 +24,14 @@
       {{ arg.name }}</label>
     </div>
 
-    <div class="mui-textfield" v-else-if="arg.type == 'str'">
+    <div class="mui-textfield" v-else-if="arg.type == 'str' || arg.type == 'string'">
       <textarea v-if="arg.name !== 'query' && arg.name !== 'cond'"
         :value="value"
         v-bind="$attrs"
         v-on="inputListeners"
         :placeholder="arg.default"
         :required="!arg.default"
-        rows="4"
+        :rows="arg.length > 20 ? 4 : 1"
         cols="40"
       ></textarea>
       <prism-editor v-else class="my-editor"
@@ -115,6 +115,7 @@ export default {
           if (val.match(/^[+-]?\d+$/)) return parseInt(val);
           break;
         case "float":
+        case "number":
           if (val.match(/^[+-]?\d?\.?\d+[eE]?[+-]?\d*$/))
             return parseFloat(val);
           break;

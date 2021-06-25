@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div v-touch:swipe="swipe_handler">
     <div class="mui-row">
       <h3 class="mui-col-md-10">
         <!-- <a href="javascript:void(0)"><font-awesome-icon icon="arrow-left" @click="$router.back()" /></a> -->
@@ -99,6 +99,17 @@ export default {
         })
         .then((data) => (this.paragraphs = data.result));
       api.blob('pdfimage?pdffile=' + encodeURIComponent(this.pdffile) + '&pdfpage=' + this.pdfpage).then(u => this.pdf_image = u);
+    },
+    swipe_handler(direction) {
+      switch (direction) {
+        case "right":
+          this.pdfpage = (+this.pdfpage - 1)
+          break
+
+        case "left":
+          this.pdfpage = (+this.pdfpage + 1)
+          break
+      }
     },
   },
 };

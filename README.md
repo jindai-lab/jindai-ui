@@ -14,6 +14,7 @@ This project was made possible through following works:
 - vue-router
 - vue-simple-progress
 - vue-simple-spinner
+- vue2-touch-events
 - clipboard
 
 License: MIT
