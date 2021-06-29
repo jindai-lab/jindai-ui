@@ -11,6 +11,12 @@
         <label>
         <input type="checkbox" v-model="task.resume_next">
           忽略运行中间的错误</label>
+        <div class="mui-select">
+          <select v-model="task.concurrent">
+            <option :value="1">不并行处理</option>
+            <option :value="3">并行处理</option>
+          </select>
+        </div>
       </div>
     </div>
     <h2>数据源</h2>

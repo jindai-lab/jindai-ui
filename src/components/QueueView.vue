@@ -74,7 +74,7 @@ export default {
     },
     download(task) {
       var id = encodeURIComponent(task.id)
-      api.download('queue/' + id, id + '.' + task.file_ext);
+      api.download('queue/' + id, id.split('/').slice(-1)[0] + '.' + task.file_ext);
     },
     delete_result(task) {
       var id = encodeURIComponent(task.id)
