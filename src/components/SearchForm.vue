@@ -7,19 +7,11 @@
           <select
             name="collection"
             id="collection"
-            v-model="selected_collection"
+            v-model="selected_dataset"
           >
-            <option value="">(全部)</option>
-            <option v-for="coll in collections" :value="coll.id" :key="coll.id">
-              {{ coll.name }}
-            </option>
-          </select>
-        </div>
-        <div class="mui-select mui-col-md-6">
-          <select name="pdffile" id="pdffile" v-model="selected_pdffile">
-            <option value="">(全部)</option>
-            <option v-for="pdffile in pdffiles" :value="pdffile" :key="pdffile">
-              {{ pdffile }}
+            <option value="">默认</option>
+            <option v-for="ds in datasets" :value="ds.id" :key="ds.id">
+              {{ ds.name }}
             </option>
           </select>
         </div>
@@ -40,7 +32,7 @@
       <div
         id="multiselect"
         class="mui-container-fluid"
-        v-show="selected_collection == ''"
+        v-show="selected_dataset == ''"
       >
         <span v-for="coll in collections" :key="coll.id" class="mui-checkbox">
           <label>
@@ -75,10 +67,9 @@ export default {
   data() {
     return {
       collections: [],
-      pdffiles: [],
-      selected_collection: "",
+      datasets: [],
+      selected_dataset: "",
       selected_collections: [],
-      selected_pdffile: "",
       q: "",
       req: {},
       sort: "",
@@ -92,21 +83,16 @@ export default {
       this.collections = data.result.collections.map((x) => {
         return { name: x[1], id: x[0] };
       });
+      this.datasets = data.result.datasets.map((x) => {
+        return { name: x[1], id: x[0] };
+      })
     });
   },
   methods: {
     search() {
       var req = {};
       this.reqstr = ''
-      if (this.selected_pdffile) {
-        req.pdffile = this.selected_pdffile;
-        this.reqstr += ',pdffile=`' + this.selected_pdffile + '`'
-      }
-      if (this.selected_collection) {
-        req.collection = this.selected_collection;
-        this.reqstr += ',collection=`' + this.selected_collection + '`'
-      }
-      else if (this.selected_collections.length > 0) {
+      if (this.selected_collections.length > 0) {
         req.collection = {
           $in: this.selected_collections,
         };
@@ -116,7 +102,7 @@ export default {
       this.$refs.results.start()
     },
     load_search(e) {
-      api.call('search', { q: this.q, sort: this.sort, req: this.req, offset: e.offset, limit: e.limit }).then(data => {
+      api.call('search', { q: this.q, sort: this.sort, req: this.req, dataset: this.selected_dataset, offset: e.offset, limit: e.limit }).then(data => {
         var reg = new RegExp(
           "(" + data.result.query.replace(/[,&]/g, "|").replace(/`/g, "") + ")",
           "ig"
@@ -136,7 +122,8 @@ export default {
       api
         .put("tasks/", {
           datasource_config: {
-            query: '?' + this.querystr + this.reqstr
+            query: '?' + this.querystr + this.reqstr,
+            mongocollection: this.selected_dataset
           },
           name: '搜索 ' + this.querystr,
           pipeline: [
@@ -153,47 +140,6 @@ export default {
         )
       })
     }
-  },
-  watch: {
-    selected_collection() {
-      api
-        .call("quicktask", {
-          q:
-            "??match(collection=`" +
-            this.selected_collection +
-            "`)=>group(_id=$pdffile)",
-          raw: true,
-        })
-        .then((data) => {
-          this.pdffiles = data.result.map((x) => x._id);
-          this.pdffiles.sort((a, b) => {
-            const rd = /\d+|[零一二三四五六七八九十百]+/
-            var num_a = a.match(rd) || ['999'], num_b = b.match(rd) || ['999']
-
-            function chndigit(v) {
-              var digits = '零一二三四五六七八九十'
-              var r = 0, n = 0
-              for (var c of v + '零') {
-                var t = digits.indexOf(c)
-                if (t < 0) {
-                  n *= (({'百': 100, '千': 1000, '万': 10000})[c] || 1)
-                } else if (t == 10 && n != 0) {
-                  n *= 10
-                } else {
-                  r += n
-                  n = t
-                }
-              }
-              return r
-            }
-
-            if (num_a[0].match(/\d+/))
-              return (num_a | 0) - (num_b | 0)
-            else
-              return chndigit(num_a) - chndigit(num_b)
-          })
-        });
-    },
   },
 };
 </script>
