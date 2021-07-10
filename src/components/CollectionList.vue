@@ -68,7 +68,7 @@ export default {
         return;
       }
       api.call("meta", { collections: this.collections });
-      alert("保存成功");
+      api.notify({title: "保存成功"});
     },
     move(index, inc) {
       var c = this.collections[index];
