@@ -23,9 +23,16 @@
       />
       {{ arg.name }}</label>
     </div>
-
+    <div class="mui-textfield" v-else-if="arg.type == 'js' || arg.name == 'query' || arg.name == 'cond'">
+      <prism-editor class="my-editor match-braces"
+        v-model="code"
+        @input="$emit('input', code)"
+        :highlight="highlighter"
+        line-numbers />
+      <label>{{ arg.name }}</label>
+    </div>
     <div class="mui-textfield" v-else-if="arg.type == 'str' || arg.type == 'string'">
-      <textarea v-if="arg.name !== 'query' && arg.name !== 'cond'"
+      <textarea
         :value="value"
         v-bind="$attrs"
         v-on="inputListeners"
@@ -34,11 +41,6 @@
         :rows="arg.length > 20 ? 4 : 1"
         cols="40"
       ></textarea>
-      <prism-editor v-else class="my-editor"
-        v-model="code"
-        @input="$emit('input', code)"
-        :highlight="highlighter"
-        line-numbers />
       <label>{{ arg.name }}</label>
     </div>
     <div class="mui-textfield" v-else>
@@ -128,10 +130,14 @@ export default {
     highlighter(code) {
       return highlight(code, languages.clike); // languages.<insert language> to return html with markup
     },
+    refresh(val) {
+      this.code = val
+      this.$emit('input', val)
+    }
   },
-  mounted() {
+  mounted () {
     this.code = this.value
-  },
+  }
 };
 </script>
 

@@ -17,7 +17,7 @@
         </div>
         <div class="mui-select mui-col-md-2">
           <select name="sort" id="sort" v-model="sort">
-            <option value="">默认</option>
+            <option value="">默认排序</option>
             <option value="year">从旧到新</option>
             <option value="-year">从新到旧</option>
             <option value="pdffile,pdfpage">出处</option>
@@ -34,16 +34,12 @@
         class="mui-container-fluid"
         v-show="selected_dataset == ''"
       >
-        <span v-for="coll in collections" :key="coll.id" class="mui-checkbox">
-          <label>
-            <input
-              type="checkbox"
-              v-model="selected_collections"
-              :value="coll.id"
-            />
-            {{ coll.name }}</label
-          >
-        </span>
+       <treeselect
+        :multiple="true"
+        value-consists-of="LEAF_PRIORITY"
+        :options="collections"
+        v-model="selected_collections"
+        />
       </div>
       <div class="clear"></div>
       <button id="search" class="mui-btn" @click="search">查询</button>
@@ -80,9 +76,17 @@ export default {
   },
   mounted() {
     api.call("meta").then((data) => {
-      this.collections = data.result.collections.map((x) => {
-        return { name: x[1], id: x[0] };
-      });
+      function expand_collection(x) {
+        if (Array.isArray(x[1])) 
+          return {
+            label: x[0],
+            id: x[0],
+            children: x[1].map(expand_collection)
+          }
+        else
+          return { label: x[1], id: x[0] }
+      }
+      this.collections = data.result.collections.map(expand_collection);
       this.datasets = data.result.datasets.map((x) => {
         return { name: x[1], id: x[0] };
       })

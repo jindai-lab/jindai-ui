@@ -14,8 +14,12 @@ Vue.component('font-awesome-icon', FontAwesomeIcon)
 
 // vue2-touch-events
 import Vue2TouchEvents from 'vue2-touch-events'
-
 Vue.use(Vue2TouchEvents)
+
+// vue-treeselect
+import Treeselect from '@riophae/vue-treeselect'
+import '@riophae/vue-treeselect/dist/vue-treeselect.css'
+Vue.component('treeselect', Treeselect)
 
 // load components
 import SearchForm from './components/SearchForm.vue'

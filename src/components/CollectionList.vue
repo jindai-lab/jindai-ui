@@ -1,31 +1,7 @@
 <template>
   <div>
     <h3>默认数据集顺序</h3>
-    <div v-for="(coll, index) in collections" :key="coll[0]" class="mui-row">
-      <div class="opers mui-col-md-2">
-        <button
-          @click="move(collections, index, -1)"
-          :disabled="index == 0"
-          class="mui-btn"
-        >
-          <font-awesome-icon icon="arrow-up" />
-        </button>
-        <button
-          @click="move(collections, index, 1)"
-          :disabled="index == collections.length - 1"
-          class="mui-btn"
-        >
-          <font-awesome-icon icon="arrow-down" />
-        </button>
-      </div>
-      <label class="mui-col-md-2">{{ coll[0] }}</label>
-      <ParamInput
-        class="mui-col-md-8"
-        :arg="{ name: '名称', type: '' }"
-        v-model="coll[1]"
-        @validation="update_valid(coll[0], $event)"
-      />
-    </div>
+    <ParamInput ref="editor" class="mui-textfield" :arg="{ name: 'JSON', type: 'js' }" v-model="collections_json" />
     <hr />
     <h3>其他数据集</h3>
     <div v-for="(ds, index) in datasets" :key="ds[0]" class="mui-row">
@@ -89,26 +65,23 @@ export default {
   },
   data() {
     return {
-      collections: [],
+      collections_json: '',
       datasets: [],
       input_ds_name: "",
       input_ds_id: "",
       valid: [],
     };
   },
+  computed: {
+    collections() {
+      return JSON.parse(this.collections_json)
+    }
+  },
   mounted() {
     api.call("meta").then((data) => {
-      this.collections = data.result.collections
+      this.collections_json = JSON.stringify(data.result.collections, '', 2)
       this.datasets = data.result.datasets
-      api
-        .call("quicktask", { q: "??group(_id=$collection)", raw: true })
-        .then((data) => {
-          var colls = this.collections.map((x) => x[0]);
-          for (var coll of data.result.collections) {
-            if (colls.indexOf(coll._id) < 0)
-              this.collections.push([coll._id, coll._id]);
-          }
-        });
+      this.$refs.editor.refresh(this.collections_json)
     });
   },
   methods: {

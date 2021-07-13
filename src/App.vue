@@ -21,7 +21,7 @@
         <li>
           <strong>管理</strong>
           <ul>
-            <li to="/collections">数据集</li>
+            <li to="/collections" v-if="admin">数据集</li>
             <li to="/storage">文件</li>
             <li to="/users" v-if="admin">用户</li>
           </ul>
