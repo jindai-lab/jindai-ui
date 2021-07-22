@@ -61,6 +61,7 @@ export default {
       paragraphs: [],
       show_modal: false,
       pdf_image: "",
+      dataset: "",
       loading_image: require("../../public/assets/loading.png"),
     };
   },
@@ -87,7 +88,8 @@ export default {
   mounted() {
     let params = window.location.href.split("/");
     params = params.slice(params.indexOf("view") + 1);
-    this.pdffile = decodeURIComponent(params.slice(0, -1).join("/"));
+    this.dataset = params[0] === 'default' ? '' : params[0]
+    this.pdffile = decodeURIComponent(params.slice(1, -1).join("/"));
     this.pdfpage = +params.slice(-1)[0];
     this.update_pdfpage();
   },
@@ -102,7 +104,8 @@ export default {
       if (!this.pdffile) return;
       api
         .call("quicktask", {
-          q: "?pdffile=`" + this.pdffile + "`,pdfpage=" + this.pdfpage,
+          query: "?pdffile=`" + this.pdffile + "`,pdfpage=" + this.pdfpage,
+          mongocollection: this.dataset
         })
         .then((data) => (this.paragraphs = data.result));
       api

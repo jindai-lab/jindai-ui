@@ -11,7 +11,7 @@
       <br />
       <a
         class="mui-btn"
-        :href="'/view/' + r.pdffile + '/' + r.pdfpage"
+        :href="'/view/' + (r.dataset || 'default') + '/' + r.pdffile + '/' + r.pdfpage"
         target="_blank"
       >
         <font-awesome-icon icon="file" aria-hidden="true" /> 查看

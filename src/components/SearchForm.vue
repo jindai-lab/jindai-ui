@@ -95,9 +95,10 @@ export default {
   },
   methods: {
     search() {
-      var req = {'$or': []};
+      var req = {};
       this.reqstr = ''
       if (this.selected_collections.length > 0) {
+        req = {'$or': []}
         var colls = this.selected_collections.filter(x => !x.startsWith('pdffile:')), 
             pdffiles = this.selected_collections.filter(x => x.startsWith('pdffile:')).map(x => x.split(':', 2)[1]),
             reqstr_colls = '', reqstr_pdffiles = ''
