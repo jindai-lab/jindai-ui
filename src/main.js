@@ -33,6 +33,7 @@ import QueueResult from './components/QueueResult.vue'
 import StorageList from './components/StorageList.vue'
 import UserList from './components/UserList.vue'
 import AccountSecurity from './components/AccountSecurity.vue'
+import ArticleCompletion from './components/ArticleCompletion.vue'
 
 // configure routes
 const routes = [
@@ -47,6 +48,7 @@ const routes = [
   { path: '/storage', component: StorageList },
   { path: '/users', component: UserList },
   { path: '/security', component: AccountSecurity },
+  { path: '/articlecompletion', component: ArticleCompletion },
 ]
 
 const router = new VueRouter({

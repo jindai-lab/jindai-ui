@@ -117,7 +117,7 @@ export default {
           })
           reqstr_pdffiles = 'pdffile=in([]=>`' + pdffiles.join('`=>`') + '`))'
         }
-        if (req.$or.length == 0) {
+        if (req.$or.length == 1) {
           req = req.$or[0]
           this.reqstr += ',' + (reqstr_colls || reqstr_pdffiles)
         } else {

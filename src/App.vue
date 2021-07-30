@@ -9,6 +9,7 @@
           <ul>
             <li to="/">搜索</li>
             <li to="/tasks">任务</li>
+            <li to="/articlecompletion">文本补全</li>
           </ul>
         </li>
         <li>
