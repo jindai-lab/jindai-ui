@@ -8,7 +8,11 @@
       <font-awesome-icon icon="sync" /> 补全
     </button>
     <ul class="results">
-      <li v-for="r in results" :key="r">{{ r }}</li>
+      <li v-for="r in results" :key="r">{{ r }}
+        <button @click="append(r)" class="mui-btn">
+          <font-awesome-icon icon="plus" />
+        </button>
+      </li>
     </ul>
   </div>
 </template>
@@ -27,12 +31,19 @@ export default {
       text: '',
       topp: 0.95,
       n: 5,
+      original_prompt: '',
       results: []
     };
   },
   methods: {
     complete() {
-      api.call("articlecompletion", { n: this.n, topp: this.topp, prompt: this.text }).then(data => this.results = data.results);
+      api.call("articlecompletion", { n: this.n, topp: this.topp, prompt: this.text }).then(data => {
+        this.results = data.results
+        this.original_prompt = data.config.prompt
+      });
+    },
+    append(r) {
+      this.text = this.original_prompt + r
     }
   },
 };
