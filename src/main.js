@@ -34,6 +34,7 @@ import StorageList from './components/StorageList.vue'
 import UserList from './components/UserList.vue'
 import AccountSecurity from './components/AccountSecurity.vue'
 import ArticleCompletion from './components/ArticleCompletion.vue'
+import DbConsole from './components/DbConsole.vue'
 
 // configure routes
 const routes = [
@@ -49,6 +50,7 @@ const routes = [
   { path: '/users', component: UserList },
   { path: '/security', component: AccountSecurity },
   { path: '/articlecompletion', component: ArticleCompletion },
+  { path: '/dbconsole', component: DbConsole },
 ]
 
 const router = new VueRouter({
