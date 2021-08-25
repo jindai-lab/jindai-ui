@@ -36,9 +36,7 @@
       >
        <treeselect
         :multiple="true"
-        value-consists-of="LEAF_PRIORITY"
         :options="collections"
-        :load-options="load_pdffiles"
         v-model="selected_collections"
         />
       </div>
@@ -77,17 +75,18 @@ export default {
   },
   mounted() {
     api.call("meta").then((data) => {
-      function expand_collection(x) {
-        if (Array.isArray(x[1])) 
+      function expand_collection(x, last) {
+        if (Array.isArray(x) && x.length == 2 && typeof x[0] === 'string' && Array.isArray(x[1])) 
           return {
             label: x[0],
-            id: x[0],
-            children: x[1].map(expand_collection)
+            id: last + x[0],
+            children: x[1].map(y => expand_collection(y, last + x[0] + '--'))
           }
         else
-          return { label: x[1], id: x[0], children: null }
+          return { label: x.split('pdffile:')[1].split('/').slice(-1)[0], id: x }
       }
-      this.collections = data.result.collections.map(expand_collection);
+      this.collections = data.result.collections.map(x => expand_collection(x, ''));
+      console.log(this.collections)
       this.datasets = data.result.datasets.map((x) => {
         return { name: x[1], id: x[0] };
       })
@@ -95,19 +94,22 @@ export default {
   },
   methods: {
     search() {
+      function escapeRegExp(string) {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+      }
       var req = {};
       this.reqstr = ''
       if (this.selected_collections.length > 0) {
         req = {'$or': []}
-        var colls = this.selected_collections.filter(x => !x.startsWith('pdffile:')), 
+        var colls = this.selected_collections.filter(x => !x.startsWith('pdffile:')).map(escapeRegExp), 
             pdffiles = this.selected_collections.filter(x => x.startsWith('pdffile:')).map(x => x.split(':', 2)[1]),
             reqstr_colls = '', reqstr_pdffiles = ''
         
         if (colls.length > 0) {
           req.$or.push({collection: {
-            $in: colls,
+            $regex: '^' + colls.join('|^'),
           }})
-          reqstr_colls = 'collection=in([]=>`' + colls.join('`=>`') + '`))'
+          reqstr_colls = 'collection%`^' + colls.join('|^') + '`))'
         }
         if (pdffiles.length > 0) {
           req.$or.push({
@@ -165,14 +167,6 @@ export default {
         api.notify({title: '已加入到任务队列', text: '请注意查看处理结果'})
         )
       })
-    },
-    load_pdffiles({ action, parentNode, callback }) {
-      console.log(action, parentNode)
-      if (action !== 'LOAD_CHILDREN_OPTIONS') return
-      api.call('quicktask', {'raw': true, 'query': '??match(collection=`' + parentNode.id + '`)=>group(_id=$pdffile)'}).then((data) => {
-        parentNode.children = data.result.map(x => { return {id: 'pdffile:' + x._id, label: x._id.split('/').slice(-1)[0] }} )
-      })
-      callback()
     }
   },
 };

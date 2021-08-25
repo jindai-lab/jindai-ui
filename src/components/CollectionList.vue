@@ -1,7 +1,17 @@
 <template>
   <div>
     <h3>默认数据集顺序</h3>
-    <ParamInput ref="editor" class="mui-textfield" :arg="{ name: 'JSON', type: 'js' }" v-model="collections_json" />
+    <button @click="refresh_collections" class="mui-btn">
+      <font-awesome-icon icon="refresh" />刷新
+    </button>
+
+    <ParamInput
+      ref="editor"
+      class="mui-textfield"
+      :arg="{ name: 'JSON', type: 'js' }"
+      v-model="collections_json"
+    />
+
     <hr />
     <h3>其他数据集</h3>
     <div v-for="(ds, index) in datasets" :key="ds[0]" class="mui-row">
@@ -35,18 +45,18 @@
           <font-awesome-icon icon="plus" />
         </button>
       </div>
-          <ParamInput
-            class="mui-col-md-4"
-            :arg="{ name: '代码ID', type: '', default: '' }"
-            v-model="input_ds_id"
-            @validation="update_valid(input_ds_id, $event)"
-          />
-          <ParamInput
-            class="mui-col-md-4"
-            :arg="{ name: '名称', type: '', default: '' }"
-            v-model="input_ds_name"
-            @validation="update_valid(input_ds_name, $event)"
-          />
+      <ParamInput
+        class="mui-col-md-4"
+        :arg="{ name: '代码ID', type: '', default: '' }"
+        v-model="input_ds_id"
+        @validation="update_valid(input_ds_id, $event)"
+      />
+      <ParamInput
+        class="mui-col-md-4"
+        :arg="{ name: '名称', type: '', default: '' }"
+        v-model="input_ds_name"
+        @validation="update_valid(input_ds_name, $event)"
+      />
     </div>
     <button @click="save" class="mui-btn mui-btn--primary">
       <font-awesome-icon icon="check" /> 保存
@@ -65,23 +75,18 @@ export default {
   },
   data() {
     return {
-      collections_json: '',
+      collections_json: "",
       datasets: [],
       input_ds_name: "",
       input_ds_id: "",
       valid: [],
     };
   },
-  computed: {
-    collections() {
-      return JSON.parse(this.collections_json)
-    }
-  },
   mounted() {
     api.call("meta").then((data) => {
-      this.collections_json = JSON.stringify(data.result.collections, '', 2)
-      this.datasets = data.result.datasets
-      this.$refs.editor.refresh(this.collections_json)
+      this.collections_json = JSON.stringify(data.result.collections, "", 2);
+      this.datasets = data.result.datasets;
+      this.$refs.editor.refresh(this.collections_json);
     });
   },
   methods: {
@@ -94,7 +99,14 @@ export default {
         alert("请更正填写错误的项");
         return;
       }
-      api.call("meta", { collections: this.collections, datasets: this.datasets });
+      var collections = {};
+      try {
+        collections = JSON.parse(this.collections_json);
+      } catch {
+        alert("无法解析JSON数据");
+        return;
+      }
+      api.call("meta", { collections, datasets: this.datasets });
       api.notify({ title: "保存成功" });
     },
     move(arr, index, inc) {
@@ -107,6 +119,40 @@ export default {
       this.datasets.push([this.input_ds_id, this.input_ds_name]);
       this.input_ds_id = "";
       this.input_ds_name = "";
+    },
+    refresh_collections() {
+      api
+        .call("quicktask", {
+          query:
+            "??group(_id=(collection=$collection,pdffile=$pdffile))=>group(_id=$_id.collection,content=push($_id.pdffile))=>addFields(collection=$_id)",
+        })
+        .then((data) => {
+          console.log(data);
+          data = data.result;
+          var colls = {};
+          for (var cpdf of data) {
+            var cobj = colls;
+            for (var ckey of cpdf.collection.split("--")) {
+              if (typeof cobj[ckey] === "undefined") cobj[ckey] = {};
+              cobj = cobj[ckey];
+            }
+            cobj.content = cpdf.content.sort().map((x) => "pdffile:" + x);
+          }
+
+          function expand_to_array(obj, arr) {
+            for (var k in obj) {
+              if (typeof k !== "string" || k === 'content') continue;
+              var v = obj[k];
+              arr.push([k, v.content || []]);
+              expand_to_array(v, arr[arr.length - 1][1]);
+            }
+          }
+
+          var collarr = [];
+          expand_to_array(colls, collarr);
+          this.collections_json = JSON.stringify(collarr, "", 2);
+          this.$refs.editor.refresh(this.collections_json);
+        });
     },
   },
 };

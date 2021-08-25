@@ -21,7 +21,7 @@
         />
         <ParamInput
           class="mui-textfield"
-          :arg="{ name: 'Operation', type: 'updateMany|deleteMany|count' }"
+          :arg="{ name: 'Operation', type: 'update_many|delete_many|count' }"
           v-model="command.operation"
           @change="previewed = false"
         />
