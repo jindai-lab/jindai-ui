@@ -1,18 +1,10 @@
 <template>
   <div>
-    <h3>默认数据集顺序</h3>
-    <button @click="refresh_collections" class="mui-btn">
-      <font-awesome-icon icon="refresh" />刷新
+    <h3>默认数据集</h3>
+    <button class="mui-btn" @click="refresh_collections">
+      <font-awesome-icon icon="sync"></font-awesome-icon>
+      更新
     </button>
-
-    <ParamInput
-      ref="editor"
-      class="mui-textfield"
-      :arg="{ name: 'JSON', type: 'js' }"
-      v-model="collections_json"
-    />
-
-    <hr />
     <h3>其他数据集</h3>
     <div v-for="(ds, index) in datasets" :key="ds[0]" class="mui-row">
       <div class="opers mui-col-md-2">
@@ -75,7 +67,6 @@ export default {
   },
   data() {
     return {
-      collections_json: "",
       datasets: [],
       input_ds_name: "",
       input_ds_id: "",
@@ -84,9 +75,7 @@ export default {
   },
   mounted() {
     api.call("meta").then((data) => {
-      this.collections_json = JSON.stringify(data.result.collections, "", 2);
       this.datasets = data.result.datasets;
-      this.$refs.editor.refresh(this.collections_json);
     });
   },
   methods: {
@@ -99,14 +88,7 @@ export default {
         alert("请更正填写错误的项");
         return;
       }
-      var collections = {};
-      try {
-        collections = JSON.parse(this.collections_json);
-      } catch {
-        alert("无法解析JSON数据");
-        return;
-      }
-      api.call("meta", { collections, datasets: this.datasets });
+      api.call("meta", { datasets: this.datasets });
       api.notify({ title: "保存成功" });
     },
     move(arr, index, inc) {
@@ -123,35 +105,52 @@ export default {
     refresh_collections() {
       api
         .call("quicktask", {
-          query:
-            "??group(_id=(collection=$collection,pdffile=$pdffile))=>group(_id=$_id.collection,content=push($_id.pdffile))=>addFields(collection=$_id)",
+          query: "??group(_id=$collection,pdfs=addToSet($pdffile))",
+          raw: true,
         })
         .then((data) => {
-          console.log(data);
-          data = data.result;
-          var colls = {};
-          for (var cpdf of data) {
-            var cobj = colls;
-            for (var ckey of cpdf.collection.split("--")) {
-              if (typeof cobj[ckey] === "undefined") cobj[ckey] = {};
-              cobj = cobj[ckey];
+          var hierarchy = {
+            id: "ROOT",
+            name: "",
+            children: [],
+          };
+          data = data.result
+            .map((x) => {
+              x.name = x._id;
+              x.segments = x.name.split("--");
+              x.level = x.segments.length;
+              return x;
+            })
+            .sort((x, y) => x.name.localeCompare(y.name));
+          for (var x of data) {
+            var parent_obj = hierarchy;
+            for (
+              var i = 0, segs = x.segments[0];
+              i < x.level;
+              i++, segs += "--" + x.segments[i]
+            ) {
+              var cand = parent_obj.children.filter(
+                (child) => child.id == segs
+              )[0];
+              if (typeof cand === "undefined") {
+                cand = {
+                  id: segs,
+                  label: x.segments[i],
+                  children: [],
+                };
+                parent_obj.children.push(cand);
+              }
+              parent_obj = cand;
             }
-            cobj.content = cpdf.content.sort().map((x) => "pdffile:" + x);
+            parent_obj.children = parent_obj.children.concat(x.pdfs.sort().map(x => {return {
+              id: 'pdffile:' + x,
+              label: x.match(/(.*\/)?(.*)/)[2]
+            }}));
           }
-
-          function expand_to_array(obj, arr) {
-            for (var k in obj) {
-              if (typeof k !== "string" || k === 'content') continue;
-              var v = obj[k];
-              arr.push([k, v.content || []]);
-              expand_to_array(v, arr[arr.length - 1][1]);
-            }
-          }
-
-          var collarr = [];
-          expand_to_array(colls, collarr);
-          this.collections_json = JSON.stringify(collarr, "", 2);
-          this.$refs.editor.refresh(this.collections_json);
+          console.log(hierarchy.children);
+          api
+            .call("meta", { collections: hierarchy.children })
+            .then(() => api.notify({ title: "保存成功" }));
         });
     },
   },

@@ -25,7 +25,7 @@
             <li to="/collections" v-if="admin">数据集</li>
             <li to="/storage">文件</li>
             <li to="/users" v-if="admin">用户</li>
-            <li to="/dbconsole" v-if="admin">数据库控制台</li>
+            <li to="/dbconsole" v-if="admin">控制台</li>
           </ul>
         </li>
       </ul>
