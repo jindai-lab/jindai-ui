@@ -89,7 +89,6 @@ export default {
     execute() {
       this.command.preview = false;
       api.call("admin/db", this.command).then((data) => {
-        console.log(data.result);
         this.preview_text += '\n\n' + JSON.stringify(data.result, '', 2)
       });
     },

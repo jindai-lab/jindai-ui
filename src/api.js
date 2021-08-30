@@ -21,6 +21,30 @@ export default {
 
     notify(notice) { Vue.notify(Object.assign(notice, { group: 'sys' })) },
 
+    _blob_download(blob, filename) {
+        var url = URL.createObjectURL(blob);
+        
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+
+        // this is necessary as link.click() does not work on the latest firefox
+        link.dispatchEvent(
+            new MouseEvent('click', {
+                bubbles: true,
+                cancelable: true,
+                view: window
+            })
+        );
+
+        setTimeout(() => {
+            // For Firefox it is necessary to delay revoking the ObjectURL
+            window.URL.revokeObjectURL(url);
+            link.remove();
+        }, 100);
+
+    },
+
     _catch_and_then(promise) {
 
         function DataError(message, stack) {
@@ -59,7 +83,7 @@ export default {
     _config(other) {
         return Object.assign({
             headers: {
-                'X-Authentication-Token': _token
+                'X-Authentication-Token': _token,
             }
         }, other || {})
     },
@@ -78,6 +102,46 @@ export default {
                 }
             })
         })
+    },
+
+    querify(obj) {       
+      function _values(x, indent) {
+        if (Array.isArray(x)) {
+          if (x.length > 0 && x.filter(y => y.length == 2).length == x.length)
+            return '([]' + _querify(x, indent + '  ') + '\n' + indent + ')'
+          return '([]' + (x.length > 0 ? ' => ' + x.map(_values).join(' => ') : '') + ')'
+        } else if (typeof(x) === 'object') {
+          return '(' + _params(x, indent + '  ') + ')'
+        } else if (typeof(x) === 'string') {
+          return '`' + JSON.stringify(x).replace(/^"|"$/g, '').replace(/`/g, '\\`') + '`'
+        } else
+          return JSON.stringify(x)
+      }
+      function _params(c, indent) {
+        var r = []
+        for (var k in c) {
+          if (typeof(c[k]) === 'undefined') continue
+          r.push(indent + k + '=' + _values(c[k], indent))
+        }
+        if (r.length > 1)
+            return '\n' + r.join(',\n')
+        else
+            return (r[0] || '').trim()
+      }
+      function _querify(v, indent) {
+        var s = ''
+        for (var i of v) {
+          var c = _params(i[1], indent + '  ')
+          if (c.indexOf('\n') >= 0) c += indent + '\n'
+          s += ';\n' + indent + i[0] + '(' + c + ')'
+        }
+        return s
+      }
+      
+      if (Array.isArray(obj))
+        return _querify(obj, '').substr(2)
+      else
+        return _params(obj, '')
     },
 
     logined() {

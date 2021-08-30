@@ -17,6 +17,7 @@
     <div class="mui-checkbox" v-else-if="arg.type == 'bool'">
       <label><input
         type="checkbox"
+        value="true"
         :checked="value"
         v-bind="$attrs"
         v-on="inputListeners"
@@ -66,9 +67,11 @@ function input_func(vm) {
     );
     if (typeof val !== "undefined") {
       vm.prompt = "";
+    } else {
+      val = null
     }
     vm.$emit("validation", vm.prompt === "");
-    vm.$emit("input", val || event.target.value);
+    vm.$emit("input", val);
   };
 }
 

@@ -1,7 +1,9 @@
 <template>
   <body id="app">
     <div id="sidedrawer" class="mui--no-user-select" v-if="!viewer">
-      <h2 class="fs22 mui--appbar-line-height"><a href="/">多语种文献利用平台</a></h2>
+      <h2 class="fs22 mui--appbar-line-height">
+        <a href="/">多语种文献利用平台</a>
+      </h2>
       <div class="mui-divider"></div>
       <ul @click="nav_click">
         <li>
@@ -9,7 +11,13 @@
           <ul>
             <li to="/">搜索</li>
             <li to="/tasks">任务</li>
-            <li to="/articlecompletion">文本补全</li>
+            <li to="/gallery">图集</li>
+          </ul>
+        </li>
+        <li>
+          <strong>快捷任务</strong>
+          <ul>
+            <li v-for="s in shortcuts" :to="'/tasks/shortcut/' + s._id" :key="s._id">{{ s.name }}</li>
           </ul>
         </li>
         <li>
@@ -19,13 +27,13 @@
             <li to="/history">历史</li>
           </ul>
         </li>
-        <li>
+        <li v-if="admin">
           <strong>管理</strong>
           <ul>
-            <li to="/collections" v-if="admin">数据集</li>
             <li to="/storage">文件</li>
-            <li to="/users" v-if="admin">用户</li>
-            <li to="/dbconsole" v-if="admin">控制台</li>
+            <li to="/collections">数据集</li>
+            <li to="/users">用户</li>
+            <li to="/dbconsole">控制台</li>
           </ul>
         </li>
       </ul>
@@ -41,7 +49,7 @@
 
     <div :id="viewer ? 'viewer' : 'content-wrapper'">
       <keep-alive :include="['SearchForm', 'ResultsView']">
-        <router-view @logined="$emit('logined')" />
+        <router-view @logined="$emit('logined')" :key="$route.fullPath" />
       </keep-alive>
     </div>
 
@@ -67,7 +75,7 @@
 <script>
 import QueueView from "./components/QueueView";
 import Notifications from "vue-notification";
-import Spinner from 'vue-simple-spinner'
+import Spinner from "vue-simple-spinner";
 import Vue from "vue";
 import api from "./api";
 
@@ -77,31 +85,38 @@ export default {
   name: "app",
   components: {
     QueueView,
-    Spinner
+    Spinner,
   },
   created() {
-    this.$on('logined', () => {
-      api.logined().then((data) => this.admin = data.result.roles.indexOf('admin') >= 0).catch(() => (localStorage.token = ""));
-    })
+    this.$on("logined", () => {
+      api
+        .logined()
+        .then((data) => (this.admin = data.result.roles.indexOf("admin") >= 0))
+        .then(() => {
+          api.call("tasks/shortcuts").then(data => this.shortcuts = data.result)
+        })
+        .catch(() => (localStorage.token = ""));
+    });
   },
   mounted() {
-    this.$emit('logined')
+    this.$emit("logined");
   },
   computed: {
     viewer() {
       return location.href.indexOf("/view/") > 0;
-    }
+    },
   },
-  data () {
+  data() {
     return {
-      admin: false
-    }
+      admin: false,
+      shortcuts: []
+    };
   },
   methods: {
     nav_click(e) {
-      this.$router.push(e.target.getAttribute('to'))
-    }
-  }
+      this.$router.push(e.target.getAttribute("to"));
+    },
+  },
 };
 </script>
 
@@ -316,7 +331,7 @@ em {
   display: none;
 }
 
-.loading>div {
+.loading > div {
   position: absolute;
   top: 50%;
   left: 50%;

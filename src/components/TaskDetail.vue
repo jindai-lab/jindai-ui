@@ -9,8 +9,9 @@
       </button>
       <div class="mui-checkbox">
         <label>
-        <input type="checkbox" v-model="task.resume_next">
-          忽略运行中间的错误</label>
+          <input type="checkbox" v-model="task.resume_next" />
+          忽略运行中间的错误</label
+        >
         <div class="mui-select">
           <select v-model="task.concurrent">
             <option :value="1">不并行处理</option>
@@ -39,21 +40,43 @@
       </blockquote>
       <div id="datasource_args">
         <div v-for="arg in datasource_doc.args" :key="arg.name">
-          <ParamInput
-            :arg="arg"
-            v-model="task.datasource_config[arg.name]"
-            @validation="update_valid('ds_args_' + arg.name, $event)"
-          />
+          <div class="mui-row">
+            <div class="mui-col-md-10">
+              <ParamInput
+                :arg="arg"
+                v-model="task.datasource_config[arg.name]"
+                @validation="update_valid('ds_args_' + arg.name, $event)"
+              />
+            </div>
+            <div class="mui-col-md-2">
+              <button @click="update_shortcut('datasource.' + arg.name, arg.description || arg.name)" class="mui-btn">
+                <font-awesome-icon icon="plus"></font-awesome-icon> 添加到快捷参数
+              </button>
+            </div>
+          </div>
           <blockquote>{{ arg.description }}</blockquote>
         </div>
       </div>
     </div>
     <div id="pipeline">
       <h2>处理流程</h2>
-      <Pipeline v-model="task.pipeline" 
+      <Pipeline
+        v-model="task.pipeline"
+        @shortcut="update_shortcut"
+        :map_id="'pipeline'"
         @validation="update_valid('pipeline_main', $event)"
       />
     </div>
+    
+    <div id="shortcut_map">
+      <h2>快捷参数</h2>
+      <div class="mui-panel">
+        <div v-for="v, k in task.shortcut_map" :key="k">
+          <ParamInput :arg="{name: k, type: 'str', default: '\'\''}" v-model="task.shortcut_map[k]" />
+        </div>
+      </div>
+    </div>
+    
     <button
       @click="save().then(() => notify('保存成功'))"
       class="mui-btn mui-btn--primary"
@@ -72,30 +95,30 @@
 
 
 <script>
-import api from "../api"
-import ParamInput from './ParamInput.vue';
-import Pipeline from "./Pipeline"
+import api from "../api";
+import ParamInput from "./ParamInput.vue";
+import Pipeline from "./Pipeline";
 
 export default {
   name: "TaskDetail",
   components: {
     Pipeline,
-    ParamInput
+    ParamInput,
   },
   props: ["id"],
   data() {
     return {
       datasources: {},
-      stages: {},
       task: {
         _id: "",
         datasource: "",
         datasource_config: {},
         name: "",
+        shortcut_map: {},
         pipeline: [],
       },
       valid: [],
-      show_code: false
+      show_code: false,
     };
   },
   mounted() {
@@ -134,6 +157,10 @@ export default {
         alert("有错误的输入值，请检查");
         return;
       }
+      for (var k in this.task.shortcut_map) {
+        if (this.task.shortcut_map[k] === '' || this.task.shortcut_map[k] === null)
+          delete this.task.shortcut_map[k]
+      }
       return api.call("tasks/" + this.task._id, this.task).then((data) => {
         var id = this.task._id;
         this.task = data.result.updated;
@@ -145,46 +172,23 @@ export default {
       api.notify({ title });
     },
     enqueue() {
-      this.save().then(id =>
+      this.save().then((id) =>
         api.put("queue/", { id }).then((data) => {
           this.notify(data.result + " 已成功加入后台处理队列。");
         })
       );
     },
+    update_shortcut(shortcut_name, shortcut_description) {
+      this.task.shortcut_map[shortcut_name] = shortcut_description || shortcut_name.split('.').slice(-1)[0]
+      this.$forceUpdate()
+    },
     querify() {
-      function _values(x, indent) {
-        if (Array.isArray(x)) {
-          if (x.length > 0 && x.filter(y => y.length == 2).length == x.length)
-            return '([]' + _querify(x, indent + '  ') + '\n' + indent + ')'
-          return '([]' + (x.length > 0 ? ' => ' + x.map(_values).join(' => ') : '') + ')'
-        } else if (typeof(x) === 'object') {
-          return '(' + _params(x, indent + '  ') + ')'
-        } else if (typeof(x) === 'string') {
-          return '`' + JSON.stringify(x).replace(/^"|"$/g, '').replace(/`/g, '\\`') + '`'
-        } else
-          return JSON.stringify(x)
-      }
-      function _params(c, indent) {
-        var r = []
-        for (var k in c) {
-          console.log(typeof(c[k]))
-          if (typeof(c[k]) === 'undefined') continue
-          r.push(indent + k + '=' + _values(c[k], indent))
-        }
-        r = r.join(',\n')
-        if (r !== '') r = '\n' + r + '\n'
-        return r
-      }
-      function _querify(v, indent) {
-        var s = ''
-        for (var i of v) {
-          var c = _params(i[1], indent + '  ')
-          if (c !== '') c += indent
-          s += ' =>\n' + indent + i[0] + '(' + c + ')'
-        }
-        return s
-      }
-      return _querify([[this.task.datasource, this.task.datasource_config]], '').substr(4) + _querify(this.task.pipeline, '')
+      return (
+        "datasource=" +
+        api.querify([[this.task.datasource, this.task.datasource_config]]) +
+        ";\n" +
+        api.querify(this.task.pipeline, "")
+      );
     },
   },
 };

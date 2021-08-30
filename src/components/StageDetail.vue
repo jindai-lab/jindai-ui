@@ -15,13 +15,22 @@
     <div class="stage-arg">
       <div v-for="arg in stage_doc.args" :key="arg.name">
         <div v-if="arg.type !== 'pipeline'">
-          <ParamInput :arg="arg" v-model="value[1][arg.name]" @validation="update_valid('stage_' + arg.name, $event)" />
+          <div class="mui-row">
+            <div class="mui-col-md-10">
+              <ParamInput :arg="arg" v-model="value[1][arg.name]" @validation="update_valid('stage_' + arg.name, $event)" />
+            </div>
+            <div class="mui-col-md-2">
+              <button @click="update_shortcut(map_id + '.' + arg.name, arg.description || arg.name)" class="mui-btn">
+                <font-awesome-icon icon="plus"></font-awesome-icon> 添加到快捷参数
+              </button>
+            </div>
+          </div>
           <blockquote>{{ arg.description }}</blockquote>
         </div>
         <div class="mui-textfield" v-else>
           <label>{{ arg.name }}</label>
           <blockquote>{{ arg.description }}</blockquote>
-          <Pipeline v-model="value[1][arg.name]" @validation="update_valid('pipeline_' + arg.name, $event)" />
+          <Pipeline v-model="value[1][arg.name]" :map_id="map_id + '.' + arg.name" @validation="update_valid('pipeline_' + arg.name, $event)" @shortcut="update_shortcut" />
         </div>
       </div>
     </div>
@@ -35,15 +44,18 @@ import Pipeline from './Pipeline'
 export default {
   name: 'StageDetail',
   inheritAttrs: false,
-  props: ["stages", "value"],
+  props: ["stages", "value", "map_id"],
   components: { ParamInput, Pipeline },
   events: ["validation"],
   data () {
-    return { valid: [] }
+    return { valid: [], shortcut: {} }
   },
   methods: {
     update_input() {
       this.$emit("input", this.value);
+    },
+    update_shortcut(map_name, map_description) {
+      this.$emit("shortcut", map_name, map_description);
     },
     update_valid(name, valid) {
       var l = this.valid.indexOf(name)

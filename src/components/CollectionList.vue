@@ -147,7 +147,6 @@ export default {
               label: x.match(/(.*\/)?(.*)/)[2]
             }}));
           }
-          console.log(hierarchy.children);
           api
             .call("meta", { collections: hierarchy.children })
             .then(() => api.notify({ title: "保存成功" }));

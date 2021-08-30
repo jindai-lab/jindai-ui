@@ -10,8 +10,10 @@
     >
       <StageDetail
         :stages="stages"
+        :map_id="map_id + '.' + index"
         v-model="value[index]"
-        @validation="update_valid('stage_' + index, $event)"
+        @validation="update_valid(map_id + '.' + index, $event)"
+        @shortcut="update_shortcut"
       />
       <div class="opers">
         <button @click="remove_stage(index)" class="mui-btn">
@@ -31,6 +33,9 @@
         >
           <font-awesome-icon icon="arrow-down" />
         </button>
+        <button @click="append_stage(index)" class="mui-btn">
+          <font-awesome-icon icon="plus" />
+        </button>
       </div>
     </div>
   </div>
@@ -48,10 +53,11 @@ export default {
     return {
         stages: {},
         show_code: false,
-        valid: []
+        valid: [],
+        shortcut: {}
     }
   },
-  props: ["value"],
+  props: ["value", "map_id"],
   methods: {
     update_valid(name, valid) {
       var l = this.valid.indexOf(name);
@@ -59,8 +65,14 @@ export default {
       if (!valid) this.valid.push(name);
       this.$emit("validation", this.valid.length == 0)
     },
-    append_stage() {
+    update_shortcut(shortcut_name, arg_description) {
+      this.$emit("shortcut", shortcut_name, arg_description)
+    },
+    append_stage(index) {
+      if (typeof index === 'undefined')
         this.value.push(["Passthrough", {}]);
+      else
+        this.value.splice(index, 0, ["Passthrough", {}])
     },
     remove_stage(current) {
         this.value.splice(current, 1);

@@ -24,6 +24,7 @@ Vue.component('treeselect', Treeselect)
 // load components
 import SearchForm from './components/SearchForm.vue'
 import TaskDetail from './components/TaskDetail.vue'
+import TaskShortcut from './components/TaskShortcut.vue'
 import TaskList from './components/TaskList.vue'
 import PageView from './components/PageView.vue'
 import CollectionList from './components/CollectionList.vue'
@@ -35,12 +36,14 @@ import UserList from './components/UserList.vue'
 import AccountSecurity from './components/AccountSecurity.vue'
 import ArticleCompletion from './components/ArticleCompletion.vue'
 import DbConsole from './components/DbConsole.vue'
+import Gallery from './components/Gallery.vue'
 
 // configure routes
 const routes = [
   { path: '*', component: SearchForm },
   { path: '/login', component: Login, name: 'Login' },
   { path: '/view/:path(.*)', component: PageView, name: 'PageView' },
+  { path: '/tasks/shortcut/:id', component: TaskShortcut, props: true },
   { path: '/tasks/:id', component: TaskDetail, props: true },
   { path: '/tasks', component: TaskList },
   { path: '/collections', component: CollectionList },
@@ -51,6 +54,7 @@ const routes = [
   { path: '/security', component: AccountSecurity },
   { path: '/articlecompletion', component: ArticleCompletion },
   { path: '/dbconsole', component: DbConsole },
+  { path: '/gallery', component: Gallery },
 ]
 
 const router = new VueRouter({
