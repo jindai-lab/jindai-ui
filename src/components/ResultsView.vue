@@ -3,7 +3,7 @@
     <div v-for="(r, index) in visible_data" :key="r._id" class="mui-panel">
       <p class="">
         数据集: {{ r.collection }} 大纲: {{ r.outline }} 来源:
-        {{ r.pdffile }} 页码: {{ r.pagenum }} 年份: {{ r.year }}
+        {{ r.source.file }} 页码: {{ r.pagenum }} 年份: {{ r.year }}
       </p>
       <div class="mui-divider"></div>
       <br />
@@ -11,7 +11,7 @@
       <br />
       <a
         class="mui-btn"
-        :href="'/view/' + (r.dataset || 'default') + '/' + r.pdffile + '/' + r.pdfpage"
+        :href="'/view/' + (r.dataset || 'default') + '/' + r.source.file + '/' + r.source.page"
         target="_blank"
       >
         <font-awesome-icon icon="file" aria-hidden="true" /> 查看
@@ -166,8 +166,6 @@ export default {
             "collectoin",
             "matched_content",
             "content",
-            "pdffile",
-            "pdfpage",
             "pagenum",
             "year",
           ].indexOf(k) >= 0

@@ -3,21 +3,21 @@
     <div class="mui-row">
       <h3 class="mui-col-md-8">
         <!-- <a href="javascript:void(0)"><font-awesome-icon icon="arrow-left" @click="$router.back()" /></a> -->
-        {{ pdffile }}
+        {{ source.file }}
       </h3>
       <div class="mui-col-md-4 mui-row">
       <button
         class="mui-btn mui-col-md-2"
         @click="swipe_handler('right')"
-        :enabled="pdfpage > 0"
+        :enabled="source.page > 0"
       >
         <font-awesome-icon icon="caret-left" />
       </button>
       <div class="mui-textfield mui-col-md-8">
         <input
           type="text"
-          :value="pdfpage"
-          @keyup.enter="pdfpage = parseInt($event.target.value)"
+          :value="source.page"
+          @keyup.enter="source.page = parseInt($event.target.value)"
         />
       </div>
       <button class="mui-btn mui-col-md-2" @click="swipe_handler('left')">
@@ -56,8 +56,7 @@ export default {
   },
   data() {
     return {
-      pdffile: "",
-      pdfpage: 0,
+      source: {file: "", page: 0},
       paragraphs: [],
       show_modal: false,
       pdf_image: "",
@@ -71,10 +70,10 @@ export default {
       if (e.target.tagName == "INPUT") return;
       switch (e.key) {
         case "ArrowRight":
-          this.pdfpage = +this.pdfpage + 1;
+          this.source.page = +this.source.page + 1;
           break;
         case "ArrowLeft":
-          if (+this.pdfpage > 0) this.pdfpage = +this.pdfpage - 1;
+          if (+this.source.page > 0) this.source.page = +this.source.page - 1;
           break;
         default:
           break;
@@ -89,8 +88,8 @@ export default {
     let params = window.location.href.split("/");
     params = params.slice(params.indexOf("view") + 1);
     this.dataset = params[0] === 'default' ? '' : params[0]
-    this.pdffile = decodeURIComponent(params.slice(1, -1).join("/"));
-    this.pdfpage = +params.slice(-1)[0];
+    this.source.file = decodeURIComponent(params.slice(1, -1).join("/"));
+    this.source.page = +params.slice(-1)[0];
     this.update_pdfpage();
   },
   watch: {
@@ -101,30 +100,30 @@ export default {
   methods: {
     update_pdfpage() {
       this.pdf_image = this.loading_image;
-      if (!this.pdffile) return;
+      if (!this.source) return;
       api
         .call("quicktask", {
-          query: "?pdffile=`" + this.pdffile + "`,pdfpage=" + this.pdfpage,
+          query: "?source.file=`" + this.source.file + "`,source.page=" + this.source.page,
           mongocollection: this.dataset
         })
         .then((data) => (this.paragraphs = data.result));
       api
         .blob(
-          "pdfimage?pdffile=" +
-            encodeURIComponent(this.pdffile) +
-            "&pdfpage=" +
-            this.pdfpage
+          "image?file=" +
+            encodeURIComponent(this.source.file) +
+            "&page=" +
+            this.source.page
         )
         .then((u) => (this.pdf_image = u));
     },
     swipe_handler(direction) {
       switch (direction) {
         case "right":
-          this.pdfpage = +this.pdfpage - 1;
+          this.source.page = +this.source.page - 1;
           break;
 
         case "left":
-          this.pdfpage = +this.pdfpage + 1;
+          this.source.page = +this.source.page + 1;
           break;
       }
     },

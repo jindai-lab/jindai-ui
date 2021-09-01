@@ -16,7 +16,7 @@
             <option value="">默认排序</option>
             <option value="year">从旧到新</option>
             <option value="-year">从新到旧</option>
-            <option value="pdffile,pdfpage">出处</option>
+            <option value="source">出处</option>
           </select>
         </div>
       </div>
@@ -95,7 +95,7 @@ export default {
             .map(escapeRegExp),
           pdffiles = this.selected_collections
             .filter((x) => x.startsWith("pdffile:"))
-            .map((x) => x.split(":", 2)[1]),
+            .map((x) => x.split(":", 2).pop()),
           reqstr_colls = "",
           reqstr_pdffiles = "";
 
@@ -109,11 +109,11 @@ export default {
         }
         if (pdffiles.length > 0) {
           req.$or.push({
-            pdffile: {
+            'source.file': {
               $in: pdffiles,
             },
           });
-          reqstr_pdffiles = "pdffile=in([]=>`" + pdffiles.join("`=>`") + "`))";
+          reqstr_pdffiles = "source.file=in([]=>`" + pdffiles.join("`=>`") + "`))";
         }
         if (req.$or.length == 1) {
           req = req.$or[0];

@@ -23,7 +23,9 @@
     "vue-router": "^3.5.1",
     "vue-simple-progress": "^1.1.1",
     "vue-simple-spinner": "^1.2.10",
-    "vue2-touch-events": "^3.2.2"
+    "vue-waterfall2": "^1.10.1",
+    "vue2-touch-events": "^3.2.2",
+    "vue2-viewer": "^1.0.3"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "~4.5.0",

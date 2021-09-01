@@ -16,6 +16,14 @@ Vue.component('font-awesome-icon', FontAwesomeIcon)
 import Vue2TouchEvents from 'vue2-touch-events'
 Vue.use(Vue2TouchEvents)
 
+// vue-waterfall2
+import waterfall from 'vue-waterfall2'
+Vue.use(waterfall)
+
+// vue2-viewer
+import ImageViewer from 'vue2-viewer'
+Vue.use(ImageViewer)
+
 // vue-treeselect
 import Treeselect from '@riophae/vue-treeselect'
 import '@riophae/vue-treeselect/dist/vue-treeselect.css'
@@ -55,6 +63,7 @@ const routes = [
   { path: '/articlecompletion', component: ArticleCompletion },
   { path: '/dbconsole', component: DbConsole },
   { path: '/gallery', component: Gallery },
+  { path: '/gallery/:q(.*)', component: Gallery, props: true },
 ]
 
 const router = new VueRouter({
