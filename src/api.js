@@ -159,10 +159,13 @@ export default {
             return this._catch_and_then(axios.get(apiBase + name, this._config()))
     },
 
-    delete(name) {
+    delete(name, params) {
         _stack.push(name)
         _set_loading()
-        return this._catch_and_then(axios.delete(apiBase + name, this._config()))
+        if (typeof (params) !== 'undefined')
+            return this._catch_and_then(axios.delete(apiBase + name, params, this._config()))
+        else
+            return this._catch_and_then(axios.delete(apiBase + name, this._config()))
     },
 
     put(name, params) {

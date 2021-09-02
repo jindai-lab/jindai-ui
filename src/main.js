@@ -62,8 +62,7 @@ const routes = [
   { path: '/security', component: AccountSecurity },
   { path: '/articlecompletion', component: ArticleCompletion },
   { path: '/dbconsole', component: DbConsole },
-  { path: '/gallery', component: Gallery },
-  { path: '/gallery/:q(.*)', component: Gallery, props: true },
+  { path: '/gallery(/.*)?', component: Gallery },
 ]
 
 const router = new VueRouter({

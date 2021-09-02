@@ -117,6 +117,7 @@ export default {
         .then((u) => (this.pdf_image = u));
     },
     swipe_handler(direction) {
+      if (document.getSelection().toString()) return;
       switch (direction) {
         case "right":
           this.source.page = +this.source.page - 1;

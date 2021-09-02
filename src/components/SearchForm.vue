@@ -14,9 +14,9 @@
         <div class="mui-select mui-col-md-2">
           <select name="sort" id="sort" v-model="sort">
             <option value="">默认排序</option>
-            <option value="year">从旧到新</option>
-            <option value="-year">从新到旧</option>
-            <option value="source">出处</option>
+            <option value="pdate">从旧到新</option>
+            <option value="-pdate">从新到旧</option>
+            <option value="source=1">出处</option>
           </select>
         </div>
       </div>

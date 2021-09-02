@@ -64,7 +64,7 @@
     <footer :id="viewer ? '' : 'footer'">
       <div class="mui-container-fluid">
         <br />
-        多语种文献利用平台<br />
+        文献利用平台<br />
         &copy; 2018-{{ new Date().getFullYear() }} 科技人文研究室 &amp;
         contributors
       </div>
