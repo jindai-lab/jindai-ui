@@ -2,7 +2,7 @@
   <body id="app">
     <div id="sidedrawer" class="mui--no-user-select" v-if="!viewer">
       <h2 class="fs22 mui--appbar-line-height">
-        <a href="/">多语种文献利用平台</a>
+        <a href="/">文献利用平台</a>
       </h2>
       <div class="mui-divider"></div>
       <ul @click="nav_click">
