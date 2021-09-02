@@ -103,7 +103,7 @@ export default {
       if (!this.source) return;
       api
         .call("quicktask", {
-          query: "?source.file=`" + this.source.file + "`,source.page=" + this.source.page,
+          query: "?source=(file=`" + this.source.file + "`,page=" + this.source.page + ")",
           mongocollection: this.dataset
         })
         .then((data) => (this.paragraphs = data.result));
