@@ -3,21 +3,21 @@
     <div class="mui-row">
       <h3 class="mui-col-md-8">
         <!-- <a href="javascript:void(0)"><font-awesome-icon icon="arrow-left" @click="$router.back()" /></a> -->
-        {{ source.file }}
+        {{ file }}
       </h3>
       <div class="mui-col-md-4 mui-row">
       <button
         class="mui-btn mui-col-md-2"
         @click="swipe_handler('right')"
-        :enabled="source.page > 0"
+        :enabled="page > 0"
       >
         <font-awesome-icon icon="caret-left" />
       </button>
       <div class="mui-textfield mui-col-md-8">
         <input
           type="text"
-          :value="source.page"
-          @keyup.enter="source.page = parseInt($event.target.value)"
+          :value="page"
+          @keyup.enter="page = parseInt($event.target.value)"
         />
       </div>
       <button class="mui-btn mui-col-md-2" @click="swipe_handler('left')">
@@ -46,6 +46,7 @@
 </template>
 
 <script>
+import QueryString from 'qs';
 import api from "../api";
 import Modal from "./ModalView";
 
@@ -56,7 +57,8 @@ export default {
   },
   data() {
     return {
-      source: {file: "", page: 0},
+      file: '',
+      page: 0,
       paragraphs: [],
       show_modal: false,
       pdf_image: "",
@@ -70,10 +72,10 @@ export default {
       if (e.target.tagName == "INPUT") return;
       switch (e.key) {
         case "ArrowRight":
-          this.source.page = +this.source.page + 1;
+          this.page = +this.page + 1;
           break;
         case "ArrowLeft":
-          if (+this.source.page > 0) this.source.page = +this.source.page - 1;
+          if (+this.page > 0) this.page = +this.page - 1;
           break;
         default:
           break;
@@ -88,31 +90,31 @@ export default {
     let params = window.location.href.split("/");
     params = params.slice(params.indexOf("view") + 1);
     this.dataset = params[0] === 'default' ? '' : params[0]
-    this.source.file = decodeURIComponent(params.slice(1, -1).join("/"));
-    this.source.page = +params.slice(-1)[0];
+    this.file = decodeURIComponent(params.slice(1, -1).join("/"));
+    this.page = +params.slice(-1)[0];
     this.update_pdfpage();
   },
   watch: {
-    pdfpage() {
+    page() {
       this.update_pdfpage();
     },
   },
   methods: {
     update_pdfpage() {
       this.pdf_image = this.loading_image;
-      if (!this.source) return;
+      if (!this.file) return;
       api
         .call("quicktask", {
-          query: "?source=(file=`" + this.source.file + "`,page=" + this.source.page + ")",
+          query: "?" + api.querify({source: {file: this.file, page: this.page}}),
           mongocollection: this.dataset
         })
         .then((data) => (this.paragraphs = data.result));
       api
         .blob(
-          "image?file=" +
-            encodeURIComponent(this.source.file) +
-            "&page=" +
-            this.source.page
+          "image?" + QueryString.stringify({
+            file: this.file,
+            page: this.page
+          })
         )
         .then((u) => (this.pdf_image = u));
     },
@@ -120,11 +122,11 @@ export default {
       if (document.getSelection().toString()) return;
       switch (direction) {
         case "right":
-          this.source.page = +this.source.page - 1;
+          this.page = +this.page - 1;
           break;
 
         case "left":
-          this.source.page = +this.source.page + 1;
+          this.page = +this.page + 1;
           break;
       }
     },

@@ -5,7 +5,7 @@
     </div>
     <div class="meta-data">
      <span>
-         {{ item.pdate }}  ⭐ {{ +(item.rating).toFixed(1) }}
+         {{ item.pdate }}  ⭐ {{ +((item.rating|0).toFixed(1)) }}
      </span>
       <span class="meta author"
         >作者:

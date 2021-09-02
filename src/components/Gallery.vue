@@ -14,8 +14,8 @@
         <div class="mui-select mui-col-md-2">
           <select name="sort" id="sort" v-model="sort">
             <option value="_id=-1">默认排序</option>
-            <option value="year=1">从旧到新</option>
-            <option value="year=-1">从新到旧</option>
+            <option value="pdate=1">从旧到新</option>
+            <option value="pdate=-1">从新到旧</option>
             <option value="source=1">出处</option>
             <option value="random">随机浏览</option>
           </select>
@@ -183,7 +183,7 @@ export default {
     load_more() {
       if (this.loading) return;
       this.loading = true;
-      var query = "??match((" + this.querystr + ")&image_storage!=null)";
+      var query = "??match((" + this.querystr + ")&image_storage!=())";
       if (this.sort === "random") query += ";sample(100)";
       else {
         query +=
@@ -210,7 +210,7 @@ export default {
             if (x.image_src) {
               api.blob(x.image_src).then((u) => (x.image_src = u)).catch(() => {x.image_src = x.image_storage.url || ''});
             }
-            if (x.image_storage.url.match(/\.(mp4|avi)$/)) x.is_video = true;
+            if (x.image_storage.url && x.image_storage.url.match(/\.(mp4|avi)$/)) x.is_video = true;
             return x;
           })
         );
