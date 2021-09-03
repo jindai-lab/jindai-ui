@@ -101,7 +101,7 @@ export default {
           if (Array.isArray(data.result)) {
             this.results = data.result
             this.$refs.results.start()
-          } else {
+          } else if (typeof data.result === 'object' && data.result !== null && data.result.__file_ext__) {
             const b64toBlob = (b64Data, contentType='', sliceSize=512) => {
               const byteCharacters = atob(b64Data);
               const byteArrays = [];

@@ -199,7 +199,8 @@ export default {
     load_more() {
       if (this.loading) return;
       this.loading = true;
-      var query = "??match((" + this.querystr + ")&image_storage!=());group(_id=(source=$source,image_storage=$image_storage),doc=first($$ROOT));replaceRoot(newRoot=$doc)";
+      var query = "??match((" + this.querystr + ")&image_storage!=())";
+      // query += ";group(_id=(source=$source,image_storage=$image_storage),doc=first($$ROOT));replaceRoot(newRoot=$doc)"
       if (this.sort === "random") query += ";sample(size=20)";
       else {
         query +=
@@ -225,14 +226,15 @@ export default {
             else if (x.image_storage.pdf)
               x.image_src =
                 "image?file=" + x.source.file + "&page=" + x.source.page;
+            else if (x.image_storage.url)
+              x.image_src = x.image_storage.url
             else x.image_src = "image";
 
-            if (x.image_src) {
+            if (x.image_src && x.image_src.startsWith('image')) {
               api
                 .blob(x.image_src)
                 .then((u) => (x.image_src = u))
                 .catch(() => {
-                  x.image_src = x.image_storage.url || "";
                 });
             }
             if (
