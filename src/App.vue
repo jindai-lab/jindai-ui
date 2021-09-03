@@ -95,6 +95,7 @@ export default {
         running: '...'
       },
       ws: null,
+      ws_reconnect: false,
       admin: false,
       shortcuts: []
     }
@@ -124,29 +125,41 @@ export default {
       this.$router.push(e.target.getAttribute("to"));
     },    
     connect_ws() {
-      const reconnect = () => {
-        this.ws = null
-        setTimeout(this.connect_ws, 5000)
-      }
-      try {
-        if (!localStorage.token) throw new Error('Not authenticated, wait.')
-        this.ws = new WebSocket((location.protocol === 'http:' ? 'ws://' : 'wss://') + location.host + '/api/socket?token=' + localStorage.token)
-        this.ws.onclose = reconnect
-        this.ws.onerror = reconnect
-        this.ws.onmessage = this.handle_ws
+      (function () {
+        return new Promise(function(resolve, reject) {
+            var server = new WebSocket((location.protocol === 'http:' ? 'ws://' : 'wss://') + location.hostname + ':8370/api/socket');
+            server.onopen = function() {
+                resolve(server);
+            };
+            server.onerror = function(err) {
+                reject(err);
+            };
+        });
+      })().then(ws => {
+        this.ws = ws
+        ws.onmessage = this.handle_ws
+        this.ws.send(JSON.stringify({event: 'auth', token: localStorage.token}))
+        this.ws.send(JSON.stringify({event: 'queue'}))
         this.keepalive_ws()
-      } catch (e) {
-        reconnect()
-      }
+      }).catch(() => {
+        if (this.ws_reconnect) return
+        this.ws_reconnect = true
+        setTimeout(this.connect_ws, 5000)
+      })
     },
     keepalive_ws() {
-      if (this.ws !== null) {
-        this.ws.send('ping')
+      if (this.ws !== null && this.ws.readyState === 1) {
+        this.ws.send('{"event":"ping"}')
+        setTimeout(this.keepalive_ws, 50000)
       }
-      setTimeout(this.keepalive_ws, 5000)
     },
     handle_ws(e) {
-      console.log(e)
+      var message = JSON.parse(e.data)
+      switch (message.event) {
+        case "queue":
+          this.queue = message.data
+          break
+      }
     }
   },
 };

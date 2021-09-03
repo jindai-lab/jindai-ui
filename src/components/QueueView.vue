@@ -60,7 +60,6 @@ export default {
       var id = encodeURIComponent(task.id)
       api.delete("queue/" + id).then(() => {
         api.notify({ title: "成功删除" });
-        this.finished = this.finished.filter((x) => x != id);
       });
     },
     view_result(task) {

@@ -29,6 +29,10 @@ import Treeselect from '@riophae/vue-treeselect'
 import '@riophae/vue-treeselect/dist/vue-treeselect.css'
 Vue.component('treeselect', Treeselect)
 
+// modal-dialogs
+import * as ModalDialogs from 'vue-modal-dialogs'
+Vue.use(ModalDialogs)
+
 // load components
 import SearchForm from './components/SearchForm.vue'
 import TaskDetail from './components/TaskDetail.vue'

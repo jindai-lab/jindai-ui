@@ -39,7 +39,13 @@
         <source src="" type="video/mp4" />
       </video>
       <div class="showing-wrapper" v-else>
+        <span class="chevron" @click="prev">
+          <img :src="chevrons.left" alt="">
+        </span>
         <img :src="viewer_image.image_src" />
+        <span class="chevron" @click="next">
+          <img :src="chevrons.right" alt="">
+        </span>
       </div>
       <div class="text-wrapper">
         <GalleryImageInfo
@@ -121,6 +127,7 @@
         <font-awesome-icon icon="tag"></font-awesome-icon>
       </button>
     </div>
+    <dialogs-wrapper transition-name="fade"></dialogs-wrapper>
   </div>
 </template>
     
@@ -128,8 +135,10 @@
 import api from "../api";
 import ParamInput from "./ParamInput.vue";
 import GalleryImageInfo from "./GalleryImageInfo.vue";
-import querystring from 'querystring'
-import stringhash from 'string-hash'
+import GalleryTagging from "./GalleryTagging.vue";
+import querystring from "querystring";
+import stringhash from "string-hash";
+import { create } from 'vue-modal-dialogs'
 
 export default {
   components: { ParamInput, GalleryImageInfo },
@@ -146,6 +155,10 @@ export default {
       viewer: false,
       viewer_item: 0,
       last_select: null,
+      chevrons: {
+        left: require('../../public/assets/arrow-left.svg'),
+        right: require('../../public/assets/arrow-right.svg')
+      }
     };
   },
   created() {
@@ -167,50 +180,66 @@ export default {
     },
   },
   mounted() {
-    var params = querystring.parse(location.search.slice(1))
-    console.log(params)
-    if (params.q) {
-      this.querystr = params.q
-      this.selected_gallery = params.gallery
-      this.sort = params.sort
-    }
-    api.call("meta").then((data) => {
-      this.galleries = data.result.galleries;
-    });
-    this.load_more();
+    api
+      .call("meta")
+      .then((data) => {
+        this.galleries = data.result.galleries;
+      })
+      .then(() => {
+        var params = querystring.parse(location.search.slice(1));
+        if (typeof params.q !== "undefined") {
+          this.querystr = params.q;
+          this.selected_gallery = params.gallery;
+          this.sort = params.sort;
+        }
+        this.load_more();
+      });
   },
   methods: {
     load_more() {
       if (this.loading) return;
       this.loading = true;
-      var query = "??match((" + this.querystr + ")&image_storage!=())";
-      if (this.sort === "random") query += ";sample(100)";
+      var query = "??match((" + this.querystr + ")&image_storage!=());group(_id=(source=$source,image_storage=$image_storage),doc=first($$ROOT));replaceRoot(newRoot=$doc)";
+      if (this.sort === "random") query += ";sample(size=20)";
       else {
         query +=
           ";sort(" +
           this.sort +
           ");skip(" +
           this.results.length +
-          ");limit(100)";
+          ");limit(20)";
       }
       api.call("quicktask", { query, raw: true }).then((data) => {
         if (data.result.length == 0) return; // loading = true, will not be called again
         this.results = this.results.concat(
           data.result.map((x) => {
-            if (typeof x.image_storage !== 'object')
-              return x
-          
+            x.selected = false;
+            if (typeof x.image_storage !== "object") return x;
+
             if (x.image_storage.blocks)
-              x.image_src = "image?file=blocks.h5&id=" + (x.image_storage.blocks === true ? x._id : x.image_storage.blocks);
+              x.image_src =
+                "image?file=blocks.h5&id=" +
+                (x.image_storage.blocks === true
+                  ? x._id
+                  : x.image_storage.blocks);
             else if (x.image_storage.pdf)
               x.image_src =
                 "image?file=" + x.source.file + "&page=" + x.source.page;
-            else x.image_src = 'image'
-          
+            else x.image_src = "image";
+
             if (x.image_src) {
-              api.blob(x.image_src).then((u) => (x.image_src = u)).catch(() => {x.image_src = x.image_storage.url || ''});
+              api
+                .blob(x.image_src)
+                .then((u) => (x.image_src = u))
+                .catch(() => {
+                  x.image_src = x.image_storage.url || "";
+                });
             }
-            if (x.image_storage.url && x.image_storage.url.match(/\.(mp4|avi)$/)) x.is_video = true;
+            if (
+              x.image_storage.url &&
+              x.image_storage.url.match(/\.(mp4|avi)$/)
+            )
+              x.is_video = true;
             return x;
           })
         );
@@ -231,21 +260,21 @@ export default {
       obj = querystring.stringify({
         q: obj,
         gallery: this.selected_gallery,
-        sort: this.sort
-      })
-      const hash = stringhash(obj)
-      this.$router.push("/gallery/" + hash + '?' + obj);
+        sort: this.sort,
+      });
+      const hash = stringhash(obj);
+      this.$router.push("/gallery/" + hash + "?" + obj);
     },
     select_image(e) {
-      var start = e, end = e + 1;
+      var start = e,
+        end = e + 1;
       if (this.last_select !== null && e.shiftKey) {
-        start = Math.min(this.last_select, e)
-        end = Math.max(this.last_select, e)
+        start = Math.min(this.last_select, e);
+        end = Math.max(this.last_select, e);
       }
-      for (var i = start ; i < end; ++i)
+      for (var i = start; i < end; ++i)
         this.results[i].selected = !this.results[i].selected;
-      this.$forceUpdate();
-      this.last_select = e
+      this.last_select = e;
     },
     // viewer
     view(e) {
@@ -296,7 +325,6 @@ export default {
           this.results.map((x) => {
             x.selected = !x.selected;
           });
-          this.$forceUpdate();
           break;
       }
     },
@@ -304,28 +332,38 @@ export default {
       if (document.getSelection().toString()) return;
       switch (direction) {
         case "right":
-          this.prev()
+          this.prev();
           break;
 
         case "left":
-          this.next()
+          this.next();
           break;
       }
     },
     // handle_selected
     clear_selected() {
       this.selected.map((x) => (x.selected = false));
-      this.$forceUpdate()
     },
-    handle_selected(type) {
+    async handle_selected(type) {
       if (this.selected.length == 0) return;
+      var selected = [].concat(this.selected);
+      const tags_dialog = create(
+            GalleryTagging,
+            "title",
+            "content",
+            "items",
+            "default_field"
+          );
+          
       switch (type) {
         case "delete":
           if (
             true ==
-            confirm("确定要删除这些图片吗：\n" + this.selected.map(x=>x._id).join(","))
+            confirm(
+              "确定要删除这些图片吗：\n" +
+                selected.map((x) => x._id).join(",")
+            )
           ) {
-            var selected = this.selected.concat()
             api
               .call("gallery/delete", {
                 selected: selected.map((x) => x._id),
@@ -339,30 +377,55 @@ export default {
           break;
         case "star":
           api
-            .call("gallery/star", { selected: this.selected.map((x) => x._id) })
+            .call("gallery/star", { selected: selected.map((x) => x._id) })
             .then(() => {
-              this.selected.map((x) => {
+              selected.map((x) => {
                 x.rating = (0 | x.rating) + 1;
               });
               this.clear_selected();
             });
           break;
         case "tag":
-          var tag = prompt("请输入标签：");
-          if (tag) {
-            tag = tag.split(",");
+          var tags_result = await tags_dialog(
+            "标签操作",
+            "",
+            this.selected,
+            "keywords"
+          );
+          if (!tags_result) return;
+
+          var new_tags = tags_result.tags.filter(
+            (x) => -1 === tags_result.initial_tags.indexOf(x)
+          );
+          var deleted_tags = tags_result.initial_tags.filter(
+            (x) => -1 === tags_result.tag.indexOf(x)
+          );
+          if (new_tags.length)
             api
               .call("gallery/tag", {
-                selected: this.selected.map((x) => x._id),
-                tag
+                selected: selected.map((x) => x._id),
+                field: tags_result.field,
+                tags: new_tags,
               })
               .then(() => {
-                this.selected.map((x) => {
-                  x.keywords = x.keywords.concat(tag);
+                selected.map((x) => {
+                  x.keywords = x.keywords.concat(new_tags);
                 });
-                this.clear_selected();
               });
-          }
+          if (deleted_tags.length)
+            api
+              .call("gallery/tag", {
+                selected: selected.map((x) => x._id),
+                field: tags_result.field,
+                tags: deleted_tags,
+                delete: true,
+              })
+              .then(() => {
+                selected.map((x) => {
+                  x.keywords = x.keywords.filter(x => deleted_tags.indexOf(x) === -1);
+                });
+              });
+          this.clear_selected();
           break;
         case "group":
           api
@@ -498,5 +561,23 @@ span.mui-checkbox {
   position: absolute;
   top: 0px;
   right: 0px;
+}
+
+span.chevron {
+  display: inline-block;
+  height: 100vh;
+  line-height: 100vh;
+  vertical-align: baseline;
+  overflow: hidden;
+  margin-left: 15px;
+  margin-right: 15px;
+}
+
+span.chevron>img {
+    position: relative;
+    left: -80px;
+    width: 40px;
+    height: auto;
+    filter: drop-shadow(#fff 80px 0);
 }
 </style>
