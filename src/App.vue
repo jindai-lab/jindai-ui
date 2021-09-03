@@ -42,7 +42,7 @@
     <header id="header" v-if="!viewer">
       <div class="mui-appbar mui--appbar-line-height">
         <div class="mui-container-fluid">
-          <QueueView />
+          <QueueView :data="queue" />
         </div>
       </div>
     </header>
@@ -87,6 +87,18 @@ export default {
     QueueView,
     Spinner,
   },
+  data() {
+    return {
+      queue: {
+        finished: [],
+        waiting: '...',
+        running: '...'
+      },
+      ws: null,
+      admin: false,
+      shortcuts: []
+    }
+  },
   created() {
     this.$on("logined", () => {
       api
@@ -99,23 +111,43 @@ export default {
     });
   },
   mounted() {
-    this.$emit("logined");
+    this.$emit("logined")
+    this.connect_ws()
   },
   computed: {
     viewer() {
       return location.href.indexOf("/view/") > 0;
     },
   },
-  data() {
-    return {
-      admin: false,
-      shortcuts: []
-    };
-  },
   methods: {
     nav_click(e) {
       this.$router.push(e.target.getAttribute("to"));
+    },    
+    connect_ws() {
+      const reconnect = () => {
+        this.ws = null
+        setTimeout(this.connect_ws, 5000)
+      }
+      try {
+        if (!localStorage.token) throw new Error('Not authenticated, wait.')
+        this.ws = new WebSocket((location.protocol === 'http:' ? 'ws://' : 'wss://') + location.host + '/api/socket?token=' + localStorage.token)
+        this.ws.onclose = reconnect
+        this.ws.onerror = reconnect
+        this.ws.onmessage = this.handle_ws
+        this.keepalive_ws()
+      } catch (e) {
+        reconnect()
+      }
     },
+    keepalive_ws() {
+      if (this.ws !== null) {
+        this.ws.send('ping')
+      }
+      setTimeout(this.keepalive_ws, 5000)
+    },
+    handle_ws(e) {
+      console.log(e)
+    }
   },
 };
 </script>
