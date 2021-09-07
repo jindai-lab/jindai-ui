@@ -17,9 +17,9 @@
           <span>{{ task.id.split("/")[0] }}</span>
           运行于:
           {{ task.last_run }}<br />
-          <button @click="download(task)" class="mui-btn" target="_blank">
+          <a :href="download_link(task)" class="mui-btn" target="_blank">
             <font-awesome-icon icon="download" /> 下载
-          </button>
+          </a>
           <button
             class="mui-btn"
             @click="view_result(task)"
@@ -52,19 +52,19 @@ export default {
     Modal,
   },
   methods: {
-    download(task) {
-      var id = encodeURIComponent(task.id)
-      api.download('queue/' + id, task.id.split('/').slice(-1)[0] + '.' + task.file_ext);
+    download_link(task) {
+      return '/api/queue/' + encodeURIComponent(task.id)
     },
     delete_result(task) {
       var id = encodeURIComponent(task.id)
       api.delete("queue/" + id).then(() => {
         api.notify({ title: "成功删除" });
+        this.$emit('updated', this.data.filter(x => x.id !== id))
       });
     },
     view_result(task) {
       var id = encodeURIComponent(task.id)
-      this.$router.push("/results/" + id);
+      this.$router.push("/results/" + id).catch(()=>{});
       this.show_finished = false;
     },
   },

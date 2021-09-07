@@ -73,7 +73,7 @@
           <ParamInput v-model="edit_target[key]" :arg="{type: typeof(field), name: key, default: '\'\''}" v-if="['_id', 'matched_content'].indexOf(key) < 0 && typeof(field) !== 'object'" />
         </div>
         <div class="mui-row">
-          <ParamInput class="mui-col-md-8" v-model="edit_new_field" :arg="{type: 'string', name: '新字段', default: '\'\''}" />
+          <ParamInput class="mui-col-md-8" v-model="edit_new_field" :arg="{type: 'string', name: '新字段', default: ''}" />
           <button class="mui-btn mui-col-md4" @click="edit_target[edit_new_field]=''; $forceUpdate()">
             <font-awesome-icon icon="plus"></font-awesome-icon>
           </button>
@@ -135,8 +135,7 @@ export default {
   },
   methods: {
     _fetched() {
-      const p = this.page * this.page_size;
-      return this.page_range[0] <= p && this.page_range[1] > p;
+      return this.page_range[0] <= this.offset && this.page_range[1] > this.offset;
     },
     start() {
       this.page_range = [0, 0];

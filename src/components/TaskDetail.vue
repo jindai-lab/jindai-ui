@@ -148,7 +148,7 @@ export default {
       api.delete("tasks/" + this.task._id).then((data) => {
         if (data.result.ok) {
           api.notify("删除成功");
-          this.$router.push("./");
+          this.$router.push("/tasks").catch(()=>{});
         }
       });
     },

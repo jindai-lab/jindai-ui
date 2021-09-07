@@ -17,7 +17,13 @@
         <li>
           <strong>快捷任务</strong>
           <ul>
-            <li v-for="s in shortcuts" :to="'/tasks/shortcut/' + s._id" :key="s._id">{{ s.name }}</li>
+            <li
+              v-for="s in shortcuts"
+              :to="'/tasks/shortcut/' + s._id"
+              :key="s._id"
+            >
+              {{ s.name }}
+            </li>
           </ul>
         </li>
         <li>
@@ -42,7 +48,7 @@
     <header id="header" v-if="!viewer">
       <div class="mui-appbar mui--appbar-line-height">
         <div class="mui-container-fluid">
-          <QueueView :data="queue" />
+          <QueueView :data="queue" @updated="queue=$event" />
         </div>
       </div>
     </header>
@@ -77,6 +83,7 @@ import QueueView from "./components/QueueView";
 import Notifications from "vue-notification";
 import Spinner from "vue-simple-spinner";
 import Vue from "vue";
+// import { io } from "socket.io-client";
 import api from "./api";
 
 Vue.use(Notifications);
@@ -91,14 +98,14 @@ export default {
     return {
       queue: {
         finished: [],
-        waiting: '...',
-        running: '...'
+        waiting: "...",
+        running: "...",
       },
       ws: null,
       ws_reconnect: false,
       admin: false,
-      shortcuts: []
-    }
+      shortcuts: [],
+    };
   },
   created() {
     this.$on("logined", () => {
@@ -106,14 +113,41 @@ export default {
         .logined()
         .then((data) => (this.admin = data.result.roles.indexOf("admin") >= 0))
         .then(() => {
-          api.call("tasks/shortcuts").then(data => this.shortcuts = data.result)
+          api
+            .call("tasks/shortcuts")
+            .then((data) => (this.shortcuts = data.result));
+          setInterval(() => api.queue().then(queue => this.queue = queue), 10000)
         })
         .catch(() => (localStorage.token = ""));
     });
   },
   mounted() {
-    this.$emit("logined")
-    this.connect_ws()
+    this.$emit("logined");
+
+    if (this.viewer) return;
+    /*
+    const sio = io("/", {
+      path: "/api/socket/",
+      auth: localStorage.token,
+    });
+    sio
+      .on("error", (e) => console.log(e))
+      .on("connect", () => {
+        sio.emit("queue");
+        keepAlive();
+      })
+      .on("queue", (data) => {
+        this.queue = data;
+        console.log(data)
+      })
+      .on("debug", (data) => console.log(data));
+    const keepAlive = () => {
+      if (sio.connected) {
+        sio.emit("ping", {});
+        setTimeout(keepAlive, 10000);
+      }
+    };
+    */
   },
   computed: {
     viewer() {
@@ -122,45 +156,8 @@ export default {
   },
   methods: {
     nav_click(e) {
-      this.$router.push(e.target.getAttribute("to"));
-    },    
-    connect_ws() {
-      (function () {
-        return new Promise(function(resolve, reject) {
-            var server = new WebSocket((location.protocol === 'http:' ? 'ws://' : 'wss://') + location.hostname + ':8370/api/socket');
-            server.onopen = function() {
-                resolve(server);
-            };
-            server.onerror = function(err) {
-                reject(err);
-            };
-        });
-      })().then(ws => {
-        this.ws = ws
-        ws.onmessage = this.handle_ws
-        this.ws.send(JSON.stringify({event: 'auth', token: localStorage.token}))
-        this.ws.send(JSON.stringify({event: 'queue'}))
-        this.keepalive_ws()
-      }).catch(() => {
-        if (this.ws_reconnect) return
-        this.ws_reconnect = true
-        setTimeout(this.connect_ws, 5000)
-      })
+      this.$router.push(e.target.getAttribute("to")).catch(() => {});
     },
-    keepalive_ws() {
-      if (this.ws !== null && this.ws.readyState === 1) {
-        this.ws.send('{"event":"ping"}')
-        setTimeout(this.keepalive_ws, 50000)
-      }
-    },
-    handle_ws(e) {
-      var message = JSON.parse(e.data)
-      switch (message.event) {
-        case "queue":
-          this.queue = message.data
-          break
-      }
-    }
   },
 };
 </script>

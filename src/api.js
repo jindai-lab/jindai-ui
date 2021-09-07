@@ -1,8 +1,11 @@
 import axios from 'axios'
 import Vue from 'vue'
+import Cookies from 'js-cookie'
+
 const apiBase = '/api/'
 const _stack = []
 var _token = localStorage.token || ''
+Cookies.set('token', _token)
 
 function _set_loading() {
     var disp = document.getElementsByClassName('loading')[0].style
@@ -21,7 +24,7 @@ export default {
 
     notify(notice) { Vue.notify(Object.assign(notice, { group: 'sys' })) },
 
-    _blob_download(blob, filename) {
+    blob_download(blob, filename) {
         var url = URL.createObjectURL(blob);
         
         const link = document.createElement('a');
@@ -94,8 +97,8 @@ export default {
                 username, password
             }).then(data => {
                 if (data) {
-                    _token = data.result
-                    localStorage.token = data.result
+                    localStorage.token = _token = data.result
+                    Cookies.set('token', _token)
                     resolve(data)
                 } else {
                     reject(data)
@@ -112,8 +115,6 @@ export default {
           return '([]' + (x.length > 0 ? ' => ' + x.map(_values).join(' => ') : '') + ')'
         } else if (typeof(x) === 'object') {
           return '(' + _params(x, indent + '  ') + ')'
-        } else if (typeof(x) === 'string') {
-          return '`' + JSON.stringify(x).replace(/^"|"$/g, '').replace(/`/g, '\\`') + '`'
         } else
           return JSON.stringify(x)
       }
@@ -174,44 +175,8 @@ export default {
         return this._catch_and_then(axios.put(apiBase + name, params, this._config()))
     },
 
-    blob(name) {
-        _stack.push('url')
-        _set_loading()
-        return this._catch_and_then(
-            axios.get(apiBase + name, this._config(
-                { responseType: 'blob' }
-            ))).then(data => {
-                var objectURL = URL.createObjectURL(data);
-                return objectURL
-            })
-    },
-
-    download(path, filename) {
-        this.blob(path).then(url => {
-
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = filename;
-
-            // this is necessary as link.click() does not work on the latest firefox
-            link.dispatchEvent(
-                new MouseEvent('click', {
-                    bubbles: true,
-                    cancelable: true,
-                    view: window
-                })
-            );
-
-            setTimeout(() => {
-                // For Firefox it is necessary to delay revoking the ObjectURL
-                window.URL.revokeObjectURL(url);
-                link.remove();
-            }, 100);
-        })
-    },
-
     queue() {
-        return axios.get(apiBase + 'queue/', this._config())
+        return axios.get(apiBase + 'queue/', this._config()).then(resp => resp.data.result).catch(() => {})
     }
 
 }

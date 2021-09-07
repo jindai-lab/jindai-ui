@@ -16,9 +16,9 @@
             <font-awesome-icon :icon="f.folder ? 'folder' : 'file'" /> 
             {{ f.name }}</span>
           <span class="opers">
-            <button class="mui-btn" @click="file_link(f)" v-if="!f.folder">
+            <a class="mui-btn" :href="file_link(f)" v-if="!f.folder">
               <font-awesome-icon icon="download" />
-            </button>
+            </a>
             <button class="mui-btn" v-else @click="enter(f.name)">
               <font-awesome-icon icon="folder-open" />
             </button>
@@ -80,8 +80,7 @@ export default {
         })
     },
     file_link(f) {
-      let path = 'storage/' + f.fullpath.split('/').slice(1).join('/');
-      api.download(path, f.name)
+      return '/api/storage/' + f.fullpath.split('/').slice(1).join('/');
     },
     update_files() {
       api

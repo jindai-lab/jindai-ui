@@ -121,7 +121,7 @@ export default {
               const blob = new Blob(byteArrays, {type: contentType});
               return blob;
             }
-            api._blob_download(b64toBlob(data.result.data), this.task.name + '.' + data.result.__file_ext__)
+            api.blob_download(b64toBlob(data.result.data), this.task.name + '.' + data.result.__file_ext__)
           }
         });
     },

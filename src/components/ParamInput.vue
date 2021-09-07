@@ -107,7 +107,7 @@ export default {
   methods: {
     validate(val) {
       if (val === "") {
-        if (!this.arg.default) {
+        if (typeof this.arg.default === 'undefined' || this.arg.default === null) {
           this.prompt = "必填";
           return;
         }

@@ -33,7 +33,7 @@ export default {
           },
           name: '搜索 ' + h.querystr
         })
-        .then((data) => this.$router.push("/tasks/" + data.result));
+        .then((data) => this.$router.push("/tasks/" + data.result)).catch(()=>{});
     },
   },
 };

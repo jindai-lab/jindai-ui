@@ -42,7 +42,7 @@
         <span class="chevron" @click="prev">
           <img :src="chevrons.left" alt="">
         </span>
-        <img :src="viewer_image.image_src" />
+        <img :src="'/api/' + viewer_image.image_src" />
         <span class="chevron" @click="next">
           <img :src="chevrons.right" alt="">
         </span>
@@ -89,7 +89,7 @@
       <waterfall :col="5" :data="results" @scroll="scroll" ref="waterfall">
         <div class="mui-panel item" v-for="(r, index) in results" :key="r._id">
           <img
-            :src="r.image_src"
+            :src="'/api/' + r.image_src"
             alt=""
             @click="select_image(index)"
             @dblclick="view(index)"
@@ -230,13 +230,6 @@ export default {
               x.image_src = x.image_storage.url
             else x.image_src = "image";
 
-            if (x.image_src && x.image_src.startsWith('image')) {
-              api
-                .blob(x.image_src)
-                .then((u) => (x.image_src = u))
-                .catch(() => {
-                });
-            }
             if (
               x.image_storage.url &&
               x.image_storage.url.match(/\.(mp4|avi)$/)
@@ -265,7 +258,7 @@ export default {
         sort: this.sort,
       });
       const hash = stringhash(obj);
-      this.$router.push("/gallery/" + hash + "?" + obj);
+      this.$router.push("/gallery/" + hash + "?" + obj).catch(()=>{});
     },
     select_image(e) {
       var start = e,

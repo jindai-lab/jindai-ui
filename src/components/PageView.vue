@@ -109,14 +109,11 @@ export default {
           mongocollection: this.dataset
         })
         .then((data) => (this.paragraphs = data.result));
-      api
-        .blob(
-          "image?" + QueryString.stringify({
+      this.pdf_image =
+          "/api/image?" + QueryString.stringify({
             file: this.file,
             page: this.page
           })
-        )
-        .then((u) => (this.pdf_image = u));
     },
     swipe_handler(direction) {
       if (document.getSelection().toString()) return;

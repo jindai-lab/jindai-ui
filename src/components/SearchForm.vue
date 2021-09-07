@@ -153,7 +153,7 @@ export default {
     },
     export_query(callback) {
       if (typeof callback !== "function")
-        callback = (data) => this.$router.push("/tasks/" + data.result);
+        callback = (data) => this.$router.push("/tasks/" + data.result).catch(()=>{});
       api
         .put("tasks/", {
           datasource_config: {

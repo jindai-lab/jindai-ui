@@ -30,7 +30,7 @@ export default {
         login() {
             api.auth(this.username, this.password).then(() => {
                 this.$emit('logined')
-                this.$router.push('./')
+                this.$router.push('/')
             })
         }
     },
