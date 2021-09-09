@@ -3,7 +3,7 @@
     <div v-for="(r, index) in visible_data" :key="r._id" class="mui-panel">
       <p class="">
         数据集: {{ r.collection }} 大纲: {{ r.outline }} 来源:
-        {{ r.source.file }} 页码: {{ r.pagenum }} 年份: {{ (r.pdate || '').substr(4) }}
+        {{ r.source.file }} 页码: {{ r.pagenum }} 日期: {{ (r.pdate || '') }}
       </p>
       <div class="mui-divider"></div>
       <br />

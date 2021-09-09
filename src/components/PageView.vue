@@ -109,11 +109,16 @@ export default {
           mongocollection: this.dataset
         })
         .then((data) => (this.paragraphs = data.result));
-      this.pdf_image =
+      var image_url =
           "/api/image?" + QueryString.stringify({
             file: this.file,
             page: this.page
           })
+      var image_element = new Image();
+      image_element.src = image_url;
+      image_element.onload = () => {
+          this.pdf_image = image_element.src
+      }
     },
     swipe_handler(direction) {
       if (document.getSelection().toString()) return;
