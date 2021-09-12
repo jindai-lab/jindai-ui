@@ -105,7 +105,7 @@ export default {
               $regex: "^" + colls.join("|^"),
             },
           });
-          reqstr_colls = "collection%`^" + colls.join("|^") + "`))";
+          reqstr_colls = "collection%`^" + colls.join("|^");
         }
         if (pdffiles.length > 0) {
           req.$or.push({
