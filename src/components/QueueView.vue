@@ -74,6 +74,10 @@ export default {
 <style scoped>
 .click-here > span {
   border-radius: 5px;
+  line-height: 100%;
+  text-align: center;
+  min-width: 14px;
   background-color: green;
+  display: inline-block;
 }
 </style>

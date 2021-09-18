@@ -1,13 +1,13 @@
 <template>
   <div class="stage">
     <div class="mui-select">
-    <select v-model="value[0]" @change="update_input">
-      <optgroup v-for="(sts, group) in stages" :key="group" :label="group">
-        <option v-for="st in sts" :key="st.name" :value="st.name">
-          {{ st.name }} {{ st.doc.split('\n')[0] }}
-        </option>
-      </optgroup>
-    </select>
+    <treeselect
+      :options="stage_options"
+      :disable-branch-nodes="true"
+      :flatten-search-results="true"
+      v-model="value[0]"
+      @change="update_input"
+    />
     </div>
     <blockquote>
       {{ stage_doc.doc }}
@@ -19,9 +19,9 @@
             <div class="mui-col-md-10">
               <ParamInput :arg="arg" v-model="value[1][arg.name]" @validation="update_valid('stage_' + arg.name, $event)" />
             </div>
-            <div class="mui-col-md-2">
+            <div class="mui-col-md-1">
               <button @click="update_shortcut(map_id + '.' + arg.name, arg.description || arg.name)" class="mui-btn">
-                <font-awesome-icon icon="plus"></font-awesome-icon> 添加到快捷参数
+                <font-awesome-icon icon="asterisk"></font-awesome-icon> 快捷
               </button>
             </div>
           </div>
@@ -72,6 +72,25 @@ export default {
         if (this.stages[x][this.value[0]])
           return this.stages[x][this.value[0]]
       return {}
+    },
+    stage_options () {
+      var opts = []
+      for (var group in this.stages) {
+        var children = []
+        for (var stname in this.stages[group]) {
+          const s = this.stages[group][stname]
+          children.push({
+            id: stname,
+            label: stname + ' ' + s.doc.split('\n')[0]
+          })
+        }
+        opts.push({
+          id: 'group:' + group,
+          label: group,
+          children: children.sort((a, b) => a.label.localeCompare(b.label))
+        })
+      }
+      return opts
     }
   },
   watch: {

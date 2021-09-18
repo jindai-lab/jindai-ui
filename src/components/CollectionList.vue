@@ -105,7 +105,7 @@ export default {
     refresh_collections() {
       api
         .call("quicktask", {
-          query: "??group(_id=$collection,pdfs=addToSet($source.file))",
+          query: "??group(_id=$collection,pdfs=addToSet($source.file));addFields(pdfs=slice($pdfs;100))",
           raw: true,
         })
         .then((data) => {

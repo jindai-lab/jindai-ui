@@ -1,6 +1,7 @@
 <template>
   <div v-if="total > 0" ref="results">
-    <div v-for="(r, index) in visible_data" :key="r._id" class="mui-panel">
+    <div v-if="columns.includes('content')">
+    <div v-for="(r, index) in visible_data" :key="index" class="mui-panel">
       <p class="">
         数据集: {{ r.collection }} 大纲: {{ r.outline }} 来源:
         {{ r.source.file }} 页码: {{ r.pagenum }} 日期: {{ (r.pdate || '') }}
@@ -23,7 +24,7 @@
           $forceUpdate();
         "
       >
-        <i :class="['fa', 'fa-caret-' + (!show_meta[index] ? 'down' : 'up')]" />
+        <font-awesome-icon :icon="'caret-' + (!show_meta[index] ? 'down' : 'up')" />
         其他元数据
       </button>
       <button class="mui-btn" @click="edit_target = r">
@@ -33,6 +34,30 @@
       <div class="mui-textfield" v-show="!!show_meta[index]">
         <textarea readonly :value="metas(r)" rows="5"></textarea>
       </div>
+    </div>
+    </div>
+    <div class="mui-panel" v-else>
+      <table>
+        <thead>
+          <tr>
+            <th v-for="col in columns" :key="col">{{ col }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(r, index) in visible_data" :key="index">
+            <td v-for="col in columns" :key="col + index">
+              <div v-if="Array.isArray(r[col])">
+                <button class="mui-btn" @click="show_embedded(r, col)">
+                  <font-awesome-icon icon="file" />
+                </button>
+              </div>
+              <div v-else>
+              {{ r[col] }}
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
     <div class="pagination mui-row">
         <div class="float-left" v-for="p in pages" :key="p">
@@ -84,6 +109,13 @@
       </div>
     </Modal>
 
+    <Modal v-if="embedded !== null" @close="embedded = null">
+      <h3 slot="header">查看 {{ querify(embedded.source) }}</h3>
+      <div slot="body">
+        <ResultsView @load="(a) => a.callback({offset: 0, result: embedded.arr})" :total="embedded.arr.length" />
+      </div>
+    </Modal>
+
   </div>
   <div v-else ref="results">未找到匹配的结果。</div>
 </template>
@@ -107,6 +139,7 @@ export default {
       page: 1,
       value: [],
       show_meta: {},
+      embedded: null,
       edit_target: null,
       edit_new_field: '',
       page_range: [0, 0],
@@ -131,7 +164,18 @@ export default {
     },
     offset() {
       return (this.page - 1) * this.page_size;
+    },
+    columns () {
+      var cols = new Set()
+      for (var r of this.visible_data) {
+        for (var k in r)
+          cols.add(k)
+      }
+      return Array.from(cols).sort()
     }
+  },
+  mounted() {
+    this.start()
   },
   methods: {
     _fetched() {
@@ -141,6 +185,7 @@ export default {
       this.page_range = [0, 0];
       this.turn_page(1);
     },
+    querify: api.querify,
     turn_page(p) {
       this.page = p;
       this.show_meta = {};
@@ -155,6 +200,11 @@ export default {
           },
         });
       }
+    },
+    show_embedded(r, col) {
+      var source = Object.assign({}, r)
+      delete source[col]
+      this.embedded = { arr: r[col], source }
     },
     metas(r) {
       var s = "";

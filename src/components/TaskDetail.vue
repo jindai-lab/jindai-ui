@@ -48,9 +48,9 @@
                 @validation="update_valid('ds_args_' + arg.name, $event)"
               />
             </div>
-            <div class="mui-col-md-2">
+            <div class="mui-col-md-1">
               <button @click="update_shortcut('datasource.' + arg.name, arg.description || arg.name)" class="mui-btn">
-                <font-awesome-icon icon="plus"></font-awesome-icon> 添加到快捷参数
+                <font-awesome-icon icon="asterisk"></font-awesome-icon> 快捷
               </button>
             </div>
           </div>

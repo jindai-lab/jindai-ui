@@ -1,8 +1,8 @@
 <template>
   <div>
-    <h3>任务
+    <h3>工作流
       <button class="mui-btn mui-btn--primary" @click="create_task()">
-        <font-awesome-icon icon="plus" /> 新建任务
+        <font-awesome-icon icon="plus" /> 新建
       </button></h3>
     <div>
       <ol>
@@ -44,7 +44,7 @@ export default {
   methods: {
     create_task() {
       api
-        .put("tasks/", { name: "新建任务 " + new Date() })
+        .put("tasks/", { name: "新建工作流 " + new Date() })
         .then((data) => this.$router.push("/tasks/" + data.result));
     },
     duplicate_task(task) {

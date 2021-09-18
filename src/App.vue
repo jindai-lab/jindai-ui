@@ -1,7 +1,7 @@
 <template>
   <body id="app">
     <div id="sidedrawer" class="mui--no-user-select" v-if="!viewer">
-      <h2 class="fs22 mui--appbar-line-height">
+      <h2 class="fs22 mui--appbar-line-height toplogo">
         <a href="/">文献利用平台</a>
       </h2>
       <div class="mui-divider"></div>
@@ -10,12 +10,12 @@
           <strong>文献</strong>
           <ul>
             <li to="/">搜索</li>
-            <li to="/tasks">任务</li>
+            <li to="/tasks">工作流</li>
             <li to="/gallery">图集</li>
           </ul>
         </li>
         <li>
-          <strong>快捷任务</strong>
+          <strong>快捷方式</strong>
           <ul>
             <li
               v-for="s in shortcuts"
@@ -377,5 +377,9 @@ em {
   position: absolute;
   top: 50%;
   left: 50%;
+}
+
+.toplogo {
+  text-align: center;
 }
 </style>

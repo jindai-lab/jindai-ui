@@ -20,9 +20,6 @@ export default {
       prompt: ''
     };
   },
-  mounted() {
-    this.$refs.results.turn_page(1)
-  },
   watch: {
     id () {
       this.$refs.results.turn_page(1)

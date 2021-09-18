@@ -123,9 +123,10 @@ export default {
         }
       }
       this.req = req;
-      this.$refs.results.start();
+      this.$refs.results.start()
     },
     load_search(e) {
+      if (!this.q) return
       api
         .call("search", {
           q: this.q,
