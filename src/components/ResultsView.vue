@@ -218,7 +218,7 @@ export default {
             "pagenum",
             "pdate",
             "source",
-          ].indexOf(k) >= 0
+          ].includes(k)
         )
           continue;
         s += k + ": " + JSON.stringify(r[k]) + "\n";
