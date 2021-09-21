@@ -33,7 +33,7 @@
         >
           <font-awesome-icon icon="arrow-down" />
         </button>
-        <button @click="append_stage(index)" class="mui-btn">
+        <button @click="append_stage(index+1)" class="mui-btn">
           <font-awesome-icon icon="plus" />
         </button>
       </div>
