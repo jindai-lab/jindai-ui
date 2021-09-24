@@ -19,6 +19,12 @@
     <button class="mui-btn" @click="quicktask">
       <font-awesome-icon icon="forward" /> 立即执行
     </button>
+    <button class="mui-btn" @click="enqueue">
+      <font-awesome-icon icon="play" /> 队列执行
+    </button>
+    <button class="mui-btn mui-btn--primary" @click="$router.push('/tasks/' + id)">
+      <font-awesome-icon icon="edit" /> 编辑
+    </button>
     <h2>运行结果</h2>
     <ResultsView :total="total" @load="load_search" ref="results" />
   </div>
@@ -79,7 +85,7 @@ export default {
     notify(title) {
       api.notify({ title });
     },
-    quicktask() {
+    update_params () {
       for (var k in this.shortcut_params) {
         const v = this.shortcut_params[k];
         const mapped_to = k.split(".");
@@ -92,7 +98,9 @@ export default {
         }
         target[mapped_to.slice(-1)[0]] = v;
       }
-      console.log(this.task);
+    },
+    quicktask() {
+      this.update_params()
       api
         .call("quicktask", {
           query: this.querify(),
@@ -124,6 +132,29 @@ export default {
             api.blob_download(b64toBlob(data.result.data), this.task.name + '.' + data.result.__file_ext__)
           }
         });
+    },
+    enqueue() {
+      this.update_params()
+      
+      if (this.valid.length > 0) {
+        alert("有错误的输入值，请检查");
+        return;
+      }
+      for (var k in this.task.shortcut_map) {
+        if (this.task.shortcut_map[k] === '' || this.task.shortcut_map[k] === null)
+          delete this.task.shortcut_map[k]
+      }
+      
+      api.call("tasks/" + this.task._id, this.task).then((data) => {
+        var id = this.task._id;
+        this.task = data.result.updated;
+        this.task._id = id;
+        return id;
+      }).then((id) =>
+        api.put("queue/", { id }).then((data) => {
+          this.notify(data.result + " 已成功加入后台处理队列。");
+        })
+      );
     },
     querify() {
       return (
