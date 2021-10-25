@@ -27,10 +27,18 @@
     </div>
 
     <div class="mui-row">
-      <div class="paragraphs mui-col-md-6 mui-panel">
-        <p v-for="p in paragraphs" :key="p._id">
-          {{ p.content }}
-        </p>
+      <div class="mui-col-md-6">
+        <div class="paragraphs mui-panel">
+          <p v-for="p in paragraphs" :key="p._id">
+            {{ p.content }}
+          </p>
+        </div>
+        <div v-if="paragraphs.length > 0">
+          日期: {{ paragraphs[0].pdate }}<br />
+          页码: {{ paragraphs[0].pagenum }}<br />
+          大纲: {{ paragraphs[0].outline }}<br />
+          来源: {{ paragraphs[0].source.file }} {{ paragraphs[0].source.page }}<br>
+        </div>
       </div>
       <div class="image mui-col-md-6" @click="show_modal = true">
         <img :src="pdf_image" alt="" style="width: 100%" />

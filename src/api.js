@@ -78,6 +78,8 @@ export default {
                 _stack.pop()
                 _set_loading()
             }
+            if (ex.message.match('code 502'))
+                ex = '后台连接失败，请重试。'
             this.notify({ title: '错误', text: ex, type: 'warn' })
             throw ex
         })

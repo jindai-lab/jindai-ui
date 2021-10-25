@@ -1,53 +1,47 @@
 <template>
   <div>
-    <h3>默认数据集</h3>
-    <button class="mui-btn" @click="refresh_collections">
-      <font-awesome-icon icon="sync"></font-awesome-icon>
-      更新
-    </button>
-    <h3>其他数据集</h3>
-    <div v-for="(ds, index) in datasets" :key="ds[0]" class="mui-row">
+    <h3>数据集</h3>
+    <div v-for="(ds, index) in collections" :key="ds._id" class="mui-row">
       <div class="opers mui-col-md-2">
-        <button
-          @click="move(datasets, index, -1)"
-          :disabled="index == 0"
-          class="mui-btn"
-        >
+        <button @click="move(index, -1)" :disabled="index == 0" class="mui-btn">
           <font-awesome-icon icon="arrow-up" />
         </button>
         <button
-          @click="move(datasets, index, 1)"
-          :disabled="index == datasets.length - 1"
+          @click="move(index, 1)"
+          :disabled="index == collections.length - 1"
           class="mui-btn"
         >
           <font-awesome-icon icon="arrow-down" />
         </button>
+        <button class="mui-btn" @click="refresh_sources(ds._id)">
+          <font-awesome-icon icon="sync" />
+        </button>
       </div>
-      <label class="mui-col-md-2">{{ ds[0] }}</label>
-      <ParamInput
-        class="mui-col-md-8"
-        :arg="{ name: '名称', type: '' }"
-        v-model="ds[1]"
-        @validation="update_valid(ds[0], $event)"
-      />
+      <div class="mui-col-md-4">
+        {{ ds.name }}
+        <button class="mui-btn" @click="rename_collection(ds.name, prompt('更名为：'))">
+          <font-awesome-icon icon="edit" />
+        </button>
+      </div>
+      <div class="mui-col-md-4">
+        {{ ds.mongocollection }}
+      </div>
     </div>
     <div class="mui-row">
-      <div class="opers mui-col-md-2">
+      <div class="opers mui-col-md-4">
         <button @click="append_dataset" class="mui-btn">
           <font-awesome-icon icon="plus" />
         </button>
       </div>
       <ParamInput
         class="mui-col-md-4"
-        :arg="{ name: '代码ID', type: '', default: '' }"
-        v-model="input_ds_id"
-        @validation="update_valid(input_ds_id, $event)"
+        :arg="{ name: '名称', type: '', default: '' }"
+        v-model="input_coll.name"
       />
       <ParamInput
         class="mui-col-md-4"
-        :arg="{ name: '名称', type: '', default: '' }"
-        v-model="input_ds_name"
-        @validation="update_valid(input_ds_name, $event)"
+        :arg="{ name: '数据库', type: '', default: '' }"
+        v-model="input_coll.mongocollection"
       />
     </div>
     <button @click="save" class="mui-btn mui-btn--primary">
@@ -67,91 +61,74 @@ export default {
   },
   data() {
     return {
-      datasets: [],
-      input_ds_name: "",
-      input_ds_id: "",
+      collections: [],
+      input_coll: {},
       valid: [],
     };
   },
   mounted() {
-    api.call("meta").then((data) => {
-      this.datasets = data.result.datasets;
-    });
+    this.load_collections()
   },
   methods: {
-    update_valid(name, val) {
-      this.valid = this.valid.filter((x) => x != name);
-      if (!val) this.valid.push(name);
+    load_collections() {      
+      api.call("collections").then((data) => {
+        this.collections = data.result.sort((x, y) =>
+          x.order_weight === y.order_weight
+            ? x.name.localeCompare(y.name)
+            : Math.sign(x.order_weight - y.order_weight)
+        );
+      });
+    },
+    prompt(t) { return window.prompt(t) 
+    },
+    update_valid(id, field, value) {
+      var coll = { _id: id };
+      coll[field] = value;
+      api
+        .call("collections", { collection: coll })
+        .then(() => api.notify({ title: "更新成功" }));
     },
     save() {
       if (this.valid.length > 0) {
         alert("请更正填写错误的项");
         return;
       }
-      api.call("meta", { datasets: this.datasets });
-      api.notify({ title: "保存成功" });
+      api
+        .call("collections", {
+          collections: this.collections.map((x, i) =>
+            Object.assign({}, x, { order_weight: i, sources: null })
+          ),
+        })
+        .then(() => api.notify({ title: "保存成功" }));
     },
-    move(arr, index, inc) {
-      var c = arr[index];
-      arr.splice(index, 1);
-      arr.splice(index + inc, 0, c);
+    move(index, inc) {
+      function __prefixing(s, prefix) {
+        return s === prefix || s.startsWith(prefix + "--");
+      }
+      var c = this.collections[index];
+      var suba = this.collections.filter(
+        (x, i) => i >= index && __prefixing(x.name, c.name)
+      );
+      this.collections = this.collections.filter(
+        (x, i) => i < index || !__prefixing(x.name, c.name)
+      );
+      this.collections.splice(index + inc, 0, ...suba);
     },
     append_dataset() {
-      if (!this.input_ds_name.length || !this.input_ds_id.length) return;
-      this.datasets.push([this.input_ds_id, this.input_ds_name]);
-      this.input_ds_id = "";
-      this.input_ds_name = "";
+      if (!this.input_coll.name) return;
+      this.collections.push(this.input_coll);
+      this.input_coll = {};
     },
-    refresh_collections() {
-      api
-        .call("quicktask", {
-          query: "??group(_id=$collection,pdfs=addToSet($source.file));addFields(pdfs=slice($pdfs;100))",
-          raw: true,
-        })
-        .then((data) => {
-          var hierarchy = {
-            id: "ROOT",
-            name: "",
-            children: [],
-          };
-          data = data.result
-            .map((x) => {
-              x.name = x._id;
-              x.segments = x.name.split("--");
-              x.level = x.segments.length;
-              return x;
-            })
-            .sort((x, y) => x.name.localeCompare(y.name));
-          for (var x of data) {
-            var parent_obj = hierarchy;
-            for (
-              var i = 0, segs = x.segments[0];
-              i < x.level;
-              i++, segs += "--" + x.segments[i]
-            ) {
-              var cand = parent_obj.children.filter(
-                (child) => child.id == segs
-              )[0];
-              if (typeof cand === "undefined") {
-                cand = {
-                  id: segs,
-                  label: x.segments[i],
-                  children: [],
-                };
-                parent_obj.children.push(cand);
-              }
-              parent_obj = cand;
-            }
-            parent_obj.children = parent_obj.children.concat(x.pdfs.sort().map(x => {return {
-              id: 'pdffile:' + x,
-              label: x.match(/(.*\/)?(.*)/)[2]
-            }}));
-          }
-          api
-            .call("meta", { collections: hierarchy.children })
-            .then(() => api.notify({ title: "保存成功" }));
-        });
+    rename_collection(from, to) {
+      if (from && to)
+        api.call("collections", { rename: {from, to} })
+          .then(() => api.notify({ title: "重命名成功" }))
+          .then(this.load_collections);
     },
+    refresh_sources(id) {
+      api.call("collections", { sources: { _id : id } })
+        .then(() => api.notify({ title: "刷新完成" }));
+    }
   },
 };
 </script>

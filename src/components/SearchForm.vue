@@ -3,15 +3,7 @@
     <h3>搜索</h3>
     <div class="mui-panel">
       <div id="selectors" class="mui-row">
-        <div class="mui-select mui-col-md-4">
-          <select name="collection" id="collection" v-model="selected_dataset">
-            <option value="">默认</option>
-            <option v-for="ds in datasets" :value="ds.id" :key="ds.id">
-              {{ ds.name }}
-            </option>
-          </select>
-        </div>
-        <div class="mui-select mui-col-md-2">
+        <div class="mui-select mui-col-md-3">
           <select name="sort" id="sort" v-model="sort">
             <option value="">默认排序</option>
             <option value="pdate">从旧到新</option>
@@ -28,7 +20,6 @@
       <div
         id="multiselect"
         class="mui-container-fluid"
-        v-show="selected_dataset == ''"
       >
         <treeselect
           :multiple="true"
@@ -74,11 +65,54 @@ export default {
     };
   },
   mounted() {
-    api.call("meta").then((data) => {
-      this.datasets = data.result.datasets.map((x) => {
-        return { name: x[1], id: x[0] };
-      });
-      this.collections = data.result.collections
+    api.call("collections").then((data) => {
+      var hierarchy = {
+        id: "ROOT",
+        name: "",
+        children: [],
+      };
+      data = data.result
+        .map((x) => {
+          x.segments = x.name.split("--");
+          x.level = x.segments.length;
+          return x;
+        })
+        .sort((x, y) => x.order_weight === y.order_weight ? x.name.localeCompare(y.name) : Math.sign(x.order_weight - y.order_weight));
+      for (var x of data) {
+        var parent_obj = hierarchy;
+        for (
+          var i = 0, segs = x.segments[0];
+          i < x.level;
+          i++, segs += "--" + x.segments[i]
+        ) {
+          var cand = parent_obj.children.filter((child) => child.id.match('"name":'+JSON.stringify(segs)))[0];
+          if (typeof cand === "undefined") {
+            cand = {
+              id: JSON.stringify({
+                name: segs,
+                mongocollection: x.mongocollection,
+              }),
+              label: x.segments[i],
+              children: [],
+            };
+            parent_obj.children.push(cand);
+          }
+          parent_obj = cand;
+        }
+        parent_obj.children = parent_obj.children.concat(
+          x.sources.sort().map((y) => {
+            return {
+              id: JSON.stringify({
+                name: x.name,
+                mongocollection: x.mongocollection,
+                source: y
+              }),
+              label: y.match(/(.*\/)?(.*)/)[2],
+            };
+          })
+        );
+      }
+      this.collections = hierarchy.children;
     });
   },
   methods: {
@@ -86,18 +120,27 @@ export default {
       function escapeRegExp(string) {
         return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
       }
-      var req = {};
+      var req = {}, selected = this.selected_collections.map(JSON.parse);
       this.reqstr = "";
-      if (this.selected_collections.length > 0) {
+      if (selected.length > 0) {
         req = { $or: [] };
-        var colls = this.selected_collections
-            .filter((x) => !x.startsWith("pdffile:"))
-            .map(escapeRegExp),
-          pdffiles = this.selected_collections
-            .filter((x) => x.startsWith("pdffile:"))
-            .map((x) => x.split(":", 2).pop()),
+        var colls = selected
+            .filter((x) => !x.source)
+            .map(x => escapeRegExp(x.name)),
+          sourcefiles = selected
+            .filter((x) => x.source)
+            .map((x) => x.source.split(":", 2).pop()),
           reqstr_colls = "",
-          reqstr_pdffiles = "";
+          reqstr_sourcefiles = "";
+        var selected_datasets = new Set(selected.map(x => x.mongocollection))
+        if (selected_datasets.size > 1) {
+          api.notify({
+            title: '您选择的数据集存在跨数据库搜索情况，请重新选择',
+            type: 'warn'
+          })
+          return
+        }
+        this.selected_dataset = Array.from(selected_datasets)[0]
 
         if (colls.length > 0) {
           req.$or.push({
@@ -105,28 +148,29 @@ export default {
               $regex: "^" + colls.join("|^"),
             },
           });
-          reqstr_colls = "collection%`^" + colls.join("|^");
+          reqstr_colls = "collection%`^" + colls.join("|^") + "`";
         }
-        if (pdffiles.length > 0) {
+        if (sourcefiles.length > 0) {
           req.$or.push({
-            'source.file': {
-              $in: pdffiles,
+            "source.file": {
+              $in: sourcefiles,
             },
           });
-          reqstr_pdffiles = "source.file=in([]=>`" + pdffiles.join("`=>`") + "`))";
+          reqstr_sourcefiles =
+            "source.file=in([]=>`" + sourcefiles.join("`=>`") + "`))";
         }
         if (req.$or.length == 1) {
           req = req.$or[0];
-          this.reqstr += "," + (reqstr_colls || reqstr_pdffiles);
+          this.reqstr += "," + (reqstr_colls || reqstr_sourcefiles);
         } else {
-          this.reqstr += ",(" + reqstr_colls + "|" + reqstr_pdffiles + ")";
+          this.reqstr += ",(" + reqstr_colls + "|" + reqstr_sourcefiles + ")";
         }
       }
       this.req = req;
-      this.$refs.results.start()
+      this.$refs.results.start();
     },
     load_search(e) {
-      if (!this.q) return
+      if (!this.q) return;
       api
         .call("search", {
           q: this.q,
@@ -154,7 +198,8 @@ export default {
     },
     export_query(callback) {
       if (typeof callback !== "function")
-        callback = (data) => this.$router.push("/tasks/" + data.result).catch(()=>{});
+        callback = (data) =>
+          this.$router.push("/tasks/" + data.result).catch(() => {});
       api
         .put("tasks/", {
           datasource_config: {
