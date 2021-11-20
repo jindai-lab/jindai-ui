@@ -28,7 +28,7 @@
       </div>
     </div>
     <div class="mui-row">
-      <div class="opers mui-col-md-4">
+      <div class="opers mui-col-md-2">
         <button @click="append_dataset" class="mui-btn">
           <font-awesome-icon icon="plus" />
         </button>

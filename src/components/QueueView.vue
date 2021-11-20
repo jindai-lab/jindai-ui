@@ -17,7 +17,7 @@
           <span>{{ task.id.split("/")[0] }}</span>
           运行于:
           {{ task.last_run }}<br />
-          <a :href="download_link(task)" class="mui-btn" target="_blank">
+          <a :href="download_link(task)" v-if="!task.isnull" class="mui-btn" target="_blank">
             <font-awesome-icon icon="download" /> 下载
           </a>
           <button

@@ -116,7 +116,8 @@ export default {
           api
             .call("tasks/shortcuts")
             .then((data) => (this.shortcuts = data.result));
-          setInterval(() => api.queue().then(queue => this.queue = queue), 10000)
+          if (!this.viewer)
+            setInterval(() => api.queue().then(queue => this.queue = queue), 10000)
         })
         .catch(() => (localStorage.token = ""));
     });
@@ -125,29 +126,6 @@ export default {
     this.$emit("logined");
 
     if (this.viewer) return;
-    /*
-    const sio = io("/", {
-      path: "/api/socket/",
-      auth: localStorage.token,
-    });
-    sio
-      .on("error", (e) => console.log(e))
-      .on("connect", () => {
-        sio.emit("queue");
-        keepAlive();
-      })
-      .on("queue", (data) => {
-        this.queue = data;
-        console.log(data)
-      })
-      .on("debug", (data) => console.log(data));
-    const keepAlive = () => {
-      if (sio.connected) {
-        sio.emit("ping", {});
-        setTimeout(keepAlive, 10000);
-      }
-    };
-    */
   },
   computed: {
     viewer() {

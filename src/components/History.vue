@@ -9,6 +9,9 @@
         <button class="mui-btn" @click="export_query(h)">
           <font-awesome-icon icon="share" />
         </button>
+        <button class="mui-btn" @click="replay(h)">
+          <font-awesome-icon icon="undo" />
+        </button>
       </div>
     </div>
   </div>
@@ -35,6 +38,9 @@ export default {
         })
         .then((data) => this.$router.push("/tasks/" + data.result)).catch(()=>{});
     },
+    replay(h) {
+      this.$router.push('search?q=' + encodeURIComponent('?' + h.querystr))
+    }
   },
 };
 </script>

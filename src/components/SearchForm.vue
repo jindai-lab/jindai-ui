@@ -39,11 +39,12 @@
         <font-awesome-icon icon="download" /> 直接导出 Excel
       </button>
     </div>
-    <ResultsView :total="total" @load="load_search" ref="results" />
+    <ResultsView :page_size="50" :total="total" @load="load_search" ref="results" />
   </div>
 </template>
     
 <script>
+import QueryString from 'qs';
 import api from "../api";
 import ResultsView from "./ResultsView";
 
@@ -65,6 +66,10 @@ export default {
     };
   },
   mounted() {
+    if (location.search) {
+      const search_params = QueryString.parse(location.search.substr(1))
+      Object.assign(this, search_params)
+    }
     api.call("collections").then((data) => {
       var hierarchy = {
         id: "ROOT",
@@ -114,6 +119,7 @@ export default {
       }
       this.collections = hierarchy.children;
     });
+    if (this.q) this.search()
   },
   methods: {
     search() {
@@ -170,7 +176,7 @@ export default {
       this.$refs.results.start();
     },
     load_search(e) {
-      if (!this.q) return;
+      if (!this.q && !this.req) return
       api
         .call("search", {
           q: this.q,
@@ -183,7 +189,7 @@ export default {
         .then((data) => {
           var reg = new RegExp(
             "(" +
-              data.result.query.replace(/[,&]/g, "|").replace(/`/g, "") +
+              data.result.query.split(/[.,/#!$%^&*;:{}=\-_`"'~()|]/g).filter(x => x).join('|') +
               ")",
             "ig"
           );
@@ -194,6 +200,11 @@ export default {
           this.total = data.result.total;
           this.querystr = data.result.query;
           e.callback({ result: data.result.results, offset: e.offset });
+          history.pushState('', '', '?' + QueryString.stringify({
+            q: this.querystr + this.reqstr, 
+            sort: this.sort,
+            selected_dataset: this.selected_dataset
+          }))
         });
     },
     export_query(callback) {
