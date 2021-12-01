@@ -9,77 +9,102 @@
       </v-btn>
       <v-row>
         <v-col>
-      <v-checkbox label="忽略运行中间的错误" v-model="task.resume_next"></v-checkbox>
-   </v-col>
-   <v-col>
-          <v-select v-model="task.concurrent" :items="[
-            {text: '不并行处理', value: 1},
-            {text: '并行处理', value: 3},
-          ]">
+          <v-checkbox
+            label="忽略运行中间的错误"
+            v-model="task.resume_next"
+          ></v-checkbox>
+        </v-col>
+        <v-col>
+          <v-select
+            v-model="task.concurrent"
+            :items="[
+              { text: '不并行处理', value: 1 },
+              { text: '并行处理', value: 3 },
+            ]"
+          >
           </v-select>
-          </v-col>
-          </v-row>
-    <h2>数据源</h2>
-    <div id="datasource" class="mui-panel">
-        <v-autocomplete v-model="task.datasource" :items="datasource_items" flat>
+        </v-col>
+      </v-row>
+      <h2>数据源</h2>
+      <div id="datasource" class="mui-panel">
+        <v-autocomplete
+          v-model="task.datasource"
+          :items="datasource_items"
+          flat
+        >
         </v-autocomplete>
-      <div id="datasource_args">
-        <div v-for="arg in datasource_doc.args" :key="arg.name">
-          <v-row>
-            <v-col>
-              {{ arg.description }}
-              <ParamInput
-                :arg="arg"
-                v-model="task.datasource_config[arg.name]"
-                @validation="update_valid('ds_args_' + arg.name, $event)"
-              />
-            </v-col>
-            <v-col cols="1">
-              <v-btn @click="update_shortcut('datasource.' + arg.name, arg.description || arg.name)" >
-                <v-icon>mdi-asterisk</v-icon> 快捷
-              </v-btn>
-            </v-col>
-          </v-row>
+        <div id="datasource_args">
+          <div v-for="arg in datasource_doc.args" :key="arg.name">
+            <v-row>
+              <v-col>
+                {{ arg.description }}
+                <ParamInput
+                  :arg="arg"
+                  v-model="task.datasource_config[arg.name]"
+                  @validation="update_valid('ds_args_' + arg.name, $event)"
+                />
+              </v-col>
+              <v-col cols="1">
+                <v-btn
+                  @click="
+                    update_shortcut(
+                      'datasource.' + arg.name,
+                      arg.description || arg.name
+                    )
+                  "
+                >
+                  <v-icon>mdi-asterisk</v-icon> 快捷
+                </v-btn>
+              </v-col>
+            </v-row>
+          </div>
         </div>
       </div>
-    </div>
-    <div id="pipeline">
-      <h2>处理流程</h2>
-      <Pipeline
-        v-model="task.pipeline"
-        @shortcut="update_shortcut"
-        :map_id="'pipeline'"
-        @validation="update_valid('pipeline_main', $event)"
-      />
-    </div>
-    
-    <div id="shortcut_map">
-      <h2>快捷参数</h2>
-      <div class="mui-panel">
-        <div v-for="v, k in task.shortcut_map" :key="k">
-          <ParamInput :arg="{name: k, type: 'str', default: '\'\''}" v-model="task.shortcut_map[k]" />
+      <div id="pipeline">
+        <h2>处理流程</h2>
+        <Pipeline
+          v-model="task.pipeline"
+          @shortcut="update_shortcut"
+          :map_id="'pipeline'"
+          @validation="update_valid('pipeline_main', $event)"
+        />
+      </div>
+
+      <div id="shortcut_map">
+        <h2>快捷参数</h2>
+        <div class="mui-panel">
+          <div v-for="(v, k) in task.shortcut_map" :key="k">
+            <ParamInput
+              :arg="{ name: k, type: 'str', default: '\'\'' }"
+              v-model="task.shortcut_map[k]"
+            />
+          </div>
         </div>
       </div>
-    </div>
     </v-card-text>
     <v-card-actions>
       <v-row>
-    <v-btn
-      @click="save().then(() => notify('保存成功'))"
-      class="ml-5" color="primary"
-    >
-      <v-icon>mdi-check</v-icon> 保存
-    </v-btn>
-    <v-btn class="ml-3" color="error" @click="delete_task()">
-      <v-icon>mdi-delete</v-icon> 删除
-    </v-btn>
-    <v-btn class="ml-3" @click="show_code = !show_code" >
-      <v-icon>mdi-code-braces</v-icon>
-    </v-btn>
+        <v-btn
+          @click="save().then(() => notify('保存成功'))"
+          class="ml-5"
+          color="primary"
+        >
+          <v-icon>mdi-check</v-icon> 保存
+        </v-btn>
+        <v-btn class="ml-3" color="error" @click="delete_task()">
+          <v-icon>mdi-delete</v-icon> 删除
+        </v-btn>
+        <v-btn class="ml-3" @click="show_code = !show_code">
+          <v-icon>mdi-code-braces</v-icon>
+        </v-btn>
       </v-row>
-    <v-row>
-    <v-textarea v-show="show_code" :value="querify(value)" readonly></v-textarea>
-    </v-row>
+      <v-row class="d-block">
+        <v-textarea
+          v-show="show_code"
+          :value="querify(task)"
+          readonly
+        ></v-textarea>
+      </v-row>
     </v-card-actions>
   </v-card>
 </template>
@@ -129,24 +154,27 @@ export default {
     },
     datasource_items() {
       function _items(obj) {
-        var items = []
+        var items = [];
         for (var k in obj) {
-          let x = obj[k]
+          let x = obj[k];
           items.push({
-            text: `${x.doc.split('\n')[0]} ${x.name}`,
-            value: `${x.name}`
-          })
+            text: `${x.doc.split("\n")[0]} ${x.name}`,
+            value: `${x.name}`,
+          });
         }
-        return items
+        return items;
       }
-      var items = []
+      var items = [];
       for (var group in this.datasources) {
-        items.push({
-          header: group
-        }, ... _items(this.datasources[group]))
+        items.push(
+          {
+            header: group,
+          },
+          ..._items(this.datasources[group])
+        );
       }
-      return items
-    }
+      return items;
+    },
   },
   methods: {
     update_valid(name, valid) {
@@ -159,7 +187,7 @@ export default {
       api.delete("tasks/" + this.task._id).then((data) => {
         if (data.result.ok) {
           api.notify("删除成功");
-          this.$router.push("/tasks").catch(()=>{});
+          this.$router.push("/tasks").catch(() => {});
         }
       });
     },
@@ -169,8 +197,11 @@ export default {
         return;
       }
       for (var k in this.task.shortcut_map) {
-        if (this.task.shortcut_map[k] === '' || this.task.shortcut_map[k] === null)
-          delete this.task.shortcut_map[k]
+        if (
+          this.task.shortcut_map[k] === "" ||
+          this.task.shortcut_map[k] === null
+        )
+          delete this.task.shortcut_map[k];
       }
       return api.call("tasks/" + this.task._id, this.task).then((data) => {
         var id = this.task._id;
@@ -190,8 +221,9 @@ export default {
       );
     },
     update_shortcut(shortcut_name, shortcut_description) {
-      this.task.shortcut_map[shortcut_name] = shortcut_description || shortcut_name.split('.').slice(-1)[0]
-      this.$forceUpdate()
+      this.task.shortcut_map[shortcut_name] =
+        shortcut_description || shortcut_name.split(".").slice(-1)[0];
+      this.$forceUpdate();
     },
     querify() {
       return (

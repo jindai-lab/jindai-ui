@@ -7,10 +7,13 @@
       :items="arg.type.split('|')">
     </v-select>
 
-    <v-checkbox v-else-if="arg.type == 'bool'" :label="arg.name" value="true" :checked="value" 
+    <div v-else-if="arg.type == 'bool'">
+    <v-simple-checkbox :value="value" class="d-inline-block" ref="checkbox"
         v-bind="$attrs"
-        v-on="inputListeners"></v-checkbox>
-    
+        v-on="inputListeners">
+        </v-simple-checkbox><label @click="() => $refs.checkbox.click()">{{ arg.name }}</label>
+    </div>
+
     <div v-else-if="arg.type == 'js' || ['query', 'cond'].includes(arg.name)">
       <prism-editor class="my-editor match-braces"
         v-model="code"
@@ -39,8 +42,8 @@
         :required="!arg.default"
         :label="arg.name">
     </v-text-field>
-    
-    <blockquote>{{ prompt }}</blockquote>
+
+    {{ prompt }}
   </div>
 </template>
 
@@ -48,7 +51,7 @@
 function input_func(vm) {
   return function (event) {
     var val = vm.validate(
-      vm.arg.type === "bool" ? event.target.checked : event.target.value
+      event
     );
     if (typeof val !== "undefined") {
       vm.prompt = "";
@@ -77,7 +80,7 @@ export default {
   },
   computed: {
     inputListeners: function () {
-      var vm = this;
+      const vm = this;
       return Object.assign({}, this.$listeners, {
         input: input_func(vm),
       });

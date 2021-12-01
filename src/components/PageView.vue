@@ -16,7 +16,7 @@
           type="number"
           style="max-width: 50px"
           :value="page"
-          @keyup.enter="page = parseInt($event.target.value)"
+          @keyup.enter="page = parseInt($event)"
         ></v-text-field>
       <v-btn icon @click="swipe_handler('left')">
         <v-icon>mdi-chevron-right</v-icon>

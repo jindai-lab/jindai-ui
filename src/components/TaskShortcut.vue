@@ -7,12 +7,12 @@
           <v-list-item v-for="(k, v) in task.shortcut_map" :key="k">
             <v-list-item-content>
               <v-list-item-title>{{ k }}</v-list-item-title>
-              <v-list-item-subtitl>
+              <v-list-item-subtitle>
               <ParamInput
                 :arg="get_map_arg(v)"
                 v-model="shortcut_params[v]"
                 @validation="update_valid('shortcut_param_' + v, $event)"
-              /></v-list-item-subtitl>
+              /></v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
         </v-list>
@@ -190,6 +190,7 @@ export default {
       );
     },
     get_map_arg(v) {
+      this.shortcut_params[v] = ''
       v = v.split(".");
       // maping value shoud be like datasource.[arg name] or pipeline.[index].[arg name]
       var arg = {};

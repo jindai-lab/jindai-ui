@@ -87,7 +87,7 @@
             <v-text-field
               class="d-inline-block ml-1"
               style="max-width: 30px"
-              @change="turn_page(parseInt($event.target.value) || page)"
+              @change="turn_page(parseInt($event) || page)"
             ></v-text-field>
         </div>
       </div>
