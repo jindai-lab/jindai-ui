@@ -23,7 +23,7 @@
           </v-list-item>
         </v-list-group>
 
-        <v-list-group v-show="shortcuts">
+        <v-list-group v-show="shortcuts.length>0">
           <template v-slot:activator>
             <v-list-item-title>快捷方式</v-list-item-title>
           </template>
