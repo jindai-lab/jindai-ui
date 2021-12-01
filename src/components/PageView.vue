@@ -1,33 +1,30 @@
 <template>
-  <div v-touch:swipe="swipe_handler">
-    <div class="mui-row">
-      <h3 class="mui-col-md-8">
-        <!-- <a href="javascript:void(0)"><font-awesome-icon icon="arrow-left" @click="$router.back()" /></a> -->
-        {{ file }}
-      </h3>
-      <div class="mui-col-md-4 mui-row">
-      <button
-        class="mui-btn mui-col-md-2"
+  <v-card flat v-touch="{left: () => swipe_handler('left'), right: () => swipe_handler('right')}">
+    <v-card-text>
+      <v-row>
+        <v-col class="heading">
+              {{ file }}
+        </v-col>
+        <v-spacer></v-spacer>
+      <v-btn icon
         @click="swipe_handler('right')"
         :enabled="page > 0"
       >
-        <font-awesome-icon icon="caret-left" />
-      </button>
-      <div class="mui-textfield mui-col-md-8">
-        <input
-          type="text"
+        <v-icon>mdi-chevron-left</v-icon>
+      </v-btn>
+      <v-text-field dense flat
+          type="number"
+          style="max-width: 50px"
           :value="page"
           @keyup.enter="page = parseInt($event.target.value)"
-        />
-      </div>
-      <button class="mui-btn mui-col-md-2" @click="swipe_handler('left')">
-        <font-awesome-icon icon="caret-right" />
-      </button>
-      </div>
-    </div>
-
-    <div class="mui-row">
-      <div class="mui-col-md-6">
+        ></v-text-field>
+      <v-btn icon @click="swipe_handler('left')">
+        <v-icon>mdi-chevron-right</v-icon>
+      </v-btn>
+      </v-row>
+    
+    <v-row>
+      <v-col cols="6">
         <div class="paragraphs mui-panel">
           <p v-for="p in paragraphs" :key="p._id">
             {{ p.content }}
@@ -39,30 +36,25 @@
           大纲: {{ paragraphs[0].outline }}<br />
           来源: {{ paragraphs[0].source.file }} {{ paragraphs[0].source.page }}<br>
         </div>
-      </div>
-      <div class="image mui-col-md-6" @click="show_modal = true">
+      </v-col>
+      <v-col cols="6" class="image mui-col-md-6" @click="show_modal = true">
         <img :src="pdf_image" alt="" style="width: 100%" />
-      </div>
-    </div>
-    <Modal v-if="show_modal" @close="show_modal = false">
-      <h3 slot="header"></h3>
-      <div slot="body">
-        <img :src="pdf_image" alt="" style="width: 100%" />
-      </div>
-    </Modal>
-  </div>
+      </v-col>
+    </v-row>
+    <v-dialog v-model="show_modal" fullscreen>
+      <v-btn fab icon absolute top right class="ma-10" @click="show_modal = false"><v-icon>mdi-close</v-icon></v-btn>
+      <img :src="pdf_image" alt="" style="width: 100%" />
+    </v-dialog>
+  </v-card-text>
+  </v-card>
 </template>
 
 <script>
 import QueryString from 'qs';
 import api from "../api";
-import Modal from "./ModalView";
 
 export default {
   name: "PageView",
-  components: {
-    Modal,
-  },
   data() {
     return {
       file: '',

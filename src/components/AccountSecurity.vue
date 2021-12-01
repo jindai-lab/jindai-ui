@@ -1,28 +1,17 @@
 <template>
-  <div>
-    <h3>账户设置</h3>
-    <div class="mui-panel">
-      <div class="mui-textfield">
-        <label>原密码</label>
-        <input type="password" v-model="old_password" />
-      </div>
-      <div class="mui-textfield">
-        <label>新密码</label>
-        <input type="password" v-model="password" />
-      </div>
-      <div class="mui-textfield">
-        <label>重复新密码</label>
-        <input
-          type="password"
-          v-model="password2"
-          :invalid="password !== password2"
-        />
-      </div>
-      <button class="mui-btn mui-btn--primary" @click="update_password">
+  <v-card flat>
+    <v-card-title>账户设置</v-card-title>
+    <v-card-text>
+      <v-text-field v-model="old_password" type="password" label="原密码"></v-text-field>
+      <v-text-field v-model="password" type="password" label="新密码"></v-text-field>
+      <v-text-field v-model="password2" type="password" label="重复新密码"></v-text-field>
+    </v-card-text>
+    <v-card-actions>
+      <v-btn color="primary" class="ml-3" @click="update_password">
         更新密码
-      </button>
-    </div>
-  </div>
+      </v-btn>
+    </v-card-actions>
+  </v-card>
 </template>
 
 

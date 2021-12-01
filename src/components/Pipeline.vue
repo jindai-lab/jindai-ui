@@ -1,8 +1,8 @@
 <template>
   <div>
-    <button @click="append_stage()" class="mui-btn">
-      <font-awesome-icon icon="plus" />
-    </button>
+    <v-btn @click="append_stage()" class="mb-5 mt-5">
+      <v-icon>mdi-plus</v-icon>
+    </v-btn>
     <div
       v-for="(stage, index) in value"
       :key="index"
@@ -16,27 +16,28 @@
         @shortcut="update_shortcut"
       />
       <div class="opers">
-        <button @click="remove_stage(index)" class="mui-btn">
-          <font-awesome-icon icon="trash" />
-        </button>
-        <button
+        <v-btn icon @click="remove_stage(index)" >
+          <v-icon>mdi-delete</v-icon>
+        </v-btn>
+        <v-btn icon
           @click="move_stage(index, -1)"
           v-show="index > 0"
-          class="mui-btn"
+          
         >
-          <font-awesome-icon icon="arrow-up" />
-        </button>
-        <button
+          <v-icon>mdi-arrow-up</v-icon>
+        </v-btn>
+        <v-btn
           @click="move_stage(index, 1)"
           v-show="index < value.length - 1"
-          class="mui-btn"
+          icon
         >
-          <font-awesome-icon icon="arrow-down" />
-        </button>
-        <button @click="append_stage(index+1)" class="mui-btn">
-          <font-awesome-icon icon="plus" />
-        </button>
+          <v-icon>mdi-arrow-down</v-icon>
+        </v-btn>
+        <v-btn icon @click="append_stage(index+1)" >
+          <v-icon>mdi-plus</v-icon>
+        </v-btn>
       </div>
+        <v-divider class="mb-5"></v-divider>
     </div>
   </div>
 </template>

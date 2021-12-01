@@ -1,29 +1,32 @@
 <template>
   <div>
     <h3>用户
-      <button class="mui-btn mui-btn--primary" @click="show_modify = false; new_user = { roles: [] }; show_modal = true; ">
-        <font-awesome-icon icon="plus" /> 添加用户
-      </button></h3>
+      <v-btn color="primary" @click="show_modify = false; new_user = { roles: [] }; show_modal = true; ">
+        <v-icon>mdi-plus</v-icon> 添加用户
+      </v-btn></h3>
     <div>
       <ol>
         <li v-for="u in users" :key="u._id" class="mui-panel">
           <span class="name">{{ u.username }}</span>
           <span class="opers">
-            <button class="mui-btn" @click="show_modify = true; new_user = Object.assign(u, {'password': ''}); show_modal = true;">
-              <font-awesome-icon icon="edit" /> 用户角色
-            </button>
-            <button class="mui-btn" @click="del_user(u)">
-              <font-awesome-icon icon="trash" /> 删除用户
-            </button>
+            <v-btn @click="show_modify = true; new_user = Object.assign(u, {'password': ''}); show_modal = true;">
+              <v-icon>mdi-account-edi</v-icon> 用户角色
+            </v-btn>
+            <v-btn @click="del_user(u)">
+              <v-icon>mdi-account-cancel</v-icon> 删除用户
+            </v-btn>
              </span
           >
         </li>
       </ol>
     </div>
-    <ModalView v-if="show_modal" @close="show_modal = false">
-      <h3 slot="header" v-if="show_modify">修改用户角色</h3>
-      <h3 slot="header" v-else>添加用户</h3>
-      <div slot="body">
+    <v-dialog :value="show_modal">
+      <v-card>
+        <v-card-title v-if="show_modify">
+          修改用户角色
+        </v-card-title>
+        <v-card-title v-else>添加用户</v-card-title>
+      <v-card-text>
         <div class="mui-textfield">
           <label>用户名</label>
           <input type="text" v-model="new_user.username" :disabled="show_modify">
@@ -44,20 +47,18 @@
         <div class="mui-checkbox">
           <label><input type="checkbox" value="admin" v-model="new_user.roles">用户及其他管理</label>
         </div>
-        <button class="mui-btn" @click="modify_user_role" v-if="show_modify">修改</button>
-        <button class="mui-btn" @click="add_user" v-else>确定</button>
-      </div>
-    </ModalView>
+        <v-btn  @click="modify_user_role" v-if="show_modify">修改</v-btn>
+        <v-btn  @click="add_user" v-else>确定</v-btn>
+      </v-card-text>
+      </v-card>
+    </v-dialog>>
   </div>
 </template>
 
 <script>
 import api from "../api";
-import ModalView from './ModalView'
-
 export default {
   name: 'UserList',
-  components: {ModalView},
   data() {
     return {
       users: [],

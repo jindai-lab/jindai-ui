@@ -1,35 +1,34 @@
 <template>
-  <div>
-    <h3>工作流
-      <button class="mui-btn mui-btn--primary" @click="create_task()">
-        <font-awesome-icon icon="plus" /> 新建
-      </button></h3>
-    <div>
-      <ol>
-        <li v-for="task in tasks" :key="task._id" class="mui-panel">
+  <v-card flat>
+    <v-card-title>工作流
+      <v-spacer></v-spacer>
+      <v-btn color="primary" @click="create_task()">
+        <v-icon>mdi-plus</v-icon> 新建
+      </v-btn>
+    </v-card-title>
+      <v-card-text>
+        <v-row v-for="task in tasks" :key="task._id" class="ma-3">
           <span class="name">{{ task.name }}</span>
           <span class="opers">
-            <router-link
+            <v-btn 
               :to="'/tasks/' + task._id"
-              class="mui-btn mui-btn"
             >
-              <font-awesome-icon icon="edit" />
-            </router-link>
+              <v-icon>mdi-file-edit-outline</v-icon>
+            </v-btn>
 
-            <button @click="duplicate_task(task)" class="mui-btn">
-              <font-awesome-icon icon="copy" />
-            </button>
+            <v-btn @click="duplicate_task(task)" >
+              <v-icon>mdi-content-copy</v-icon>
+            </v-btn>
 
-            <button class="mui-btn" @click="delete_task(task)">
-              <font-awesome-icon icon="trash" />
-            </button>
+            <v-btn @click="delete_task(task)">
+              <v-icon>mdi-delete</v-icon>
+            </v-btn>
              </span
           ><br />
           <span class="id">{{ task._id }}</span>
-        </li>
-      </ol>
-    </div>
-  </div>
+        </v-row>
+      </v-card-text>
+  </v-card>
 </template>
 
 <script>
@@ -80,5 +79,9 @@ ol {
 
 span.id::before {
   content: "ID: ";
+}
+
+.opers .v-btn {
+  margin-right: 12px;
 }
 </style>

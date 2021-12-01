@@ -1,60 +1,45 @@
 <template>
   <div>
-    <div class="mui-select" v-if="arg.type.indexOf('|') >= 0">
-      <select
-        :value="value"
-        v-bind="$attrs"
-        v-on="inputListeners"
-        @change="inputListeners.input"
-        :required="!arg.default"
-      >
-        <option value="" v-if="arg.default">默认</option>
-        <option v-for="opt in arg.type.split('|')" :key="opt">{{ opt }}</option>
-      </select>
-      <label>{{ arg.name }}</label>
-    </div>
+    <v-select 
+      v-if="arg.type.indexOf('|') >= 0" 
+      :label="arg.name"
+      :value="value === null || typeof value === 'undefined' ? arg.default : value" v-bind="$attrs" v-on="inputListeners" @change="inputListeners.input"
+      :items="arg.type.split('|')">
+    </v-select>
 
-    <div class="mui-checkbox" v-else-if="arg.type == 'bool'">
-      <label><input
-        type="checkbox"
-        value="true"
-        :checked="value"
+    <v-checkbox v-else-if="arg.type == 'bool'" :label="arg.name" value="true" :checked="value" 
         v-bind="$attrs"
-        v-on="inputListeners"
-      />
-      {{ arg.name }}</label>
-    </div>
-    <div class="mui-textfield" v-else-if="arg.type == 'js' || arg.name == 'query' || arg.name == 'cond'">
+        v-on="inputListeners"></v-checkbox>
+    
+    <div v-else-if="arg.type == 'js' || ['query', 'cond'].includes(arg.name)">
       <prism-editor class="my-editor match-braces"
         v-model="code"
         @input="$emit('input', code)"
         :highlight="highlighter"
         line-numbers />
-      <label>{{ arg.name }}</label>
     </div>
-    <div class="mui-textfield" v-else-if="arg.type == 'str' || arg.type == 'string'">
-      <textarea
+    
+    <v-textarea v-else-if="arg.type == 'str' || arg.type == 'string'"
         :value="value"
         v-bind="$attrs"
         v-on="inputListeners"
-        :placeholder="arg.default"
+        :hint="arg.default"
         :required="!arg.default"
         :rows="arg.length > 20 ? 4 : 1"
         cols="40"
-      ></textarea>
-      <label>{{ arg.name }}</label>
-    </div>
-    <div class="mui-textfield" v-else>
-      <input
+        :label="arg.name"
+      ></v-textarea>
+    
+    <v-text-field v-else
         type="text"
         :value="value"
         v-bind="$attrs"
         v-on="inputListeners"
         :placeholder="arg.default"
         :required="!arg.default"
-      />
-      <label>{{ arg.name }}</label>
-    </div>
+        :label="arg.name">
+    </v-text-field>
+    
     <blockquote>{{ prompt }}</blockquote>
   </div>
 </template>

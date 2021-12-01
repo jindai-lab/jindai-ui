@@ -1,45 +1,26 @@
 <template>
   <div>
-    处理队列:
-    <a
-      @click="show_finished = true"
-      href="javascript:void(0)"
-      :class="data.finished.length > 0 ? 'click-here' : ''"
-      ><span>{{ data.finished.length }}</span> 已完成</a
+    <div @click="show_finished = true">
+    <v-badge
+      :value="data.finished.length > 0"
+      :content="data.finished.length"
     >
-    - {{ data.waiting }} 等待中 - 正在运行:
+    处理结果
+    </v-badge>
+    <v-badge
+      :value="data.waiting > 0"
+      :content="data.waiting"
+    >
+    等待中
+    </v-badge>
+     正在运行:
     {{ data.running || "无" }}
-    <Modal v-if="show_finished" @close="show_finished = false">
-      <h3 slot="header">已完成的任务</h3>
-      <div slot="body" v-if="data.finished.length > 0">
-        <div v-for="task in data.finished" :key="task.id">
-          <h4>{{ task.name }}</h4>
-          <span>{{ task.id.split("/")[0] }}</span>
-          运行于:
-          {{ task.last_run }}<br />
-          <a :href="download_link(task)" v-if="!task.isnull" class="mui-btn" target="_blank">
-            <font-awesome-icon icon="download" /> 下载
-          </a>
-          <button
-            class="mui-btn"
-            @click="view_result(task)"
-            v-if="task.viewable"
-          >
-            <font-awesome-icon icon="eye" /> 查看
-          </button>
-          <button class="mui-btn" @click="delete_result(task)">
-            <font-awesome-icon icon="trash" /> 删除
-          </button>
-        </div>
-        <div class="mui-divide"></div>
-      </div>
-    </Modal>
+    </div>
   </div>
 </template>
 
 <script>
 import api from "../api";
-import Modal from "./ModalView";
 
 export default {
   data() {
@@ -48,9 +29,6 @@ export default {
     };
   },
   props: ["data"],
-  components: {
-    Modal,
-  },
   methods: {
     download_link(task) {
       return '/api/queue/' + encodeURIComponent(task.id)

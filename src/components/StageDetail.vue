@@ -1,35 +1,35 @@
 <template>
   <div class="stage">
     <div class="mui-select">
-    <treeselect
-      :options="stage_options"
+      
+      {{ stage_doc.doc }}
+    <v-autocomplete
+      :items="stage_options"
       :disable-branch-nodes="true"
       :flatten-search-results="true"
       v-model="value[0]"
       @change="update_input"
-    />
+    ></v-autocomplete>
     </div>
     <blockquote>
-      {{ stage_doc.doc }}
     </blockquote>
     <div class="stage-arg">
       <div v-for="arg in stage_doc.args" :key="arg.name">
         <div v-if="arg.type !== 'pipeline'">
-          <div class="mui-row">
-            <div class="mui-col-md-10">
-              <ParamInput :arg="arg" v-model="value[1][arg.name]" @validation="update_valid('stage_' + arg.name, $event)" />
-            </div>
-            <div class="mui-col-md-1">
-              <button @click="update_shortcut(map_id + '.' + arg.name, arg.description || arg.name)" class="mui-btn">
-                <font-awesome-icon icon="asterisk"></font-awesome-icon> 快捷
-              </button>
-            </div>
-          </div>
-          <blockquote>{{ arg.description }}</blockquote>
+          <v-row>
+            <v-col>
+              {{ arg.description }}<ParamInput :arg="arg" v-model="value[1][arg.name]" @validation="update_valid('stage_' + arg.name, $event)" />
+            </v-col>
+            <v-col cols="1">
+              <v-btn @click="update_shortcut(map_id + '.' + arg.name, arg.description || arg.name)" >
+                <v-icon>mdi-asterisk</v-icon> 快捷
+              </v-btn>
+            </v-col>
+          </v-row>
         </div>
         <div class="mui-textfield" v-else>
           <label>{{ arg.name }}</label>
-          <blockquote>{{ arg.description }}</blockquote>
+          {{ arg.description }}
           <Pipeline v-model="value[1][arg.name]" :map_id="map_id + '.' + arg.name" @validation="update_valid('pipeline_' + arg.name, $event)" @shortcut="update_shortcut" />
         </div>
       </div>
@@ -76,19 +76,14 @@ export default {
     stage_options () {
       var opts = []
       for (var group in this.stages) {
-        var children = []
+        opts.push({header: group})
         for (var stname in this.stages[group]) {
           const s = this.stages[group][stname]
-          children.push({
-            id: stname,
-            label: stname + ' ' + s.doc.split('\n')[0]
+          opts.push({
+            value: stname,
+            text: stname + ' ' + s.doc.split('\n')[0]
           })
         }
-        opts.push({
-          id: 'group:' + group,
-          label: group,
-          children: children.sort((a, b) => a.label.localeCompare(b.label))
-        })
       }
       return opts
     }

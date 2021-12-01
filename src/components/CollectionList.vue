@@ -3,25 +3,25 @@
     <h3>数据集</h3>
     <div v-for="(ds, index) in collections" :key="ds._id" class="mui-row">
       <div class="opers mui-col-md-2">
-        <button @click="move(index, -1)" :disabled="index == 0" class="mui-btn">
-          <font-awesome-icon icon="arrow-up" />
-        </button>
-        <button
+        <v-btn @click="move(index, -1)" :disabled="index == 0" >
+          <v-icon>mdi-arrow-up</v-icon>
+        </v-btn>
+        <v-btn
           @click="move(index, 1)"
           :disabled="index == collections.length - 1"
-          class="mui-btn"
+          
         >
-          <font-awesome-icon icon="arrow-down" />
-        </button>
-        <button class="mui-btn" @click="refresh_sources(ds._id)">
-          <font-awesome-icon icon="sync" />
-        </button>
+          <v-icon>mdi-arrow-down</v-icon>
+        </v-btn>
+        <v-btn  @click="refresh_sources(ds._id)">
+          <v-icon>mdi-sync</v-icon>
+        </v-btn>
       </div>
       <div class="mui-col-md-4">
         {{ ds.name }}
-        <button class="mui-btn" @click="rename_collection(ds.name, prompt('更名为：'))">
-          <font-awesome-icon icon="edit" />
-        </button>
+        <v-btn  @click="rename_collection(ds.name, prompt('更名为：'))">
+          <v-icon>mdi-edit</v-icon>
+        </v-btn>
       </div>
       <div class="mui-col-md-4">
         {{ ds.mongocollection }}
@@ -29,9 +29,9 @@
     </div>
     <div class="mui-row">
       <div class="opers mui-col-md-2">
-        <button @click="append_dataset" class="mui-btn">
-          <font-awesome-icon icon="plus" />
-        </button>
+        <v-btn @click="append_dataset" >
+          <v-icon>mdi-plus</v-icon>
+        </v-btn>
       </div>
       <ParamInput
         class="mui-col-md-4"
@@ -44,9 +44,9 @@
         v-model="input_coll.mongocollection"
       />
     </div>
-    <button @click="save" class="mui-btn mui-btn--primary">
-      <font-awesome-icon icon="check" /> 保存
-    </button>
+    <v-btn @click="save" class="mui-btn mui-btn--primary">
+      <v-icon>mdi-check</v-icon> 保存
+    </v-btn>
   </div>
 </template>
 

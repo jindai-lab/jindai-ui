@@ -4,14 +4,14 @@
     <ParamInput class="mui-textfield" :arg="{ name: '备选数量', type: 'int' }" v-model="n" />
     <ParamInput class="mui-textfield" :arg="{ name: '概率阈限', type: 'float' }" v-model="topp" />
     <ParamInput ref="editor" class="mui-textfield" :arg="{ name: '文本内容', type: 'str' }" v-model="text" />
-    <button @click="complete" class="mui-btn mui-btn--primary">
-      <font-awesome-icon icon="sync" /> 补全
-    </button>
+    <v-btn @click="complete" class="mui-btn mui-btn--primary">
+      <v-icon>mdi-sync</v-icon> 补全
+    </v-btn>
     <ul class="results">
       <li v-for="r in results" :key="r">{{ r }}
-        <button @click="append(r)" class="mui-btn">
-          <font-awesome-icon icon="plus" />
-        </button>
+        <v-btn @click="append(r)" >
+          <v-icon>mdi-plus</v-icon>
+        </v-btn>
       </li>
     </ul>
   </div>

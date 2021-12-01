@@ -34,8 +34,8 @@
         />
       </div>
     </div>
-    <button class="mui-btn mui-btn--primary" @click="preview">预览</button>
-    <button class="mui-btn" :disabled="!previewed" @click="execute">运行</button>
+    <v-btn class="mui-btn mui-btn--primary" @click="preview">预览</v-btn>
+    <v-btn  :disabled="!previewed" @click="execute">运行</v-btn>
     <div class="mui-panel">
       <pre>{{ preview_text }}</pre>
     </div>

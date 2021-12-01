@@ -1,20 +1,22 @@
 <template>
-  <div>
-    <h3>检索历史</h3>
-    <div class="mui-row mui-panel" v-for="h in history" :key="h._id">
-      <div class="mui-col-md-2">{{ h.user }}</div>
-      <div class="mui-col-md-2">{{ h.created_at }}</div>
-      <div class="mui-col-md-6">{{ h.querystr }}</div>
-      <div class="mui-col-md-2">
-        <button class="mui-btn" @click="export_query(h)">
-          <font-awesome-icon icon="share" />
-        </button>
-        <button class="mui-btn" @click="replay(h)">
-          <font-awesome-icon icon="undo" />
-        </button>
-      </div>
-    </div>
-  </div>
+  <v-card flat>
+    <v-card-title>检索历史</v-card-title>
+    <v-card-text>
+    <v-row v-for="h in history" :key="h._id">
+      <v-col>{{ h.user }}</v-col>
+      <v-col>{{ h.created_at }}</v-col>
+      <v-col cols="6">{{ h.querystr }}</v-col>
+      <v-col>
+        <v-btn icon @click="export_query(h)">
+          <v-icon>mdi-share</v-icon>
+        </v-btn>
+        <v-btn icon @click="replay(h)">
+          <v-icon>mdi-replay</v-icon>
+        </v-btn>
+      </v-col>
+    </v-row>
+    </v-card-text>
+  </v-card>
 </template>
 
 <script>

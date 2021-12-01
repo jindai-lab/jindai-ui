@@ -1,60 +1,45 @@
 <template>
-  <div id="task">
-    <div class="mui-panel">
+  <v-card flat>
+    <v-card-text>
       <ParamInput v-model="task.name" :arg="{ name: '名称', type: '' }" />
       <span>ID: {{ task._id }}</span
       ><br />
-      <button class="mui-btn" @click="enqueue">
-        <font-awesome-icon icon="play" /> 后台执行
-      </button>
-      <div class="mui-checkbox">
-        <label>
-          <input type="checkbox" v-model="task.resume_next" />
-          忽略运行中间的错误</label
-        >
-        <div class="mui-select">
-          <select v-model="task.concurrent">
-            <option :value="1">不并行处理</option>
-            <option :value="3">并行处理</option>
-          </select>
-        </div>
-      </div>
-    </div>
+      <v-btn color="primary" @click="enqueue">
+        <v-icon>mdi-play</v-icon> 后台执行
+      </v-btn>
+      <v-row>
+        <v-col>
+      <v-checkbox label="忽略运行中间的错误" v-model="task.resume_next"></v-checkbox>
+   </v-col>
+   <v-col>
+          <v-select v-model="task.concurrent" :items="[
+            {text: '不并行处理', value: 1},
+            {text: '并行处理', value: 3},
+          ]">
+          </v-select>
+          </v-col>
+          </v-row>
     <h2>数据源</h2>
     <div id="datasource" class="mui-panel">
-      <div class="mui-select">
-        <select v-model="task.datasource">
-          <optgroup
-            v-for="(dss, group) in datasources"
-            :label="group"
-            :key="group"
-          >
-            <option v-for="ds in dss" :key="ds.name" :value="ds.name">
-              {{ ds.name }} {{ ds.doc }}
-            </option>
-          </optgroup>
-        </select>
-      </div>
-      <blockquote id="datasource_explanation">
-        {{ datasource_doc.doc }}
-      </blockquote>
+        <v-autocomplete v-model="task.datasource" :items="datasource_items" flat>
+        </v-autocomplete>
       <div id="datasource_args">
         <div v-for="arg in datasource_doc.args" :key="arg.name">
-          <div class="mui-row">
-            <div class="mui-col-md-10">
+          <v-row>
+            <v-col>
+              {{ arg.description }}
               <ParamInput
                 :arg="arg"
                 v-model="task.datasource_config[arg.name]"
                 @validation="update_valid('ds_args_' + arg.name, $event)"
               />
-            </div>
-            <div class="mui-col-md-1">
-              <button @click="update_shortcut('datasource.' + arg.name, arg.description || arg.name)" class="mui-btn">
-                <font-awesome-icon icon="asterisk"></font-awesome-icon> 快捷
-              </button>
-            </div>
-          </div>
-          <blockquote>{{ arg.description }}</blockquote>
+            </v-col>
+            <v-col cols="1">
+              <v-btn @click="update_shortcut('datasource.' + arg.name, arg.description || arg.name)" >
+                <v-icon>mdi-asterisk</v-icon> 快捷
+              </v-btn>
+            </v-col>
+          </v-row>
         </div>
       </div>
     </div>
@@ -76,21 +61,27 @@
         </div>
       </div>
     </div>
-    
-    <button
+    </v-card-text>
+    <v-card-actions>
+      <v-row>
+    <v-btn
       @click="save().then(() => notify('保存成功'))"
-      class="mui-btn mui-btn--primary"
+      class="ml-5" color="primary"
     >
-      <font-awesome-icon icon="check" /> 保存
-    </button>
-    <button @click="delete_task()" class="mui-btn mui-btn--danger">
-      <font-awesome-icon icon="trash" /> 删除
-    </button>
-    <button @click="show_code = !show_code" class="mui-btn">
-      <font-awesome-icon icon="code" />
-    </button>
-    <pre v-if="show_code">{{ querify(value) }}</pre>
-  </div>
+      <v-icon>mdi-check</v-icon> 保存
+    </v-btn>
+    <v-btn class="ml-3" color="error" @click="delete_task()">
+      <v-icon>mdi-delete</v-icon> 删除
+    </v-btn>
+    <v-btn class="ml-3" @click="show_code = !show_code" >
+      <v-icon>mdi-code-braces</v-icon>
+    </v-btn>
+      </v-row>
+    <v-row>
+    <v-textarea v-show="show_code" :value="querify(value)" readonly></v-textarea>
+    </v-row>
+    </v-card-actions>
+  </v-card>
 </template>
 
 
@@ -136,6 +127,26 @@ export default {
           return this.datasources[x][this.task.datasource];
       return {};
     },
+    datasource_items() {
+      function _items(obj) {
+        var items = []
+        for (var k in obj) {
+          let x = obj[k]
+          items.push({
+            text: `${x.doc.split('\n')[0]} ${x.name}`,
+            value: `${x.name}`
+          })
+        }
+        return items
+      }
+      var items = []
+      for (var group in this.datasources) {
+        items.push({
+          header: group
+        }, ... _items(this.datasources[group]))
+      }
+      return items
+    }
   },
   methods: {
     update_valid(name, valid) {

@@ -1,5 +1,5 @@
 <template>
-  <div v-if="total > 0" ref="results">
+  <v-sheet v-if="total > 0" ref="results">
     <div v-if="columns.includes('content')">
     <div v-for="(r, index) in visible_data" :key="index" class="mui-panel">
       <p class="">
@@ -10,36 +10,33 @@
       <br />
       <div v-html="r.matched_content || r.content"></div>
       <br />
-      <button
-        class="mui-btn"
+      <v-btn
+        
         @click="view_page(index)"
       >
-        <font-awesome-icon icon="file" aria-hidden="true" /> 查看
-      </button>
-      <a
-        class="mui-btn"
+        <v-icon>mdi-eye</v-icon> 查看
+      </v-btn>
+      <v-btn
         :href="'/view/' + (r.dataset || 'default') + '/' + r.source.file + '/' + r.source.page"
         target="_blank"
       >
-        <font-awesome-icon icon="window-maximize" aria-hidden="true" /> 浏览
-      </a>
-      <button
-        class="mui-btn"
+        <v-icon>mdi-dock-window</v-icon> 浏览
+      </v-btn>
+      <v-btn
         @click="
           show_meta[index] = !show_meta[index];
           $forceUpdate();
         "
       >
-        <font-awesome-icon :icon="'caret-' + (!show_meta[index] ? 'down' : 'up')" />
+        <v-icon>{{ 'mdi-menu-' + (!show_meta[index] ? 'down' : 'up') }}</v-icon>
         其他元数据
-      </button>
-      <button class="mui-btn" @click="edit_target = r">
-        <font-awesome-icon icon="edit"></font-awesome-icon>
+      </v-btn>
+      <v-btn @click="edit_target = r">
+        <v-icon>mdi-file-edit-outline</v-icon>
         编辑
-      </button>
-      <div class="mui-textfield" v-show="!!show_meta[index]">
-        <textarea readonly :value="metas(r)" rows="5"></textarea>
-      </div>
+      </v-btn>
+      <v-textarea readonly v-show="!!show_meta[index]" :value="metas(r)" rows="5"></v-textarea>
+      <v-divider class="mt-5 mb-5"></v-divider>
     </div>
     </div>
     <div class="mui-panel" v-else>
@@ -53,9 +50,9 @@
           <tr v-for="(r, index) in visible_data" :key="index">
             <td v-for="col in columns" :key="col + index">
               <div v-if="Array.isArray(r[col])">
-                <button class="mui-btn" @click="show_embedded(r, col)">
-                  <font-awesome-icon icon="file" />
-                </button>
+                <v-btn  @click="show_embedded(r, col)">
+                  <v-icon>mdi-file</v-icon>
+                </v-btn>
               </div>
               <div v-else>
               {{ r[col] }}
@@ -65,87 +62,109 @@
         </tbody>
       </table>
     </div>
-    <div class="pagination mui-row">
+    <div class="pagination">
         <div class="float-left" v-for="p in pages" :key="p">
-          <button
-            class="mui-btn"
+          <v-btn
             v-if="p <= 5 || p > pages.length - 5 || Math.abs(p - page) <= 4"
             @click="turn_page(p)"
             :disabled="p == page"
           >
             {{ p }}
-          </button>
-          <button
-            class="mui-btn"
+          </v-btn>
+          <v-btn
             disabled
             v-else-if="
               p == 6 || p == page.length - 5 || Math.abs(p - page) == 5
             "
           >
             ...
-          </button>
+          </v-btn>
         </div>
       <div class="mui-col-md-1">
         <div class="mui-textfield">
           <label>
             页码</label>
-            <input
-              type="text"
+            <v-text-field
+              class="d-inline-block ml-1"
+              style="max-width: 30px"
               @change="turn_page(parseInt($event.target.value) || page)"
-            />
+            ></v-text-field>
         </div>
       </div>
     </div>
 
-    <Modal v-if="show_page !== null" @close="show_page = null">
-      <h3 slot="header">查看</h3>
-      <div slot="body" ref="show_page_element" v-if="showing_result !== null">
-        <div class="paragraphs mui-panel">
-          <p>
-            {{ showing_result.content }}
-          </p>
-          <img :src="pdf_image" alt="" style="width: 100%" />
+    <v-dialog v-if="show_page !== null" :value="show_page !== null" @input="show_page = null">
+      <v-card>
+        <v-card-title>查看
+          <v-spacer></v-spacer>
+          <v-btn icon @click="show_page = null"><v-icon>mdi-close</v-icon></v-btn></v-card-title>
+        <v-card-text>
+          <div ref="show_page_element" v-if="showing_result !== null">
+            <div class="page-view">
+              <p>
+                {{ showing_result.content }}
+              </p>
+              <img :src="pdf_image" alt="" style="width: 100%" />
+            </div>
+            <div>
+              日期: {{ showing_result.pdate }}<br />
+              页码: {{ showing_result.pagenum }}<br />
+              大纲: {{ showing_result.outline }}<br />
+              来源: {{ showing_result.source.file }} {{ showing_result.source.page }}<br>
+            </div>
         </div>
-        <div>
-          日期: {{ showing_result.pdate }}<br />
-          页码: {{ showing_result.pagenum }}<br />
-          大纲: {{ showing_result.outline }}<br />
-          来源: {{ showing_result.source.file }} {{ showing_result.source.page }}<br>
-        </div>
-      </div>
-    </Modal>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
     
-    <Modal v-if="edit_target !== null" @close="edit_target = null">
-      <h3 slot="header">编辑 {{ edit_target._id }}</h3>
-      <div slot="body">
-        <div v-for="field, key in edit_target" :key="key">
-          <ParamInput v-model="edit_target[key]" :arg="{type: typeof(field), name: key, default: '\'\''}" v-if="['_id', 'matched_content'].indexOf(key) < 0 && typeof(field) !== 'object'" />
-        </div>
-        <div class="mui-row">
+    <v-dialog v-if="edit_target" :value="edit_target !== null" @input="edit_target = null">
+      <v-card>
+        <v-card-title>编辑语段 {{ edit_target._id }}
+          <v-spacer></v-spacer>
+          <v-btn icon @click="edit_target = null"><v-icon>mdi-close</v-icon></v-btn></v-card-title>
+        <v-card-text>
+          <v-list>
+        <v-list-item v-for="field, key in edit_target" :key="key">
+          <v-list-item-content>
+          <ParamInput v-model="edit_target[key]" :arg="{type: typeof(field), name: key, default: '\'\''}" v-if="!(['_id', 'matched_content'].includes(key) || typeof(field) == 'object')" />
+          </v-list-item-content>
+        </v-list-item>
+        <v-list-item>
+<v-list-item-content>
           <ParamInput class="mui-col-md-8" v-model="edit_new_field" :arg="{type: 'string', name: '新字段', default: ''}" />
-          <button class="mui-btn mui-col-md4" @click="edit_target[edit_new_field]=''; $forceUpdate()">
-            <font-awesome-icon icon="plus"></font-awesome-icon>
-          </button>
-        </div>
-        <div class="mui-divide"></div>
-        <button class="mui-btn mui-btn--primary" @click="save()">保存</button>
-        <button class="mui-btn" @click="edit_target = null">取消</button>
-      </div>
-    </Modal>
+          <v-btn class="mui-btn mui-col-md4" @click="edit_target[edit_new_field]=''; $forceUpdate()">
+            <v-icon>mdi-plus</v-icon>
+          </v-btn>
 
-    <Modal v-if="embedded !== null" @close="embedded = null">
-      <h3 slot="header">查看 {{ querify(embedded.source) }}</h3>
-      <div slot="body">
-        <ResultsView @load="(a) => a.callback({offset: 0, result: embedded.arr})" :total="embedded.arr.length" />
-      </div>
-    </Modal>
+</v-list-item-content>
+        </v-list-item>
+        </v-list>
+        </v-card-text>
+        <v-card-actions>
+        <v-btn class="mui-btn mui-btn--primary" @click="save()">保存</v-btn>
+        <v-btn  @click="edit_target = null">取消</v-btn>
 
-  </div>
-  <div v-else ref="results">未找到匹配的结果。</div>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <v-dialog v-if="embedded" :value="embedded !== null" @input="embedded = null">
+      <v-card>
+        <v-card-title>
+          查看 {{ querify(embedded.source) }}
+          <v-spacer></v-spacer>
+          <v-btn icon @click="embedded = null"><v-icon>mdi-close</v-icon></v-btn>
+        </v-card-title>
+        <v-card-tex>
+          <ResultsView @load="(a) => a.callback({offset: 0, result: embedded.arr})" :total="embedded.arr.length" />
+        </v-card-tex>
+      </v-card>
+    </v-dialog>
+  </v-sheet>
+  <v-sheet v-else ref="results">未找到匹配的结果。</v-sheet>
 </template>
 
 <script>
-import Modal from './ModalView'
 import ParamInput from './ParamInput'
 import api from '../api'
 import QueryString from 'querystring'
@@ -157,7 +176,7 @@ export default {
     page_size: { default: 20 },
   },
   components: {
-    Modal, ParamInput
+    ParamInput
   },
   data() {
     return {
@@ -324,8 +343,17 @@ export default {
 </script>
 
 <style scoped>
-.float-left {
-  float: left;
-  margin-right: 10px
+.v-btn {
+  margin-right: 12px;
+}
+.page-view {
+  overflow-y: auto;
+  max-height: 100%;
+}
+
+.v-dialog .v-card__title .v-btn {
+  margin-right: 50px;
+  position: fixed;
+  right: 20px;
 }
 </style>

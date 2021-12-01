@@ -7,18 +7,12 @@ const _stack = []
 var _token = localStorage.token || ''
 Cookies.set('token', _token)
 
-function _set_loading() {
-    var disp = document.getElementsByClassName('loading')[0].style
-    if (_stack.length > 0) {
-        disp.display = 'block';
-    } else {
-        disp.display = 'none';
-    }
-}
 
 export default {
 
     stack: _stack,
+
+    bus: new Vue(),
 
     apiBase,
 
@@ -61,7 +55,7 @@ export default {
         return promise.then(resp => {
             if (_stack.length > 0) {
                 _stack.pop()
-                _set_loading()
+                this.bus.$emit('loading', _stack.length)
             }
             if (resp.data.exception) {
                 if (resp.data.exception == 'Forbidden.') {
@@ -76,7 +70,7 @@ export default {
         }).catch(ex => {
             if (_stack.length > 0) {
                 _stack.pop()
-                _set_loading()
+                this.bus.$emit('loading', _stack.length)
             }
             if (ex.message.match('code 502'))
                 ex = '后台连接失败，请重试。'
@@ -93,14 +87,14 @@ export default {
         }, other || {})
     },
 
-    auth(username, password) {
+    auth(username, password, remember) {
         return new Promise((resolve, reject) => {
             this.call('authenticate', {
                 username, password
             }).then(data => {
                 if (data) {
                     localStorage.token = _token = data.result
-                    Cookies.set('token', _token)
+                    Cookies.set('token', _token, remember ? {expires: 30} : undefined)
                     resolve(data)
                 } else {
                     reject(data)
@@ -155,7 +149,7 @@ export default {
 
     call(name, params) {
         _stack.push(name)
-        _set_loading()
+        this.bus.$emit('loading', _stack.length)
         if (typeof (params) !== 'undefined')
             return this._catch_and_then(axios.post(apiBase + name, params, this._config()))
         else
@@ -164,7 +158,7 @@ export default {
 
     delete(name, params) {
         _stack.push(name)
-        _set_loading()
+        this.bus.$emit('loading', _stack.length)
         if (typeof (params) !== 'undefined')
             return this._catch_and_then(axios.delete(apiBase + name, params, this._config()))
         else
@@ -173,7 +167,7 @@ export default {
 
     put(name, params) {
         _stack.push(name)
-        _set_loading()
+        this.bus.$emit('loading', _stack.length)
         return this._catch_and_then(axios.put(apiBase + name, params, this._config()))
     },
 

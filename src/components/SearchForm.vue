@@ -1,46 +1,70 @@
 <template>
-  <div>
-    <h3>搜索</h3>
-    <div class="mui-panel">
-      <div id="selectors" class="mui-row">
-        <div class="mui-select mui-col-md-3">
-          <select name="sort" id="sort" v-model="sort">
-            <option value="">默认排序</option>
-            <option value="pdate">从旧到新</option>
-            <option value="-pdate">从新到旧</option>
-            <option value="source=1">出处</option>
-          </select>
-        </div>
-      </div>
-      <div id="search">
-        <div class="mui-textfield">
-          <input type="text" v-model="q" @keyup.enter="search" />
-        </div>
-      </div>
-      <div
-        id="multiselect"
-        class="mui-container-fluid"
-      >
-        <treeselect
-          :multiple="true"
-          :options="collections"
-          v-model="selected_collections"
-        />
-      </div>
-      <div class="clear"></div>
-      <button id="search" class="mui-btn" @click="search">查询</button>
-    </div>
-    <div v-if="total">
+  <v-container>
+    <v-card flat>
+      <v-card-title>搜索</v-card-title>
+      <v-card-text>
+        <v-row>
+          <v-col cols="3">
+            <v-select v-model="sort" label="排序" dense :items="[
+              {text: '默认排序', value: ''},
+              {text: '从旧到新', value: 'pdate'},
+              {text: '从新到旧', value: '-pdate'},
+              {text: '出处', value: 'source=1'},
+            ]"></v-select>
+          </v-col>
+          <v-spacer></v-spacer>
+        </v-row>
+        <v-row>
+          <v-col>
+          <v-text-field v-model="q" @keyup.enter="search" label="搜索条件"></v-text-field>
+          </v-col>
+        </v-row>
+        <v-row class="ml-1 mb-3">
+          <v-btn @click="search" color="primary">查询</v-btn>
+          <v-btn @click="expand_collections = !expand_collections"><v-icon v-show="!expand_collections">mdi-menu-down</v-icon><v-icon v-show="expand_collections">mdi-menu-up</v-icon> 选择数据集</v-btn>
+        </v-row>
+        <v-row>
+          <v-col>
+        <v-sheet
+            v-show="expand_collections">
+           <v-text-field
+        v-model="search_collection"
+        label="搜索数据集"
+        flat
+        solo-inverted
+        hide-details
+        clearable
+      ></v-text-field>
+          <v-treeview
+            selectable
+            :search="search_collection"
+            :items="collections"
+            selection-type="independent"
+            v-model="selected_collections"
+            :open.sync="open_collections"
+          >
+          </v-treeview>
+        </v-sheet>
+        </v-col>
+        </v-row>
+      </v-card-text>
+    </v-card>
+    <v-spacer></v-spacer>
+    <v-card flat>
+      <v-card-title v-show="total">
       共找到 {{ total }} 个结果。
-      <button class="mui-btn" @click="export_query">
-        <font-awesome-icon icon="share" /> 导出为任务
-      </button>
-      <button class="mui-btn" @click="export_xlsx">
-        <font-awesome-icon icon="download" /> 直接导出 Excel
-      </button>
-    </div>
-    <ResultsView :page_size="50" :total="total" @load="load_search" ref="results" />
-  </div>
+      <v-btn  @click="export_query">
+        <v-icon>mdi-share</v-icon> 导出为任务
+      </v-btn>
+      <v-btn  @click="export_xlsx">
+        <v-icon>mdi-download</v-icon> 直接导出 Excel
+      </v-btn>
+      </v-card-title>
+      <v-card-text>
+        <ResultsView :page_size="50" :total="total" @load="load_search" ref="results" />        
+      </v-card-text>
+    </v-card>
+  </v-container>
 </template>
     
 <script>
@@ -57,12 +81,15 @@ export default {
       datasets: [],
       selected_dataset: "",
       selected_collections: [],
+      open_collections: [],
       q: "",
       req: {},
       sort: "",
       querystr: "",
       reqstr: "",
       total: 0,
+      expand_collections: false,
+      search_collection: ""
     };
   },
   mounted() {
@@ -97,7 +124,7 @@ export default {
                 name: segs,
                 mongocollection: x.mongocollection,
               }),
-              label: x.segments[i],
+              name: x.segments[i],
               children: [],
             };
             parent_obj.children.push(cand);
@@ -112,7 +139,7 @@ export default {
                 mongocollection: x.mongocollection,
                 source: y
               }),
-              label: y.match(/(.*\/)?(.*)/)[2],
+              name: y.match(/(.*\/)?(.*)/)[2],
             };
           })
         );
@@ -247,5 +274,9 @@ span.mui-checkbox {
 
 .clear {
   clear: both;
+}
+
+.v-btn {
+  margin-right: 12px;
 }
 </style>
