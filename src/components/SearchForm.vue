@@ -19,33 +19,18 @@
           <v-text-field v-model="q" @keyup.enter="search" label="搜索条件"></v-text-field>
           </v-col>
         </v-row>
-        <v-row class="ml-1 mb-3">
-          <v-btn @click="search" color="primary">查询</v-btn>
-          <v-btn @click="expand_collections = !expand_collections"><v-icon v-show="!expand_collections">mdi-menu-down</v-icon><v-icon v-show="expand_collections">mdi-menu-up</v-icon> 选择数据集</v-btn>
-        </v-row>
         <v-row>
           <v-col>
-        <v-sheet
-            v-show="expand_collections">
-           <v-text-field
-        v-model="search_collection"
-        label="搜索数据集"
-        flat
-        solo-inverted
-        hide-details
-        clearable
-      ></v-text-field>
-          <v-treeview
-            selectable
-            :search="search_collection"
-            :items="collections"
-            selection-type="independent"
+          <treeselect
+            :multiple="true"
+            :options="collections"
             v-model="selected_collections"
-            :open.sync="open_collections"
-          >
-          </v-treeview>
-        </v-sheet>
-        </v-col>
+            placeholder="数据集"
+          />
+          </v-col>
+        </v-row>
+        <v-row class="ml-1 mb-3">
+          <v-btn @click="search" color="primary">查询</v-btn>
         </v-row>
       </v-card-text>
     </v-card>
@@ -71,10 +56,12 @@
 import QueryString from 'qs';
 import api from "../api";
 import ResultsView from "./ResultsView";
+import Treeselect from '@riophae/vue-treeselect'
+import '@riophae/vue-treeselect/dist/vue-treeselect.css'
 
 export default {
   name: "SearchForm",
-  components: { ResultsView },
+  components: { ResultsView, Treeselect },
   data() {
     return {
       collections: [],
@@ -88,8 +75,6 @@ export default {
       querystr: "",
       reqstr: "",
       total: 0,
-      expand_collections: false,
-      search_collection: ""
     };
   },
   mounted() {
@@ -103,6 +88,7 @@ export default {
         name: "",
         children: [],
       };
+      const _stringify = JSON.stringify
       data = data.result
         .map((x) => {
           x.segments = x.name.split("--");
@@ -117,14 +103,14 @@ export default {
           i < x.level;
           i++, segs += "--" + x.segments[i]
         ) {
-          var cand = parent_obj.children.filter((child) => child.id.match('"name":'+JSON.stringify(segs)))[0];
+          var cand = parent_obj.children.filter((child) => child.id.match('"name":'+_stringify(segs)))[0];
           if (typeof cand === "undefined") {
             cand = {
-              id: JSON.stringify({
+              id: _stringify({
                 name: segs,
                 mongocollection: x.mongocollection,
               }),
-              name: x.segments[i],
+              label: x.segments[i],
               children: [],
             };
             parent_obj.children.push(cand);
@@ -134,12 +120,12 @@ export default {
         parent_obj.children = parent_obj.children.concat(
           x.sources.sort().map((y) => {
             return {
-              id: JSON.stringify({
+              id: _stringify({
                 name: x.name,
                 mongocollection: x.mongocollection,
                 source: y
               }),
-              name: y.match(/(.*\/)?(.*)/)[2],
+              label: y.match(/(.*\/)?(.*)/)[2],
             };
           })
         );
@@ -162,7 +148,7 @@ export default {
             .map(x => escapeRegExp(x.name)),
           sourcefiles = selected
             .filter((x) => x.source)
-            .map((x) => x.source.split(":", 2).pop()),
+            .map((x) => ({file: x.source.split(":", 2).pop(), collection: x.name})),
           reqstr_colls = "",
           reqstr_sourcefiles = "";
         var selected_datasets = new Set(selected.map(x => x.mongocollection))
@@ -184,20 +170,17 @@ export default {
           reqstr_colls = "collection%`^" + colls.join("|^") + "`";
         }
         if (sourcefiles.length > 0) {
-          req.$or.push({
-            "source.file": {
-              $in: sourcefiles,
-            },
-          });
+          req.$or.push(... sourcefiles.map(sf => ({
+            "collection": sf.collection,
+            "source.file": sf.file
+          })));
           reqstr_sourcefiles =
-            "source.file=in([]=>`" + sourcefiles.join("`=>`") + "`))";
+            sourcefiles.map(sf => `(collection='${sf.collection}',source.file='${sf.file}')`).join('|')
         }
         if (req.$or.length == 1) {
           req = req.$or[0];
-          this.reqstr += "," + (reqstr_colls || reqstr_sourcefiles);
-        } else {
-          this.reqstr += ",(" + reqstr_colls + "|" + reqstr_sourcefiles + ")";
         }
+        this.reqstr = "(" + [reqstr_colls, reqstr_sourcefiles].filter(x => x.length > 0).join('|') + ")"
       }
       this.req = req;
       this.$refs.results.start();
@@ -228,7 +211,7 @@ export default {
           this.querystr = data.result.query;
           e.callback({ result: data.result.results, offset: e.offset });
           history.pushState('', '', '?' + QueryString.stringify({
-            q: this.querystr + this.reqstr, 
+            q: [this.querystr, this.reqstr].filter(x => x !== '').join(','), 
             sort: this.sort,
             selected_dataset: this.selected_dataset
           }))
@@ -278,5 +261,11 @@ span.mui-checkbox {
 
 .v-btn {
   margin-right: 12px;
+}
+</style>
+
+<style>
+.vue-treeselect__control {
+  border-radius: 0;
 }
 </style>

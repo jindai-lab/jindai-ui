@@ -15,6 +15,7 @@
     </div>
 
     <div v-else-if="arg.type == 'js' || ['query', 'cond'].includes(arg.name)">
+      <label>{{ arg.name }}</label>
       <prism-editor class="my-editor match-braces"
         v-model="code"
         @input="$emit('input', code)"

@@ -354,6 +354,7 @@ export default {
 .v-dialog .v-card__title .v-btn {
   margin-right: 50px;
   position: fixed;
+  z-index: 200;
   right: 20px;
 }
 </style>

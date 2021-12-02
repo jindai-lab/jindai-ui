@@ -95,16 +95,27 @@
 
       <div style="height: 40px"></div>
 
-      <notifications group="sys" />
-
       <v-footer :id="viewer ? '' : 'footer'">
-        <br />
         文献利用平台<br />
         &copy; 2018-{{ new Date().getFullYear() }} 科技人文研究室 &amp;
         contributors
       </v-footer>
     </v-main>
     <v-progress-linear indeterminate v-show="loading"></v-progress-linear>
+    
+    <v-snackbar
+      v-model="sb.visible"
+      v-for="(sb, index) in snackbars"
+      :key="`sb${index}`"
+    >
+      {{ sb.text }}
+      <template v-slot:action="">
+        <v-btn color="primary" text @click="snackbars.splice(index, 1)">
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
+      </template>
+    </v-snackbar>
+
   </v-app>
 </template>
 
@@ -128,10 +139,23 @@ export default {
       },
       admin: false,
       shortcuts: [],
+      snackbars: [],
     };
   },
   created() {
-    api.bus.$on("loading", (loading_num) => (this.loading = loading_num > 0));
+    api.bus.$on("loading", (loading_num) => (this.loading = loading_num > 0))
+            .$on("alert", (bundle) => {
+          const message = bundle.title ? `${bundle.title}\n${bundle.text || ''}`.trim() : bundle;
+          this.snackbars = this.snackbars
+            .filter((x) => x.visible)
+            .concat([
+              {
+                text: message,
+                visible: true,
+              },
+            ]);
+        });
+
     this.$on("logined", () => {
       api
         .logined()

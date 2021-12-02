@@ -5,10 +5,6 @@ import App from './App'
 import VueRouter from 'vue-router'
 Vue.use(VueRouter)
 
-// use notifications
-import Notifications from "vue-notification";
-Vue.use(Notifications);
-
 // load components
 import SearchForm from './components/SearchForm.vue'
 import TaskDetail from './components/TaskDetail.vue'
@@ -24,6 +20,7 @@ import UserList from './components/UserList.vue'
 import AccountSecurity from './components/AccountSecurity.vue'
 import ArticleCompletion from './components/ArticleCompletion.vue'
 import DbConsole from './components/DbConsole.vue'
+import Gallery from './gallery/Gallery.vue'
 import vuetify from './plugins/vuetify'
 
 // configure routes
@@ -42,6 +39,7 @@ const routes = [
     { path: '/security', component: AccountSecurity },
     { path: '/articlecompletion', component: ArticleCompletion },
     { path: '/dbconsole', component: DbConsole },
+    { path: '/gallery', component: Gallery },
 ]
 
 const router = new VueRouter({

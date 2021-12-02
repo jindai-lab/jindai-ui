@@ -1,53 +1,54 @@
 <template>
-  <div>
-    <h3>数据集</h3>
-    <div v-for="(ds, index) in collections" :key="ds._id" class="mui-row">
-      <div class="opers mui-col-md-2">
-        <v-btn @click="move(index, -1)" :disabled="index == 0" >
+  <v-card flat>
+    <v-card-title>数据集</v-card-title>
+    <v-card-text>
+    <v-row v-for="(ds, index) in collections" :key="ds._id">
+      <v-col cols="2" class="opers">
+        <v-btn icon @click="move(index, -1)" :disabled="index == 0" >
           <v-icon>mdi-arrow-up</v-icon>
         </v-btn>
-        <v-btn
+        <v-btn icon
           @click="move(index, 1)"
           :disabled="index == collections.length - 1"
           
         >
           <v-icon>mdi-arrow-down</v-icon>
         </v-btn>
-        <v-btn  @click="refresh_sources(ds._id)">
+        <v-btn icon @click="refresh_sources(ds._id)">
           <v-icon>mdi-sync</v-icon>
         </v-btn>
-      </div>
-      <div class="mui-col-md-4">
+      </v-col>
+      <v-col>
         {{ ds.name }}
-        <v-btn  @click="rename_collection(ds.name, prompt('更名为：'))">
+        <v-btn icon @click="rename_collection(ds.name, prompt('更名为：'))">
           <v-icon>mdi-edit</v-icon>
         </v-btn>
-      </div>
-      <div class="mui-col-md-4">
+      </v-col>
+      <v-col>
         {{ ds.mongocollection }}
-      </div>
-    </div>
-    <div class="mui-row">
-      <div class="opers mui-col-md-2">
-        <v-btn @click="append_dataset" >
+      </v-col>
+    </v-row>
+    <v-row>
+      <v-col class="opers" cols="2">
+        <v-btn icon @click="append_dataset" >
           <v-icon>mdi-plus</v-icon>
         </v-btn>
-      </div>
+      </v-col>
+      <v-col>
       <ParamInput
-        class="mui-col-md-4"
         :arg="{ name: '名称', type: '', default: '' }"
         v-model="input_coll.name"
-      />
+      /></v-col>
+      <v-col>
       <ParamInput
-        class="mui-col-md-4"
         :arg="{ name: '数据库', type: '', default: '' }"
         v-model="input_coll.mongocollection"
-      />
-    </div>
-    <v-btn @click="save" class="mui-btn mui-btn--primary">
+      /></v-col>
+    </v-row>
+    <v-btn @click="save" color="primary">
       <v-icon>mdi-check</v-icon> 保存
     </v-btn>
-  </div>
+    </v-card-text></v-card>
 </template>
 
 <script>

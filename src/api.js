@@ -16,11 +16,11 @@ export default {
 
     apiBase,
 
-    notify(notice) { Vue.notify(Object.assign(notice, { group: 'sys' })) },
+    notify(notice) { this.bus.$emit("alert", notice) },
 
     blob_download(blob, filename) {
         var url = URL.createObjectURL(blob);
-        
+
         const link = document.createElement('a');
         link.href = url;
         link.download = filename;
@@ -51,7 +51,7 @@ export default {
         }
         DataError.prototype = Object.create(Error.prototype);
         DataError.prototype.constructor = DataError;
-        
+
         return promise.then(resp => {
             if (_stack.length > 0) {
                 _stack.pop()
@@ -90,11 +90,12 @@ export default {
     auth(username, password, remember) {
         return new Promise((resolve, reject) => {
             this.call('authenticate', {
-                username, password
+                username,
+                password
             }).then(data => {
                 if (data) {
                     localStorage.token = _token = data.result
-                    Cookies.set('token', _token, remember ? {expires: 30} : undefined)
+                    Cookies.set('token', _token, remember ? { expires: 30 } : undefined)
                     resolve(data)
                 } else {
                     reject(data)
@@ -103,42 +104,44 @@ export default {
         })
     },
 
-    querify(obj) {       
-      function _values(x, indent) {
-        if (Array.isArray(x)) {
-          if (x.length > 0 && x.filter(y => y.length == 2).length == x.length)
-            return '([]' + _querify(x, indent + '  ') + '\n' + indent + ')'
-          return '([]' + (x.length > 0 ? ' => ' + x.map(_values).join(' => ') : '') + ')'
-        } else if (typeof(x) === 'object') {
-          return '(' + _params(x, indent + '  ') + ')'
-        } else
-          return JSON.stringify(x)
-      }
-      function _params(c, indent) {
-        var r = []
-        for (var k in c) {
-          if (typeof(c[k]) === 'undefined') continue
-          r.push(indent + k + '=' + _values(c[k], indent))
+    querify(obj) {
+        function _values(x, indent) {
+            if (Array.isArray(x)) {
+                if (x.length > 0 && x.filter(y => y.length == 2).length == x.length)
+                    return '([]' + _querify(x, indent + '  ') + '\n' + indent + ')'
+                return '([]' + (x.length > 0 ? ' => ' + x.map(_values).join(' => ') : '') + ')'
+            } else if (typeof(x) === 'object') {
+                return '(' + _params(x, indent + '  ') + ')'
+            } else
+                return JSON.stringify(x)
         }
-        if (r.length > 1)
-            return '\n' + r.join(',\n')
+
+        function _params(c, indent) {
+            var r = []
+            for (var k in c) {
+                if (typeof(c[k]) === 'undefined') continue
+                r.push(indent + k + '=' + _values(c[k], indent))
+            }
+            if (r.length > 1)
+                return '\n' + r.join(',\n')
+            else
+                return (r[0] || '').trim()
+        }
+
+        function _querify(v, indent) {
+            var s = ''
+            for (var i of v) {
+                var c = _params(i[1], indent + '  ')
+                if (c.indexOf('\n') >= 0) c += indent + '\n'
+                s += ';\n' + indent + i[0] + '(' + c + ')'
+            }
+            return s
+        }
+
+        if (Array.isArray(obj))
+            return _querify(obj, '').substr(2)
         else
-            return (r[0] || '').trim()
-      }
-      function _querify(v, indent) {
-        var s = ''
-        for (var i of v) {
-          var c = _params(i[1], indent + '  ')
-          if (c.indexOf('\n') >= 0) c += indent + '\n'
-          s += ';\n' + indent + i[0] + '(' + c + ')'
-        }
-        return s
-      }
-      
-      if (Array.isArray(obj))
-        return _querify(obj, '').substr(2)
-      else
-        return _params(obj, '')
+            return _params(obj, '')
     },
 
     logined() {
@@ -150,7 +153,7 @@ export default {
     call(name, params) {
         _stack.push(name)
         this.bus.$emit('loading', _stack.length)
-        if (typeof (params) !== 'undefined')
+        if (typeof(params) !== 'undefined')
             return this._catch_and_then(axios.post(apiBase + name, params, this._config()))
         else
             return this._catch_and_then(axios.get(apiBase + name, this._config()))
@@ -159,7 +162,7 @@ export default {
     delete(name, params) {
         _stack.push(name)
         this.bus.$emit('loading', _stack.length)
-        if (typeof (params) !== 'undefined')
+        if (typeof(params) !== 'undefined')
             return this._catch_and_then(axios.delete(apiBase + name, params, this._config()))
         else
             return this._catch_and_then(axios.delete(apiBase + name, this._config()))

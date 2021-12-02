@@ -1,45 +1,44 @@
 <template>
-  <div>
-    <h3>数据库控制台</h3>
-    <div>
-      <div class="mui-panel">
-        <ParamInput
-          class="mui-textfield"
-          :arg="{
-            name: 'Mongo Collection',
-            type: mongocollectionsstr || 'paragraph',
-          }"
-          v-model="command.mongocollection"
-          @change="previewed = false"
-        />
+  <v-card flat>
+    <v-card-title>
+      数据库控制台
+    </v-card-title>
+    <v-card-text>
+      <v-select
+        label="Mongo Collection"
+        :items="mongocollections"
+        v-model="command.mongocollection"
+        @change="previewed = false"
+      ></v-select>
         <ParamInput
           ref="editor"
           class="mui-textfield"
           :arg="{ name: 'Query', type: 'js' }"
           v-model="command.query"
-          @change="previewed = false"
+          @input="previewed = false"
         />
         <ParamInput
           class="mui-textfield"
           :arg="{ name: 'Operation', type: 'update_many|delete_many|count' }"
           v-model="command.operation"
-          @change="previewed = false"
+          @input="previewed = false"
         />
         <ParamInput
           ref="editor"
           class="mui-textfield"
           :arg="{ name: 'Parameters', type: 'js' }"
           v-model="command.operation_params"
-          @change="previewed = false"
+          @input="previewed = false"
         />
-      </div>
-    </div>
-    <v-btn class="mui-btn mui-btn--primary" @click="preview">预览</v-btn>
-    <v-btn  :disabled="!previewed" @click="execute">运行</v-btn>
-    <div class="mui-panel">
-      <pre>{{ preview_text }}</pre>
-    </div>
-  </div>
+    </v-card-text>
+    <v-card-actions>
+      <v-btn @click="preview">Preview</v-btn>
+      <v-btn :disabled="!previewed" @click="execute">Execute</v-btn>
+    </v-card-actions>
+      <v-card-text>
+        <pre>{{ preview_text }}</pre>
+      </v-card-text>
+  </v-card>
 </template>
 
 <script>
@@ -51,7 +50,7 @@ export default {
   components: { ParamInput },
   data() {
     return {
-      mongocollections: [],
+      mongocollections: ["paragraph"],
       command: {
         mongocollection: "paragraph",
         query: "",
@@ -62,11 +61,6 @@ export default {
       previewed: false,
       preview_text: "",
     };
-  },
-  computed: {
-    mongocollectionsstr() {
-      return this.mongocollections.join("|");
-    },
   },
   methods: {
     preview() {

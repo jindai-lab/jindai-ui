@@ -5,7 +5,7 @@
       <v-btn color="primary" @click="open_file_dialog()">
         <v-icon>mdi-upload</v-icon> 上传文件
       </v-btn>
-      <v-progress-linear indeterminate v-show="progress" />
+      <v-progress-linear v-show="progress > 0" v-bind="progress" />
       <input
         type="file"
         value=""
@@ -37,20 +37,22 @@
           >
           <v-spacer></v-spacer>
           <v-col class="opers">
-            <v-btn class="copy" :data-clipboard-text="copy_file_path(f)">
+            <v-btn class="copy" @click="copy_file_path(f)">
               <v-icon>mdi-content-copy</v-icon>
             </v-btn>
           </v-col>
         </v-row>
       </v-sheet>
     </v-sheet>
+    <v-card-actions>
+      <input type="hidden" id="testing-code">
+    </v-card-actions>
   </v-card>
 </template>
 
 <script>
 import api from "../api";
 import axios from "axios";
-import Clipboard from "clipboard";
 
 export default {
   name: "StorageList",
@@ -99,7 +101,18 @@ export default {
       });
     },
     copy_file_path(f) {
-      return "sources" + f.fullpath;
+      const text = (f.fullpath);
+      const testingCodeToCopy = document.querySelector('#testing-code')
+      testingCodeToCopy.setAttribute('type', 'text')
+      testingCodeToCopy.setAttribute('value', text)
+      testingCodeToCopy.select()
+      try {
+        document.execCommand('copy');
+      } catch (err) {
+        alert('Oops, unable to copy');
+      }
+      testingCodeToCopy.setAttribute('type', 'hidden')
+      window.getSelection().removeAllRanges()
     },
     enter(d) {
       if (d === "..")
@@ -114,7 +127,6 @@ export default {
   },
   mounted() {
     this.update_files();
-    new Clipboard("button.copy");
   },
   watch: {
     selected_dir() {
