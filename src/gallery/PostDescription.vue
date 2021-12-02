@@ -68,7 +68,7 @@ export default {
   methods: {
     _is_text (x) {return encodeURIComponent(x).replace(/%[0-9a-f]{2}/ig, 'x').length > 20 || x.match(/[\s.,?!。，？…]/)},
     quote(tag) {
-      if (tag.match(/[\s.,+%:/]/)) return "`" + tag + "`";
+      if (tag.match(/[`'"()\s.,+%:/]/)) return "`" + tag + "`";
       return tag;
     },
     tag_class(tag) {

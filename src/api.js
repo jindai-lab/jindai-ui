@@ -104,6 +104,10 @@ export default {
         })
     },
 
+    log_out() {
+        return this.call('authenticate', {}, 'delete').then(() => { location.reload() })
+    },
+
     querify(obj) {
         function _values(x, indent) {
             if (Array.isArray(x)) {

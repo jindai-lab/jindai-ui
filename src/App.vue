@@ -49,6 +49,11 @@
               >历史</v-list-item-title
             >
           </v-list-item>
+          <v-list-item link @click="log_out(); $router.push('/login')">
+            <v-list-item-title
+              >登出</v-list-item-title
+            >
+          </v-list-item>
         </v-list-group>
 
         <v-list-group>
@@ -101,7 +106,7 @@
         contributors
       </v-footer>
     </v-main>
-    <v-progress-linear indeterminate v-show="loading"></v-progress-linear>
+    <v-progress-linear indeterminate v-show="loading" app fixed bottom></v-progress-linear>
     
     <v-snackbar
       v-model="sb.visible"
@@ -187,6 +192,7 @@ export default {
     nav_click(e) {
       this.$router.push(e.target.getAttribute("to")).catch(() => {});
     },
+    log_out: api.log_out
   },
 };
 </script>

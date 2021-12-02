@@ -105,7 +105,7 @@
 </template>
 
 <script>
-import api from "./api";
+import api from "./gallery-api";
 
 export default {
   name: "AutoTags",

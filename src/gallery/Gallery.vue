@@ -1,36 +1,36 @@
 <template>
   <div>
     <v-toolbar flat>
-      <v-toolbar-items>
-        <v-toolbar-item>
+      <v-row>
+        <v-col>
           <v-checkbox
             v-model="config.contain"
             label="Show Full Image"
             @change="_save_config"
           ></v-checkbox>
-        </v-toolbar-item>
-        <v-toolbar-item>
+        </v-col>
+        <v-col>
           <v-checkbox
             v-model="config.force_thumbnail"
             label="Force Thumbnails"
             @change="_save_config"
-          ></v-checkbox> </v-toolbar-item
-        ><v-toolbar-item>
+          ></v-checkbox> </v-col
+        ><v-col>
           <v-checkbox
             v-model="config.enhance"
             label="Enhance Image"
             @change="_save_config"
           ></v-checkbox>
-        </v-toolbar-item>
-        <v-toolbar-item>
+        </v-col>
+        <v-col>
           <v-btn text @click="_show_dialog('auto_tagging')">Auto Tagging</v-btn>
-        </v-toolbar-item>
-        <v-toolbar-item>
+        </v-col>
+        <v-col>
           <v-btn text href="/api/gallery/compare" target="_blank"
             >Hash Compare</v-btn
-          ></v-toolbar-item
+          ></v-col
         >
-        <v-toolbar-item>
+        <v-col>
           <v-autocomplete
             :items="
               ['', { header: 'Tools' }]
@@ -43,18 +43,18 @@
             @keyup.enter="call_tool"
             auto-select-first
           ></v-autocomplete>
-        </v-toolbar-item>
-        <v-toolbar-item>
+        </v-col>
+        <v-col>
           <v-text-field
             clearable
             @keyup.enter="call_tool"
             v-model="tool_call.args"
           ></v-text-field>
-        </v-toolbar-item>
-        <v-toolbar-item>
+        </v-col>
+        <v-col>
           <v-btn @click="call_tool" text>Call</v-btn>
-        </v-toolbar-item>
-      </v-toolbar-items>
+        </v-col>
+      </v-row>
     </v-toolbar>
 
     <v-toolbar flat>
@@ -170,7 +170,7 @@
             @dblclick="browse(post_index)"
           >
             <v-img
-              :contain="contain"
+              :contain="config.contain"
               height="250"
               :src="get_item_image(post.items[0])"
             ></v-img>
@@ -180,6 +180,26 @@
           </v-card>
         </v-col>
       </v-row>
+      <v-pagination
+        v-model="page"
+        :length="length"
+        :total-visible="0"
+        @next="update({ order: next, direction: 'next' })"
+        @previous="update({ order: prev, direction: 'prev' })"
+      ></v-pagination>
+      <v-card flat v-show="count">
+        <v-card-text>Count: {{ count }}</v-card-text>
+      </v-card>
+      <v-card
+        flat
+        v-show="console_outputs.length > 0"
+        class="console"
+        ref="console"
+      >
+        <div v-for="(line, index) in console_outputs" :key="index">
+          {{ line }}
+        </div>
+      </v-card>
     </v-container>
 
     <v-dialog v-model="dialogs.auto_tagging" fullscreen persistent>
@@ -190,13 +210,7 @@
       <db-console @close="dialogs.db_console = false"></db-console>
     </v-dialog>
 
-    <v-dialog
-      v-model="browsing"
-      fullscreen
-      hide-overlay
-      class="browsing"
-      persistent
-    >
+    <v-dialog v-model="browsing" fullscreen hide-overlay persistent>
       <v-card
         v-touch="{
           left: browse_next,
@@ -204,6 +218,7 @@
           down: () => (browsing = false),
           up: () => rating(1),
         }"
+        class="browsing"
       >
         <v-btn class="close" icon @click="browsing = false">
           <v-icon>mdi-close</v-icon>
@@ -300,7 +315,6 @@
                   </v-col>
                   <v-spacer></v-spacer>
                 </v-row>
-                <v-row><v-divider></v-divider></v-row>
                 <post-description :post="browsing_post"></post-description>
               </v-col>
             </v-row>
@@ -328,11 +342,46 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <div class="fabs">
+      <v-badge
+        bordered
+        color="green darken-2"
+        :content="'' + selected_posts_count"
+        :value="selected_posts_count > 0"
+        overlap
+      >
+        <v-btn fab small @click="toggle_selection" @dblclick="clear_selection">
+          <v-icon>mdi-select-all</v-icon>
+        </v-btn>
+      </v-badge>
+
+      <v-btn fab small @click="show_tagging_dialog()">
+        <v-icon>mdi-tag</v-icon>
+      </v-btn>
+
+      <v-btn fab small @click="rating(1)">
+        <v-icon>mdi-heart</v-icon>
+      </v-btn>
+
+      <v-btn fab small @click="group()">
+        <v-icon>mdi-group</v-icon>
+      </v-btn>
+
+      <v-btn
+        fab
+        small
+        @click="bus.$emit('alert', 'Double-click to confirm deletion')"
+        @dblclick="delete_items()"
+      >
+        <v-icon>mdi-delete</v-icon>
+      </v-btn>
+    </div>
   </div>
 </template>
 
 <script>
-import api from "./api";
+import api from "./gallery-api";
 import PostDescription from "./PostDescription";
 import TaggingDialog from "./TaggingDialog.vue";
 import TaggingShortcutsDialog from "./TaggingShortcutsDialog.vue";
@@ -349,6 +398,8 @@ export default {
     TaggingShortcutsDialog,
   },
   data: () => ({
+    bus: api.bus,
+
     last_id: -1,
     browsing: false,
     browsing_index: -1,
@@ -427,28 +478,6 @@ export default {
     tool_call: { action: "", args: "" },
     pages: [],
     console_outputs: [],
-    buttons: [
-      {
-        icon: "mdi-tag",
-        click: () => api.bus.$emit("gallery", "tag"),
-        dblclick: () => {},
-      },
-      {
-        icon: "mdi-heart",
-        click: () => api.bus.$emit("gallery", "rating"),
-        dblclick: () => {},
-      },
-      {
-        icon: "mdi-group",
-        click: () => api.bus.$emit("gallery", "group"),
-        dblclick: () => {},
-      },
-      {
-        icon: "mdi-delete",
-        dblclick: () => api.bus.$emit("gallery", "delete"),
-        click: () => api.bus.$emit("alert", "Double-click to confirm deletion"),
-      },
-    ],
     fab: false,
     params_state: "",
     selected_posts_count: 0,
@@ -503,28 +532,6 @@ export default {
     this.config = api.load_config("gallery", this.config);
     this._on_login();
 
-    api.bus.$on("gallery", (call) => {
-      switch (call) {
-        case "tag":
-          this.show_tagging_dialog();
-          break;
-        case "group":
-          if (this.selected_posts().length > 0) this.group();
-          break;
-        case "rating":
-          if (this.selected_posts().length > 0) this.rating(1);
-          break;
-        case "delete":
-          if (this.selected_posts().length > 0) this.delete_items();
-          break;
-        case "toggle-selection":
-          this.toggle_selection();
-          break;
-        case "clear-selection":
-          this.clear_selection(this.posts);
-          break;
-      }
-    });
     api.call("shortcuts", {}, "get").then((data) => {
       for (var k in data)
         this.tagging_shortcut_list.push({
@@ -686,10 +693,10 @@ export default {
       } else {
         switch (e.key) {
           case "ArrowLeft":
-            this.$emit("previous");
+            this.update({ order: this.prev, direction: "prev" });
             break;
           case "ArrowRight":
-            this.$emit("next");
+            this.update({ order: this.next, direction: "next" });
             break;
           case "f":
             this.toggle_selection();
@@ -830,11 +837,11 @@ export default {
       }
       this.last_id = post_id;
       this.browsing_index = -1;
-      this.$emit("select", this.selected_posts());
+      this.selected_posts_count = this.selected_posts().length;
     },
     toggle_selection() {
       this.posts.forEach((x) => (x.selected = !x.selected));
-      this.$emit("select", this.selected_posts());
+      this.selected_posts_count = this.selected_posts().length;
     },
     _fit_image(e) {
       const img = e.target,
@@ -924,7 +931,7 @@ export default {
     },
     _clear_selected(sel) {
       sel.forEach((x) => (x.selected = false));
-      this.$emit("select", this.selected_posts());
+      this.selected_posts_count = 0;
     },
 
     browse(post_index) {
@@ -952,7 +959,7 @@ export default {
       if (this.browsing_index + 1 < this.browsing_items.length) {
         this.browsing_index++;
       } else {
-        this.$emit("next");
+        this.update({ order: this.next, direction: "next" });
         this.continue_browsing = true;
       }
       this.browsing_page = 2;
@@ -961,7 +968,7 @@ export default {
       if (this.browsing_index > 0) {
         this.browsing_index--;
       } else {
-        this.$emit("previous");
+        this.update({ order: this.prev, direction: "prev" });
         this.continue_browsing = true;
       }
       this.browsing_page = 2;
@@ -1151,7 +1158,24 @@ export default {
 .groups .row {
   flex-wrap: nowrap;
 }
-.v-dialog {
+.browsing {
   overflow: hidden;
+}
+.console {
+  height: 200px;
+  overflow-y: auto;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 12px;
+}
+.fabs {
+  position: fixed;
+  z-index: 300;
+  bottom: 16px;
+  right: 16px;
+}
+.fabs > * {
+  margin: 5px;
+  clear: both;
+  display: block;
 }
 </style>
