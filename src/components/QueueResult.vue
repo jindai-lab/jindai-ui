@@ -1,9 +1,11 @@
 <template>
-  <div>
-    <h3>任务结果 {{ id }}</h3>
+  <v-card flat>
+    <v-card-title>任务结果 {{ id }}</v-card-title>
+    <v-card-text>
     <ResultsView @load="load_data" :total="total" v-if="typeof(total) === 'number'" ref="results" />
     <div v-else v-html="prompt || '结果为文件或其他类型，请直接下载'"></div>
-  </div>
+    </v-card-text>
+  </v-card>
 </template>
 
 <script>

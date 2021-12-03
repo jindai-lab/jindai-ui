@@ -93,12 +93,24 @@
 
     <v-main>
       <div :id="viewer ? 'viewer' : 'content-wrapper'">
-        <keep-alive :include="['SearchForm', 'ResultsView']">
+        <keep-alive :include="['SearchForm', 'ResultsView', 'DbConsole']">
           <router-view @logined="$emit('logined')" :key="$route.fullPath" />
         </keep-alive>
       </div>
 
       <div style="height: 40px"></div>
+      
+      <v-card
+        flat
+        v-show="console_outputs.length > 0"
+        ref="console"
+      >
+        <v-btn small left bottom text class="ma-3" @click="console_outputs=[]"><v-icon>mdi-delete</v-icon> 清除</v-btn>
+        <div class="console">
+        <div v-for="(line, index) in console_outputs" :key="index">
+          {{ line }}
+        </div></div>
+      </v-card>
 
       <v-footer :id="viewer ? '' : 'footer'">
         Powered by Jindai &copy; 2018-{{ new Date().getFullYear() }} zhuth &amp; contributors
@@ -143,6 +155,7 @@ export default {
       admin: false,
       shortcuts: [],
       snackbars: [],
+      console_outputs: [],
       app_title: 'Jindai',
       app_dark: false
     };
@@ -153,23 +166,6 @@ export default {
     }
   },
   created() {
-    api.bus.$on("loading", (loading_num) => (this.loading = loading_num > 0))
-            .$on("alert", (bundle) => {
-          const message = bundle.title ? `${bundle.title}\n${bundle.text || ''}`.trim() : bundle;
-          this.snackbars = this.snackbars
-            .filter((x) => x.visible)
-            .concat([
-              {
-                text: message,
-                visible: true,
-              },
-            ]);
-        });
-    
-    api.call("meta").then((data) => {
-      Object.assign(this, data.result);
-    })
-    
     this.$on("logined", () => {
       api
         .logined()
@@ -187,8 +183,27 @@ export default {
         .catch(() => (localStorage.token = ""));
     });
   },
-  mounted() {
+  mounted() {    
+    api.call("meta").then((data) => {
+      Object.assign(this, data.result);
+    })
     this.$emit("logined");
+    api.bus.$on("loading", (loading_num) => (this.loading = loading_num > 0))
+    .$on("console", (data) => {
+            this.console_outputs.splice(0, 0, ...data.reverse());
+          })
+            .$on("alert", (bundle) => {
+          const message = bundle.title ? `${bundle.title}\n${bundle.text || ''}`.trim() : bundle;
+          this.snackbars = this.snackbars
+            .filter((x) => x.visible)
+            .concat([
+              {
+                text: message,
+                visible: true,
+              },
+            ]);
+        });
+    
     if (this.viewer) return;
   },
   computed: {
@@ -222,5 +237,11 @@ em {
 
 .toplogo {
   text-align: center;
+}
+
+.console {
+  height: 200px;
+  overflow-y: auto;
+  font-size: 12px;
 }
 </style>

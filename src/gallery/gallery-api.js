@@ -54,23 +54,6 @@ export default {
         })
     },
 
-    call_tool(bundle, callback) {
-        var last_response_len = false
-        axios.post(`${_BASE}/plugins/tool`, bundle, {
-            onDownloadProgress: function(e) {
-                var this_response, response = e.currentTarget.response;
-                if (last_response_len === false) {
-                    this_response = response;
-                    last_response_len = response.length;
-                } else {
-                    this_response = response.substring(last_response_len);
-                    last_response_len = response.length;
-                }
-                callback(this_response.split('\n'));
-            },
-        }).then(() => this.bus.$emit("alert", "Complete"))
-    },
-
     get_item_image(item, config = {}) {
 
         if (typeof item === "undefined" || !item.source.url)

@@ -217,6 +217,7 @@ export default {
       this.save().then((id) =>
         api.put("queue/", { id }).then((data) => {
           this.notify(data.result + " 已成功加入后台处理队列。");
+          api.fetch_logs(data.result)
         })
       );
     },

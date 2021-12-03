@@ -33,7 +33,7 @@
             <v-icon>mdi-download</v-icon> 下载
           </v-btn>
           <v-btn
-            class="mui-btn"
+            class="ml-3"
             @click="view_result(task)"
             v-if="task.viewable"
           >
@@ -69,7 +69,7 @@ export default {
       var id = encodeURIComponent(task.id)
       api.delete("queue/" + id).then(() => {
         api.notify({ title: "成功删除" });
-        this.$emit('updated', this.data.filter(x => x.id !== id))
+        this.$emit('updated', {running: this.running, waiting: this.waiting, finished: this.data.finished.filter(x => x.id !== id)})
       });
     },
     view_result(task) {

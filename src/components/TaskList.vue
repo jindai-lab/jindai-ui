@@ -43,7 +43,7 @@ export default {
   methods: {
     create_task() {
       api
-        .put("tasks/", { name: "新建工作流 " + new Date() })
+        .put("tasks/", { name: "新建工作流 " + new Date().toLocaleString() })
         .then((data) => this.$router.push("/tasks/" + data.result));
     },
     duplicate_task(task) {

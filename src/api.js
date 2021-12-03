@@ -163,6 +163,27 @@ export default {
             return this._catch_and_then(axios.get(apiBase + name, this._config()))
     },
 
+    fetch_logs(key) {
+        var last_response_len = false
+        const that = this
+        axios.get(`${apiBase}queue/logs/${key}`, {
+            onDownloadProgress: function(e) {
+                var this_response, response = e.currentTarget.response;
+                if (last_response_len === false) {
+                    this_response = response;
+                    last_response_len = response.length;
+                } else {
+                    this_response = response.substring(last_response_len);
+                    last_response_len = response.length;
+                }
+                that.bus.$emit('console', this_response.split('\n'));
+            },
+        }).then((data) => {
+            that.bus.$emit("alert", `${key} 完成`)
+            that.bus.$emit("console", data.resp.substring(last_response_len).split('\n'))
+        })
+    },
+
     delete(name, params) {
         _stack.push(name)
         this.bus.$emit('loading', _stack.length)

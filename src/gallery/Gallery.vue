@@ -32,14 +32,9 @@
         >
         <v-col>
           <v-autocomplete
-            :items="
-              ['', { header: 'Tools' }]
-                .concat(tools)
-                .concat([{ header: 'Special Pages' }])
-                .concat(pages.map((x) => 'page:' + x))
-            "
+            :items="pages"
             clearable
-            v-model="tool_call.action"
+            v-model="post_option.post"
             @keyup.enter="call_tool"
             auto-select-first
           ></v-autocomplete>
@@ -48,7 +43,7 @@
           <v-text-field
             clearable
             @keyup.enter="call_tool"
-            v-model="tool_call.args"
+            v-model="post_option.args"
           ></v-text-field>
         </v-col>
         <v-col>
@@ -190,24 +185,10 @@
       <v-card flat v-show="count">
         <v-card-text>Count: {{ count }}</v-card-text>
       </v-card>
-      <v-card
-        flat
-        v-show="console_outputs.length > 0"
-        class="console"
-        ref="console"
-      >
-        <div v-for="(line, index) in console_outputs" :key="index">
-          {{ line }}
-        </div>
-      </v-card>
     </v-container>
 
     <v-dialog v-model="dialogs.auto_tagging" fullscreen persistent>
       <auto-tags @close="dialogs.auto_tagging = false"></auto-tags>
-    </v-dialog>
-
-    <v-dialog v-model="dialogs.db_console" fullscreen persistent>
-      <db-console @close="dialogs.db_console = false"></db-console>
     </v-dialog>
 
     <v-dialog v-model="browsing" fullscreen hide-overlay persistent>
@@ -471,17 +452,14 @@ export default {
       limit: 50,
     },
     sorting: null,
-    tools: [],
-    tool_call: { action: "", args: "" },
+    post_option: { post: "", args: "" },
     pages: [],
-    console_outputs: [],
     fab: false,
     params_state: "",
     selected_albums_count: 0,
     snackbars: [],
     dialogs: {
       auto_tagging: false,
-      db_console: false,
     },
     logined: true,
   }),
@@ -559,12 +537,11 @@ export default {
         else if (pair[1].match(/^(true|false)$/)) pair[1] = pair[1] == "true";
         this.params[pair[0]] = pair[1];
       }
-      this.tool_call.action = this.params.post
+      this.post_option.post = this.params.post
         ? "page:" + this.params.post.split("/")[0]
         : "";
-      this.tool_call.args = this.params.post.split("/").slice(1).join(" ");
+      this.post_option.args = this.params.post.split("/").slice(1).join(" ");
       this.update();
-      api.call("plugins/tool").then((data) => (this.tools = data.result));
       api
         .call("plugins/special_pages")
         .then((data) => (this.pages = data.result));
@@ -574,7 +551,7 @@ export default {
     },
     update(obj) {
       if (obj && (!obj.order || (!obj.order.keys && !obj.order.offset))) {
-        obj.order = { keys: ["-liked_at"], liked_at: new Date() };
+        obj.order = { keys: ["-liked_at"] };
         this.page = 1;
       }
       Object.assign(this.params, obj);
@@ -631,28 +608,17 @@ export default {
           .then((data) => (this.count = data.result));
         this.params_state = state;
       }
-      this.console_outputs = [];
     },
     call_tool() {
-      if (!this.tool_call.action) {
+      if (!this.post_option.post) {
         this.params_state = "";
-        this.tool_call.args = "";
+        this.post_option.args = "";
         this.update({ post: "" });
-      } else if (this.tools.includes(this.tool_call.action)) {
-        api.call_tool(
-          {
-            action: this.tool_call.action,
-            args: this.tool_call.args ? this.tool_call.args.split(" ") : [],
-          },
-          (data) => {
-            this.console_outputs.splice(0, 0, ...data.reverse());
-          }
-        );
-      } else if (this.tool_call.action.startsWith("page:")) {
-        let topost = this.tool_call.action.slice(5);
+      } else if (this.post_option.post.startsWith("page:")) {
+        let topost = this.post_option.post.slice(5);
         this.params_state = "";
         this.update({
-          post: [topost || "", ...(this.tool_call.args || "").split(" ")]
+          post: [topost || "", ...(this.post_option.args || "").split(" ")]
             .filter((x) => x)
             .join("/"),
         });
@@ -1158,12 +1124,6 @@ export default {
 }
 .browsing {
   overflow: hidden;
-}
-.console {
-  height: 200px;
-  overflow-y: auto;
-  font-family: "Courier New", Courier, monospace;
-  font-size: 12px;
 }
 .fabs {
   position: fixed;
