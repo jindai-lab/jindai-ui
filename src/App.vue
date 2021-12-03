@@ -86,7 +86,7 @@
 
     <v-app-bar app color="primary" dark v-if="!viewer">
       <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
-      <v-toolbar-title>文献利用平台</v-toolbar-title>
+      <v-toolbar-title>{{ app_title }}</v-toolbar-title>
       <v-spacer></v-spacer>
       <queue-view :data="queue" @updated="queue = $event"></queue-view>
     </v-app-bar>
@@ -101,9 +101,7 @@
       <div style="height: 40px"></div>
 
       <v-footer :id="viewer ? '' : 'footer'">
-        文献利用平台<br />
-        &copy; 2018-{{ new Date().getFullYear() }} 科技人文研究室 &amp;
-        contributors
+        Powered by Jindai &copy; 2018-{{ new Date().getFullYear() }} zhuth &amp; contributors
       </v-footer>
     </v-main>
     <v-progress-linear indeterminate v-show="loading" app fixed bottom></v-progress-linear>
@@ -145,7 +143,14 @@ export default {
       admin: false,
       shortcuts: [],
       snackbars: [],
+      app_title: 'Jindai',
+      app_dark: false
     };
+  },
+  watch: {
+    app_dark(val) {
+      this.$vuetify.theme.dark = !!val
+    }
   },
   created() {
     api.bus.$on("loading", (loading_num) => (this.loading = loading_num > 0))
@@ -160,7 +165,11 @@ export default {
               },
             ]);
         });
-
+    
+    api.call("meta").then((data) => {
+      Object.assign(this, data.result);
+    })
+    
     this.$on("logined", () => {
       api
         .logined()
@@ -180,7 +189,6 @@ export default {
   },
   mounted() {
     this.$emit("logined");
-    this.drawer = !this.viewer
     if (this.viewer) return;
   },
   computed: {

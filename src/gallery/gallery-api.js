@@ -43,12 +43,12 @@ export default {
             if (data.redirect) {
                 location.href = data.redirect
             }
-            data.results = data.results.map(post => {
-                post.author = post.author || (post.tags.filter(x => x.startsWith('@')) || [''])[0]
-                post.group = post.group_id ? '?query=' + post.group_id : '?query=id%3D' + post._id
-                post.selected = false
-                post.items.forEach(i => { i.rating = i.rating || 0 })
-                return post
+            data.results = data.results.map(album => {
+                album.author = album.author || (album.tags.filter(x => x.startsWith('@')) || [''])[0]
+                album.group = album.group_id ? '?query=' + album.group_id : '?query=id%3D' + album._id
+                album.selected = false
+                album.items.forEach(i => { i.rating = i.rating || 0 })
+                return album
             })
             return data
         })
@@ -68,15 +68,15 @@ export default {
                 }
                 callback(this_response.split('\n'));
             },
-        }).then(() => this.bus.$emit("alert", { message: "Complete" }))
+        }).then(() => this.bus.$emit("alert", "Complete"))
     },
 
     get_item_image(item, config = {}) {
 
-        if (typeof item === "undefined" || !item.url)
+        if (typeof item === "undefined" || !item.source.url)
             return "https://via.placeholder.com/350x150.png?text=No Image";
 
-        var ext = item.url.split(".").pop();
+        var ext = item.source.url.split(".").pop();
         if (ext === "mp4") {
             if (item.thumbnail) return `${_BASE}/block/${item.thumbnail}`;
             return "https://via.placeholder.com/350x150.png?text=Video";
@@ -92,11 +92,11 @@ export default {
             ext += 'enhance=1'
         }
         if (item.storage) return `${_BASE}/block/${item._id}.${ext}`;
-        return item.url;
+        return item.source.url;
     },
 
     get_item_video(item) {
         if (item.storage) return `${_BASE}/block/${item._id}.mp4`;
-        return `${_BASE}/${item.url}`;
+        return `${_BASE}/${item.source.url}`;
     },
 }

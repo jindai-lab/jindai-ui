@@ -126,8 +126,8 @@
     <v-container fluid v-show="drawer" class="groups">
       <v-row justify="start">
         <v-col
-          v-for="gpost in groups"
-          :key="gpost.group_id"
+          v-for="g in groups"
+          :key="g.group_id"
           cols="12"
           xs="12"
           sm="6"
@@ -136,23 +136,23 @@
         >
           <v-card
             width="250"
-            @click="gpost.selected = !gpost.selected"
-            @dblclick="_open_window(`?query=${gpost.group_id}`)"
-            :class="gpost.selected ? 'selected' : ''"
+            @click="g.selected = !g.selected"
+            @dblclick="_open_window(`?query=${g.group_id}`)"
+            :class="g.selected ? 'selected' : ''"
             style="overflow: hidden"
           >
             <v-img
               :contain="config.contain"
               height="150"
-              :src="get_item_image(gpost.items[0])"
+              :src="get_item_image(g.items[0])"
             ></v-img>
-            <v-card-text>{{ gpost.group_id }}</v-card-text>
+            <v-card-text>{{ g.group_id }}</v-card-text>
           </v-card>
         </v-col>
       </v-row>
     </v-container>
 
-    <v-container fluid class="posts">
+    <v-container fluid class="albums">
       <v-row>
         <v-col
           cols="12"
@@ -160,22 +160,22 @@
           sm="6"
           md="3"
           lg="2"
-          v-for="(post, post_index) in posts"
-          :key="`post_${post_index}_${post._id}`"
-          :ref="`post_ref_${post._id}`"
+          v-for="(album, album_index) in albums"
+          :key="`album_${album_index}_${album._id}`"
+          :ref="`album_ref_${album._id}`"
         >
           <v-card
-            :class="post.selected ? 'selected' : ''"
-            @click="select_post(post_index, $event)"
-            @dblclick="browse(post_index)"
+            :class="album.selected ? 'selected' : ''"
+            @click="select_album(album_index, $event)"
+            @dblclick="browse(album_index)"
           >
             <v-img
               :contain="config.contain"
               height="250"
-              :src="get_item_image(post.items[0])"
+              :src="get_item_image(album.items[0])"
             ></v-img>
             <v-card-text>
-              <post-description :post="post"></post-description>
+              <album-description :album="album"></album-description>
             </v-card-text>
           </v-card>
         </v-col>
@@ -228,7 +228,7 @@
             width="100%"
             style="height: 90vh"
             controls
-            v-if="browsing_item && browsing_item.url.split('.').pop() == 'mp4'"
+            v-if="browsing_item && browsing_item.source.url.split('.').pop() == 'mp4'"
           >
             <source :src="get_item_video(browsing_item)" type="video/mp4" />
           </video>
@@ -294,7 +294,7 @@
                     <v-btn
                       icon
                       dense
-                      :href="`?post=face/${browsing_item._id}&query='${browsing_post.author}'&archive=true`"
+                      :href="`?post=face/${browsing_item._id}&query='${browsing_album.author}'&archive=true`"
                       class="t_func facedet"
                       target="_blank"
                       v-show="browsing_item.faces && browsing_item.faces.length"
@@ -304,7 +304,7 @@
                     <v-btn
                       icon
                       dense
-                      :href="`?post=sim/${browsing_item._id}&query='${browsing_post.author}'&archive=true`"
+                      :href="`?post=sim/${browsing_item._id}&query='${browsing_album.author}'&archive=true`"
                       class="t_func sim"
                       target="_blank"
                       ><v-icon>mdi-image</v-icon></v-btn
@@ -315,7 +315,7 @@
                   </v-col>
                   <v-spacer></v-spacer>
                 </v-row>
-                <post-description :post="browsing_post"></post-description>
+                <album-description :album="browsing_album"></album-description>
               </v-col>
             </v-row>
           </v-card-text>
@@ -334,7 +334,7 @@
         <v-card-text>
           <v-row v-for="(v, k) in selected_items()[0]" :key="k">
             <v-col cols="4">{{ k }}</v-col>
-            <v-col cols="8" v-if="!['post'].includes(k)">{{ v }}</v-col>
+            <v-col cols="8" v-if="!['album'].includes(k)">{{ v }}</v-col>
           </v-row>
         </v-card-text>
         <v-card-actions>
@@ -347,8 +347,8 @@
       <v-badge
         bordered
         color="green darken-2"
-        :content="'' + selected_posts_count"
-        :value="selected_posts_count > 0"
+        :content="'' + selected_albums_count"
+        :value="selected_albums_count > 0"
         overlap
       >
         <v-btn fab small @click="toggle_selection" @dblclick="clear_selection">
@@ -382,18 +382,16 @@
 
 <script>
 import api from "./gallery-api";
-import PostDescription from "./PostDescription";
+import AlbumDescription from "./AlbumDescription.vue";
 import TaggingDialog from "./TaggingDialog.vue";
 import TaggingShortcutsDialog from "./TaggingShortcutsDialog.vue";
-import DbConsole from "./DBConsole.vue";
 import AutoTags from "./AutoTags.vue";
 
 export default {
   name: "Gallery",
   components: {
-    DbConsole,
     AutoTags,
-    PostDescription,
+    AlbumDescription,
     TaggingDialog,
     TaggingShortcutsDialog,
   },
@@ -418,7 +416,7 @@ export default {
     drawer: true,
     item_info: false,
 
-    posts: [],
+    albums: [],
     groups: [],
     prev: {},
     next: {},
@@ -426,8 +424,7 @@ export default {
       query: "",
       post: "",
       order: {
-        keys: ["-liked_at"],
-        liked_at: 1e12,
+        keys: ["-liked_at"]
       },
       limit: 40,
       archive: false,
@@ -439,11 +436,11 @@ export default {
       { text: "Default", value: "" },
       {
         text: "Liked At",
-        value: { order: { keys: ["-liked_at"], liked_at: 1e12 } },
+        value: { order: { keys: ["-liked_at"] } },
       },
       {
         text: "Created At",
-        value: { order: { keys: ["-created_at"], created_at: 1e12 } },
+        value: { order: { keys: ["-pdate"] } },
       },
       {
         text: "Random",
@@ -454,12 +451,12 @@ export default {
         value: { order: { keys: ["group_id"], group_id: "" } },
       },
       {
-        text: "Source URL",
-        value: { order: { keys: ["source_url"], group_id: "" } },
+        text: "Source",
+        value: { order: { keys: ["source"], group_id: "" } },
       },
       {
-        text: "Item URL",
-        value: { order: { keys: ["items.url"], "items.url": "" } },
+        text: "Item Source",
+        value: { order: { keys: ["items.source"], "items.source": "" } },
       },
       {
         text: "Rating",
@@ -480,7 +477,7 @@ export default {
     console_outputs: [],
     fab: false,
     params_state: "",
-    selected_posts_count: 0,
+    selected_albums_count: 0,
     snackbars: [],
     dialogs: {
       auto_tagging: false,
@@ -497,18 +494,18 @@ export default {
     window.addEventListener("wheel", this._wheel_listener);
   },
   computed: {
-    browsing_post() {
-      return (this.browsing_item || { post: {} }).post;
+    browsing_album() {
+      return (this.browsing_item || { album: {} }).album;
     },
     browsing_item() {
       return this.browsing_items[this.browsing_index] || { url: "", _id: "" };
     },
     browsing_items() {
       var items = [];
-      for (var post of this.posts)
+      for (var album of this.albums)
         items = items.concat(
-          post.items.map((x) => {
-            x.post = post;
+          album.items.map((x) => {
+            x.album = album;
             return x;
           })
         );
@@ -516,7 +513,7 @@ export default {
     },
   },
   watch: {
-    posts() {
+    albums() {
       if (this.continue_browsing) {
         this.continue_browsing = false;
         this.browsing_index =
@@ -525,14 +522,14 @@ export default {
       }
     },
     browsing(val) {
-      if (!val) this._scroll_to_browsing_post();
+      if (!val) this._scroll_to_browsing_album();
     },
   },
   mounted() {
-    this.config = api.load_config("gallery", this.config);
     this._on_login();
 
     api.call("shortcuts", {}, "get").then((data) => {
+      data = data.result
       for (var k in data)
         this.tagging_shortcut_list.push({
           text: `${k} ${data[k]}`,
@@ -550,10 +547,10 @@ export default {
     },
     _save_config() {
       this.config.limit = this.params.limit;
-      api.save_config("main", this.config);
+      api.save_config("gallery", this.config);
     },
     _on_login() {
-      this.config = api.load_config("main", this.config);
+      this.config = api.load_config("gallery", this.config);
       this.params.limit = this.config.limit;
       for (var pair of new URLSearchParams(location.search).entries()) {
         if (pair[1].startsWith("JSON__"))
@@ -573,18 +570,18 @@ export default {
         .then((data) => (this.pages = data.result));
     },
     clear_selection() {
-      this.groups.concat(this.posts).forEach((x) => (x.selected = false));
+      this.groups.concat(this.albums).forEach((x) => (x.selected = false));
     },
     update(obj) {
       if (obj && (!obj.order || (!obj.order.keys && !obj.order.offset))) {
-        obj.order = { keys: ["-liked_at"], liked_at: 1e12 };
+        obj.order = { keys: ["-liked_at"], liked_at: new Date() };
         this.page = 1;
       }
       Object.assign(this.params, obj);
       this.params.limit = +this.params.limit;
       document.title = `${this.params.post} ${this.params.query}`;
       api.fetch(this.params).then((data) => {
-        this.posts = data.results;
+        this.albums = data.results;
         if (!data.prev) this.page = 1;
         else {
           this.prev = data.prev;
@@ -718,7 +715,7 @@ export default {
           this.tag([`noted:${new Date().toISOString()}`]);
           break;
         case "d":
-          if (this.last_key == e.key && this.selected_posts().length > 0) {
+          if (this.last_key == e.key && this.selected_albums().length > 0) {
             this.delete_items();
             this.last_key = null;
           }
@@ -727,7 +724,7 @@ export default {
         case "`":
         case "escape":
           this.browsing = false;
-          this._clear_selected(this.posts);
+          this._clear_selected(this.albums);
           break;
         case "a":
         case "arrowup":
@@ -736,7 +733,7 @@ export default {
             this.rating(e.key != "ArrowDown" ? 1 : -1);
           break;
         case "r":
-          if (this.last_key == e.key && this.selected_posts().length > 0) {
+          if (this.last_key == e.key && this.selected_albums().length > 0) {
             this.reset_storage();
             this.last_key = null;
           }
@@ -747,37 +744,37 @@ export default {
         case "e":
         case "o":
         case "i":
-          if (this.selected_posts().length > 0) {
+          if (this.selected_albums().length > 0) {
             var _item = this.selected_items()[0],
-              _post = this.selected_posts()[0];
+              _album = this.selected_albums()[0];
             switch (e.key.toLowerCase()) {
               case "o":
-                this._open_window(_post.source_url);
+                this._open_window(_album.source.url);
                 break;
               case "c":
                 this._open_window(
-                  `?query=${encodeURIComponent(_post.author) || ""}`
+                  `?query=${encodeURIComponent(_album.author) || ""}`
                 );
                 break;
               case "s":
                 this._open_window(
                   `?post=sim/${_item._id}&archive=true&query=${
-                    encodeURIComponent(_post.author) || ""
+                    encodeURIComponent(_album.author) || ""
                   }`
                 );
                 break;
               case "e":
                 this._open_window(
                   `?post=face/${_item._id}&archive=true&query=${
-                    encodeURIComponent(_post.author) || ""
+                    encodeURIComponent(_album.author) || ""
                   }`
                 );
                 break;
               case "z":
                 this._open_window(
                   e.shiftKey
-                    ? `?query=id%3D${_post._id}`
-                    : `?query=source_url%'${_post.source_url
+                    ? `?query=id%3D${_album._id}`
+                    : `?query=source.url%'${_album.source.url
                         .replace(/[-\\^$*+?.()|[\]{}]/g, "\\$&")
                         .replace(/\/\d+\//, "/.*/")}'`
                 );
@@ -805,7 +802,7 @@ export default {
         case "7":
         case "8":
         case "9":
-          this.tagging_shortcuts = this.selected_posts().length > 0;
+          this.tagging_shortcuts = this.selected_albums().length > 0;
           this.tagging_shortcut_initial = e.key;
           break;
       }
@@ -816,10 +813,10 @@ export default {
       return api.get_item_image(item, this.config);
     },
     get_item_video: api.get_item_video,
-    select_post(post_id, event) {
-      var id_start = post_id,
+    select_album(album_id, event) {
+      var id_start = album_id,
         id_end = this.last_id;
-      if (id_end == -1) id_end = post_id;
+      if (id_end == -1) id_end = album_id;
       if (event.shiftKey) {
         if (id_start > id_end) {
           var tmp = id_start;
@@ -828,20 +825,20 @@ export default {
         }
         if (id_start == this.last_id) ++id_start;
         if (id_end == this.last_id) --id_end;
-        this.posts
+        this.albums
           .slice(id_start, id_end + 1)
-          .forEach((post) => (post.selected = !post.selected));
+          .forEach((album) => (album.selected = !album.selected));
         window.getSelection().removeAllRanges();
       } else {
-        this.posts[post_id].selected = !this.posts[post_id].selected;
+        this.albums[album_id].selected = !this.albums[album_id].selected;
       }
-      this.last_id = post_id;
+      this.last_id = album_id;
       this.browsing_index = -1;
-      this.selected_posts_count = this.selected_posts().length;
+      this.selected_albums_count = this.selected_albums().length;
     },
     toggle_selection() {
-      this.posts.forEach((x) => (x.selected = !x.selected));
-      this.selected_posts_count = this.selected_posts().length;
+      this.albums.forEach((x) => (x.selected = !x.selected));
+      this.selected_albums_count = this.selected_albums().length;
     },
     _fit_image(e) {
       const img = e.target,
@@ -899,47 +896,47 @@ export default {
     },
     selected_items() {
       if (this.browsing) {
-        if (!this.browsing_item.post_id)
-          this.browsing_item.post_id = this.browsing_post._id;
+        if (!this.browsing_item.album_id)
+          this.browsing_item.album_id = this.browsing_album._id;
         return [this.browsing_item];
       }
-      return this.selected_posts().reduce(
+      return this.selected_albums().reduce(
         (y, e) =>
           y.concat(
             e.items.map((i) => {
-              if (!i.post_id) i.post_id = e._id;
+              if (!i.album_id) i.album_id = e._id;
               return i;
             })
           ),
         []
       );
     },
-    selected_posts() {
-      if (this.browsing) return [this.browsing_post];
-      return this.posts
+    selected_albums() {
+      if (this.browsing) return [this.browsing_album];
+      return this.albums
         .filter((x) => x.selected)
         .concat(this.groups.filter((x) => x.selected));
     },
-    _selected_post_ids() {
+    _selected_album_ids() {
       return Array.from(
         new Set(
-          this.selected_posts()
+          this.selected_albums()
             .map((x) => x._id)
-            .concat(this.selected_items().map((x) => x.post_id))
+            .concat(this.selected_items().map((x) => x.album_id))
         )
       );
     },
     _clear_selected(sel) {
       sel.forEach((x) => (x.selected = false));
-      this.selected_posts_count = 0;
+      this.selected_albums_count = 0;
     },
 
-    browse(post_index) {
-      this.browsing_index = this.posts
-        .slice(0, post_index)
+    browse(album_index) {
+      this.browsing_index = this.albums
+        .slice(0, album_index)
         .reduce((x, y) => x + y.items.length, 0);
       this.browsing = true;
-      this._clear_selected(this.posts);
+      this._clear_selected(this.albums);
     },
     playing() {
       this.playing_timer = setInterval(() => {
@@ -951,9 +948,9 @@ export default {
         this.browse_next();
       }, this.playing_interval);
     },
-    _scroll_to_browsing_post() {
-      const post_ele = this.$refs[`post_ref_${this.browsing_post._id}`] || [];
-      if (post_ele[0]) window.scrollTo(0, post_ele[0].offsetTop);
+    _scroll_to_browsing_album() {
+      const album_ele = this.$refs[`album_ref_${this.browsing_album._id}`] || [];
+      if (album_ele[0]) window.scrollTo(0, album_ele[0].offsetTop);
     },
     browse_next() {
       if (this.browsing_index + 1 < this.browsing_items.length) {
@@ -980,21 +977,21 @@ export default {
     },
     // api calls
     show_tagging_dialog() {
-      if (this.selected_posts().length > 0) {
+      if (this.selected_albums().length > 0) {
         var existing_tags = new Set(
-          this.selected_posts().reduce((a, e) => a.concat(e.tags), [])
+          this.selected_albums().reduce((a, e) => a.concat(e.tags), [])
         );
         this.$refs.tagging_dialog.show(Array.from(existing_tags));
       }
     },
     tag(e, append = true) {
-      var s = this.selected_posts();
+      var s = this.selected_albums();
       var existing_tags = new Set(
-        this.selected_posts().reduce((a, e) => a.concat(e.tags), [])
+        this.selected_albums().reduce((a, e) => a.concat(e.tags), [])
       );
       api
-        .call("post/tag", {
-          posts: this._selected_post_ids(),
+        .call("album/tag", {
+          albums: this._selected_album_ids(),
           append: append ? e : e.filter((x) => !existing_tags.has(x)),
           delete: append
             ? []
@@ -1008,18 +1005,18 @@ export default {
         });
     },
     delete_items() {
-      var s = this.selected_posts();
-      var post_items = {},
-        visible_post_items = {};
+      var s = this.selected_albums();
+      var album_items = {},
+        visible_album_items = {};
 
       this.selected_items().forEach((item) => {
-        if (!post_items[item.post_id]) post_items[item.post_id] = [];
-        post_items[item.post_id].push(item._id);
+        if (!album_items[item.album_id]) album_items[item.album_id] = [];
+        album_items[item.album_id].push(item._id);
       });
 
       s.forEach((p) => {
-        if (!visible_post_items[p._id]) visible_post_items[p._id] = [];
-        visible_post_items[p._id].splice(
+        if (!visible_album_items[p._id]) visible_album_items[p._id] = [];
+        visible_album_items[p._id].splice(
           0,
           0,
           ...(this.browsing
@@ -1029,22 +1026,22 @@ export default {
       });
 
       api
-        .call("item/delete", {
-          post_items,
+        .call("imageitem/delete", {
+          album_items,
         })
         .then(() => {
           s.forEach((x) => {
             x.items = x.items.filter(
-              (i) => !visible_post_items[x._id].includes(i._id)
+              (i) => !visible_album_items[x._id].includes(i._id)
             );
           });
           this._clear_selected(s);
         });
     },
     rating(inc) {
-      var s = this.selected_posts();
+      var s = this.selected_albums();
       api
-        .call("item/rating", {
+        .call("imageitem/rating", {
           items: this.browsing
             ? [this.browsing_item._id]
             : this.selected_items().map((x) => x._id),
@@ -1063,10 +1060,10 @@ export default {
         });
     },
     group(del) {
-      var s = this.selected_posts();
+      var s = this.selected_albums();
       api
-        .call("post/group", {
-          posts: this._selected_post_ids(),
+        .call("album/group", {
+          albums: this._selected_album_ids(),
           delete: del,
         })
         .then((data) => {
@@ -1080,25 +1077,25 @@ export default {
         });
     },
     merge() {
-      var s = this.selected_posts();
+      var s = this.selected_albums();
       api
-        .call("post/merge", {
-          posts: this._selected_post_ids(),
+        .call("album/merge", {
+          albums: this._selected_album_ids(),
         })
         .then(() => this._clear_selected(s));
     },
     split() {
-      var s = this.selected_posts();
+      var s = this.selected_albums();
       api
-        .call("post/split", {
-          posts: this._selected_post_ids(),
+        .call("album/split", {
+          albums: this._selected_album_ids(),
         })
         .then(() => this._clear_selected(s));
     },
     reset_storage() {
-      var s = this.selected_posts();
+      var s = this.selected_albums();
       api
-        .call("item/reset_storage", {
+        .call("imageitem/reset_storage", {
           items: this.browsing
             ? [this.browsing_item._id]
             : this.selected_items().map((x) => x._id),
@@ -1146,6 +1143,7 @@ export default {
 }
 .description:hover {
   opacity: 1;
+  z-index: 101;
 }
 .groups {
   width: 100%;

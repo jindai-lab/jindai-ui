@@ -2,24 +2,24 @@
   <v-row>
     <span class="nums">
       <span class="datetime">
-        {{ new Date(post.created_at * 1000).toLocaleDateString() }}
+        {{ new Date(album.pdate).toLocaleDateString() }}
       </span>
-      <span class="score" v-show="post.score">{{ post.score }}</span>
+      <span class="score" v-show="album.score">{{ album.score }}</span>
       <span class="count"
-        ><a class="counter secondary--text" target="_blank" :href="post.group">{{
-          post.count || post.items.length
+        ><a class="counter secondary--text" target="_blank" :href="album.group">{{
+          album.count || album.items.length
         }}</a></span
       >
     </span>
     <a
       :href="
-        '?archive=0&query=source_url%25`' +
-        post.source_url.replace(/\/\d+(\/|$)/, '/.*$1') +
+        '?archive=0&query=source.url%25`' +
+        album.source.url.replace(/\/\d+(\/|$)/, '/.*$1') +
         '`'
       "
       class="break-anywhere force-text"
       target="_blank"
-      >{{ post.source_url }}</a
+      >{{ album.source.url }}</a
     >
     {{ text }}
     <a
@@ -27,8 +27,8 @@
         '?query=' +
         encodeURIComponent(
           quote(tag) +
-            (post.author && !['t_group', 't_author'].includes(tag_class(tag))
-              ? ',`' + post.author + '`'
+            (album.author && !['t_group', 't_author'].includes(tag_class(tag))
+              ? ',`' + album.author + '`'
               : '')
         ) +
         '&post=' +
@@ -37,23 +37,23 @@
       :class="['tag', tag_class(tag), 'force-text']"
       target="_blank"
       v-for="tag in tags"
-      :key="`${post._id}-${Math.random()}-${tag}`"
+      :key="`${album._id}-${Math.random()}-${tag}`"
       >{{ tag }}</a
     >
-    <a :href="post.source_url" target="_blank" class="orig no-underline">🌍</a>
+    <a :href="album.source.url" target="_blank" class="orig no-underline">🌍</a>
   </v-row>
 </template>
 
 <script>
 export default {
-  name: "PostDescription",
-  props: ["post"],
+  name: "AlbumDescription",
+  props: ["album"],
   computed: {
     special_page() {
       return new URLSearchParams(location.search.substr(1)).get("post", "");
     },
     text() {
-      var candidates = this.post.tags.filter(this._is_text)
+      var candidates = this.album.tags.filter(this._is_text)
       if (candidates) {
         var longest = candidates.sort(x => x.length).pop()
         candidates = [longest, ... candidates.filter(x => !longest.includes(x))]
@@ -62,7 +62,7 @@ export default {
       return ''
     },
     tags() {
-      return this.post.tags.filter(x => !this._is_text(x)).sort()
+      return this.album.tags.filter(x => !this._is_text(x)).sort()
     }
   },
   methods: {
@@ -74,7 +74,7 @@ export default {
     tag_class(tag) {
       return tag.startsWith("*")
           ? "t_group"
-          : tag == this.post.author ? "t_author" : "t_" + tag;
+          : tag == this.album.author ? "t_author" : "t_" + tag;
     },
   },
 };

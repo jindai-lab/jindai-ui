@@ -22,11 +22,7 @@
         ></v-autocomplete>
       </v-card-text>
       <v-card-actions>
-        <v-btn
-          @click="do_submit"
-        >
-          OK
-        </v-btn>
+        <v-btn @click="do_submit"> OK </v-btn>
         <v-btn @click="$emit('input', false)"> Cancel </v-btn>
       </v-card-actions>
     </v-card>
@@ -34,8 +30,6 @@
 </template>
 
 <script>
-import api from "./gallery-api";
-
 export default {
   name: "TaggingShortcutsDialog",
   data() {
@@ -52,7 +46,7 @@ export default {
       default: null,
     },
     bundle: {
-      default: () => ({})
+      default: () => ({}),
     },
     prompt: {
       type: String,
@@ -69,7 +63,7 @@ export default {
     initial: String,
     match_initials: {
       type: Boolean,
-      default: false
+      default: false,
     },
   },
   watch: {
@@ -92,38 +86,16 @@ export default {
   },
   methods: {
     search_tag(search) {
-      if (this.choices) {
-        if (!search) return;
-        this.tag_choices = this.choices.filter(x => this.match_initials ? x.text.startsWith(search) : x.text.match(search));
-        return;
-      }
-      if (this.loading) return
-      this.loading = true;
-      api
-        .call(
-          "search_tags",
-          {
-            tag: search,
-            match_initials: ((search.match(/^[@*]/)) ? true : false)
-          },
-          "post",
-          false
-        )
-        .then((data) => {
-          this.tag_choices = [search].concat(data.result);
-          this.loading = false;
-        })
-        .catch((err) => {
-          console.log(err);
-          this.loading = false;
-          this.tag_choices = [search];
-        });
+      if (!search) return;
+      this.tag_choices = this.choices.filter((x) =>
+        this.match_initials ? x.text.startsWith(search) : x.text.match(search)
+      );
     },
     do_submit() {
-      const val = this.tag_new || [this.tag_typing]
-      this.$emit('submit', val);
-      this.$emit('input', false);      
-    }
+      const val = this.tag_new || [this.tag_typing];
+      this.$emit("submit", val);
+      this.$emit("input", false);
+    },
   },
 };
 </script>
