@@ -30,6 +30,10 @@ export default {
   methods: {
     load_data(e) {
       api.call("queue/" + encodeURIComponent(this.id) + '?offset=' + e.offset + '&limit=' + e.limit).then(data => {
+        if (data.redirect) {
+          location.href = data.redirect
+          return
+        }
         this.total = data.result.total
         e.callback({
           offset: e.offset,

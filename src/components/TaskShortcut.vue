@@ -80,6 +80,9 @@ export default {
         }
         api.call("tasks/" + this.id).then((data) => {
           this.task = data.result;
+          for (var k in this.task.shortcut_map) {
+            this.shortcut_params[k] = this.get_map_val(k)
+          }
         });
       });
     });
@@ -161,6 +164,7 @@ export default {
       }
       for (var k in this.task.shortcut_map) {
         if (
+          typeof this.task.shortcut_map[k] === 'undefined' ||
           this.task.shortcut_map[k] === "" ||
           this.task.shortcut_map[k] === null
         )
@@ -178,7 +182,6 @@ export default {
         .then((id) =>
           api.put("queue/", { id }).then((data) => {
             this.notify(data.result + " 已成功加入后台处理队列。");
-            api.fetch_logs(data.result)
           })
         );
     },
@@ -191,7 +194,6 @@ export default {
       );
     },
     get_map_arg(v) {
-      this.shortcut_params[v] = ''
       v = v.split(".");
       // maping value shoud be like datasource.[arg name] or pipeline.[index].[arg name]
       var arg = {};
@@ -203,6 +205,15 @@ export default {
         arg = this.stages[this.task.pipeline[+v[1]]].args.filter(
           (x) => x.name == v[2]
         )[0];
+      return arg;
+    },
+    get_map_val(v) {
+      v = v.split(".");
+      var arg = {};
+      if (v[0] === "datasource")
+        arg = this.task.datasource_config[v[1]]
+      else
+        arg = this.task.pipeline[+v[1]][1][v[2]];
       return arg;
     },
     load_search(e) {

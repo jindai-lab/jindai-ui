@@ -58,7 +58,7 @@ export default {
                 this.bus.$emit('loading', _stack.length)
             }
             if (resp.data.exception) {
-                if (resp.data.exception == 'Forbidden.') {
+                if (resp.data.exception.match('Forbidden.')) {
                     localStorage.token = ''
                     resp.data.exception = '登录失效，请重新登录。'
                     if (!location.href.endsWith('/login')) location.href = '/login'

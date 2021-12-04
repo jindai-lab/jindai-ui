@@ -83,7 +83,6 @@
       </div>
     </v-card-text>
     <v-card-actions>
-      <v-row>
         <v-btn
           @click="save().then(() => notify('保存成功'))"
           class="ml-5"
@@ -97,15 +96,14 @@
         <v-btn class="ml-3" @click="show_code = !show_code">
           <v-icon>mdi-code-braces</v-icon>
         </v-btn>
-      </v-row>
-      <v-row class="d-block">
+    </v-card-actions>
+      <v-row class="ma-10">
         <v-textarea
           v-show="show_code"
           :value="querify(task)"
           readonly
         ></v-textarea>
       </v-row>
-    </v-card-actions>
   </v-card>
 </template>
 
@@ -217,7 +215,6 @@ export default {
       this.save().then((id) =>
         api.put("queue/", { id }).then((data) => {
           this.notify(data.result + " 已成功加入后台处理队列。");
-          api.fetch_logs(data.result)
         })
       );
     },

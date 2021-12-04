@@ -152,6 +152,7 @@ export default {
         waiting: "...",
         running: "...",
       },
+      last_running: '',
       admin: false,
       shortcuts: [],
       snackbars: [],
@@ -163,6 +164,9 @@ export default {
   watch: {
     app_dark(val) {
       this.$vuetify.theme.dark = !!val
+    },
+    app_title(val) {
+      document.title = val
     }
   },
   created() {
@@ -176,7 +180,13 @@ export default {
             .then((data) => (this.shortcuts = data.result));
           if (!this.viewer)
             setInterval(
-              () => api.queue().then((queue) => (this.queue = queue)),
+              () => api.queue().then((queue) => {
+                this.queue = queue
+                if (this.queue.running != this.last_running ) {
+                  this.last_running = this.queue.running
+                  this.last_running && api.fetch_logs(this.last_running)
+                }
+              }),
               10000
             );
         })
