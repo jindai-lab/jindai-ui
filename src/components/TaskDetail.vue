@@ -26,7 +26,7 @@
         </v-col>
       </v-row>
       <h2>数据源</h2>
-      <div id="datasource" class="mui-panel">
+      <div id="datasource">
         <v-autocomplete
           v-model="task.datasource"
           :items="datasource_items"
@@ -72,7 +72,7 @@
 
       <div id="shortcut_map">
         <h2>快捷参数</h2>
-        <div class="mui-panel">
+        <div>
           <div v-for="(v, k) in task.shortcut_map" :key="k">
             <ParamInput
               :arg="{ name: k, type: 'str', default: '\'\'' }"

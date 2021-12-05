@@ -25,7 +25,7 @@
     
     <v-row>
       <v-col cols="6">
-        <div class="paragraphs mui-panel">
+        <div class="paragraphs">
           <p v-for="p in paragraphs" :key="p._id">
             {{ p.content }}
           </p>
@@ -37,7 +37,7 @@
           来源: {{ paragraphs[0].source.file }} {{ paragraphs[0].source.page }}<br>
         </div>
       </v-col>
-      <v-col cols="6" class="image mui-col-md-6" @click="show_modal = true">
+      <v-col cols="6" class="image" @click="show_modal = true">
         <img :src="pdf_image" alt="" style="width: 100%" />
       </v-col>
     </v-row>

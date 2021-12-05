@@ -12,20 +12,17 @@
       ></v-select>
         <ParamInput
           ref="editor"
-          class="mui-textfield"
           :arg="{ name: 'Query', type: 'js' }"
           v-model="command.query"
           @input="previewed = false"
         />
         <ParamInput
-          class="mui-textfield"
           :arg="{ name: 'Operation', type: 'update_many|delete_many|count' }"
           v-model="command.operation"
           @input="previewed = false"
         />
         <ParamInput
           ref="editor"
-          class="mui-textfield"
           :arg="{ name: 'Parameters', type: 'js' }"
           v-model="command.operation_params"
           @input="previewed = false"

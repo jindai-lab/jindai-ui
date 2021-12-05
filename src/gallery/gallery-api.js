@@ -44,7 +44,7 @@ export default {
                 location.href = data.redirect
             }
             data.results = data.results.map(album => {
-                album.author = album.author || (album.tags.filter(x => x.startsWith('@')) || [''])[0]
+                album.author = album.author || (album.keywords.filter(x => x.startsWith('@')) || [''])[0]
                 album.group = album.group_id ? '?query=' + album.group_id : '?query=id%3D' + album._id
                 album.selected = false
                 album.items.forEach(i => { i.rating = i.rating || 0 })

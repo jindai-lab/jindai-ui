@@ -27,7 +27,7 @@
         '?query=' +
         encodeURIComponent(
           quote(tag) +
-            (album.author && !['t_group', 't_author'].includes(tag_class(tag))
+            (album.author && !tag.match(/^[*@]/)
               ? ',`' + album.author + '`'
               : '')
         ) +
@@ -53,7 +53,7 @@ export default {
       return new URLSearchParams(location.search.substr(1)).get("post", "");
     },
     text() {
-      var candidates = this.album.tags.filter(this._is_text)
+      var candidates = this.album.keywords.filter(this._is_text)
       if (candidates) {
         var longest = candidates.sort(x => x.length).pop()
         candidates = [longest, ... candidates.filter(x => !longest.includes(x))]
@@ -62,7 +62,7 @@ export default {
       return ''
     },
     tags() {
-      return this.album.tags.filter(x => !this._is_text(x)).sort()
+      return this.album.keywords.filter(x => !this._is_text(x)).sort()
     }
   },
   methods: {

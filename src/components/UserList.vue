@@ -6,7 +6,7 @@
         <v-icon>mdi-plus</v-icon> 添加用户
       </v-btn></v-card-title>
     <v-card-text>
-        <v-row v-for="u in users" :key="u._id" class="mui-panel">
+        <v-row v-for="u in users" :key="u._id">
           <v-col class="name">{{ u.username }}</v-col>
           <v-col class="opers">
             <v-btn @click="show_modify = true; new_user = Object.assign(u, {'password': ''}); show_modal = true;">

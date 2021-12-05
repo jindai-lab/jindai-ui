@@ -1,47 +1,72 @@
 <template>
   <div>
-    <v-select 
-      v-if="arg.type.indexOf('|') >= 0" 
+    <v-select
+      v-if="arg.type.indexOf('|') >= 0"
       :label="arg.name"
-      :value="value === null || typeof value === 'undefined' ? arg.default : value" v-bind="$attrs" v-on="inputListeners" @change="inputListeners.input"
-      :items="arg.type.split('|')">
+      :value="
+        value === null || typeof value === 'undefined' ? arg.default : value
+      "
+      v-bind="$attrs"
+      v-on="inputListeners"
+      @change="inputListeners.input"
+      :items="arg.type.split('|')"
+    >
     </v-select>
 
+    <v-autocomplete
+      :label="arg.name"
+      v-bind="$attrs"
+      v-on="inputListeners"
+      @change="inputListeners.input"
+      :items="tasks"
+      v-else-if="arg.type == 'TASK'"
+    ></v-autocomplete>
+
     <div v-else-if="arg.type == 'bool'">
-    <v-simple-checkbox :value="value" class="d-inline-block" ref="checkbox"
+      <v-simple-checkbox
+        :value="value"
+        class="d-inline-block"
+        ref="checkbox"
         v-bind="$attrs"
-        v-on="inputListeners">
-        </v-simple-checkbox><label @click="() => $refs.checkbox.click()">{{ arg.name }}</label>
+        v-on="inputListeners"
+      >
+      </v-simple-checkbox
+      ><label @click="() => $refs.checkbox.click()">{{ arg.name }}</label>
     </div>
 
     <div v-else-if="arg.type == 'js' || ['query', 'cond'].includes(arg.name)">
       <label>{{ arg.name }}</label>
-      <prism-editor class="my-editor match-braces"
+      <prism-editor
+        class="my-editor match-braces"
         v-model="code"
         @input="$emit('input', code)"
         :highlight="highlighter"
-        line-numbers />
+        line-numbers
+      />
     </div>
-    
-    <v-textarea v-else-if="arg.type == 'str' || arg.type == 'string'"
-        :value="value"
-        v-bind="$attrs"
-        v-on="inputListeners"
-        :hint="arg.default"
-        :required="!arg.default"
-        :rows="arg.length > 20 ? 4 : 1"
-        cols="40"
-        :label="arg.name"
-      ></v-textarea>
-    
-    <v-text-field v-else
-        type="text"
-        :value="value"
-        v-bind="$attrs"
-        v-on="inputListeners"
-        :placeholder="arg.default"
-        :required="!arg.default"
-        :label="arg.name">
+
+    <v-textarea
+      v-else-if="arg.type == 'str' || arg.type == 'string'"
+      :value="value"
+      v-bind="$attrs"
+      v-on="inputListeners"
+      :hint="arg.default"
+      :required="!arg.default"
+      :rows="arg.length > 20 ? 4 : 1"
+      cols="40"
+      :label="arg.name"
+    ></v-textarea>
+
+    <v-text-field
+      v-else
+      type="text"
+      :value="value"
+      v-bind="$attrs"
+      v-on="inputListeners"
+      :placeholder="arg.default"
+      :required="!arg.default"
+      :label="arg.name"
+    >
     </v-text-field>
 
     {{ prompt }}
@@ -51,33 +76,32 @@
 <script>
 function input_func(vm) {
   return function (event) {
-    var val = vm.validate(
-      event
-    );
+    var val = vm.validate(event);
     if (typeof val !== "undefined") {
       vm.prompt = "";
     } else {
-      val = null
+      val = null;
     }
     vm.$emit("validation", vm.prompt === "");
     vm.$emit("input", val);
   };
 }
 
-import { PrismEditor } from 'vue-prism-editor';
-import 'vue-prism-editor/dist/prismeditor.min.css'; // import the styles somewhere
+import api from "../api";
+import { PrismEditor } from "vue-prism-editor";
+import "vue-prism-editor/dist/prismeditor.min.css"; // import the styles somewhere
 
 // import highlighting library (you can use any library you want just return html string)
-import { highlight, languages } from 'prismjs/components/prism-core';
-import 'prismjs/components/prism-clike';
-import 'prismjs/themes/prism-tomorrow.css'; // import syntax highlighting styles
+import { highlight, languages } from "prismjs/components/prism-core";
+import "prismjs/components/prism-clike";
+import "prismjs/themes/prism-tomorrow.css"; // import syntax highlighting styles
 
 export default {
   inheritAttrs: false,
   props: ["value", "arg"],
   events: ["validation"],
   components: {
-    PrismEditor
+    PrismEditor,
   },
   computed: {
     inputListeners: function () {
@@ -91,12 +115,23 @@ export default {
     return {
       prompt: "",
       code: "",
+      tasks: []
     };
+  },
+  watch: {
+    arg(val) {
+      if (val.type == "TASK") {
+        api.call("tasks").then((data) => (this.tasks = data.result));
+      }
+    }
   },
   methods: {
     validate(val) {
       if (val === "") {
-        if (typeof this.arg.default === 'undefined' || this.arg.default === null) {
+        if (
+          typeof this.arg.default === "undefined" ||
+          this.arg.default === null
+        ) {
           this.prompt = "必填";
           return;
         }
@@ -123,13 +158,19 @@ export default {
       return highlight(code, languages.clike); // languages.<insert language> to return html with markup
     },
     refresh(val) {
-      this.code = val
-      this.$emit('input', val)
+      this.code = val;
+      this.$emit("input", val);
+    },
+  },
+  mounted() {
+    this.code = this.value;
+    if (this.arg.type == 'TASK') {
+      api.call("tasks").then((data) => (this.tasks = data.result.map(x => ({
+        text: x.name,
+        value: x._id
+      }))));
     }
   },
-  mounted () {
-    this.code = this.value
-  }
 };
 </script>
 

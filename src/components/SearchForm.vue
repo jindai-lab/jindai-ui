@@ -250,11 +250,6 @@ export default {
 </script>
 
 <style scoped>
-span.mui-checkbox {
-  float: left;
-  margin: 5px;
-}
-
 .clear {
   clear: both;
 }

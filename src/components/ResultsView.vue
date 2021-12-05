@@ -1,45 +1,54 @@
 <template>
   <v-sheet v-if="total > 0" ref="results">
     <div v-if="columns.includes('content')">
-    <div v-for="(r, index) in visible_data" :key="index" class="mui-panel">
-      <p class="">
-        数据集: {{ r.collection }} 大纲: {{ r.outline }} 来源:
-        {{ r.source.file }} 页码: {{ r.pagenum }} 日期: {{ (r.pdate || '') }}
-      </p>
-      <div class="mui-divider"></div>
-      <br />
-      <div v-html="r.matched_content || r.content"></div>
-      <br />
-      <v-btn
-        
-        @click="view_page(index)"
-      >
-        <v-icon>mdi-eye</v-icon> 查看
-      </v-btn>
-      <v-btn
-        :href="'/view/' + (r.dataset || 'default') + '/' + r.source.file + '/' + r.source.page"
-        target="_blank"
-      >
-        <v-icon>mdi-dock-window</v-icon> 浏览
-      </v-btn>
-      <v-btn
-        @click="
-          show_meta[index] = !show_meta[index];
-          $forceUpdate();
-        "
-      >
-        <v-icon>{{ 'mdi-menu-' + (!show_meta[index] ? 'down' : 'up') }}</v-icon>
-        其他元数据
-      </v-btn>
-      <v-btn @click="edit_target = r">
-        <v-icon>mdi-file-edit-outline</v-icon>
-        编辑
-      </v-btn>
-      <v-textarea readonly v-show="!!show_meta[index]" :value="metas(r)" rows="5"></v-textarea>
-      <v-divider class="mt-5 mb-5"></v-divider>
+      <div v-for="(r, index) in visible_data" :key="index">
+        <p class="">
+          数据集: {{ r.collection }} 大纲: {{ r.outline }} 来源:
+          {{ r.source.file }} 页码: {{ r.pagenum }} 日期: {{ r.pdate || "" }}
+        </p>
+        <v-divider></v-divider>
+        <br />
+        <div v-html="r.matched_content || r.content"></div>
+        <br />
+        <v-btn @click="view_page(index)"> <v-icon>mdi-eye</v-icon> 查看 </v-btn>
+        <v-btn
+          :href="
+            '/view/' +
+            (r.dataset || 'default') +
+            '/' +
+            r.source.file +
+            '/' +
+            r.source.page
+          "
+          target="_blank"
+        >
+          <v-icon>mdi-dock-window</v-icon> 浏览
+        </v-btn>
+        <v-btn
+          @click="
+            show_meta[index] = !show_meta[index];
+            $forceUpdate();
+          "
+        >
+          <v-icon>{{
+            "mdi-menu-" + (!show_meta[index] ? "down" : "up")
+          }}</v-icon>
+          其他元数据
+        </v-btn>
+        <v-btn @click="edit_target = r">
+          <v-icon>mdi-file-edit-outline</v-icon>
+          编辑
+        </v-btn>
+        <v-textarea
+          readonly
+          v-show="!!show_meta[index]"
+          :value="metas(r)"
+          rows="5"
+        ></v-textarea>
+        <v-divider class="mt-5 mb-5"></v-divider>
+      </div>
     </div>
-    </div>
-    <div class="mui-panel" v-else>
+    <v-sheet v-else>
       <table>
         <thead>
           <tr>
@@ -50,54 +59,59 @@
           <tr v-for="(r, index) in visible_data" :key="index">
             <td v-for="col in columns" :key="col + index">
               <div v-if="Array.isArray(r[col])">
-                <v-btn  @click="show_embedded(r, col)">
+                <v-btn @click="show_embedded(r, col)">
                   <v-icon>mdi-file</v-icon>
                 </v-btn>
               </div>
               <div v-else>
-              {{ r[col] }}
+                {{ r[col] }}
               </div>
             </td>
           </tr>
         </tbody>
       </table>
-    </div>
+    </v-sheet>
     <div class="pagination">
-        <div class="float-left" v-for="p in pages" :key="p">
-          <v-btn
-            v-if="p <= 5 || p > pages.length - 5 || Math.abs(p - page) <= 4"
-            @click="turn_page(p)"
-            :disabled="p == page"
-          >
-            {{ p }}
-          </v-btn>
-          <v-btn
-            disabled
-            v-else-if="
-              p == 6 || p == page.length - 5 || Math.abs(p - page) == 5
-            "
-          >
-            ...
-          </v-btn>
-        </div>
-      <div class="mui-col-md-1">
-        <div class="mui-textfield">
-          <label>
-            页码</label>
-            <v-text-field
-              class="d-inline-block ml-1"
-              style="max-width: 30px"
-              @change="turn_page(parseInt($event) || page)"
-            ></v-text-field>
+      <div class="float-left" v-for="p in pages" :key="p">
+        <v-btn
+          v-if="p <= 5 || p > pages.length - 5 || Math.abs(p - page) <= 4"
+          @click="turn_page(p)"
+          :disabled="p == page"
+        >
+          {{ p }}
+        </v-btn>
+        <v-btn
+          disabled
+          v-else-if="p == 6 || p == page.length - 5 || Math.abs(p - page) == 5"
+        >
+          ...
+        </v-btn>
+      </div>
+      <div>
+        <div>
+          <label> 页码</label>
+          <v-text-field
+            class="d-inline-block ml-1"
+            style="max-width: 30px"
+            @change="turn_page(parseInt($event) || page)"
+          ></v-text-field>
         </div>
       </div>
     </div>
 
-    <v-dialog v-if="show_page !== null" :value="show_page !== null" @input="show_page = null">
+    <v-dialog
+      v-if="show_page !== null"
+      :value="show_page !== null"
+      @input="show_page = null"
+    >
       <v-card>
-        <v-card-title>查看
+        <v-card-title
+          >查看
           <v-spacer></v-spacer>
-          <v-btn icon @click="show_page = null"><v-icon>mdi-close</v-icon></v-btn></v-card-title>
+          <v-btn icon @click="show_page = null"
+            ><v-icon>mdi-close</v-icon></v-btn
+          ></v-card-title
+        >
         <v-card-text>
           <div ref="show_page_element" v-if="showing_result !== null">
             <div class="page-view">
@@ -110,53 +124,86 @@
               日期: {{ showing_result.pdate }}<br />
               页码: {{ showing_result.pagenum }}<br />
               大纲: {{ showing_result.outline }}<br />
-              来源: {{ showing_result.source.file }} {{ showing_result.source.page }}<br>
+              来源: {{ showing_result.source.file }}
+              {{ showing_result.source.page }}<br />
             </div>
-        </div>
+          </div>
         </v-card-text>
       </v-card>
     </v-dialog>
-    
-    <v-dialog v-if="edit_target" :value="edit_target !== null" @input="edit_target = null">
+
+    <v-dialog
+      v-if="edit_target"
+      :value="edit_target !== null"
+      @input="edit_target = null"
+    >
       <v-card>
-        <v-card-title>编辑语段 {{ edit_target._id }}
+        <v-card-title
+          >编辑语段 {{ edit_target._id }}
           <v-spacer></v-spacer>
-          <v-btn icon @click="edit_target = null"><v-icon>mdi-close</v-icon></v-btn></v-card-title>
+          <v-btn icon @click="edit_target = null"
+            ><v-icon>mdi-close</v-icon></v-btn
+          ></v-card-title
+        >
         <v-card-text>
           <v-list>
-        <v-list-item v-for="field, key in edit_target" :key="key">
-          <v-list-item-content>
-          <ParamInput v-model="edit_target[key]" :arg="{type: typeof(field), name: key, default: '\'\''}" v-if="!(['_id', 'matched_content'].includes(key) || typeof(field) == 'object')" />
-          </v-list-item-content>
-        </v-list-item>
-        <v-list-item>
-<v-list-item-content>
-          <ParamInput class="mui-col-md-8" v-model="edit_new_field" :arg="{type: 'string', name: '新字段', default: ''}" />
-          <v-btn class="mui-btn mui-col-md4" @click="edit_target[edit_new_field]=''; $forceUpdate()">
-            <v-icon>mdi-plus</v-icon>
-          </v-btn>
-
-</v-list-item-content>
-        </v-list-item>
-        </v-list>
+            <v-list-item v-for="(field, key) in edit_target" :key="key">
+              <v-list-item-content>
+                <ParamInput
+                  v-model="edit_target[key]"
+                  :arg="{ type: typeof field, name: key, default: '\'\'' }"
+                  v-if="
+                    !(
+                      ['_id', 'matched_content'].includes(key) ||
+                      typeof field == 'object'
+                    )
+                  "
+                />
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item>
+              <v-list-item-content>
+                <ParamInput
+                  v-model="edit_new_field"
+                  :arg="{ type: 'string', name: '新字段', default: '' }"
+                />
+                <v-btn
+                  @click="
+                    edit_target[edit_new_field] = '';
+                    $forceUpdate();
+                  "
+                >
+                  <v-icon>mdi-plus</v-icon>
+                </v-btn>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
         </v-card-text>
         <v-card-actions>
-        <v-btn class="mui-btn mui-btn--primary" @click="save()">保存</v-btn>
-        <v-btn  @click="edit_target = null">取消</v-btn>
-
+          <v-btn color="primary" @click="save()">保存</v-btn>
+          <v-btn @click="edit_target = null">取消</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
 
-    <v-dialog v-if="embedded" :value="embedded !== null" @input="embedded = null">
+    <v-dialog
+      v-if="embedded"
+      :value="embedded !== null"
+      @input="embedded = null"
+    >
       <v-card>
         <v-card-title>
           查看 {{ querify(embedded.source) }}
           <v-spacer></v-spacer>
-          <v-btn icon @click="embedded = null"><v-icon>mdi-close</v-icon></v-btn>
+          <v-btn icon @click="embedded = null"
+            ><v-icon>mdi-close</v-icon></v-btn
+          >
         </v-card-title>
         <v-card-tex>
-          <ResultsView @load="(a) => a.callback({offset: 0, result: embedded.arr})" :total="embedded.arr.length" />
+          <ResultsView
+            @load="(a) => a.callback({ offset: 0, result: embedded.arr })"
+            :total="embedded.arr.length"
+          />
         </v-card-tex>
       </v-card>
     </v-dialog>
@@ -165,9 +212,9 @@
 </template>
 
 <script>
-import ParamInput from './ParamInput'
-import api from '../api'
-import QueryString from 'querystring'
+import ParamInput from "./ParamInput";
+import api from "../api";
+import QueryString from "querystring";
 export default {
   name: "ResultsView",
   props: {
@@ -176,7 +223,7 @@ export default {
     page_size: { default: 20 },
   },
   components: {
-    ParamInput
+    ParamInput,
   },
   data() {
     return {
@@ -184,21 +231,22 @@ export default {
       value: [],
       show_meta: {},
       show_page: null,
-      pdf_image: '',
-      loading_image: require('../../public/assets/loading.png'),
+      pdf_image: "",
+      loading_image: require("../../public/assets/loading.png"),
       embedded: null,
       edit_target: null,
-      edit_new_field: '',
+      edit_new_field: "",
       page_range: [0, 0],
     };
   },
   watch: {
-    show_page () {
+    show_page() {
       if (this.show_page !== null) {
-        this._prepare_pdfimage()
-        if (this.$refs.show_page_element) this.$refs.show_page_element.parentNode.parentNode.scroll(0, 0)
+        this._prepare_pdfimage();
+        if (this.$refs.show_page_element)
+          this.$refs.show_page_element.parentNode.parentNode.scroll(0, 0);
       }
-    }
+    },
   },
   computed: {
     pages() {
@@ -220,50 +268,49 @@ export default {
     offset() {
       return (this.page - 1) * this.page_size;
     },
-    columns () {
-      var cols = new Set()
+    columns() {
+      var cols = new Set();
       for (var r of this.visible_data) {
-        for (var k in r)
-          cols.add(k)
+        for (var k in r) cols.add(k);
       }
-      return Array.from(cols).sort()
+      return Array.from(cols).sort();
     },
     showing_result() {
-      return this.visible_data[this.show_page] || null
-    }
+      return this.visible_data[this.show_page] || null;
+    },
   },
   mounted() {
-    this.start()
+    this.start();
   },
   created() {
     this.handler = (e) => {
       this.$emit("keyup", e);
       if (e.target.tagName == "INPUT" || this.show_page === null) return;
-      
-      const that = this
+
+      const that = this;
       function __cb_update_show_page(set_value) {
         return () => {
-          that.show_page = set_value >= 0 ? set_value : that.visible_data.length + set_value
-        }
+          that.show_page =
+            set_value >= 0 ? set_value : that.visible_data.length + set_value;
+        };
       }
 
       switch (e.key) {
         case "ArrowRight":
         case "ArrowLeft":
-          var inc = e.key == 'ArrowRight' ? 1 : -1
-          this.show_page += inc
+          var inc = e.key == "ArrowRight" ? 1 : -1;
+          this.show_page += inc;
           if (this.show_page >= this.visible_data.length) {
-            this.show_page = null
-            this.turn_page(this.page + 1, __cb_update_show_page(0))
+            this.show_page = null;
+            this.turn_page(this.page + 1, __cb_update_show_page(0));
           } else if (this.show_page < 0) {
-            this.show_page = null
-            this.turn_page(this.page - 1, __cb_update_show_page(-1))
+            this.show_page = null;
+            this.turn_page(this.page - 1, __cb_update_show_page(-1));
           }
           break;
         default:
           break;
       }
-
     };
     window.addEventListener("keyup", this.handler);
   },
@@ -272,17 +319,20 @@ export default {
   },
   methods: {
     _fetched() {
-      return this.page_range[0] <= this.offset && this.page_range[1] > this.offset;
+      return (
+        this.page_range[0] <= this.offset && this.page_range[1] > this.offset
+      );
     },
     _prepare_pdfimage() {
-      this.pdf_image = this.loading_image
-      if (this.showing_result === null) return
-      var image_url = "/api/image?" + QueryString.stringify(this.showing_result.source)
+      this.pdf_image = this.loading_image;
+      if (this.showing_result === null) return;
+      var image_url =
+        "/api/image?" + QueryString.stringify(this.showing_result.source);
       var image_element = new Image();
       image_element.src = image_url;
       image_element.onload = () => {
-          this.pdf_image = image_element.src
-      }
+        this.pdf_image = image_element.src;
+      };
     },
     start() {
       this.page_range = [0, 0];
@@ -300,15 +350,15 @@ export default {
           callback: (data) => {
             this.page_range = [data.offset, data.offset + data.result.length];
             this.value = data.result;
-            if (typeof cb !== 'undefined') cb();
+            if (typeof cb !== "undefined") cb();
           },
         });
       }
     },
     show_embedded(r, col) {
-      var source = Object.assign({}, r)
-      delete source[col]
-      this.embedded = { arr: r[col], source }
+      var source = Object.assign({}, r);
+      delete source[col];
+      this.embedded = { arr: r[col], source };
     },
     view_page(index) {
       this.show_page = index;
@@ -333,11 +383,13 @@ export default {
       return s;
     },
     save() {
-      api.call('paragraphs/' + this.edit_target._id, this.edit_target).then(() => {
-        this.edit_target = null
-        api.notify({ title: "保存成功" });
-      })
-    }
+      api
+        .call("paragraphs/" + this.edit_target._id, this.edit_target)
+        .then(() => {
+          this.edit_target = null;
+          api.notify({ title: "保存成功" });
+        });
+    },
   },
 };
 </script>

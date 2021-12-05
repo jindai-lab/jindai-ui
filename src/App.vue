@@ -135,8 +135,8 @@
 </template>
 
 <script>
-import QueueView from "./components/QueueView";
 import api from "./api";
+import QueueView from "./components/QueueView";
 
 export default {
   name: "app",
@@ -170,6 +170,21 @@ export default {
     }
   },
   created() {
+      api.bus.$on("loading", (loading_num) => (this.loading = loading_num > 0))
+    .$on("console", (data) => {
+            this.console_outputs.splice(0, 0, ...data.reverse());
+          })
+            .$on("alert", (bundle) => {
+          const message = bundle.title ? `${bundle.title}\n${bundle.text || ''}`.trim() : bundle;
+          this.snackbars = this.snackbars
+            .filter((x) => x.visible)
+            .concat([
+              {
+                text: message,
+                visible: true,
+              },
+            ]);
+        });
     this.$on("logined", () => {
       api
         .logined()
@@ -198,21 +213,7 @@ export default {
       Object.assign(this, data.result);
     })
     this.$emit("logined");
-    api.bus.$on("loading", (loading_num) => (this.loading = loading_num > 0))
-    .$on("console", (data) => {
-            this.console_outputs.splice(0, 0, ...data.reverse());
-          })
-            .$on("alert", (bundle) => {
-          const message = bundle.title ? `${bundle.title}\n${bundle.text || ''}`.trim() : bundle;
-          this.snackbars = this.snackbars
-            .filter((x) => x.visible)
-            .concat([
-              {
-                text: message,
-                visible: true,
-              },
-            ]);
-        });
+  
     
     if (this.viewer) return;
   },

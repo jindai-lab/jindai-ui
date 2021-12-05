@@ -1,6 +1,6 @@
 <template>
   <div class="stage">
-    <div class="mui-select">
+    <div>
       
       {{ stage_doc.doc }}
     <v-autocomplete
@@ -27,7 +27,7 @@
             </v-col>
           </v-row>
         </div>
-        <div class="mui-textfield" v-else>
+        <div v-else>
           <label>{{ arg.name }}</label>
           {{ arg.description }}
           <Pipeline v-model="value[1][arg.name]" :map_id="map_id + '.' + arg.name" @validation="update_valid('pipeline_' + arg.name, $event)" @shortcut="update_shortcut" />

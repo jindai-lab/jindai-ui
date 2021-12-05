@@ -1,10 +1,10 @@
 <template>
-  <div>
-    <h3>文本补全</h3>
-    <ParamInput class="mui-textfield" :arg="{ name: '备选数量', type: 'int' }" v-model="n" />
-    <ParamInput class="mui-textfield" :arg="{ name: '概率阈限', type: 'float' }" v-model="topp" />
-    <ParamInput ref="editor" class="mui-textfield" :arg="{ name: '文本内容', type: 'str' }" v-model="text" />
-    <v-btn @click="complete" class="mui-btn mui-btn--primary">
+  <v-card>
+    <v-card-title>文本补全</v-card-title>
+    <ParamInput :arg="{ name: '备选数量', type: 'int' }" v-model="n" />
+    <ParamInput :arg="{ name: '概率阈限', type: 'float' }" v-model="topp" />
+    <ParamInput ref="editor" :arg="{ name: '文本内容', type: 'str' }" v-model="text" />
+    <v-btn @click="complete" color="primary">
       <v-icon>mdi-sync</v-icon> 补全
     </v-btn>
     <ul class="results">
@@ -14,7 +14,7 @@
         </v-btn>
       </li>
     </ul>
-  </div>
+  </v-card>
 </template>
 
 <script>

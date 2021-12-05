@@ -6,8 +6,7 @@
     <div
       v-for="(stage, index) in value"
       :key="index"
-      class="stage-opers mui-panel"
-    >
+      class="stage-opers">
       <StageDetail
         :stages="stages"
         :map_id="map_id + '.' + index"

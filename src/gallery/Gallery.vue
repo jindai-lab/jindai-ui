@@ -1,5 +1,10 @@
 <template>
   <div>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="/api/gallery/plugins/style.css"
+    />
     <v-toolbar flat>
       <v-row>
         <v-col>
@@ -209,7 +214,10 @@
             width="100%"
             style="height: 90vh"
             controls
-            v-if="browsing_item && browsing_item.source.url.split('.').pop() == 'mp4'"
+            v-if="
+              browsing_item &&
+              browsing_item.source.url.split('.').pop() == 'mp4'
+            "
           >
             <source :src="get_item_video(browsing_item)" type="video/mp4" />
           </video>
@@ -405,7 +413,7 @@ export default {
       query: "",
       post: "",
       order: {
-        keys: ["-liked_at"]
+        keys: ["-liked_at"],
       },
       limit: 40,
       archive: false,
@@ -451,7 +459,7 @@ export default {
       force_thumbnail: false,
       limit: 50,
     },
-    sorting: null,
+    sorting: "",
     post_option: { post: "", args: "" },
     pages: [],
     fab: false,
@@ -507,7 +515,7 @@ export default {
     this._on_login();
 
     api.call("shortcuts", {}, "get").then((data) => {
-      data = data.result
+      data = data.result;
       for (var k in data)
         this.tagging_shortcut_list.push({
           text: `${k} ${data[k]}`,
@@ -710,6 +718,7 @@ export default {
         case "e":
         case "o":
         case "i":
+          if (e.ctrlKey || e.metaKey) return;
           if (this.selected_albums().length > 0) {
             var _item = this.selected_items()[0],
               _album = this.selected_albums()[0];
@@ -915,7 +924,8 @@ export default {
       }, this.playing_interval);
     },
     _scroll_to_browsing_album() {
-      const album_ele = this.$refs[`album_ref_${this.browsing_album._id}`] || [];
+      const album_ele =
+        this.$refs[`album_ref_${this.browsing_album._id}`] || [];
       if (album_ele[0]) window.scrollTo(0, album_ele[0].offsetTop);
     },
     browse_next() {
@@ -945,7 +955,7 @@ export default {
     show_tagging_dialog() {
       if (this.selected_albums().length > 0) {
         var existing_tags = new Set(
-          this.selected_albums().reduce((a, e) => a.concat(e.tags), [])
+          this.selected_albums().reduce((a, e) => a.concat(e.keywords), [])
         );
         this.$refs.tagging_dialog.show(Array.from(existing_tags));
       }
@@ -953,7 +963,7 @@ export default {
     tag(e, append = true) {
       var s = this.selected_albums();
       var existing_tags = new Set(
-        this.selected_albums().reduce((a, e) => a.concat(e.tags), [])
+        this.selected_albums().reduce((a, e) => a.concat(e.keywords), [])
       );
       api
         .call("album/tag", {
@@ -966,7 +976,7 @@ export default {
         .then((data) => {
           this._clear_selected(s);
           s.forEach((p) => {
-            data.result[p._id] && (p.tags = data.result[p._id]);
+            data.result[p._id] && (p.keywords = data.result[p._id]);
           });
         });
     },
@@ -1036,7 +1046,7 @@ export default {
           this._clear_selected(s);
           s.forEach(
             (p) =>
-              (p.tags = p.tags
+              (p.keywords = p.keywords
                 .filter((x) => !x.startsWith("*0") && x !== data.result)
                 .concat(data.result ? [data.result] : []))
           );
