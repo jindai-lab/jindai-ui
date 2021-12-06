@@ -7,31 +7,27 @@
             <v-list-item-title>文献</v-list-item-title>
           </template>
           <v-list-item link @click="$router.push('/')">
-            <v-list-item-title
-              >搜索</v-list-item-title
-            >
+            <v-list-item-title>搜索</v-list-item-title>
           </v-list-item>
           <v-list-item link @click="$router.push('/tasks')">
-            <v-list-item-title
-              >工作流</v-list-item-title
-            >
+            <v-list-item-title>工作流</v-list-item-title>
           </v-list-item>
           <v-list-item link @click="$router.push('/gallery')">
-            <v-list-item-title
-              >图集</v-list-item-title
-            >
+            <v-list-item-title>图集</v-list-item-title>
           </v-list-item>
         </v-list-group>
 
-        <v-list-group v-show="shortcuts.length>0">
+        <v-list-group v-show="shortcuts.length > 0">
           <template v-slot:activator>
             <v-list-item-title>快捷方式</v-list-item-title>
           </template>
-          <v-list-item link v-for="s in shortcuts || [{_id: '', name: '快捷方式'}]" :key="s._id"
-              @click="$router.push('/tasks/shortcut/' + s._id)">
-            <v-list-item-title
-              >{{ s.name }}</v-list-item-title
-            >
+          <v-list-item
+            link
+            v-for="s in shortcuts || [{ _id: '', name: '快捷方式' }]"
+            :key="s._id"
+            @click="$router.push('/tasks/shortcut/' + s._id)"
+          >
+            <v-list-item-title>{{ s.name }}</v-list-item-title>
           </v-list-item>
         </v-list-group>
 
@@ -40,19 +36,19 @@
             <v-list-item-title>用户</v-list-item-title>
           </template>
           <v-list-item link @click="$router.push('/security')">
-            <v-list-item-title
-              >账户</v-list-item-title
-            >
+            <v-list-item-title>账户</v-list-item-title>
           </v-list-item>
           <v-list-item link @click="$router.push('/history')">
-            <v-list-item-title 
-              >历史</v-list-item-title
-            >
+            <v-list-item-title>历史</v-list-item-title>
           </v-list-item>
-          <v-list-item link @click="log_out(); $router.push('/login')">
-            <v-list-item-title
-              >登出</v-list-item-title
-            >
+          <v-list-item
+            link
+            @click="
+              log_out();
+              $router.push('/login');
+            "
+          >
+            <v-list-item-title>登出</v-list-item-title>
           </v-list-item>
         </v-list-group>
 
@@ -61,24 +57,16 @@
             <v-list-item-title>管理</v-list-item-title>
           </template>
           <v-list-item link @click="$router.push('/storage')">
-            <v-list-item-title
-              >文件</v-list-item-title
-            >
+            <v-list-item-title>文件</v-list-item-title>
           </v-list-item>
           <v-list-item link @click="$router.push('/collections')">
-            <v-list-item-title
-              >数据集</v-list-item-title
-            >
+            <v-list-item-title>数据集</v-list-item-title>
           </v-list-item>
           <v-list-item link @click="$router.push('/dbconsole')">
-            <v-list-item-title
-              >控制台</v-list-item-title
-            >
+            <v-list-item-title>控制台</v-list-item-title>
           </v-list-item>
           <v-list-item link @click="$router.push('/users')">
-            <v-list-item-title
-              >权限</v-list-item-title
-            >
+            <v-list-item-title>权限</v-list-item-title>
           </v-list-item>
         </v-list-group>
       </v-list>
@@ -93,31 +81,39 @@
 
     <v-main>
       <div :id="viewer ? 'viewer' : 'content-wrapper'">
-        <keep-alive :include="['SearchForm', 'ResultsView', 'DbConsole']">
+        <keep-alive
+          :include="['SearchForm', 'ResultsView', 'DbConsole', 'Gallery']"
+        >
           <router-view @logined="$emit('logined')" :key="$route.fullPath" />
         </keep-alive>
       </div>
 
       <div style="height: 40px"></div>
-      
-      <v-card
-        flat
-        v-show="console_outputs.length > 0"
-        ref="console"
-      >
-        <v-btn small left bottom text class="ma-3" @click="console_outputs=[]"><v-icon>mdi-delete</v-icon> 清除</v-btn>
+
+      <v-card flat v-show="console_outputs.length > 0" ref="console">
+        <v-btn small left bottom text class="ma-3" @click="console_outputs = []"
+          ><v-icon>mdi-delete</v-icon> 清除</v-btn
+        >
         <div class="console">
-        <div v-for="(line, index) in console_outputs" :key="index">
-          {{ line }}
-        </div></div>
+          <div v-for="(line, index) in console_outputs" :key="index">
+            {{ line }}
+          </div>
+        </div>
       </v-card>
 
       <v-footer :id="viewer ? '' : 'footer'">
-        Powered by Jindai &copy; 2018-{{ new Date().getFullYear() }} zhuth &amp; contributors
+        Powered by Jindai &copy; 2018-{{ new Date().getFullYear() }} zhuth &amp;
+        contributors
       </v-footer>
     </v-main>
-    <v-progress-linear indeterminate v-show="loading" app fixed bottom></v-progress-linear>
-    
+    <v-progress-linear
+      indeterminate
+      v-show="loading"
+      app
+      fixed
+      bottom
+    ></v-progress-linear>
+
     <v-snackbar
       v-model="sb.visible"
       v-for="(sb, index) in snackbars"
@@ -130,7 +126,6 @@
         </v-btn>
       </template>
     </v-snackbar>
-
   </v-app>
 </template>
 
@@ -149,43 +144,51 @@ export default {
       loading: false,
       queue: {
         finished: [],
-        waiting: "...",
-        running: "...",
+        waiting: 0,
+        running: [],
       },
-      last_running: '',
+      logs: {},
       admin: false,
       shortcuts: [],
       snackbars: [],
       console_outputs: [],
-      app_title: 'Jindai',
-      app_dark: false
+      app_title: "Jindai",
+      app_dark: false,
     };
   },
   watch: {
     app_dark(val) {
-      this.$vuetify.theme.dark = !!val
+      this.$vuetify.theme.dark = !!val;
     },
     app_title(val) {
-      document.title = val
-    }
+      document.title = val;
+    },
   },
   created() {
-      api.bus.$on("loading", (loading_num) => (this.loading = loading_num > 0))
-    .$on("console", (data) => {
-            this.console_outputs.splice(0, 0, ...data.reverse());
-          })
-            .$on("alert", (bundle) => {
-          const message = bundle.title ? `${bundle.title}\n${bundle.text || ''}`.trim() : bundle;
-          this.snackbars = this.snackbars
-            .filter((x) => x.visible)
-            .concat([
-              {
-                text: message,
-                visible: true,
-              },
-            ]);
-        });
+    api.bus
+      .$on("loading", (loading_num) => (this.loading = loading_num > 0))
+      .$on("console", (data) => {
+        this.console_outputs.splice(0, 0, ...data.reverse());
+      })
+      .$on("alert", (bundle) => {
+        const message = bundle.title
+          ? `${bundle.title}\n${bundle.text || ""}`.trim()
+          : bundle;
+        this.snackbars = this.snackbars
+          .filter((x) => x.visible)
+          .concat([
+            {
+              text: message,
+              visible: true,
+            },
+          ]);
+      })
+      .$on("finish", (key) => {
+        if (this.logs[key]) delete this.logs[key];
+        this.update_queue();
+      });
     this.$on("logined", () => {
+      this.update_queue()
       api
         .logined()
         .then((data) => (this.admin = data.result.roles.indexOf("admin") >= 0))
@@ -193,28 +196,17 @@ export default {
           api
             .call("tasks/shortcuts")
             .then((data) => (this.shortcuts = data.result));
-          if (!this.viewer)
-            setInterval(
-              () => api.queue().then((queue) => {
-                this.queue = queue
-                if (this.queue.running != this.last_running ) {
-                  this.last_running = this.queue.running
-                  this.last_running && api.fetch_logs(this.last_running)
-                }
-              }),
-              10000
-            );
+          if (!this.viewer) setInterval(this.update_queue, 10000);
         })
         .catch(() => (localStorage.token = ""));
     });
   },
-  mounted() {    
+  mounted() {
     api.call("meta").then((data) => {
       Object.assign(this, data.result);
-    })
+    });
     this.$emit("logined");
-  
-    
+
     if (this.viewer) return;
   },
   computed: {
@@ -226,7 +218,18 @@ export default {
     nav_click(e) {
       this.$router.push(e.target.getAttribute("to")).catch(() => {});
     },
-    log_out: api.log_out
+    log_out: api.log_out,
+    update_queue() {
+      api.queue().then((queue) => {
+        this.queue = queue;
+        this.queue.running.forEach((k) => {
+          if (!this.logs[k]) {
+            api.fetch_logs(k);
+            this.logs[k] = true;
+          }
+        });
+      });
+    },
   },
 };
 </script>

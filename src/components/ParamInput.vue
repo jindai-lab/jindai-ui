@@ -17,6 +17,7 @@
       :label="arg.name"
       v-bind="$attrs"
       v-on="inputListeners"
+      :value="value"
       @change="inputListeners.input"
       :items="tasks"
       v-else-if="arg.type == 'TASK'"
@@ -52,7 +53,7 @@
       v-on="inputListeners"
       :hint="arg.default"
       :required="!arg.default"
-      :rows="arg.length > 20 ? 4 : 1"
+      :rows="arg.length > 20 || (value||'').includes('\n') ? 4 : 1"
       cols="40"
       :label="arg.name"
     ></v-textarea>

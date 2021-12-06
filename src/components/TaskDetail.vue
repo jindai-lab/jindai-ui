@@ -61,7 +61,12 @@
         </div>
       </div>
       <div id="pipeline">
-        <h2>处理流程</h2>
+        <h2>
+          处理流程
+          <v-btn :href="`/api/blockly/${task._id}`"
+            ><v-icon>mdi-layers</v-icon> 设计视图</v-btn
+          >
+        </h2>
         <Pipeline
           v-model="task.pipeline"
           @shortcut="update_shortcut"
@@ -83,27 +88,27 @@
       </div>
     </v-card-text>
     <v-card-actions>
-        <v-btn
-          @click="save().then(() => notify('保存成功'))"
-          class="ml-5"
-          color="primary"
-        >
-          <v-icon>mdi-check</v-icon> 保存
-        </v-btn>
-        <v-btn class="ml-3" color="error" @click="delete_task()">
-          <v-icon>mdi-delete</v-icon> 删除
-        </v-btn>
-        <v-btn class="ml-3" @click="show_code = !show_code">
-          <v-icon>mdi-code-braces</v-icon>
-        </v-btn>
+      <v-btn
+        @click="save().then(() => notify('保存成功'))"
+        class="ml-5"
+        color="primary"
+      >
+        <v-icon>mdi-check</v-icon> 保存
+      </v-btn>
+      <v-btn class="ml-3" color="error" @click="delete_task()">
+        <v-icon>mdi-delete</v-icon> 删除
+      </v-btn>
+      <v-btn class="ml-3" @click="show_code = !show_code">
+        <v-icon>mdi-code-braces</v-icon>
+      </v-btn>
     </v-card-actions>
-      <v-row class="ma-10">
-        <v-textarea
-          v-show="show_code"
-          :value="querify(task)"
-          readonly
-        ></v-textarea>
-      </v-row>
+    <v-row class="ma-10">
+      <v-textarea
+        v-show="show_code"
+        :value="querify(task)"
+        readonly
+      ></v-textarea>
+    </v-row>
   </v-card>
 </template>
 

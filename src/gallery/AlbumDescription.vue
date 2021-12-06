@@ -45,6 +45,7 @@
 </template>
 
 <script>
+import api from "./gallery-api"
 export default {
   name: "AlbumDescription",
   props: ["album"],
@@ -67,10 +68,7 @@ export default {
   },
   methods: {
     _is_text (x) {return encodeURIComponent(x).replace(/%[0-9a-f]{2}/ig, 'x').length > 20 || x.match(/[\s.,?!。，？…]/)},
-    quote(tag) {
-      if (tag.match(/[`'"()\s.,+%:/]/)) return "`" + tag + "`";
-      return tag;
-    },
+    quote: api.quote,
     tag_class(tag) {
       return tag.startsWith("*")
           ? "t_group"

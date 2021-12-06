@@ -82,4 +82,10 @@ export default {
         if (item.storage) return `${_BASE}/block/${item._id}.mp4`;
         return `${_BASE}/${item.source.url}`;
     },
+
+    quote(tag) {
+        tag = tag || '';
+        if (tag.match(/[`'"()\s.,+%:/]/)) return "`" + tag.replace(/`/g, "\\`") + "`";
+        return tag;
+    }
 }

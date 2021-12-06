@@ -179,7 +179,7 @@ export default {
                 that.bus.$emit('console', this_response.split('\n'));
             },
         }).then((data) => {
-            that.bus.$emit("alert", `${key} 完成`)
+            that.bus.$emit("finish", key)
             that.bus.$emit("console", data.resp.substring(last_response_len).split('\n'))
         })
     },

@@ -31,11 +31,6 @@
           <v-btn text @click="_show_dialog('auto_tagging')">Auto Tagging</v-btn>
         </v-col>
         <v-col>
-          <v-btn text href="/api/gallery/compare" target="_blank"
-            >Hash Compare</v-btn
-          ></v-col
-        >
-        <v-col>
           <v-autocomplete
             :items="pages"
             clearable
@@ -283,7 +278,7 @@
                     <v-btn
                       icon
                       dense
-                      :href="`?post=face/${browsing_item._id}&query='${browsing_album.author}'&archive=true`"
+                      :href="`?post=face/${browsing_item._id}&query=${quote(browsing_album.author)}&archive=true`"
                       class="t_func facedet"
                       target="_blank"
                       v-show="browsing_item.faces && browsing_item.faces.length"
@@ -293,7 +288,7 @@
                     <v-btn
                       icon
                       dense
-                      :href="`?post=sim/${browsing_item._id}&query='${browsing_album.author}'&archive=true`"
+                      :href="`?post=sim/${browsing_item._id}&query=${quote(browsing_album.author)}&archive=true`"
                       class="t_func sim"
                       target="_blank"
                       ><v-icon>mdi-image</v-icon></v-btn
@@ -508,7 +503,10 @@ export default {
       }
     },
     browsing(val) {
-      if (!val) this._scroll_to_browsing_album();
+      if (!val) {
+        this._scroll_to_browsing_album();
+        this.item_info = false
+      }
     },
   },
   mounted() {
@@ -545,9 +543,7 @@ export default {
         else if (pair[1].match(/^(true|false)$/)) pair[1] = pair[1] == "true";
         this.params[pair[0]] = pair[1];
       }
-      this.post_option.post = this.params.post
-        ? "page:" + this.params.post.split("/")[0]
-        : "";
+      this.post_option.post = this.params.post.split("/")[0];
       this.post_option.args = this.params.post.split("/").slice(1).join(" ");
       this.update();
       api
@@ -557,6 +553,7 @@ export default {
     clear_selection() {
       this.groups.concat(this.albums).forEach((x) => (x.selected = false));
     },
+    quote(x){ return encodeURIComponent(api.quote(x)); },
     update(obj) {
       if (obj && (!obj.order || (!obj.order.keys && !obj.order.offset))) {
         obj.order = { keys: ["-liked_at"] };
@@ -622,8 +619,8 @@ export default {
         this.params_state = "";
         this.post_option.args = "";
         this.update({ post: "" });
-      } else if (this.post_option.post.startsWith("page:")) {
-        let topost = this.post_option.post.slice(5);
+      } else {
+        let topost = this.post_option.post;
         this.params_state = "";
         this.update({
           post: [topost || "", ...(this.post_option.args || "").split(" ")]
@@ -728,20 +725,20 @@ export default {
                 break;
               case "c":
                 this._open_window(
-                  `?query=${encodeURIComponent(_album.author) || ""}`
+                  `?query=${this.quote(_album.author) || ""}`
                 );
                 break;
               case "s":
                 this._open_window(
                   `?post=sim/${_item._id}&archive=true&query=${
-                    encodeURIComponent(_album.author) || ""
+                    this.quote(_album.author) || ""
                   }`
                 );
                 break;
               case "e":
                 this._open_window(
                   `?post=face/${_item._id}&archive=true&query=${
-                    encodeURIComponent(_album.author) || ""
+                    this.quote(_album.author) || ""
                   }`
                 );
                 break;

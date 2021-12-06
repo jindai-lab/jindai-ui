@@ -14,8 +14,9 @@
     >
     等待中
     </v-badge>
-     正在运行:
-    {{ data.running || "无" }}
+    <v-badge color="orange" :value="data.running.length > 0" :content="data.running.length">
+    正在运行      
+    </v-badge>
     </a>
     <v-dialog v-model="show_finished">
       <v-card>
