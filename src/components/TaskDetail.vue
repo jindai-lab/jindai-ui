@@ -37,7 +37,7 @@
           <div v-for="arg in datasource_doc.args" :key="arg.name">
             <v-row>
               <v-col>
-                {{ arg.description }}
+                {{ arg.description.replace('%1', arg.name) }}
                 <ParamInput
                   :arg="arg"
                   v-model="task.datasource_config[arg.name]"
@@ -49,7 +49,7 @@
                   @click="
                     update_shortcut(
                       'datasource.' + arg.name,
-                      arg.description || arg.name
+                      arg.description.replace('%1', arg.name) || arg.name
                     )
                   "
                 >

@@ -18,7 +18,7 @@
         <div v-if="arg.type !== 'pipeline'">
           <v-row>
             <v-col>
-              {{ arg.description }}<ParamInput :arg="arg" v-model="value[1][arg.name]" @validation="update_valid('stage_' + arg.name, $event)" />
+              {{ arg.description.replace('%1', arg.name) }}<ParamInput :arg="arg" v-model="value[1][arg.name]" @validation="update_valid('stage_' + arg.name, $event)" />
             </v-col>
             <v-col cols="1">
               <v-btn @click="update_shortcut(map_id + '.' + arg.name, arg.description || arg.name)" >

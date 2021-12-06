@@ -9,7 +9,7 @@
       v-bind="$attrs"
       v-on="inputListeners"
       @change="inputListeners.input"
-      :items="arg.type.split('|')"
+      :items="arg.type.split('|').map(x => x.includes(':') ? x.split(':') : [x, x]).map(x => ({text: x[0], value: x[1]}))"
     >
     </v-select>
 

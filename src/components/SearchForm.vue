@@ -1,5 +1,4 @@
 <template>
-  <v-container>
     <v-card flat>
       <v-card-title>搜索</v-card-title>
       <v-card-text>
@@ -32,8 +31,6 @@
         <v-row class="ml-1 mb-3">
           <v-btn @click="search" color="primary">查询</v-btn>
         </v-row>
-      </v-card-text>
-    </v-card>
     <v-spacer></v-spacer>
     <v-card flat>
       <v-card-title v-show="total">
@@ -48,8 +45,8 @@
       <v-card-text>
         <ResultsView :page_size="50" :total="total" @load="load_search" ref="results" />        
       </v-card-text>
+    </v-card>    </v-card-text>
     </v-card>
-  </v-container>
 </template>
     
 <script>

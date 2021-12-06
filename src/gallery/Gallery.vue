@@ -47,7 +47,7 @@
           ></v-text-field>
         </v-col>
         <v-col>
-          <v-btn @click="call_tool" text>Call</v-btn>
+          <v-btn @click="call_tool">Go</v-btn>
         </v-col>
       </v-row>
     </v-toolbar>
@@ -440,7 +440,7 @@ export default {
       },
       {
         text: "Item Source",
-        value: { order: { keys: ["items.source"], "items.source": "" } },
+        value: { order: { keys: ["items.source.url"], "items.source.url": "" } },
       },
       {
         text: "Rating",
