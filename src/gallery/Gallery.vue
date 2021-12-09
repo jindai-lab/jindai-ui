@@ -131,7 +131,7 @@
         >
           <v-card
             width="250"
-            @click="g.selected = !g.selected"
+            @click="g.selected = !g.selected; selected_albums_count = selected_albums().length;"
             @dblclick="_open_window(`?query=${g.group_id}`)"
             :class="g.selected ? 'selected' : ''"
             style="overflow: hidden"
@@ -278,7 +278,9 @@
                     <v-btn
                       icon
                       dense
-                      :href="`?post=face/${browsing_item._id}&query=${quote(browsing_album.author)}&archive=true`"
+                      :href="`?post=face/${browsing_item._id}&query=${quote(
+                        browsing_album.author
+                      )}&archive=true`"
                       class="t_func facedet"
                       target="_blank"
                       v-show="browsing_item.faces && browsing_item.faces.length"
@@ -288,7 +290,9 @@
                     <v-btn
                       icon
                       dense
-                      :href="`?post=sim/${browsing_item._id}&query=${quote(browsing_album.author)}&archive=true`"
+                      :href="`?post=sim/${browsing_item._id}&query=${quote(
+                        browsing_album.author
+                      )}&archive=true`"
                       class="t_func sim"
                       target="_blank"
                       ><v-icon>mdi-image</v-icon></v-btn
@@ -355,7 +359,6 @@
       <v-btn
         fab
         small
-        @click="bus.$emit('alert', 'Double-click to confirm deletion')"
         @dblclick="delete_items()"
       >
         <v-icon>mdi-delete</v-icon>
@@ -440,7 +443,9 @@ export default {
       },
       {
         text: "Item Source",
-        value: { order: { keys: ["items.source.url"], "items.source.url": "" } },
+        value: {
+          order: { keys: ["items.source.url"], "items.source.url": "" },
+        },
       },
       {
         text: "Rating",
@@ -465,6 +470,10 @@ export default {
       auto_tagging: false,
     },
     logined: true,
+    fetch_sources: {
+      groups: api.cancel_source(),
+      main: api.cancel_source(),
+    },
   }),
   beforeDestroy() {
     window.removeEventListener("keydown", this._keydown_listener);
@@ -505,7 +514,7 @@ export default {
     browsing(val) {
       if (!val) {
         this._scroll_to_browsing_album();
-        this.item_info = false
+        this.item_info = false;
       }
     },
   },
@@ -553,8 +562,11 @@ export default {
     clear_selection() {
       this.groups.concat(this.albums).forEach((x) => (x.selected = false));
     },
-    quote(x){ return encodeURIComponent(api.quote(x)); },
+    quote(x) {
+      return encodeURIComponent(api.quote(x));
+    },
     update(obj) {
+
       if (obj && (!obj.order || (!obj.order.keys && !obj.order.offset))) {
         obj.order = { keys: ["-liked_at"] };
         this.page = 1;
@@ -562,7 +574,11 @@ export default {
       Object.assign(this.params, obj);
       this.params.limit = +this.params.limit;
       document.title = `${this.params.post} ${this.params.query}`;
-      api.fetch(this.params).then((data) => {
+
+      this.fetch_sources.main.cancel()
+      this.fetch_sources.main = api.cancel_source()
+      api.fetch(this.params, this.fetch_sources.main).then((data) => {
+        if (!data) return;
         this.albums = data.results;
         if (!data.prev) this.page = 1;
         else {
@@ -598,19 +614,24 @@ export default {
         })
       );
       if (state != this.params_state) {
+        
+        this.fetch_sources.groups.cancel()
+        this.fetch_sources.groups = api.cancel_source()
         api
           .fetch(
-            Object.assign({}, this.params, { groups: true, archive: false })
+            Object.assign({}, this.params, { groups: true, archive: false }),
+            this.fetch_sources.groups
           )
-          .then((data) => (this.groups = data.results));
+          .then((data) => (data && (this.groups = data.results)));
         api
           .call(
             "get",
             Object.assign({}, this.params, { count: true }),
             "post",
-            false
+            false,
+            this.fetch_sources.groups
           )
-          .then((data) => (this.count = data.result));
+          .then((data) => ( data && (this.count = data.result)));
         this.params_state = state;
       }
     },
@@ -724,9 +745,7 @@ export default {
                 this._open_window(_album.source.url);
                 break;
               case "c":
-                this._open_window(
-                  `?query=${this.quote(_album.author) || ""}`
-                );
+                this._open_window(`?query=${this.quote(_album.author) || ""}`);
                 break;
               case "s":
                 this._open_window(
@@ -813,11 +832,10 @@ export default {
       this.selected_albums_count = this.selected_albums().length;
     },
     _fit_image(e) {
-      const img = e.target,
-        scrr = window.clientWidth / window.clientH;
-      const wh = window.innerHeight,
+      const img = e.target, wh = window.innerHeight,
         ww = window.innerWidth,
         imgr = img.naturalWidth / img.naturalHeight;
+      const scrr = ww / wh;
       var nh = 0,
         nw = 0,
         transform = "",
@@ -837,7 +855,7 @@ export default {
           case "fit-height":
             nw = wh;
             nh = nw / imgr;
-            offsetX = (nh - ww) / 2;
+            offsetX = (nh + ww) / 2;
             offsetY = 0;
             break;
         }

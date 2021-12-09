@@ -7,7 +7,6 @@ const _stack = []
 var _token = localStorage.token || ''
 Cookies.set('token', _token)
 
-
 export default {
 
     stack: _stack,
@@ -40,6 +39,10 @@ export default {
             link.remove();
         }, 100);
 
+    },
+
+    cancel_source() {
+        return axios.CancelToken.source();
     },
 
     _catch_and_then(promise) {
@@ -83,7 +86,7 @@ export default {
         return Object.assign({
             headers: {
                 'X-Authentication-Token': _token,
-            }
+            },
         }, other || {})
     },
 
@@ -154,13 +157,13 @@ export default {
         })
     },
 
-    call(name, params) {
+    call(name, params, cancel=null) {
         _stack.push(name)
         this.bus.$emit('loading', _stack.length)
         if (typeof(params) !== 'undefined')
-            return this._catch_and_then(axios.post(apiBase + name, params, this._config()))
+            return this._catch_and_then(axios.post(apiBase + name, params, this._config(cancel ? {cancelToken: cancel.token} : {})))
         else
-            return this._catch_and_then(axios.get(apiBase + name, this._config()))
+            return this._catch_and_then(axios.get(apiBase + name, this._config(cancel ? {cancelToken: cancel.token} : {})))
     },
 
     fetch_logs(key) {
@@ -176,11 +179,11 @@ export default {
                     this_response = response.substring(last_response_len);
                     last_response_len = response.length;
                 }
-                that.bus.$emit('console', this_response.split('\n'));
+                that.bus.$emit('console', {key, content: this_response.split('\n')});
             },
         }).then((data) => {
             that.bus.$emit("finish", key)
-            that.bus.$emit("console", data.resp.substring(last_response_len).split('\n'))
+            that.bus.$emit("console", {key, content: data.resp.substring(last_response_len).split('\n')})
         })
     },
 
@@ -199,8 +202,15 @@ export default {
         return this._catch_and_then(axios.put(apiBase + name, params, this._config()))
     },
 
+    _queue_cancel: null,
+
     queue() {
-        return axios.get(apiBase + 'queue/', this._config()).then(resp => resp.data.result).catch(() => {})
+        if (this._queue_cancel)
+            this._queue_cancel.cancel()
+        this._queue_cancel = this.cancel_source()
+        return axios.get(apiBase + 'queue/', this._config({
+            cancelToken: this._queue_cancel.token
+        })).then(resp => resp.data.result).catch(() => {})
     }
 
 }

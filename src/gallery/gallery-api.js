@@ -17,11 +17,11 @@ export default {
         localStorage[name] = JSON.stringify(config);
     },
 
-    call(name, data, method = 'post', show_loading = true) {
+    call(name, data, method = 'post', show_loading = true, cancel = null) {
         var key = new Date().toJSON() + Math.random()
         if (show_loading) this._loading.push(key)
         this.bus.$emit('loading', this._loading.length)
-        return axios[method](`${_BASE}/${name}`, data).then(resp => {
+        return axios[method](`${_BASE}/${name}`, data, cancel ? {cancelToken: cancel.token} : {}).then(resp => {
             if (show_loading) this._loading.splice(this._loading.indexOf(key), 1)
             this.bus.$emit('loading', this._loading.length)
             if (resp.data.exception) {
@@ -32,14 +32,18 @@ export default {
         }).catch(err => {
             if (show_loading) this._loading.splice(this._loading.indexOf(key), 1)
             this.bus.$emit('loading', this._loading.length)
+            if (err.__CANCEL__) return
             console.log('Error', err)
             this.bus.$emit('alert', err.exception || err)
             throw err
         })
     },
 
-    fetch(params) {
-        return this.call('get', params).then(data => {
+    cancel_source: api.cancel_source,
+
+    fetch(params, cancel) {
+        return this.call('get', params, 'post', true, cancel).then(data => {
+            if (!data) return;
             if (data.redirect) {
                 location.href = data.redirect
             }

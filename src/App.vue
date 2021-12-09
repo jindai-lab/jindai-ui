@@ -168,7 +168,7 @@ export default {
     api.bus
       .$on("loading", (loading_num) => (this.loading = loading_num > 0))
       .$on("console", (data) => {
-        this.console_outputs.splice(0, 0, ...data.reverse());
+        this.console_outputs.splice(0, 0, ...data.content.filter(x => x.trim()).map(x => `${data.key}|${x}`).reverse());
       })
       .$on("alert", (bundle) => {
         const message = bundle.title
@@ -184,8 +184,9 @@ export default {
           ]);
       })
       .$on("finish", (key) => {
-        if (this.logs[key]) delete this.logs[key];
-        this.update_queue();
+        this.update_queue().then(() => { 
+          if (this.logs[key]) delete this.logs[key]
+        });
       });
     this.$on("logined", () => {
       this.update_queue()
@@ -220,7 +221,7 @@ export default {
     },
     log_out: api.log_out,
     update_queue() {
-      api.queue().then((queue) => {
+      return api.queue().then((queue) => {
         this.queue = queue;
         this.queue.running.forEach((k) => {
           if (!this.logs[k]) {
