@@ -199,12 +199,12 @@
             ><v-icon>mdi-close</v-icon></v-btn
           >
         </v-card-title>
-        <v-card-tex>
+        <v-card-text>
           <ResultsView
             @load="(a) => a.callback({ offset: 0, result: embedded.arr })"
             :total="embedded.arr.length"
           />
-        </v-card-tex>
+        </v-card-text>
       </v-card>
     </v-dialog>
   </v-sheet>

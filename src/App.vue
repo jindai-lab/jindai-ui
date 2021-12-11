@@ -95,7 +95,7 @@
           ><v-icon>mdi-delete</v-icon> 清除</v-btn
         >
         <div class="console">
-          <div v-for="(line, index) in console_outputs" :key="index">
+          <div v-for="(line, index) in console_outputs.slice(0, 50)" :key="index">
             {{ line }}
           </div>
         </div>
@@ -169,6 +169,7 @@ export default {
       .$on("loading", (loading_num) => (this.loading = loading_num > 0))
       .$on("console", (data) => {
         this.console_outputs.splice(0, 0, ...data.content.filter(x => x.trim()).map(x => `${data.key}|${x}`).reverse());
+        if (this.console_outputs.length > 100) this.console_outputs.splice(50, this.console_outputs.length-50);
       })
       .$on("alert", (bundle) => {
         const message = bundle.title
@@ -222,6 +223,7 @@ export default {
     log_out: api.log_out,
     update_queue() {
       return api.queue().then((queue) => {
+        if (!queue) return;
         this.queue = queue;
         this.queue.running.forEach((k) => {
           if (!this.logs[k]) {
