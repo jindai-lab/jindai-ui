@@ -50,7 +50,6 @@
 </template>
     
 <script>
-import QueryString from 'qs';
 import api from "../api";
 import ResultsView from "./ResultsView";
 import Treeselect from '@riophae/vue-treeselect'
@@ -76,7 +75,7 @@ export default {
   },
   mounted() {
     if (location.search) {
-      const search_params = QueryString.parse(location.search.substr(1))
+      const search_params = api.querystring_parse(location.search)
       Object.assign(this, search_params)
     }
     api.call("collections").then((data) => {
@@ -207,7 +206,7 @@ export default {
           this.total = data.result.total;
           this.querystr = data.result.query;
           e.callback({ result: data.result.results, offset: e.offset });
-          history.pushState('', '', '?' + QueryString.stringify({
+          history.pushState('', '', '?' + api.querystring_stringify({
             q: [this.querystr, this.reqstr].filter(x => x !== '').join(','), 
             sort: this.sort,
             selected_dataset: this.selected_dataset

@@ -21,7 +21,7 @@ export default {
         var key = new Date().toJSON() + Math.random()
         if (show_loading) this._loading.push(key)
         this.bus.$emit('loading', this._loading.length)
-        return axios[method](`${_BASE}/${name}`, data, cancel ? {cancelToken: cancel.token} : {}).then(resp => {
+        return axios[method](`${_BASE}/${name}`, data, cancel ? { cancelToken: cancel.token } : {}).then(resp => {
             if (show_loading) this._loading.splice(this._loading.indexOf(key), 1)
             this.bus.$emit('loading', this._loading.length)
             if (resp.data.exception) {
@@ -65,7 +65,7 @@ export default {
 
         var ext = item.source.url.split(".").pop();
         if (ext === "mp4") {
-            if (item.thumbnail) return `${_BASE}/block/${item.thumbnail}`;
+            if (item.thumbnail) return `/api/image/imageitem/${item.thumbnail}`;
             return "https://via.placeholder.com/350x150.png?text=Video";
         }
         if (config.force_thumbnail) {
@@ -78,12 +78,12 @@ export default {
             else ext += '&'
             ext += 'enhance=1'
         }
-        if (item.storage) return `${_BASE}/block/${item._id}.${ext}`;
+        if (item.source.file) return `/api/image/imageitem/${item._id}.${ext}`;
         return item.source.url;
     },
 
     get_item_video(item) {
-        if (item.storage) return `${_BASE}/block/${item._id}.mp4`;
+        if (item.source.file) return `/api/image/imageitem/${item._id}.mp4`;
         return `${_BASE}/${item.source.url}`;
     },
 

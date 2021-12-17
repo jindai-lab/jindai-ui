@@ -17,6 +17,38 @@ export default {
 
     notify(notice) { this.bus.$emit("alert", notice) },
 
+    querystring_parse(str) {
+        var params = {}
+        for (var pair of new URLSearchParams(str).entries()) {
+            if (pair[1].startsWith("JSON__"))
+                pair[1] = JSON.parse(pair[1].slice(6));
+            else if (pair[1].match(/^\d+$/)) pair[1] = +pair[1];
+            else if (pair[1].match(/^(true|false)$/)) pair[1] = pair[1] == "true";
+            params[pair[0]] = pair[1];
+        }
+        return params
+    },
+
+    querystring_stringify(o) {
+        var str = '?'
+        for (var k in o) {
+            str += k + '='
+            switch (typeof o) {
+                case 'object':
+                    str += 'JSON__' + encodeURIComponent(JSON.stringify(o))
+                    break
+                case 'string':
+                    str += encodeURIComponent(o)
+                    break
+                default:
+                    str += o
+                    break
+            }
+            if (str === '?') return ''
+            return str
+        }
+    },
+
     blob_download(blob, filename) {
         var url = URL.createObjectURL(blob);
 
@@ -157,13 +189,13 @@ export default {
         })
     },
 
-    call(name, params, cancel=null) {
+    call(name, params, cancel = null) {
         _stack.push(name)
         this.bus.$emit('loading', _stack.length)
         if (typeof(params) !== 'undefined')
-            return this._catch_and_then(axios.post(apiBase + name, params, this._config(cancel ? {cancelToken: cancel.token} : {})))
+            return this._catch_and_then(axios.post(apiBase + name, params, this._config(cancel ? { cancelToken: cancel.token } : {})))
         else
-            return this._catch_and_then(axios.get(apiBase + name, this._config(cancel ? {cancelToken: cancel.token} : {})))
+            return this._catch_and_then(axios.get(apiBase + name, this._config(cancel ? { cancelToken: cancel.token } : {})))
     },
 
     fetch_logs(key) {
@@ -179,11 +211,11 @@ export default {
                     this_response = response.substring(last_response_len);
                     last_response_len = response.length;
                 }
-                that.bus.$emit('console', {key, content: this_response.split('\n')});
+                that.bus.$emit('console', { key, content: this_response.split('\n') });
             },
         }).then((data) => {
             that.bus.$emit("finish", key)
-            that.bus.$emit("console", {key, content: data.resp.substring(last_response_len).split('\n')})
+            that.bus.$emit("console", { key, content: data.resp.substring(last_response_len).split('\n') })
         })
     },
 

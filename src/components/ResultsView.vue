@@ -14,7 +14,7 @@
         <v-btn
           :href="
             '/view/' +
-            (r.dataset || 'default') +
+            (r.dataset || 'paragraph') +
             '/' +
             r.source.file +
             '/' +
@@ -214,7 +214,6 @@
 <script>
 import ParamInput from "./ParamInput";
 import api from "../api";
-import QueryString from "querystring";
 export default {
   name: "ResultsView",
   props: {
@@ -327,7 +326,7 @@ export default {
       this.pdf_image = this.loading_image;
       if (this.showing_result === null) return;
       var image_url =
-        "/api/image?" + QueryString.stringify(this.showing_result.source);
+        `/api/image/${this.showing_result._id}.png`;
       var image_element = new Image();
       image_element.src = image_url;
       image_element.onload = () => {

@@ -213,6 +213,7 @@
               browsing_item &&
               browsing_item.source.url.split('.').pop() == 'mp4'
             "
+            :key="browsing_item._id"
           >
             <source :src="get_item_video(browsing_item)" type="video/mp4" />
           </video>

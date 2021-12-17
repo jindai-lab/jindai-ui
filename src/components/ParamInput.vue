@@ -53,7 +53,7 @@
       v-on="inputListeners"
       :hint="arg.default"
       :required="!arg.default"
-      :rows="arg.length > 20 || (value||'').includes('\n') ? 4 : 1"
+      :rows="(value||'').includes('\n') ? 4 : 1"
       cols="40"
       :label="arg.name"
     ></v-textarea>

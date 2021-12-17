@@ -50,7 +50,6 @@
 </template>
 
 <script>
-import QueryString from 'qs';
 import api from "../api";
 
 export default {
@@ -89,7 +88,7 @@ export default {
   mounted() {
     let params = window.location.href.split("/");
     params = params.slice(params.indexOf("view") + 1);
-    this.dataset = params[0] === 'default' ? '' : params[0]
+    this.dataset = params[0] === 'paragraph' ? '' : params[0]
     this.file = decodeURIComponent(params.slice(1, -1).join("/"));
     this.page = +params.slice(-1)[0];
     this.update_pdfpage();
@@ -108,17 +107,19 @@ export default {
           query: "?" + api.querify({source: {file: this.file, page: this.page}}),
           mongocollection: this.dataset
         })
-        .then((data) => (this.paragraphs = data.result));
-      var image_url =
-          "/api/image?" + QueryString.stringify({
-            file: this.file,
-            page: this.page
-          })
-      var image_element = new Image();
-      image_element.src = image_url;
-      image_element.onload = () => {
-          this.pdf_image = image_element.src
-      }
+        .then((data) => {
+          this.paragraphs = data.result
+          if (this.paragraphs.length) {
+            var p = this.paragraphs[0]
+            var image_url =
+                `/api/image/${p._id}.png`
+            var image_element = new Image();
+            image_element.src = image_url;
+            image_element.onload = () => {
+                this.pdf_image = image_element.src
+            }
+          }  
+        });
     },
     swipe_handler(direction) {
       if (document.getSelection().toString()) return;
