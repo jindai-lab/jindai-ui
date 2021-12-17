@@ -71,23 +71,11 @@
         </tbody>
       </table>
     </v-sheet>
-    <div class="pagination">
-      <div class="float-left" v-for="p in pages" :key="p">
-        <v-btn
-          v-if="p <= 5 || p > pages.length - 5 || Math.abs(p - page) <= 4"
-          @click="turn_page(p)"
-          :disabled="p == page"
-        >
-          {{ p }}
-        </v-btn>
-        <v-btn
-          disabled
-          v-else-if="p == 6 || p == page.length - 5 || Math.abs(p - page) == 5"
-        >
-          ...
-        </v-btn>
-      </div>
-      <div>
+    <v-row>
+    <v-pagination
+      :page=page
+      @click="turn_page"
+    ></v-pagination>
         <div>
           <label> 页码</label>
           <v-text-field
@@ -96,7 +84,7 @@
             @change="turn_page(parseInt($event) || page)"
           ></v-text-field>
         </div>
-      </div>
+      </v-row>
     </div>
 
     <v-dialog
@@ -326,7 +314,7 @@ export default {
       this.pdf_image = this.loading_image;
       if (this.showing_result === null) return;
       var image_url =
-        `/api/image/${this.showing_result._id}.png`;
+        `/api/image/${this.showing_result.dataset || 'paragraph'}/${this.showing_result._id}.png`;
       var image_element = new Image();
       image_element.src = image_url;
       image_element.onload = () => {

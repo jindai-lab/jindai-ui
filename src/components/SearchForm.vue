@@ -206,7 +206,7 @@ export default {
           this.total = data.result.total;
           this.querystr = data.result.query;
           e.callback({ result: data.result.results, offset: e.offset });
-          history.pushState('', '', '?' + api.querystring_stringify({
+          history.pushState('', '', api.querystring_stringify({
             q: [this.querystr, this.reqstr].filter(x => x !== '').join(','), 
             sort: this.sort,
             selected_dataset: this.selected_dataset
