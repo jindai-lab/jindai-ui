@@ -1,7 +1,7 @@
 <template>
   <v-dialog v-model="show">
     <v-card>
-      <v-card-title>Tagging Shortcuts</v-card-title>
+      <v-card-title>快速标签</v-card-title>
       <v-card-text style="height: 150px">
         <v-autocomplete
           autofocus
@@ -16,14 +16,14 @@
           auto-select-first
           hide-no-data
           hide-details
-          label="Tag"
+          label="标签"
           @keyup.enter="do_submit"
           @change="tag_typing = ''"
         ></v-autocomplete>
       </v-card-text>
       <v-card-actions>
-        <v-btn @click="do_submit"> OK </v-btn>
-        <v-btn @click="$emit('input', false)"> Cancel </v-btn>
+        <v-btn @click="do_submit"> 确定 </v-btn>
+        <v-btn @click="$emit('input', false)"> 取消 </v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>

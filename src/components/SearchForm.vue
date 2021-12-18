@@ -1,59 +1,71 @@
 <template>
-    <v-card flat>
-      <v-card-title>搜索</v-card-title>
-      <v-card-text>
-        <v-row>
-          <v-col cols="3">
-            <v-select v-model="sort" label="排序" dense :items="[
-              {text: '默认排序', value: ''},
-              {text: '从旧到新', value: 'pdate'},
-              {text: '从新到旧', value: '-pdate'},
-              {text: '出处', value: 'source=1'},
-            ]"></v-select>
-          </v-col>
-          <v-spacer></v-spacer>
-        </v-row>
-        <v-row>
-          <v-col>
-          <v-text-field v-model="q" @keyup.enter="search" label="搜索条件"></v-text-field>
-          </v-col>
-        </v-row>
-        <v-row>
-          <v-col>
+  <v-card flat>
+    <v-card-title>搜索</v-card-title>
+    <v-card-text>
+      <v-row>
+        <v-col cols="3">
+          <v-select
+            v-model="sort"
+            label="排序"
+            dense
+            :items="[
+              { text: '默认排序', value: '' },
+              { text: '从旧到新', value: 'pdate' },
+              { text: '从新到旧', value: '-pdate' },
+              { text: '出处', value: 'source=1' },
+            ]"
+          ></v-select>
+        </v-col>
+        <v-spacer></v-spacer>
+      </v-row>
+      <v-row>
+        <v-col>
+          <v-text-field
+            v-model="q"
+            @keyup.enter="search"
+            label="搜索条件"
+          ></v-text-field>
+        </v-col>
+      </v-row>
+      <v-row>
+        <v-col>
           <treeselect
             :multiple="true"
             :options="collections"
             v-model="selected_collections"
             placeholder="数据集"
           />
-          </v-col>
-        </v-row>
-        <v-row class="ml-1 mb-3">
-          <v-btn @click="search" color="primary">查询</v-btn>
-        </v-row>
-    <v-spacer></v-spacer>
-    <v-card flat>
-      <v-card-title v-show="total">
-      共找到 {{ total }} 个结果。
-      <v-btn  @click="export_query">
-        <v-icon>mdi-share</v-icon> 导出为任务
-      </v-btn>
-      <v-btn  @click="export_xlsx">
-        <v-icon>mdi-download</v-icon> 直接导出 Excel
-      </v-btn>
-      </v-card-title>
-      <v-card-text>
-        <ResultsView :page_size="50" :total="total" @load="load_search" ref="results" />        
-      </v-card-text>
-    </v-card>    </v-card-text>
-    </v-card>
+        </v-col>
+      </v-row>
+      <v-row class="ml-1 mb-3">
+        <v-btn @click="search" color="primary">查询</v-btn>
+      </v-row>
+      <v-spacer></v-spacer>
+      <v-sheet v-show="total">
+        共找到 {{ total }} 个结果。
+        <v-btn @click="export_query">
+          <v-icon>mdi-share</v-icon> 导出为任务
+        </v-btn>
+        <v-btn @click="export_xlsx">
+          <v-icon>mdi-download</v-icon> 直接导出 Excel
+        </v-btn>
+      </v-sheet>
+      <v-divider class="mt-5 mb-5"></v-divider>
+      <ResultsView
+        :page_size="50"
+        :total="total"
+        @load="load_search"
+        ref="results"
+      />
+    </v-card-text>
+  </v-card>
 </template>
     
 <script>
 import api from "../api";
 import ResultsView from "./ResultsView";
-import Treeselect from '@riophae/vue-treeselect'
-import '@riophae/vue-treeselect/dist/vue-treeselect.css'
+import Treeselect from "@riophae/vue-treeselect";
+import "@riophae/vue-treeselect/dist/vue-treeselect.css";
 
 export default {
   name: "SearchForm",
@@ -75,8 +87,8 @@ export default {
   },
   mounted() {
     if (location.search) {
-      const search_params = api.querystring_parse(location.search)
-      Object.assign(this, search_params)
+      const search_params = api.querystring_parse(location.search);
+      Object.assign(this, search_params);
     }
     api.call("collections").then((data) => {
       var hierarchy = {
@@ -84,14 +96,18 @@ export default {
         name: "",
         children: [],
       };
-      const _stringify = JSON.stringify
+      const _stringify = JSON.stringify;
       data = data.result
         .map((x) => {
           x.segments = x.name.split("--");
           x.level = x.segments.length;
           return x;
         })
-        .sort((x, y) => x.order_weight === y.order_weight ? x.name.localeCompare(y.name) : Math.sign(x.order_weight - y.order_weight));
+        .sort((x, y) =>
+          x.order_weight === y.order_weight
+            ? x.name.localeCompare(y.name)
+            : Math.sign(x.order_weight - y.order_weight)
+        );
       for (var x of data) {
         var parent_obj = hierarchy;
         for (
@@ -99,7 +115,9 @@ export default {
           i < x.level;
           i++, segs += "--" + x.segments[i]
         ) {
-          var cand = parent_obj.children.filter((child) => child.id.match('"name":'+_stringify(segs)))[0];
+          var cand = parent_obj.children.filter((child) =>
+            child.id.match('"name":' + _stringify(segs))
+          )[0];
           if (typeof cand === "undefined") {
             cand = {
               id: _stringify({
@@ -119,7 +137,7 @@ export default {
               id: _stringify({
                 name: x.name,
                 mongocollection: x.mongocollection,
-                source: y
+                source: y,
               }),
               label: y.match(/(.*\/)?(.*)/)[2],
             };
@@ -128,34 +146,38 @@ export default {
       }
       this.collections = hierarchy.children;
     });
-    if (this.q) this.search()
+    if (this.q) this.search();
   },
   methods: {
     search() {
       function escapeRegExp(string) {
         return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
       }
-      var req = {}, selected = this.selected_collections.map(JSON.parse);
+      var req = {},
+        selected = this.selected_collections.map(JSON.parse);
       this.reqstr = "";
       if (selected.length > 0) {
         req = { $or: [] };
         var colls = selected
             .filter((x) => !x.source)
-            .map(x => escapeRegExp(x.name)),
+            .map((x) => escapeRegExp(x.name)),
           sourcefiles = selected
             .filter((x) => x.source)
-            .map((x) => ({file: x.source.split(":", 2).pop(), collection: x.name})),
+            .map((x) => ({
+              file: x.source.split(":", 2).pop(),
+              collection: x.name,
+            })),
           reqstr_colls = "",
           reqstr_sourcefiles = "";
-        var selected_datasets = new Set(selected.map(x => x.mongocollection))
+        var selected_datasets = new Set(selected.map((x) => x.mongocollection));
         if (selected_datasets.size > 1) {
           api.notify({
-            title: '您选择的数据集存在跨数据库搜索情况，请重新选择',
-            type: 'warn'
-          })
-          return
+            title: "您选择的数据集存在跨数据库搜索情况，请重新选择",
+            type: "warn",
+          });
+          return;
         }
-        this.selected_dataset = Array.from(selected_datasets)[0]
+        this.selected_dataset = Array.from(selected_datasets)[0];
 
         if (colls.length > 0) {
           req.$or.push({
@@ -166,23 +188,33 @@ export default {
           reqstr_colls = "collection%`^" + colls.join("|^") + "`";
         }
         if (sourcefiles.length > 0) {
-          req.$or.push(... sourcefiles.map(sf => ({
-            "collection": sf.collection,
-            "source.file": sf.file
-          })));
-          reqstr_sourcefiles =
-            sourcefiles.map(sf => `(collection='${sf.collection}',source.file='${sf.file}')`).join('|')
+          req.$or.push(
+            ...sourcefiles.map((sf) => ({
+              collection: sf.collection,
+              "source.file": sf.file,
+            }))
+          );
+          reqstr_sourcefiles = sourcefiles
+            .map(
+              (sf) => `(collection='${sf.collection}',source.file='${sf.file}')`
+            )
+            .join("|");
         }
         if (req.$or.length == 1) {
           req = req.$or[0];
         }
-        this.reqstr = "(" + [reqstr_colls, reqstr_sourcefiles].filter(x => x.length > 0).join('|') + ")"
+        this.reqstr =
+          "(" +
+          [reqstr_colls, reqstr_sourcefiles]
+            .filter((x) => x.length > 0)
+            .join("|") +
+          ")";
       }
       this.req = req;
       this.$refs.results.start();
     },
     load_search(e) {
-      if (!this.q && !this.req) return
+      if (!this.q && !this.req) return;
       api
         .call("search", {
           q: this.q,
@@ -195,7 +227,10 @@ export default {
         .then((data) => {
           var reg = new RegExp(
             "(" +
-              data.result.query.split(/[.,/#!$%^&*;:{}=\-_`"'~()|]/g).filter(x => x).join('|') +
+              data.result.query
+                .split(/[.,/#!$%^&*;:{}=\-_`"'~()|]/g)
+                .filter((x) => x)
+                .join("|") +
               ")",
             "ig"
           );
@@ -206,11 +241,15 @@ export default {
           this.total = data.result.total;
           this.querystr = data.result.query;
           e.callback({ result: data.result.results, offset: e.offset });
-          history.pushState('', '', api.querystring_stringify({
-            q: [this.querystr, this.reqstr].filter(x => x !== '').join(','), 
-            sort: this.sort,
-            selected_dataset: this.selected_dataset
-          }))
+          history.pushState(
+            "",
+            "",
+            api.querystring_stringify({
+              q: [this.querystr, this.reqstr].filter((x) => x !== "").join(","),
+              sort: this.sort,
+              selected_dataset: this.selected_dataset,
+            })
+          );
         });
     },
     export_query(callback) {

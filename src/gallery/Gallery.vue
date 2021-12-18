@@ -61,13 +61,13 @@
               update({ ...sorting, direction: 'next' });
             "
             dense
-            hint="Query"
+            hint="查询条件"
             v-model="params.query"
           ></v-text-field>
         </v-col>
-        <v-col cols="2">
+        <v-col cols="1">
           <v-text-field
-            hint="Limit"
+            hint="每页数量"
             v-model="params.limit"
             type="number"
             dense
@@ -75,10 +75,10 @@
             >40</v-text-field
           >
         </v-col>
-        <v-col cols="2">
+        <v-col cols="1">
           <v-select
             v-model="sorting"
-            hint="Sort"
+            hint="排序"
             :items="sorts"
             single-line
             dense
@@ -87,7 +87,7 @@
         <v-col cols="1">
           <v-checkbox
             v-model="params.archive"
-            label="Archive"
+            label="归档"
             dense
           ></v-checkbox>
         </v-col>
@@ -421,35 +421,35 @@ export default {
     length: 999,
     count: 0,
     sorts: [
-      { text: "Default", value: "" },
+      { text: "默认", value: "" },
       {
-        text: "Liked At",
+        text: "导入日期",
         value: { order: { keys: ["-liked_at"] } },
       },
       {
-        text: "Created At",
+        text: "创建日期",
         value: { order: { keys: ["-pdate"] } },
       },
       {
-        text: "Random",
+        text: "随机",
         value: { order: { keys: ["random"] } },
       },
       {
-        text: "Group ID",
+        text: "分组",
         value: { order: { keys: ["group_id"], group_id: "" } },
       },
       {
-        text: "Source",
+        text: "相册来源",
         value: { order: { keys: ["source"], group_id: "" } },
       },
       {
-        text: "Item Source",
+        text: "图像网址",
         value: {
           order: { keys: ["items.source.url"], "items.source.url": "" },
         },
       },
       {
-        text: "Rating",
+        text: "评价",
         value: { order: { keys: ["-items.rating"], "items.rating": 10 } },
       },
     ],

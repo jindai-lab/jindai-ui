@@ -112,7 +112,7 @@ export default {
           if (this.paragraphs.length) {
             var p = this.paragraphs[0]
             var image_url =
-                `/api/image${api.querystring_stringify(p.source)}.png`
+                `/api/image${api.querystring_stringify(p.source)}`
             var image_element = new Image();
             image_element.src = image_url;
             image_element.onload = () => {

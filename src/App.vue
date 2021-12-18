@@ -80,6 +80,11 @@
     </v-app-bar>
 
     <v-main>
+      <v-progress-linear
+        indeterminate
+        v-show="loading"
+        app
+      ></v-progress-linear>
       <div :id="viewer ? 'viewer' : 'content-wrapper'">
         <keep-alive
           :include="['SearchForm', 'ResultsView', 'DbConsole', 'Gallery']"
@@ -106,13 +111,6 @@
         contributors
       </v-footer>
     </v-main>
-    <v-progress-linear
-      indeterminate
-      v-show="loading"
-      app
-      fixed
-      bottom
-    ></v-progress-linear>
 
     <v-snackbar
       v-model="sb.visible"
