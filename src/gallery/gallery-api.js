@@ -51,7 +51,7 @@ export default {
                 album.author = album.author || (album.keywords.filter(x => x.startsWith('@')) || [''])[0]
                 album.group = album.group_id ? '?query=' + album.group_id : '?query=id%3D' + album._id
                 album.selected = false
-                album.items.forEach(i => { i.rating = i.rating || 0 })
+                album.items.forEach(i => { i.rating = i.rating || 0; })
                 return album
             })
             return data
@@ -63,33 +63,37 @@ export default {
         if (typeof item === "undefined" || !item.source.url)
             return "https://via.placeholder.com/350x150.png?text=No Image";
 
-        var ext = item.source.url.split(".").pop();
+        var ext = item.source.url.split(".").pop(), args = '';
         if (ext === "mp4") {
-            if (item.thumbnail) return `/api/image/imageitem/${item.thumbnail}`;
+            if (item.thumbnail) return `/api/image?file=blocks.h5&block_id=${item.thumbnail}`;
             return "https://via.placeholder.com/350x150.png?text=Video";
         }
-        if (config.force_thumbnail) {
-            if (ext.indexOf('?') < 0) ext += '?'
-            else ext += '&'
-            ext += "w=1280";
+        if (config.force_thumbnail)
+            args += '&w=1280'
+        if (config.enhance)
+            args += '&enhance=1'
+        if (item.source.file) {
+            if (item.source.file == 'blocks.h5') item.source.block_id = item._id;
+            return `/api/image${api.querystring_stringify(item.source)}${args}`;
         }
-        if (config.enhance) {
-            if (ext.indexOf('?') < 0) ext += '?'
-            else ext += '&'
-            ext += 'enhance=1'
-        }
-        if (item.source.file) return `/api/image/imageitem/${item._id}.${ext}`;
         return item.source.url;
     },
 
     get_item_video(item) {
-        if (item.source.file) return `/api/image/imageitem/${item._id}.mp4`;
-        return `${_BASE}/${item.source.url}`;
+        if (item.source.file) {
+            if (item.source.file == 'blocks.h5') item.source.block_id = item._id;
+            return `/api/image${api.querystring_stringify(item.source)}`;
+        }
+        return item.source.url;
     },
 
     quote(tag) {
         tag = tag || '';
         if (tag.match(/[`'"()\s.,+%:/]/)) return "`" + tag.replace(/`/g, "\\`") + "`";
         return tag;
-    }
+    },
+
+    querystring_parse: api.querystring_parse,
+    
+    querystring_stringify: api.querystring_stringify,
 }

@@ -10,25 +10,25 @@
         <v-col>
           <v-checkbox
             v-model="config.contain"
-            label="Show Full Image"
+            label="全图显示"
             @change="_save_config"
           ></v-checkbox>
         </v-col>
         <v-col>
           <v-checkbox
             v-model="config.force_thumbnail"
-            label="Force Thumbnails"
+            label="缩略图"
             @change="_save_config"
           ></v-checkbox> </v-col
         ><v-col>
           <v-checkbox
             v-model="config.enhance"
-            label="Enhance Image"
+            label="增强图像"
             @change="_save_config"
           ></v-checkbox>
         </v-col>
         <v-col>
-          <v-btn text @click="_show_dialog('auto_tagging')">Auto Tagging</v-btn>
+          <v-btn text @click="_show_dialog('auto_tagging')">自动标签</v-btn>
         </v-col>
         <v-col>
           <v-autocomplete
@@ -47,7 +47,7 @@
           ></v-text-field>
         </v-col>
         <v-col>
-          <v-btn @click="call_tool">Go</v-btn>
+          <v-btn @click="call_tool">跳转</v-btn>
         </v-col>
       </v-row>
     </v-toolbar>
@@ -98,7 +98,7 @@
               update({ ...sorting, direction: 'next' });
             "
           >
-            Load
+            刷新
           </v-btn>
         </v-col>
       </v-row>
@@ -131,7 +131,10 @@
         >
           <v-card
             width="250"
-            @click="g.selected = !g.selected; selected_albums_count = selected_albums().length;"
+            @click="
+              g.selected = !g.selected;
+              selected_albums_count = selected_albums().length;
+            "
             @dblclick="_open_window(`?query=${g.group_id}`)"
             :class="g.selected ? 'selected' : ''"
             style="overflow: hidden"
@@ -241,7 +244,7 @@
               <img
                 :src="get_item_image(browsing_item)"
                 alt="Browsing Image"
-                ref="image"
+                ref="browsing_image"
                 @load="_fit_image"
               />
             </div>
@@ -357,11 +360,7 @@
         <v-icon>mdi-group</v-icon>
       </v-btn>
 
-      <v-btn
-        fab
-        small
-        @dblclick="delete_items()"
-      >
+      <v-btn fab small @dblclick="delete_items()">
         <v-icon>mdi-delete</v-icon>
       </v-btn>
     </div>
@@ -391,6 +390,7 @@ export default {
     browsing_index: -1,
     browsing_page: 2,
     continue_browsing: false,
+
     tagging: false,
     tags: [],
     tagging_choices: null,
@@ -513,14 +513,30 @@ export default {
       }
     },
     browsing(val) {
-      if (!val) {
+      if (val) {
+        this.albums.forEach(a => a.items.forEach(i => {
+          var im = new Image();
+          im.src = this.get_item_image(i)
+        }))
+      } else {
         this._scroll_to_browsing_album();
         this.item_info = false;
       }
     },
+    browsing_index() {
+      (this.$refs.browsing_image || new Image()).style.display = 'none'
+    }
   },
   mounted() {
-    this._on_login();
+    this.config = api.load_config("gallery", this.config);
+    this.params.limit = this.config.limit;
+    Object.assign(this.params, api.querystring_parse(location.search))
+    this.post_option.post = this.params.post.split("/")[0];
+    this.post_option.args = this.params.post.split("/").slice(1).join(" ");
+    this.update();
+    api
+      .call("plugins/special_pages")
+      .then((data) => (this.pages = data.result));
 
     api.call("shortcuts", {}, "get").then((data) => {
       data = data.result;
@@ -543,23 +559,6 @@ export default {
       this.config.limit = this.params.limit;
       api.save_config("gallery", this.config);
     },
-    _on_login() {
-      this.config = api.load_config("gallery", this.config);
-      this.params.limit = this.config.limit;
-      for (var pair of new URLSearchParams(location.search).entries()) {
-        if (pair[1].startsWith("JSON__"))
-          pair[1] = JSON.parse(pair[1].slice(6));
-        else if (pair[1].match(/^\d+$/)) pair[1] = +pair[1];
-        else if (pair[1].match(/^(true|false)$/)) pair[1] = pair[1] == "true";
-        this.params[pair[0]] = pair[1];
-      }
-      this.post_option.post = this.params.post.split("/")[0];
-      this.post_option.args = this.params.post.split("/").slice(1).join(" ");
-      this.update();
-      api
-        .call("plugins/special_pages")
-        .then((data) => (this.pages = data.result));
-    },
     clear_selection() {
       this.groups.concat(this.albums).forEach((x) => (x.selected = false));
     },
@@ -567,7 +566,6 @@ export default {
       return encodeURIComponent(api.quote(x));
     },
     update(obj) {
-
       if (obj && (!obj.order || (!obj.order.keys && !obj.order.offset))) {
         obj.order = { keys: ["-liked_at"] };
         this.page = 1;
@@ -576,8 +574,8 @@ export default {
       this.params.limit = +this.params.limit;
       document.title = `${this.params.post} ${this.params.query}`;
 
-      this.fetch_sources.main.cancel()
-      this.fetch_sources.main = api.cancel_source()
+      this.fetch_sources.main.cancel();
+      this.fetch_sources.main = api.cancel_source();
       api.fetch(this.params, this.fetch_sources.main).then((data) => {
         if (!data) return;
         this.albums = data.results;
@@ -594,17 +592,7 @@ export default {
         window.scrollTo(0, 0);
       });
 
-      var url = "";
-      for (var key in this.params) {
-        if (typeof this.params[key] === "object")
-          url +=
-            "&" +
-            key +
-            "=JSON__" +
-            encodeURIComponent(JSON.stringify(this.params[key]));
-        else url += "&" + key + "=" + encodeURIComponent(this.params[key]);
-      }
-      history.pushState(null, null, "?" + url.substr(1));
+      history.pushState(null, null, api.querystring_stringify(this.params));
 
       var state = JSON.stringify(
         Object.assign({}, this.params, {
@@ -615,15 +603,14 @@ export default {
         })
       );
       if (state != this.params_state) {
-        
-        this.fetch_sources.groups.cancel()
-        this.fetch_sources.groups = api.cancel_source()
+        this.fetch_sources.groups.cancel();
+        this.fetch_sources.groups = api.cancel_source();
         api
           .fetch(
             Object.assign({}, this.params, { groups: true, archive: false }),
             this.fetch_sources.groups
           )
-          .then((data) => (data && (this.groups = data.results)));
+          .then((data) => data && (this.groups = data.results));
         api
           .call(
             "get",
@@ -632,7 +619,7 @@ export default {
             false,
             this.fetch_sources.groups
           )
-          .then((data) => ( data && (this.count = data.result)));
+          .then((data) => data && (this.count = data.result));
         this.params_state = state;
       }
     },
@@ -766,7 +753,7 @@ export default {
                 this._open_window(
                   e.shiftKey
                     ? `?query=id%3D${_album._id}`
-                    : `?query=source.url%'${_album.source.url
+                    : `?query=source.url%25%27${_album.source.url
                         .replace(/[-\\^$*+?.()|[\]{}]/g, "\\$&")
                         .replace(/\/\d+\//, "/.*/")}'`
                 );
@@ -833,7 +820,8 @@ export default {
       this.selected_albums_count = this.selected_albums().length;
     },
     _fit_image(e) {
-      const img = e.target, wh = window.innerHeight,
+      const img = e.target,
+        wh = window.innerHeight,
         ww = window.innerWidth,
         imgr = img.naturalWidth / img.naturalHeight;
       const scrr = ww / wh;
@@ -883,6 +871,7 @@ export default {
         top: offsetY + "px",
         left: offsetX + "px",
         position: "absolute",
+        display: "block"
       });
     },
     selected_items() {

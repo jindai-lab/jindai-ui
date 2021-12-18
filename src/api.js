@@ -21,18 +21,20 @@ export default {
         var params = {}
         for (var pair of new URLSearchParams(str).entries()) {
             if (pair[1].startsWith("JSON__"))
-                pair[1] = JSON.parse(pair[1].slice(6));
+                pair[1] = JSON.parse(decodeURIComponent(pair[1].slice(6)));
             else if (pair[1].match(/^\d+$/)) pair[1] = +pair[1];
             else if (pair[1].match(/^(true|false)$/)) pair[1] = pair[1] == "true";
+            else pair[1] = decodeURIComponent(pair[1])
             params[pair[0]] = pair[1];
         }
         return params
     },
 
-    querystring_stringify(o) {
-        var str = '?'
-        for (var k in o) {
-            str += k + '='
+    querystring_stringify(obj) {
+        var str = ''
+        for (var k in obj) {
+            let o = obj[k]
+            str += `&${k}=`
             switch (typeof o) {
                 case 'object':
                     str += 'JSON__' + encodeURIComponent(JSON.stringify(o))
@@ -44,9 +46,9 @@ export default {
                     str += o
                     break
             }
-            if (str === '?') return ''
-            return str
         }
+        if (str === '') return ''
+        return '?' + str.substring(1)
     },
 
     blob_download(blob, filename) {

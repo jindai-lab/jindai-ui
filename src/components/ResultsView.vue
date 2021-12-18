@@ -72,20 +72,16 @@
       </table>
     </v-sheet>
     <v-row>
-    <v-pagination
-      :page=page
-      @click="turn_page"
-    ></v-pagination>
-        <div>
-          <label> 页码</label>
-          <v-text-field
-            class="d-inline-block ml-1"
-            style="max-width: 30px"
-            @change="turn_page(parseInt($event) || page)"
-          ></v-text-field>
-        </div>
-      </v-row>
-    </div>
+      <v-pagination v-model="page" :length="pages.length"></v-pagination>
+      <div>
+        <label> 页码</label>
+        <v-text-field
+          class="d-inline-block ml-1"
+          style="max-width: 30px"
+          @change="page = parseInt($event) || page"
+        ></v-text-field>
+      </div>
+    </v-row>
 
     <v-dialog
       v-if="show_page !== null"
@@ -234,6 +230,9 @@ export default {
           this.$refs.show_page_element.parentNode.parentNode.scroll(0, 0);
       }
     },
+    page(val) {
+      this.turn_page(val)
+    }
   },
   computed: {
     pages() {
@@ -313,8 +312,9 @@ export default {
     _prepare_pdfimage() {
       this.pdf_image = this.loading_image;
       if (this.showing_result === null) return;
-      var image_url =
-        `/api/image/${this.showing_result.dataset || 'paragraph'}/${this.showing_result._id}.png`;
+      var image_url = `/api/image${api.querystring_stringify(
+        this.showing_result.source
+      )}`;
       var image_element = new Image();
       image_element.src = image_url;
       image_element.onload = () => {
@@ -327,7 +327,7 @@ export default {
     },
     querify: api.querify,
     turn_page(p, cb) {
-      this.page = p;
+      if (this.page !== p) this.page = p;
       this.show_meta = {};
       window.scroll({ top: this.$refs.results.offsetTop - 64 });
       if (!this._fetched()) {
