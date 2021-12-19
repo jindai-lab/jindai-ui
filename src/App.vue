@@ -82,7 +82,7 @@
     <v-main>
       <v-progress-linear
         indeterminate
-        v-show="loading"
+        :style="{opacity: loading ? 1 : 0}"
         app
       ></v-progress-linear>
       <div :id="viewer ? 'viewer' : 'content-wrapper'">

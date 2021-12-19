@@ -83,6 +83,7 @@ export default {
       querystr: "",
       reqstr: "",
       total: 0,
+      selection_bundles: {},
     };
   },
   mounted() {
@@ -96,7 +97,7 @@ export default {
         name: "",
         children: [],
       };
-      const _stringify = JSON.stringify;
+      
       data = data.result
         .map((x) => {
           x.segments = x.name.split("--");
@@ -108,6 +109,7 @@ export default {
             ? x.name.localeCompare(y.name)
             : Math.sign(x.order_weight - y.order_weight)
         );
+      
       for (var x of data) {
         var parent_obj = hierarchy;
         for (
@@ -115,37 +117,40 @@ export default {
           i < x.level;
           i++, segs += "--" + x.segments[i]
         ) {
-          var cand = parent_obj.children.filter((child) =>
-            child.id.match('"name":' + _stringify(segs))
-          )[0];
+          var cand = parent_obj.children.filter((child) => child.id == segs)[0];
           if (typeof cand === "undefined") {
             cand = {
-              id: _stringify({
-                name: segs,
-                mongocollection: x.mongocollection,
-              }),
+              id: segs,
               label: x.segments[i],
               children: [],
+            };
+            this.selection_bundles[cand.id] = {
+              name: segs,
+              mongocollection: x.mongocollection,
             };
             parent_obj.children.push(cand);
           }
           parent_obj = cand;
         }
+
         parent_obj.children = parent_obj.children.concat(
-          x.sources.sort().map((y) => {
+          x.sources.sort().slice(0, 100).map((y) => {
+            this.selection_bundles[x.name + '//' + y] = {
+              name: x.name,
+              mongocollection: x.mongocollection,
+              source: y,
+            };
             return {
-              id: _stringify({
-                name: x.name,
-                mongocollection: x.mongocollection,
-                source: y,
-              }),
+              id: x.name + '//' + y,
               label: y.match(/(.*\/)?(.*)/)[2],
             };
           })
         );
       }
+      
       this.collections = hierarchy.children;
     });
+    
     if (this.q) this.search();
   },
   methods: {
@@ -154,7 +159,9 @@ export default {
         return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
       }
       var req = {},
-        selected = this.selected_collections.map(JSON.parse);
+        selected = this.selected_collections.map(
+          (sid) => this.selection_bundles[sid]
+        );
       this.reqstr = "";
       if (selected.length > 0) {
         req = { $or: [] };

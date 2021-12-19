@@ -39,6 +39,10 @@
           <v-icon>mdi-file-edit-outline</v-icon>
           编辑
         </v-btn>
+        <v-btn @click="fav(r); $forceUpdate();" :dark="favored(r)" :color="favored(r) ? 'orange' : ''">
+          <v-icon>mdi-star</v-icon>
+          收藏
+        </v-btn>
         <v-textarea
           readonly
           v-show="!!show_meta[index]"
@@ -371,12 +375,14 @@ export default {
     },
     save() {
       api
-        .call("paragraphs/" + this.edit_target._id, this.edit_target)
+        .call(`edit/${this.edit_target.dataset || 'paragraph'}/${this.edit_target._id}`, this.edit_target)
         .then(() => {
           this.edit_target = null;
           api.notify({ title: "保存成功" });
         });
     },
+    fav(r) { api.fav(r); },
+    favored(r) { return api.favored(r) },
   },
 };
 </script>

@@ -3,7 +3,7 @@
     <v-card-text>
       <v-row>
         <v-col class="heading">
-              {{ file }}
+           <h3>{{ file }} </h3>
         </v-col>
         <v-spacer></v-spacer>
       <v-btn icon
@@ -28,6 +28,7 @@
         <div class="paragraphs">
           <p v-for="p in paragraphs" :key="p._id">
             {{ p.content }}
+          <v-btn class="fav-button" :color="favored(p) ? 'orange' : ''" :dark="favored(p)" icon @click="fav(p); $forceUpdate()"><v-icon>mdi-star</v-icon></v-btn>
           </p>
         </div>
         <div v-if="paragraphs.length > 0">
@@ -133,6 +134,17 @@ export default {
           break;
       }
     },
+    fav(r) { api.fav(r); },
+    favored(r) { return api.favored(r) },
   },
 };
 </script>
+
+<style scoped>
+.fav-button {
+  opacity: 0;
+}
+p:hover .fav-button, .fav-button.orange--text {
+  opacity: 1;
+}
+</style>

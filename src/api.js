@@ -13,6 +13,8 @@ export default {
 
     bus: new Vue(),
 
+    user: '',
+
     apiBase,
 
     notify(notice) { this.bus.$emit("alert", notice) },
@@ -150,7 +152,7 @@ export default {
                 if (x.length > 0 && x.filter(y => y.length == 2).length == x.length)
                     return '([]' + _querify(x, indent + '  ') + '\n' + indent + ')'
                 return '([]' + (x.length > 0 ? ' => ' + x.map(_values).join(' => ') : '') + ')'
-            } else if (typeof(x) === 'object') {
+            } else if (typeof (x) === 'object') {
                 return '(' + _params(x, indent + '  ') + ')'
             } else
                 return JSON.stringify(x)
@@ -159,7 +161,7 @@ export default {
         function _params(c, indent) {
             var r = []
             for (var k in c) {
-                if (typeof(c[k]) === 'undefined') continue
+                if (typeof (c[k]) === 'undefined') continue
                 r.push(indent + k + '=' + _values(c[k], indent))
             }
             if (r.length > 1)
@@ -186,14 +188,17 @@ export default {
 
     logined() {
         return new Promise((resolve, reject) => {
-            this.call('authenticate').then(resolve).catch(reject)
+            this.call('authenticate').then(d => {
+                this.user = d.result.username
+                resolve(d)
+            }).catch(reject)
         })
     },
 
     call(name, params, cancel = null) {
         _stack.push(name)
         this.bus.$emit('loading', _stack.length)
-        if (typeof(params) !== 'undefined')
+        if (typeof (params) !== 'undefined')
             return this._catch_and_then(axios.post(apiBase + name, params, this._config(cancel ? { cancelToken: cancel.token } : {})))
         else
             return this._catch_and_then(axios.get(apiBase + name, this._config(cancel ? { cancelToken: cancel.token } : {})))
@@ -203,7 +208,7 @@ export default {
         var last_response_len = false
         const that = this
         axios.get(`${apiBase}queue/logs/${key}`, {
-            onDownloadProgress: function(e) {
+            onDownloadProgress: function (e) {
                 var this_response, response = e.currentTarget.response;
                 if (last_response_len === false) {
                     this_response = response;
@@ -223,7 +228,7 @@ export default {
     delete(name, params) {
         _stack.push(name)
         this.bus.$emit('loading', _stack.length)
-        if (typeof(params) !== 'undefined')
+        if (typeof (params) !== 'undefined')
             return this._catch_and_then(axios.delete(apiBase + name, params, this._config()))
         else
             return this._catch_and_then(axios.delete(apiBase + name, this._config()))
@@ -243,7 +248,24 @@ export default {
         this._queue_cancel = this.cancel_source()
         return axios.get(apiBase + 'queue/', this._config({
             cancelToken: this._queue_cancel.token
-        })).then(resp => resp.data.result).catch(() => {})
+        })).then(resp => resp.data.result).catch(() => { })
+    },
+
+    fav(r) {
+        const key = 'favored:' + this.user
+        var bundle = { keywords: key }
+        if (this.favored(r)) {
+            r.keywords = r.keywords.filter(x => x != key)
+            bundle = { $pull: bundle }
+        } else {
+            r.keywords.push(key)
+            bundle = { $push: bundle }
+        }
+        this.call(`edit/${r.dataset || 'paragraph'}/${r._id}`, bundle)
+    },
+
+    favored(r) {
+        return r.keywords.includes('favored:' + this.user)
     }
 
 }
