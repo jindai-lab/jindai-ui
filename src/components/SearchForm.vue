@@ -134,7 +134,7 @@ export default {
         }
 
         parent_obj.children = parent_obj.children.concat(
-          x.sources.sort().slice(0, 100).map((y) => {
+          x.sources.sort().filter(y => !y.match(/[^/]\d+\.pdf$/)).map((y) => {
             this.selection_bundles[x.name + '//' + y] = {
               name: x.name,
               mongocollection: x.mongocollection,

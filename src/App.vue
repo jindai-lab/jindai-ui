@@ -9,9 +9,6 @@
           <v-list-item link @click="$router.push('/')">
             <v-list-item-title>搜索</v-list-item-title>
           </v-list-item>
-          <v-list-item link @click="$router.push('/tasks')">
-            <v-list-item-title>工作流</v-list-item-title>
-          </v-list-item>
           <v-list-item link @click="$router.push('/gallery')">
             <v-list-item-title>图集</v-list-item-title>
           </v-list-item>
@@ -19,8 +16,11 @@
 
         <v-list-group v-show="shortcuts.length > 0">
           <template v-slot:activator>
-            <v-list-item-title>快捷方式</v-list-item-title>
+            <v-list-item-title>工作流</v-list-item-title>
           </template>
+          <v-list-item link @click="$router.push('/tasks')">
+            <v-list-item-title>全部</v-list-item-title>
+          </v-list-item>
           <v-list-item
             link
             v-for="s in shortcuts || [{ _id: '', name: '快捷方式' }]"
@@ -82,9 +82,11 @@
     <v-main>
       <v-progress-linear
         indeterminate
-        :style="{opacity: loading ? 1 : 0}"
+        :style="{opacity: loading ? 1 : 0, 'z-index': 5}"
         app
+        fixed
       ></v-progress-linear>
+
       <div :id="viewer ? 'viewer' : 'content-wrapper'">
         <keep-alive
           :include="['SearchForm', 'ResultsView', 'DbConsole', 'Gallery']"

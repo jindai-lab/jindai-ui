@@ -28,7 +28,7 @@
         <div class="paragraphs">
           <p v-for="p in paragraphs" :key="p._id">
             {{ p.content }}
-          <v-btn class="fav-button" :color="favored(p) ? 'orange' : ''" :dark="favored(p)" icon @click="fav(p); $forceUpdate()"><v-icon>mdi-star</v-icon></v-btn>
+          <v-btn class="fav-button" :color="favored(p) ? 'orange' : ''" :dark="favored(p)" icon small @click="fav(p); $forceUpdate()"><v-icon small>mdi-star</v-icon></v-btn>
           </p>
         </div>
         <div v-if="paragraphs.length > 0">
@@ -39,12 +39,12 @@
         </div>
       </v-col>
       <v-col cols="6" class="image" @click="show_modal = true">
-        <img :src="pdf_image" alt="" style="width: 100%" />
+        <img :src="pdf_image" alt="" @load="$event.target.style.height = (window_height - $event.target.offsetTop - 20) + 'px'" />
       </v-col>
     </v-row>
     <v-dialog v-model="show_modal" fullscreen>
-      <v-btn fab icon absolute top right class="ma-10" @click="show_modal = false"><v-icon>mdi-close</v-icon></v-btn>
-      <img :src="pdf_image" alt="" style="width: 100%" />
+      <v-btn fab fixed icon top right class="ma-10" @click="show_modal = false"><v-icon>mdi-close</v-icon></v-btn>
+      <img :src="pdf_image" alt="" style="width: 100%" ref="image" />
     </v-dialog>
   </v-card-text>
   </v-card>
@@ -65,6 +65,11 @@ export default {
       dataset: "",
       loading_image: require("../../public/assets/loading.png"),
     };
+  },
+  computed: {
+    window_height() {
+      return window.innerHeight
+    }
   },
   created() {
     this.handler = (e) => {
@@ -101,6 +106,11 @@ export default {
   },
   methods: {
     update_pdfpage() {
+      var path = location.href.split('/')
+      path.pop()
+      path.push('' + this.page)
+      history.pushState(null, null, path.join('/'))
+
       this.pdf_image = this.loading_image;
       if (!this.file) return;
       api
@@ -146,5 +156,8 @@ export default {
 }
 p:hover .fav-button, .fav-button.orange--text {
   opacity: 1;
+}
+.paragraphs {
+  line-height: 200%;
 }
 </style>

@@ -65,7 +65,7 @@
             v-model="params.query"
           ></v-text-field>
         </v-col>
-        <v-col cols="1">
+        <v-col cols="2" lg="1">
           <v-text-field
             hint="每页数量"
             v-model="params.limit"
@@ -75,7 +75,7 @@
             >40</v-text-field
           >
         </v-col>
-        <v-col cols="1">
+        <v-col cols="2" lg="1">
           <v-select
             v-model="sorting"
             hint="排序"
@@ -84,14 +84,14 @@
             dense
           ></v-select>
         </v-col>
-        <v-col cols="1">
+        <v-col cols="2" lg="1">
           <v-checkbox
             v-model="params.archive"
             label="归档"
             dense
           ></v-checkbox>
         </v-col>
-        <v-col cols="1">
+        <v-col cols="2" lg="1">
           <v-btn
             @click="
               params_state = '';
@@ -229,7 +229,7 @@
               height="100vh"
               width="100vw"
               :src="get_item_image(browsing_item)"
-              :contain="config.fit !== 'both'"
+              :contain="config.fit == 'visible'"
               v-if="config.fit !== 'both'"
               ref="browsing_image"
             />
@@ -952,7 +952,7 @@ export default {
       this.browsing_page = 2;
     },
     toggle_fits() {
-      const fits = ["both", "visible"];
+      const fits = ["both", "visible", "maximize"];
       this.config.fit = fits[(fits.indexOf(this.config.fit) + 1) % fits.length];
       api.save_config("gallery", this.config);
     },
@@ -1143,7 +1143,7 @@ export default {
 .fabs {
   position: fixed;
   z-index: 300;
-  bottom: 16px;
+  bottom: 32px;
   right: 16px;
 }
 .fabs > * {
