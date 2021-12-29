@@ -12,6 +12,7 @@
                 :arg="get_map_arg(v)"
                 v-model="shortcut_params[v]"
                 @validation="update_valid('shortcut_param_' + v, $event)"
+                @input="$forceUpdate()"
               /></v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
@@ -209,7 +210,7 @@ export default {
     },
     get_map_val(v) {
       v = v.split(".");
-      var arg = {};
+      var arg = null;
       if (v[0] === "datasource")
         arg = this.task.datasource_config[v[1]]
       else

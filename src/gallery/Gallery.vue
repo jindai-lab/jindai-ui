@@ -212,9 +212,13 @@
             width="100%"
             style="height: 90vh"
             controls
+            :style="{
+              position: 'absolute',
+              'z-index': 203
+            }"
             v-if="
               browsing_item &&
-              browsing_item.source.url.split('.').pop() == 'mp4'
+              (browsing_item.source.url || browsing_item.source.file).split('.').pop() == 'mp4'
             "
             :key="browsing_item._id"
           >
@@ -251,7 +255,7 @@
           </div>
           <v-card-text class="browsing description">
             <v-row align="end">
-              <v-col cols="3">
+              <v-col cols="2">
                 <v-pagination
                   v-model="browsing_page"
                   :length="3"
@@ -260,9 +264,9 @@
                   @next="browse_next"
                 ></v-pagination>
               </v-col>
-              <v-col cols="9" class="item-description">
+              <v-col cols="10" class="item-description">
                 <v-row>
-                  <v-col cols="8" sm="6">
+                  <v-col cols="8" sm="6" class="no-padding-margin">
                     <v-rating
                       style="display: inline-block"
                       v-model="browsing_item.rating"
@@ -278,7 +282,7 @@
                       ({{ browsing_item.rating.toFixed(1) }})
                     </span>
                   </v-col>
-                  <v-col cols="2" sm="3">
+                  <v-col cols="2" sm="3" class="no-padding-margin">
                     <v-btn
                       icon
                       dense
@@ -543,7 +547,7 @@ export default {
       for (var k in data)
         this.tagging_shortcut_list.push({
           text: `${k} ${data[k]}`,
-          value: [data[k]],
+          value: data[k],
         });
     });
   },
@@ -752,7 +756,7 @@ export default {
               case "z":
                 this._open_window(
                   e.shiftKey
-                    ? `?query=id%3D${_album._id}`
+                    ? `?query=id%3D${_album._id},items.source=exists(1)`
                     : `?query=source.url%25%27${_album.source.url
                         .replace(/[-\\^$*+?.()|[\]{}]/g, "\\$&")
                         .replace(/\/\d+\//, "/.*/")}'`
@@ -1150,5 +1154,9 @@ export default {
   margin: 5px;
   clear: both;
   display: block;
+}
+.no-padding-margin {
+  margin: 0;
+  padding: 0;
 }
 </style>

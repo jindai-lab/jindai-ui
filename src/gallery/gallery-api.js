@@ -60,10 +60,10 @@ export default {
 
     get_item_image(item, config = {}) {
 
-        if (typeof item === "undefined" || !item.source.url)
+        if (typeof item === "undefined" || (!item.source.url && !item.source.file))
             return "https://via.placeholder.com/350x150.png?text=No Image";
 
-        var ext = item.source.url.split(".").pop(), args = '';
+        var ext = (item.source.url || item.source.file).split(".").pop(), args = '';
         if (ext === "mp4") {
             if (item.thumbnail) return `/api/image?file=blocks.h5&block_id=${item.thumbnail}`;
             return "https://via.placeholder.com/350x150.png?text=Video";

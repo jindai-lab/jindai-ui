@@ -223,7 +223,7 @@ export default {
     log_out: api.log_out,
     update_queue() {
       return api.queue().then((queue) => {
-        if (!queue) return;
+        if (!queue || !queue.running) return;
         this.queue = queue;
         this.queue.running.forEach((k) => {
           if (!this.logs[k]) {

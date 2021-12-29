@@ -14,10 +14,10 @@
     <a
       :href="
         '?archive=0&query=source.url%25`' +
-        album.source.url.replace(/\/\d+(\/|$)/, '/.*$1') +
+        (album.source.url||'').replace(/\/\d+(\/|$)/, '/.*$1') +
         '`'
       "
-      class="break-anywhere force-text"
+      class="force-text break-anywhere"
       target="_blank"
       >{{ album.source.url }}</a
     >
@@ -54,13 +54,14 @@ export default {
       return new URLSearchParams(location.search.substr(1)).get("post", "");
     },
     text() {
+      var t = this.album.content || ''
       var candidates = this.album.keywords.filter(this._is_text)
       if (candidates) {
         var longest = candidates.sort(x => x.length).pop()
         candidates = [longest, ... candidates.filter(x => !longest.includes(x))]
-        return candidates.join(' ')
+        return t + ' ' + candidates.join(' ')
       }
-      return ''
+      return t
     },
     tags() {
       return this.album.keywords.filter(x => !this._is_text(x)).sort()
@@ -103,7 +104,7 @@ a {
   text-overflow: ellipsis;
   white-space: nowrap;
   overflow: hidden;
-  width: 100%;
+  max-width: 100%;
   display: inline-block;
 }
 span.nums > * {

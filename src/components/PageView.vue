@@ -16,7 +16,7 @@
           type="number"
           style="max-width: 50px"
           :value="page"
-          @keyup.enter="page = parseInt($event)"
+          @input="try_page"
         ></v-text-field>
       <v-btn icon @click="swipe_handler('left')">
         <v-icon>mdi-chevron-right</v-icon>
@@ -143,6 +143,10 @@ export default {
           this.page = +this.page + 1;
           break;
       }
+    },
+    try_page(e) {
+      e = e | 0;
+      this.page = e;
     },
     fav(r) { api.fav(r); },
     favored(r) { return api.favored(r) },

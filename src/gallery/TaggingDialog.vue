@@ -81,7 +81,13 @@ export default {
           false
         )
         .then((data) => {
-          this.tag_choices = [...this.tag_new, search].concat(data.result);
+          this.tag_choices = [...this.tag_new.map(x => ({
+            text: x,
+            value: x
+          })), {text: search, value: search}].concat(data.result.map(x => ({
+            text: x._id + ' (' + x.count + ')',
+            value: x._id
+          })));
           this.loading = false;
         })
         .catch((err) => {

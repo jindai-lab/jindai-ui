@@ -11,9 +11,8 @@
           :loading="loading"
           :search-input.sync="tag_typing"
           class="mx-4"
-          :multiple="multiple"
+          multiple
           flat
-          auto-select-first
           hide-no-data
           hide-details
           label="标签"
@@ -36,7 +35,7 @@ export default {
     return {
       tag_choices: [],
       loading: false,
-      tag_new: "",
+      tag_new: [],
       tag_typing: "",
       show: false,
     };
@@ -76,7 +75,7 @@ export default {
     value(val) {
       this.show = val;
       if (val) {
-        this.tag_new = "";
+        this.tag_new = [];
         this.tag_typing = this.initial;
       }
     },
@@ -87,13 +86,21 @@ export default {
   methods: {
     search_tag(search) {
       if (!search) return;
-      this.tag_choices = this.choices.filter((x) =>
-        this.match_initials ? x.text.startsWith(search) : x.text.match(search)
+      var matched = this.choices.filter((x) =>
+        x.text.startsWith(search)
       );
+      if (matched.length > 0) {
+        if (matched[0].text.startsWith(search + ' '))
+          this.tag_new = Array.from(new Set(this.tag_new.concat(matched[0])));
+        if (matched.length > 1)
+          this.tag_typing = search;
+        else
+          this.tag_typing = '';
+      }
+      return matched
     },
     do_submit() {
-      const val = this.tag_new || [this.tag_typing];
-      this.$emit("submit", val);
+      this.$emit("submit", this.tag_new.map(x => x.value).filter(x => x));
       this.$emit("input", false);
     },
   },
