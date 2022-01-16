@@ -85,11 +85,7 @@
           ></v-select>
         </v-col>
         <v-col cols="2" lg="1">
-          <v-checkbox
-            v-model="params.archive"
-            label="归档"
-            dense
-          ></v-checkbox>
+          <v-checkbox v-model="params.archive" label="归档" dense></v-checkbox>
         </v-col>
         <v-col cols="2" lg="1">
           <v-btn
@@ -197,8 +193,8 @@
     <v-dialog v-model="browsing" fullscreen hide-overlay persistent>
       <v-card
         v-touch="{
-          left: browse_next,
-          right: browse_prev,
+          left: () => browse_next(),
+          right: () => browse_prev(),
           down: () => (browsing = false),
           up: () => rating(1),
         }"
@@ -208,42 +204,31 @@
           <v-icon>mdi-close</v-icon>
         </v-btn>
         <v-card v-if="browsing && browsing_index >= 0">
-          <video
-            width="100%"
-            style="height: 90vh"
-            controls
-            :style="{
-              position: 'absolute',
-              'z-index': 203
+          <video-player 
+            :src="get_item_video(browsing_item)"
+            :options="{
+              muted: false,
+              autoplay: true,
+              style: {
+                width: '100%',
+                height: '100vh'
+              }
             }"
-            v-if="
-              browsing_item &&
-              (browsing_item.source.url || browsing_item.source.file).split('.').pop() == 'mp4'
-            "
-            :key="browsing_item._id"
-          >
-            <source :src="get_item_video(browsing_item)" type="video/mp4" />
-          </video>
+            class="video-player" 
+            ref="videoPlayer" 
+            v-if="browsing_video"
+          />
           <div
             style="width: 100%; text-align: center"
             @click="toggle_fits"
             v-else
           >
-            <v-img
-              height="100vh"
-              width="100vw"
-              :src="get_item_image(browsing_item)"
-              :contain="config.fit == 'visible'"
-              v-if="config.fit !== 'both'"
-              ref="browsing_image"
-            />
             <div
               :style="{
                 height: '100vh',
                 width: '100%',
                 overflow: 'hidden',
               }"
-              v-else
             >
               <img
                 :src="get_item_image(browsing_item)"
@@ -377,6 +362,7 @@ import AlbumDescription from "./AlbumDescription.vue";
 import TaggingDialog from "./TaggingDialog.vue";
 import TaggingShortcutsDialog from "./TaggingShortcutsDialog.vue";
 import AutoTags from "./AutoTags.vue";
+import VideoPlayer from "./VideoPlayer.vue";
 
 export default {
   name: "Gallery",
@@ -385,6 +371,7 @@ export default {
     AlbumDescription,
     TaggingDialog,
     TaggingShortcutsDialog,
+    VideoPlayer
   },
   data: () => ({
     bus: api.bus,
@@ -506,6 +493,14 @@ export default {
         );
       return items;
     },
+    browsing_video() {
+      return (
+        this.browsing_item &&
+        (this.browsing_item.source.url || this.browsing_item.source.file)
+          .split(".")
+          .pop() == "mp4"
+      );
+    },
   },
   watch: {
     albums() {
@@ -518,23 +513,25 @@ export default {
     },
     browsing(val) {
       if (val) {
-        this.albums.forEach(a => a.items.forEach(i => {
-          var im = new Image();
-          im.src = this.get_item_image(i)
-        }))
+        this.albums.forEach((a) =>
+          a.items.forEach((i) => {
+            var im = new Image();
+            im.src = this.get_item_image(i);
+          })
+        );
       } else {
         this._scroll_to_browsing_album();
         this.item_info = false;
       }
     },
     browsing_index() {
-      (this.$refs.browsing_image || new Image()).style.display = 'none'
-    }
+      (this.$refs.browsing_image || new Image()).style.display = "none";
+    },
   },
   mounted() {
     this.config = api.load_config("gallery", this.config);
     this.params.limit = this.config.limit;
-    Object.assign(this.params, api.querystring_parse(location.search))
+    Object.assign(this.params, api.querystring_parse(location.search));
     this.post_option.post = this.params.post.split("/")[0];
     this.post_option.args = this.params.post.split("/").slice(1).join(" ");
     this.update();
@@ -834,9 +831,10 @@ export default {
         transform = "",
         mode = "",
         offsetX = 0,
-        offsetY = 0;
+        offsetY = 0,
+        rr = imgr < 1 != scrr < 1;
 
-      if (imgr < 1 != scrr < 1) {
+      if (this.config.fit == 'both' && rr) {
         mode = 1 / imgr >= scrr ? "fit-height" : "fit-width";
         switch (mode) {
           case "fit-width":
@@ -854,7 +852,14 @@ export default {
         }
         transform = "rotate(90deg)";
       } else {
-        mode = imgr >= scrr ? "fit-height" : "fit-width";
+        switch (this.config.fit) {
+          case 'both':
+          case 'maximize':
+            mode = imgr >= scrr ? "fit-height" : "fit-width";
+            break;
+          default:
+            mode = scrr > 1 ? "fit-height" : "fit-width";
+        }
         switch (mode) {
           case "fit-width":
             nw = ww;
@@ -865,7 +870,7 @@ export default {
             nw = nh * imgr;
             break;
         }
-        transform += `translate(${(ww - nw) / 2}px, ${(wh - nh) / 2}px)`;
+        transform = `translate(${(ww - nw) / 2}px, ${(wh - nh) / 2}px)`;
       }
       Object.assign(img.style, {
         height: nh + "px",
@@ -875,7 +880,7 @@ export default {
         top: offsetY + "px",
         left: offsetX + "px",
         position: "absolute",
-        display: "block"
+        display: "block",
       });
     },
     selected_items() {
@@ -959,6 +964,7 @@ export default {
       const fits = ["both", "visible", "maximize"];
       this.config.fit = fits[(fits.indexOf(this.config.fit) + 1) % fits.length];
       api.save_config("gallery", this.config);
+      this._fit_image({target: this.$refs.browsing_image});
     },
     // api calls
     show_tagging_dialog() {

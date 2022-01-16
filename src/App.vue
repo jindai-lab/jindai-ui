@@ -110,7 +110,7 @@
 
       <v-footer :id="viewer ? '' : 'footer'">
         Powered by Jindai &copy; 2018-{{ new Date().getFullYear() }} zhuth &amp;
-        contributors
+        contributors <div v-html="copyright"></div>
       </v-footer>
     </v-main>
 
@@ -154,6 +154,7 @@ export default {
       console_outputs: [],
       app_title: "Jindai",
       app_dark: false,
+      copyright: '',
     };
   },
   watch: {

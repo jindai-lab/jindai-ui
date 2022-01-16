@@ -1,7 +1,7 @@
 <template>
   <v-card flat>
     <v-card-title>搜索</v-card-title>
-    <v-card-text>
+    <v-card-text @drop.prevent="drop_json_file" @dragover.prevent>
       <v-row>
         <v-col cols="3">
           <v-select
@@ -84,6 +84,7 @@ export default {
       reqstr: "",
       total: 0,
       selection_bundles: {},
+      external_json: null
     };
   },
   mounted() {
@@ -155,6 +156,7 @@ export default {
   },
   methods: {
     search() {
+      this.external_json = null
       function escapeRegExp(string) {
         return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
       }
@@ -221,6 +223,11 @@ export default {
       this.$refs.results.start();
     },
     load_search(e) {
+      if (this.external_json) {
+        this.total = this.external_json.result.total
+        e.callback({ result: this.external_json.result.results.slice(e.offset, e.offset + e.limit), offset: e.offset });
+        return
+      }
       if (!this.q && !this.req) return;
       api
         .call("search", {
@@ -287,6 +294,17 @@ export default {
         );
       });
     },
+    drop_json_file(e) {
+      let droppedFiles = Array.from(e.dataTransfer.files).filter(x => x.name.match(/\.json$/));
+      if (!droppedFiles.length) return;
+      let file = droppedFiles[0];
+      let reader = new FileReader();
+      reader.onload = f => {
+        this.external_json = JSON.parse(f.target.result);
+        this.$refs.results.start();
+      }
+      reader.readAsText(file);
+    }
   },
 };
 </script>
