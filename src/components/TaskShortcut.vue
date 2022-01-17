@@ -203,7 +203,7 @@ export default {
           (x) => x.name == v[1]
         )[0];
       else
-        arg = this.stages[this.task.pipeline[+v[1]]].args.filter(
+        arg = this.stages[this.task.pipeline[+v[1]][0]].args.filter(
           (x) => x.name == v[2]
         )[0];
       return arg;
