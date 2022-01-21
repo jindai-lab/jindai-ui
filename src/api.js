@@ -266,6 +266,40 @@ export default {
 
     favored(r) {
         return r.keywords.includes('favored:' + this.user)
+    },
+
+    get_collections() {
+
+        function _segs(x) {
+            var r = [], s = ''
+            for (var seg of x.name.split('--')) {
+                s += seg
+                r.push(s)
+                s += '--'
+            }
+            return r
+        }
+
+        return this.call("collections").then((data) => {
+            var weights = {}, colls = data.result.sort(x => x.order_weight);
+            for (var c of colls) {
+                for (var s of _segs(c))
+                    if (!weights[s])
+                        weights[s] = c.order_weight
+            }
+
+            function _comp(x, y) {
+                var s1 = _segs(x), s2 = _segs(y)
+                for (var si = 0; si < s1.length && si < s2.length; ++si) {
+                    let xx = s1[si], yy = s2[si]
+                    if (weights[xx] !== weights[yy])
+                        return weights[xx] - weights[yy]
+                }
+                return x.name.localeCompare(y.name)
+            }
+
+            return colls.sort(_comp)
+        })
     }
 
 }

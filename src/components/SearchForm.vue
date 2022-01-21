@@ -92,24 +92,19 @@ export default {
       const search_params = api.querystring_parse(location.search);
       Object.assign(this, search_params);
     }
-    api.call("collections").then((data) => {
+    api.get_collections().then((data) => {
       var hierarchy = {
         id: "ROOT",
         name: "",
         children: [],
       };
       
-      data = data.result
+      data = data
         .map((x) => {
           x.segments = x.name.split("--");
           x.level = x.segments.length;
           return x;
         })
-        .sort((x, y) =>
-          x.order_weight === y.order_weight
-            ? x.name.localeCompare(y.name)
-            : Math.sign(x.order_weight - y.order_weight)
-        );
       
       for (var x of data) {
         var parent_obj = hierarchy;

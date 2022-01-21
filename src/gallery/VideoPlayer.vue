@@ -37,6 +37,7 @@
         :min="0"
         :value="currentTime"
         ref="slider"
+        hide-details
         dark dense
         class="d-inline-block"
         @change="vp.currentTime = $event"
@@ -105,7 +106,7 @@ export default {
 
 <style scoped>
 .controls {
-  z-index: 1;
+  z-index: 100;
   position: absolute;
   top: 0;
   left: 0;
@@ -129,6 +130,8 @@ select.rates option {
 }
 
 .v-input__slider {
-  margin-top: 5px;
+  margin-top: 2px;
+  margin-bottom: 2px;
+  vertical-align: middle;
 }
 </style>
