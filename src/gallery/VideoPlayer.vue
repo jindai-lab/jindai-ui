@@ -43,6 +43,7 @@
         @change="vp.currentTime = $event"
         color="white"
       ></v-slider>
+      <v-btn icon @click="fullscreen"><v-icon>mdi-fullscreen</v-icon></v-btn>
     </div>
   </div>
 </template>
@@ -86,6 +87,9 @@ export default {
         return `${hours}:${_lz(mins)}:${_lz(secs)}`
       else
         return `${_lz(mins)}:${_lz(secs)}`
+    },
+    fullscreen() {
+      this.vp.requestFullscreen()
     }
   },
   mounted () {
@@ -106,7 +110,7 @@ export default {
 
 <style scoped>
 .controls {
-  z-index: 100;
+  z-index: 101;
   position: absolute;
   top: 0;
   left: 0;

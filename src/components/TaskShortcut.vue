@@ -106,7 +106,7 @@ export default {
             ? this.task.datasource_config
             : this.task.pipeline;
         for (var seg of mapped_to.slice(1, -1)) {
-          target = seg.match(/^\d+$/) ? target[+seg] : target[seg];
+          target = seg.match(/^\d+$/) ? target[+seg][1] : target[seg];
         }
         target[mapped_to.slice(-1)[0]] = v;
       }
