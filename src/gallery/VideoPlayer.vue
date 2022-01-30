@@ -114,14 +114,9 @@ export default {
   position: absolute;
   top: 0;
   left: 0;
-  opacity: 0;
   width: 100%;
   background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(5px);
-}
-
-.controls:hover {
-  opacity: 100%;
 }
 
 select.rates {
