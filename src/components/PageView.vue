@@ -35,7 +35,8 @@
           日期: {{ paragraphs[0].pdate }}<br />
           页码: {{ paragraphs[0].pagenum }}<br />
           大纲: {{ paragraphs[0].outline }}<br />
-          来源: {{ paragraphs[0].source.file }} {{ paragraphs[0].source.page }}<br>
+          来源: <a :href="paragraphs[0].source.url" v-if="paragraphs[0].source.url">{{ paragraphs[0].source.url }}</a>
+            {{ paragraphs[0].source.file }} {{ paragraphs[0].source.page }}<br>
         </div>
       </v-col>
       <v-col cols="6" class="image" @click="show_modal = true">
@@ -58,6 +59,7 @@ export default {
   data() {
     return {
       file: '',
+      paragraph_id: '',
       page: 0,
       paragraphs: [],
       show_modal: false,
@@ -66,37 +68,59 @@ export default {
       loading_image: require("../../public/assets/loading.png"),
     };
   },
+  props: [
+    "compact",
+    "paragraph"
+  ],
   computed: {
     window_height() {
       return window.innerHeight
     }
   },
   created() {
-    this.handler = (e) => {
-      this.$emit("keyup", e);
-      if (e.target.tagName == "INPUT") return;
-      switch (e.key) {
-        case "ArrowRight":
-          this.page = +this.page + 1;
-          break;
-        case "ArrowLeft":
-          if (+this.page > 0) this.page = +this.page - 1;
-          break;
-        default:
-          break;
-      }
-    };
-    window.addEventListener("keyup", this.handler);
+    if (!this.compact) {
+      this.handler = (e) => {
+        this.$emit("keyup", e);
+        if (e.target.tagName == "INPUT") return;
+        switch (e.key) {
+          case "ArrowRight":
+            this.page = +this.page + 1;
+            break;
+          case "ArrowLeft":
+            if (+this.page > 0) this.page = +this.page - 1;
+            break;
+          default:
+            break;
+        }
+      };
+      window.addEventListener("keyup", this.handler);
+    }
+    if (this.paragraph) {
+      this.paragraphs = [this.paragraph]
+    }
   },
   beforeDestroy() {
-    window.removeEventListener("keyup", this.handler);
+    if (!this.compact) {
+      window.removeEventListener("keyup", this.handler);
+    }
   },
   mounted() {
-    let params = window.location.href.split("/");
-    params = params.slice(params.indexOf("view") + 1);
-    this.dataset = params[0] === 'paragraph' ? '' : params[0]
-    this.file = decodeURIComponent(params.slice(1, -1).join("/"));
-    this.page = +params.slice(-1)[0];
+    if (!this.paragraph) {
+      let params = window.location.href.split("/");
+      params = params.slice(params.indexOf("view") + 1);
+      this.dataset = params[0] === 'paragraph' ? '' : params[0]
+      if (params.length > 2) {
+        this.file = decodeURIComponent(params.slice(1, -1).join("/"));
+        this.page = +params.slice(-1)[0];
+      } else {
+        this.page = 0
+        this.paragraph_id = params[1]
+        this.file = ''
+      }
+    } else {
+      this.file = this.paragraph.source.file || false;
+      this.page = this.paragraph.source.page || 0;
+    }
     this.update_pdfpage();
   },
   watch: {
@@ -106,34 +130,44 @@ export default {
   },
   methods: {
     update_pdfpage() {
-      var path = location.href.split('/')
-      path.pop()
-      path.push('' + this.page)
-      history.pushState(null, null, path.join('/'))
-
+      if (!this.compact && this.file) {
+        var path = location.href.split('/')
+        path.pop()
+        path.push('' + this.page)
+        history.pushState(null, null, path.join('/'))
+      }
       this.pdf_image = this.loading_image;
-      if (!this.file) return;
+      
+      if (!this.paragraph_id && !this.file) {
+        this.pdf_image = '';
+        return;
+      }
+
       api
         .call("quicktask", {
-          query: "?" + api.querify({source: {file: this.file, page: this.page}}),
+          query: "?" + api.querify(this.file ? {source: {file: this.file, page: this.page}} : {id: this.paragraph_id}),
           mongocollection: this.dataset
         })
         .then((data) => {
           this.paragraphs = data.result
           if (this.paragraphs.length) {
             var p = this.paragraphs[0]
-            var image_url =
-                `/api/image${api.querystring_stringify(p.source)}`
-            var image_element = new Image();
-            image_element.src = image_url;
-            image_element.onload = () => {
-                this.pdf_image = image_element.src
+            if (p.source.file) {
+              var image_url =
+                    `/api/image${api.querystring_stringify(p.source)}`
+              var image_element = new Image();
+              image_element.src = image_url;
+              image_element.onload = () => {
+                  this.pdf_image = image_element.src
+              }
+            } else {
+              this.pdf_image = ''
             }
           }  
         });
     },
     swipe_handler(direction) {
-      if (document.getSelection().toString()) return;
+      if (document.getSelection().toString() || this.compact) return;
       switch (direction) {
         case "right":
           this.page = +this.page - 1;

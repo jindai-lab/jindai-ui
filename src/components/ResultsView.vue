@@ -4,21 +4,19 @@
       <div v-for="(r, index) in visible_data" :key="index">
         <p class="">
           数据集: {{ r.collection }} 大纲: {{ r.outline }} 来源:
-          {{ r.source.file }} 页码: {{ r.pagenum }} 日期: {{ r.pdate || "" }}
+          {{ r.source.file }} <a :href="r.source.url" target="_blank">{{ r.source.url }}</a> 页码: {{ r.pagenum }} 日期: {{ r.pdate || "" }}
         </p>
         <v-divider></v-divider>
         <br />
         <div v-html="r.matched_content || r.content"></div>
         <br />
-        <v-btn @click="view_page(index)"> <v-icon>mdi-eye</v-icon> 查看 </v-btn>
+        <v-btn @click="view_page(r)"> <v-icon>mdi-eye</v-icon> 查看 </v-btn>
         <v-btn
           :href="
             '/view/' +
             (r.dataset || 'paragraph') +
             '/' +
-            r.source.file +
-            '/' +
-            r.source.page
+            (r.source.file ? (r.source.file + '/' + r.source.page) : r._id)
           "
           target="_blank"
         >
@@ -88,36 +86,11 @@
     </v-row>
 
     <v-dialog
-      v-if="show_page !== null"
-      :value="show_page !== null"
-      @input="show_page = null"
+      v-if="view_paragraph !== null"
+      :value="view_paragraph !== null"
+      @input="view_paragraph = null"
     >
-      <v-card>
-        <v-card-title
-          >查看
-          <v-spacer></v-spacer>
-          <v-btn icon @click="show_page = null"
-            ><v-icon>mdi-close</v-icon></v-btn
-          ></v-card-title
-        >
-        <v-card-text>
-          <div ref="show_page_element" v-if="showing_result !== null">
-            <div class="page-view">
-              <p>
-                {{ showing_result.content }}
-              </p>
-              <img :src="pdf_image" alt="" style="width: 100%" />
-            </div>
-            <div>
-              日期: {{ showing_result.pdate }}<br />
-              页码: {{ showing_result.pagenum }}<br />
-              大纲: {{ showing_result.outline }}<br />
-              来源: {{ showing_result.source.file }}
-              {{ showing_result.source.page }}<br />
-            </div>
-          </div>
-        </v-card-text>
-      </v-card>
+    <PageView class="page-view" :paragraph="view_paragraph" :compact="true" />
     </v-dialog>
 
     <v-dialog
@@ -201,6 +174,7 @@
 
 <script>
 import ParamInput from "./ParamInput";
+import PageView from './PageView.vue';
 import api from "../api";
 export default {
   name: "ResultsView",
@@ -211,15 +185,14 @@ export default {
   },
   components: {
     ParamInput,
+    PageView
   },
   data() {
     return {
       page: 1,
       value: [],
       show_meta: {},
-      show_page: null,
-      pdf_image: "",
-      loading_image: require("../../public/assets/loading.png"),
+      view_paragraph: null,
       embedded: null,
       edit_target: null,
       edit_new_field: "",
@@ -227,13 +200,6 @@ export default {
     };
   },
   watch: {
-    show_page() {
-      if (this.show_page !== null) {
-        this._prepare_pdfimage();
-        if (this.$refs.show_page_element)
-          this.$refs.show_page_element.parentNode.parentNode.scroll(0, 0);
-      }
-    },
     page(val) {
       this.turn_page(val)
     }
@@ -266,7 +232,7 @@ export default {
       return Array.from(cols).sort();
     },
     showing_result() {
-      return this.visible_data[this.show_page] || null;
+      return this.visible_data[this.view_paragraph] || null;
     },
   },
   mounted() {
@@ -275,12 +241,12 @@ export default {
   created() {
     this.handler = (e) => {
       this.$emit("keyup", e);
-      if (e.target.tagName == "INPUT" || this.show_page === null) return;
+      if (e.target.tagName == "INPUT" || this.view_paragraph === null) return;
 
       const that = this;
-      function __cb_update_show_page(set_value) {
+      function __cb_update_view_paragraph(set_value) {
         return () => {
-          that.show_page =
+          that.view_paragraph =
             set_value >= 0 ? set_value : that.visible_data.length + set_value;
         };
       }
@@ -289,13 +255,13 @@ export default {
         case "ArrowRight":
         case "ArrowLeft":
           var inc = e.key == "ArrowRight" ? 1 : -1;
-          this.show_page += inc;
-          if (this.show_page >= this.visible_data.length) {
-            this.show_page = null;
-            this.turn_page(this.page + 1, __cb_update_show_page(0));
-          } else if (this.show_page < 0) {
-            this.show_page = null;
-            this.turn_page(this.page - 1, __cb_update_show_page(-1));
+          this.view_paragraph += inc;
+          if (this.view_paragraph >= this.visible_data.length) {
+            this.view_paragraph = null;
+            this.turn_page(this.page + 1, __cb_update_view_paragraph(0));
+          } else if (this.view_paragraph < 0) {
+            this.view_paragraph = null;
+            this.turn_page(this.page - 1, __cb_update_view_paragraph(-1));
           }
           break;
         default:
@@ -312,18 +278,6 @@ export default {
       return (
         this.page_range[0] <= this.offset && this.page_range[1] > this.offset
       );
-    },
-    _prepare_pdfimage() {
-      this.pdf_image = this.loading_image;
-      if (this.showing_result === null) return;
-      var image_url = `/api/image${api.querystring_stringify(
-        this.showing_result.source
-      )}`;
-      var image_element = new Image();
-      image_element.src = image_url;
-      image_element.onload = () => {
-        this.pdf_image = image_element.src;
-      };
     },
     start() {
       this.page_range = [0, 0];
@@ -351,8 +305,8 @@ export default {
       delete source[col];
       this.embedded = { arr: r[col], source };
     },
-    view_page(index) {
-      this.show_page = index;
+    view_page(paragraph) {
+      this.view_paragraph = paragraph;
     },
     metas(r) {
       var s = "";
