@@ -3,7 +3,7 @@
     <v-card>
       <v-card-title>标签</v-card-title>
       <v-card-text style="height: 400px">
-        <v-autocomplete
+        <v-combobox
           autofocus
           v-model="tag_new"
           :items="tag_choices"
@@ -13,7 +13,7 @@
           auto-select-first
           label="标签"
           ref="ac"
-        ></v-autocomplete>
+        ></v-combobox>
       </v-card-text>
       <v-card-actions>
         <v-btn
@@ -81,10 +81,10 @@ export default {
           false
         )
         .then((data) => {
-          this.tag_choices = [...this.tag_new.map(x => ({
+          this.tag_choices = this.tag_new.map(x => ({
             text: x,
             value: x
-          })), {text: search, value: search}].concat(data.result.map(x => ({
+          })).concat(data.result.map(x => ({
             text: x._id + ' (' + x.count + ')',
             value: x._id
           })));
@@ -93,11 +93,11 @@ export default {
         .catch((err) => {
           console.log(err);
           this.loading = false;
-          this.tag_choices = [...this.tag_new, search];
+          this.tag_choices = [...this.tag_new];
         });
     },
     do_submit() {
-      this.$emit('submit', this.tag_new || [this.tag_typing])
+      this.$emit('submit', this.tag_new.map(x => x.value || x) || [this.tag_typing])
     }
   },
 };

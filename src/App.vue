@@ -76,7 +76,7 @@
       <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
       <v-toolbar-title>{{ app_title }}</v-toolbar-title>
       <v-spacer></v-spacer>
-      <queue-view :data="queue" @updated="queue = $event"></queue-view>
+      <queue-view :data="queue" @updated="update_queue"></queue-view>
     </v-app-bar>
 
     <v-main>

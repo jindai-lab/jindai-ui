@@ -1,7 +1,7 @@
 <template>
   <v-card flat v-touch="{left: () => swipe_handler('left'), right: () => swipe_handler('right')}">
     <v-card-text>
-      <v-row>
+      <v-row v-if="!compact">
         <v-col class="heading">
            <h3>{{ file }} </h3>
         </v-col>
@@ -120,6 +120,7 @@ export default {
     } else {
       this.file = this.paragraph.source.file || false;
       this.page = this.paragraph.source.page || 0;
+      this.paragraph_id = this.paragraph._id;
     }
     this.update_pdfpage();
   },
@@ -145,7 +146,7 @@ export default {
 
       api
         .call("quicktask", {
-          query: "?" + api.querify(this.file ? {source: {file: this.file, page: this.page}} : {id: this.paragraph_id}),
+          query: "?" + api.querify(this.paragraph_id ? {id: this.paragraph_id} : {source: {file: this.file, page: this.page}}),
           mongocollection: this.dataset
         })
         .then((data) => {

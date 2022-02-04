@@ -10,7 +10,7 @@
         <br />
         <div v-html="r.matched_content || r.content"></div>
         <br />
-        <v-btn @click="view_page(r)"> <v-icon>mdi-eye</v-icon> 查看 </v-btn>
+        <v-btn @click="view_page(index)"> <v-icon>mdi-eye</v-icon> 查看 </v-btn>
         <v-btn
           :href="
             '/view/' +
@@ -90,7 +90,16 @@
       :value="view_paragraph !== null"
       @input="view_paragraph = null"
     >
-    <PageView class="page-view" :paragraph="view_paragraph" :compact="true" />
+    <v-card>
+      <v-card-title>
+          <v-spacer></v-spacer>
+          <v-btn icon @click="view_paragraph = null"
+            ><v-icon>mdi-close</v-icon></v-btn
+          ></v-card-title>
+        <v-card-text>
+          <PageView class="page-view" :paragraph="showing_result" :key="view_paragraph" :compact="true" />
+        </v-card-text>
+    </v-card>
     </v-dialog>
 
     <v-dialog
@@ -305,8 +314,8 @@ export default {
       delete source[col];
       this.embedded = { arr: r[col], source };
     },
-    view_page(paragraph) {
-      this.view_paragraph = paragraph;
+    view_page(index) {
+      this.view_paragraph = index;
     },
     metas(r) {
       var s = "";

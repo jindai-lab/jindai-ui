@@ -9,7 +9,12 @@
       v-bind="$attrs"
       v-on="inputListeners"
       @change="inputListeners.input"
-      :items="arg.type.split('|').map(x => x.includes(':') ? x.split(':') : [x, x]).map(x => ({text: x[0], value: x[1]}))"
+      :items="
+        arg.type
+          .split('|')
+          .map((x) => (x.includes(':') ? x.split(':') : [x, x]))
+          .map((x) => ({ text: x[0], value: x[1] }))
+      "
     >
     </v-select>
 
@@ -19,9 +24,23 @@
       v-on="inputListeners"
       :value="value"
       @change="inputListeners.input"
-      :items="tasks"
+      :items="choices"
+      item-value="value"
+      item-text="text"
       v-else-if="arg.type == 'TASK'"
     ></v-autocomplete>
+
+    <v-combobox
+      v-else-if="arg.type == 'COLLECTION'"
+      :items="choices"
+      :label="arg.name"
+      v-bind="$attrs"
+      v-on="inputListeners"
+      :value="value"
+      item-value="value"
+      item-text="text"
+      @change="inputListeners.input"
+    ></v-combobox>
 
     <div v-else-if="arg.type == 'bool'">
       <v-simple-checkbox
@@ -53,7 +72,7 @@
       v-on="inputListeners"
       :hint="arg.default"
       :required="!arg.default"
-      :rows="(value||'').includes('\n') ? 4 : 1"
+      :rows="(value || '').includes('\n') ? 4 : 1"
       cols="40"
       :label="arg.name"
     ></v-textarea>
@@ -83,6 +102,7 @@ function input_func(vm) {
     } else {
       val = null;
     }
+    if (typeof val.value !== "undefined") val = val.value;
     vm.$emit("validation", vm.prompt === "");
     vm.$emit("input", val);
   };
@@ -116,15 +136,13 @@ export default {
     return {
       prompt: "",
       code: "",
-      tasks: []
+      choices: [],
     };
   },
   watch: {
     arg(val) {
-      if (val.type == "TASK") {
-        api.call("tasks").then((data) => (this.tasks = data.result));
-      }
-    }
+      this.update_choices()
+    },
   },
   methods: {
     validate(val) {
@@ -162,15 +180,21 @@ export default {
       this.code = val;
       this.$emit("input", val);
     },
+    update_choices() {      
+      switch (this.arg.type) {
+        case "TASK":
+        case "COLLECTION":
+          api.call(this.arg.type.toLowerCase() + "s").then((data) => (this.choices = data.result.map((x) => ({
+            text: x.name,
+            value: this.arg.type == 'TASK' ? x._id : x.name,
+          }))));
+          break;
+      }
+    }
   },
   mounted() {
     this.code = this.value;
-    if (this.arg.type == 'TASK') {
-      api.call("tasks").then((data) => (this.tasks = data.result.map(x => ({
-        text: x.name,
-        value: x._id
-      }))));
-    }
+    this.update_choices()
   },
 };
 </script>

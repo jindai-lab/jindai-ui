@@ -12,7 +12,7 @@
               { text: '默认排序', value: '' },
               { text: '从旧到新', value: 'pdate' },
               { text: '从新到旧', value: '-pdate' },
-              { text: '出处', value: 'source=1' },
+              { text: '出处', value: 'source' },
             ]"
           ></v-select>
         </v-col>

@@ -99,7 +99,7 @@ export default {
         const span = vm.$refs.duration, slider = vm.$refs.slider;
         if (span) {
           span.innerText = `${vm.to_friendly_time(vm.vp.currentTime)}/${vm.to_friendly_time(vm.vp.duration)}`;
-          slider.$el.style.width = (window.innerWidth - span.offsetLeft - span.offsetWidth - 60) + 'px';
+          slider.$el.style.width = (window.innerWidth - span.offsetLeft - span.offsetWidth - 70) + 'px';
         }
         vm.currentTime = vm.vp.currentTime;
       }

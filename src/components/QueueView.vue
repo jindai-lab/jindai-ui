@@ -10,7 +10,7 @@
     </v-badge>
     <v-badge class="ml-5 mr-5"
       :value="data.waiting > 0"
-      :content="data.waiting"
+      :content="data.waiting.length"
     >
     等待中
     </v-badge>
@@ -47,6 +47,20 @@
           </div>
         </v-card-text>
         <v-card-text v-else>没有已完成的任务。</v-card-text>
+        <v-card-title>正在运行的任务</v-card-title>
+        <v-card-text>
+          <div v-for="task in data.running" :key="task">
+            {{ task }}
+            <v-btn @click="delete_result({id: task})"><v-icon>mdi-stop</v-icon> 终止</v-btn>
+          </div>
+        </v-card-text>
+        <v-card-title>正在等待的任务</v-card-title>
+        <v-card-text>
+          <div v-for="task in data.waiting" :key="task">
+            {{ task }}
+            <v-btn @click="delete_result({id: task})"><v-icon>mdi-trash</v-icon> 取消</v-btn>
+          </div>
+        </v-card-text>
       </v-card>
     </v-dialog>
   </div>
@@ -70,14 +84,14 @@ export default {
       var id = encodeURIComponent(task.id)
       api.delete("queue/" + id).then(() => {
         api.notify({ title: "成功删除" });
-        this.$emit('updated', {running: this.running, waiting: this.waiting, finished: this.data.finished.filter(x => x.id !== id)})
+        this.$emit('updated', {})
       });
     },
     view_result(task) {
       var id = encodeURIComponent(task.id)
       this.$router.push("/results/" + id).catch(()=>{});
       this.show_finished = false;
-    },
+    }
   },
 };
 </script>
