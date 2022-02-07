@@ -1,7 +1,7 @@
 <template>
   <div>
     <v-select
-      v-if="arg.type.indexOf('|') >= 0"
+      v-if="arg.type.indexOf('|') >= 0 || arg.type == 'LANG'"
       :label="arg.name"
       :value="
         value === null || typeof value === 'undefined' ? arg.default : value
@@ -10,7 +10,7 @@
       v-on="inputListeners"
       @change="inputListeners.input"
       :items="
-        arg.type
+        (arg.type == 'LANG' ? langs : arg.type)
           .split('|')
           .map((x) => (x.includes(':') ? x.split(':') : [x, x]))
           .map((x) => ({ text: x[0], value: x[1] }))
@@ -54,7 +54,7 @@
       ><label @click="() => $refs.checkbox.click()">{{ arg.name }}</label>
     </div>
 
-    <div v-else-if="arg.type == 'js' || ['query', 'cond'].includes(arg.name)">
+    <div v-else-if="arg.type == 'QUERY'">
       <label>{{ arg.name }}</label>
       <prism-editor
         class="my-editor match-braces"
@@ -137,6 +137,7 @@ export default {
       prompt: "",
       code: "",
       choices: [],
+      langs: '简体中文:chs|繁体中文:cht|英文:en|德文:de|法文:fr|俄文:ru|西班牙文:es|葡萄牙文:pt|日文:ja|韩文/朝鲜文:kr|越南文:vn'
     };
   },
   watch: {
