@@ -234,19 +234,21 @@ export default {
           limit: e.limit,
         })
         .then((data) => {
-          var reg = new RegExp(
-            "(" +
-              data.result.query
-                .split(/[.,/#!$%^&*;:{}=\-_`"'~()|]/g)
-                .filter((x) => x)
-                .join("|") +
-              ")",
-            "ig"
-          );
-          this.results = data.result.results.map((x) => {
-            x.matched_content = x.content.replace(reg, "<em>$1</em>");
-            return x;
-          });
+          if (data.result.query) {
+            var reg = new RegExp(
+              "(" +
+                data.result.query
+                  .split(/[.,/#!$%^&*;:{}=\-_`"'~()|]/g)
+                  .filter((x) => x)
+                  .join("|") +
+                ")",
+              "ig"
+            );
+            this.results = data.result.results.map((x) => {
+              x.matched_content = x.content.replace(reg, "<em>$1</em>");
+              return x;
+            });
+          }
           this.total = data.result.total;
           this.querystr = data.result.query;
           e.callback({ result: data.result.results, offset: e.offset });
@@ -317,5 +319,8 @@ export default {
 <style>
 .vue-treeselect__control {
   border-radius: 0;
+}
+.theme--dark .vue-treeselect {
+  color: rgba(0, 0, 0, 0.7) !important;
 }
 </style>

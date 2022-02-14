@@ -8,7 +8,7 @@
         </p>
         <v-divider></v-divider>
         <br />
-        <div v-html="r.matched_content || r.content"></div>
+        <ContentView :paragraph="r" :item_width="200" :item_height="200" />
         <br />
         <v-btn @click="view_page(index)"> <v-icon>mdi-eye</v-icon> 查看 </v-btn>
         <v-btn
@@ -184,6 +184,7 @@
 <script>
 import ParamInput from "./ParamInput";
 import PageView from './PageView.vue';
+import ContentView from './ContentView.vue';
 import api from "../api";
 export default {
   name: "ResultsView",
@@ -194,7 +195,8 @@ export default {
   },
   components: {
     ParamInput,
-    PageView
+    PageView,
+    ContentView
   },
   data() {
     return {

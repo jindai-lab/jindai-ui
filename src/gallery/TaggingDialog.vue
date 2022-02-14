@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="visible">
+  <v-dialog v-model="visible" width="unset">
     <v-card>
       <v-card-title>标签</v-card-title>
       <v-card-text style="height: 400px">

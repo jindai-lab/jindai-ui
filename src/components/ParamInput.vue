@@ -137,11 +137,11 @@ export default {
       prompt: "",
       code: "",
       choices: [],
-      langs: '简体中文:chs|繁体中文:cht|英文:en|德文:de|法文:fr|俄文:ru|西班牙文:es|葡萄牙文:pt|日文:ja|韩文/朝鲜文:kr|越南文:vn'
+      langs: '自动:auto|简体中文:chs|繁体中文:cht|英文:en|德文:de|法文:fr|俄文:ru|西班牙文:es|葡萄牙文:pt|日文:ja|韩文/朝鲜文:kr|越南文:vn'
     };
   },
   watch: {
-    arg(val) {
+    arg() {
       this.update_choices()
     },
   },

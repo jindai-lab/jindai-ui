@@ -33,9 +33,9 @@
         </div>
         <div v-if="paragraphs.length > 0">
           日期: {{ paragraphs[0].pdate }}<br />
-          页码: {{ paragraphs[0].pagenum }}<br />
+          页码: {{ paragraphs[0].pagenum }} <v-btn icon small @click="pagenum_editor.new_pagenum = paragraphs[0].pagenum; pagenum_edit = true"><v-icon small>mdi-form-textbox</v-icon></v-btn> <br />
           大纲: {{ paragraphs[0].outline }}<br />
-          来源: <a :href="paragraphs[0].source.url" v-if="paragraphs[0].source.url">{{ paragraphs[0].source.url }}</a>
+          来源: <a :href="paragraphs[0].source.url" v-if="paragraphs[0].source.url" target="_blank">{{ paragraphs[0].source.url }}</a>
             {{ paragraphs[0].source.file }} {{ paragraphs[0].source.page }}<br>
         </div>
       </v-col>
@@ -47,15 +47,36 @@
       <v-btn fab fixed icon top right class="ma-10" @click="show_modal = false"><v-icon>mdi-close</v-icon></v-btn>
       <img :src="pdf_image" alt="" style="width: 100%" ref="image" />
     </v-dialog>
+    <v-dialog v-model="pagenum_edit" width="unset">
+      <v-card>
+        <v-card-title>编辑页码
+          <v-spacer></v-spacer>
+           <v-btn icon @click="pagenum_edit = false"><v-icon>mdi-close</v-icon></v-btn>
+        </v-card-title>
+        <v-card-text>
+          <v-sheet>
+            <ParamInput :arg="{name: '页码', type: 'int'}" v-model="pagenum_editor.new_pagenum" />
+            <ParamInput :arg="{name: '页码', type: '修改全部页面:all|只修改当前页面:solo|只修改本页之后的页面:after'}" v-model="pagenum_editor.sequential" />
+          </v-sheet>
+        </v-card-text>
+        <v-card-actions>
+          <v-btn color="primary" @click="save_pagenum">确定</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-card-text>
   </v-card>
 </template>
 
 <script>
 import api from "../api";
+import ParamInput from "./ParamInput.vue"
 
 export default {
   name: "PageView",
+  components: {
+    ParamInput
+  },
   data() {
     return {
       file: '',
@@ -64,6 +85,11 @@ export default {
       paragraphs: [],
       show_modal: false,
       pdf_image: "",
+      pagenum_edit: false,
+      pagenum_editor: {
+        new_pagenum: 0,
+        sequential: 'all'
+      },
       dataset: "",
       loading_image: require("../../public/assets/loading.png"),
     };
@@ -120,6 +146,7 @@ export default {
     } else {
       this.file = this.paragraph.source.file || false;
       this.page = this.paragraph.source.page || 0;
+      this.dataset = this.paragraph.dataset || '';
       this.paragraph_id = this.paragraph._id;
     }
     this.update_pdfpage();
@@ -185,6 +212,10 @@ export default {
     },
     fav(r) { api.fav(r); },
     favored(r) { return api.favored(r) },
+    save_pagenum() {
+      api.call(`edit/${this.dataset || 'paragraph'}/${this.paragraphs[0]._id}/pagenum`, this.pagenum_editor);
+      this.pagenum_edit = false;
+    }
   },
 };
 </script>

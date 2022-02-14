@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="show">
+  <v-dialog v-model="show" width="unset">
     <v-card>
       <v-card-title>快速标签</v-card-title>
       <v-card-text style="height: 150px">
@@ -21,7 +21,7 @@
         ></v-autocomplete>
       </v-card-text>
       <v-card-actions>
-        <v-btn @click="do_submit"> 确定 </v-btn>
+        <v-btn color="primary" @click="do_submit"> 确定 </v-btn>
         <v-btn @click="$emit('input', false)"> 取消 </v-btn>
       </v-card-actions>
     </v-card>

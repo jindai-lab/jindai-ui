@@ -12,7 +12,7 @@
       ></v-select>
         <ParamInput
           ref="editor"
-          :arg="{ name: 'Query', type: 'js' }"
+          :arg="{ name: 'Query', type: 'QUERY' }"
           v-model="command.query"
           @input="previewed = false"
         />
@@ -23,14 +23,14 @@
         />
         <ParamInput
           ref="editor"
-          :arg="{ name: 'Parameters', type: 'js' }"
+          :arg="{ name: 'Parameters', type: 'QUERY' }"
           v-model="command.operation_params"
           @input="previewed = false"
         />
     </v-card-text>
     <v-card-actions>
-      <v-btn @click="preview">Preview</v-btn>
-      <v-btn :disabled="!previewed" @click="execute">Execute</v-btn>
+      <v-btn @click="preview">预览</v-btn>
+      <v-btn :disabled="!previewed" @click="execute">执行</v-btn>
     </v-card-actions>
       <v-card-text>
         <pre>{{ preview_text }}</pre>
