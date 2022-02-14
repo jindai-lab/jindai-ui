@@ -59,7 +59,7 @@
           <v-list-item link @click="$router.push('/storage')">
             <v-list-item-title>文件</v-list-item-title>
           </v-list-item>
-          <v-list-item link @click="$router.push('/collections')">
+          <v-list-item link @click="$router.push('/datasets')">
             <v-list-item-title>数据集</v-list-item-title>
           </v-list-item>
           <v-list-item link @click="$router.push('/dbconsole')">

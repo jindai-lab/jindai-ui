@@ -3,7 +3,7 @@
     <div v-if="columns.includes('content')">
       <div v-for="(r, index) in visible_data" :key="index">
         <p class="">
-          数据集: {{ r.collection }} 大纲: {{ r.outline }} 来源:
+          数据集: {{ r.dataset }} 大纲: {{ r.outline }} 来源:
           {{ r.source.file }} <a :href="r.source.url" target="_blank">{{ r.source.url }}</a> 页码: {{ r.pagenum }} 日期: {{ r.pdate || "" }}
         </p>
         <v-divider></v-divider>
@@ -12,12 +12,7 @@
         <br />
         <v-btn @click="view_page(index)"> <v-icon>mdi-eye</v-icon> 查看 </v-btn>
         <v-btn
-          :href="
-            '/view/' +
-            (r.dataset || 'paragraph') +
-            '/' +
-            (r.source.file ? (r.source.file + '/' + r.source.page) : r._id)
-          "
+          :href="`/view/${r.mongocollection}/${r.source.file ? (r.source.file + '/' + r.source.page) : r._id}`"
           target="_blank"
         >
           <v-icon>mdi-dock-window</v-icon> 浏览
@@ -340,7 +335,7 @@ export default {
     },
     save() {
       api
-        .call(`edit/${this.edit_target.dataset || 'paragraph'}/${this.edit_target._id}`, this.edit_target)
+        .call(`edit/${this.edit_target.mongocollection}/${this.edit_target._id}`, this.edit_target)
         .then(() => {
           this.edit_target = null;
           api.notify({ title: "保存成功" });

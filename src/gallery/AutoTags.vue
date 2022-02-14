@@ -58,7 +58,7 @@
         </template>
 
         <template v-slot:default="props">
-          <v-row v-for="item in props.items" :key="item._id" cols="12">
+          <v-row v-for="item in props.images" :key="item._id" cols="12">
             <v-col
               v-for="(key, index) in ['Pattern', 'From Tag', 'Tag']"
               :key="index"

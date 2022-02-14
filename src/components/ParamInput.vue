@@ -31,7 +31,7 @@
     ></v-autocomplete>
 
     <v-combobox
-      v-else-if="arg.type == 'COLLECTION'"
+      v-else-if="arg.type == 'DATASET'"
       :items="choices"
       :label="arg.name"
       v-bind="$attrs"
@@ -102,7 +102,7 @@ function input_func(vm) {
     } else {
       val = null;
     }
-    if (typeof val.value !== "undefined") val = val.value;
+    if (val && typeof val.value !== "undefined") val = val.value;
     vm.$emit("validation", vm.prompt === "");
     vm.$emit("input", val);
   };
@@ -184,7 +184,7 @@ export default {
     update_choices() {      
       switch (this.arg.type) {
         case "TASK":
-        case "COLLECTION":
+        case "DATASET":
           api.call(this.arg.type.toLowerCase() + "s").then((data) => (this.choices = data.result.map((x) => ({
             text: x.name,
             value: this.arg.type == 'TASK' ? x._id : x.name,

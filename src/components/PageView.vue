@@ -90,7 +90,7 @@ export default {
         new_pagenum: 0,
         sequential: 'all'
       },
-      dataset: "",
+      mongocollection: "",
       loading_image: require("../../public/assets/loading.png"),
     };
   },
@@ -134,7 +134,7 @@ export default {
     if (!this.paragraph) {
       let params = window.location.href.split("/");
       params = params.slice(params.indexOf("view") + 1);
-      this.dataset = params[0] === 'paragraph' ? '' : params[0]
+      this.mongocollection = params[0]
       if (params.length > 2) {
         this.file = decodeURIComponent(params.slice(1, -1).join("/"));
         this.page = +params.slice(-1)[0];
@@ -146,7 +146,7 @@ export default {
     } else {
       this.file = this.paragraph.source.file || false;
       this.page = this.paragraph.source.page || 0;
-      this.dataset = this.paragraph.dataset || '';
+      this.mongocollection = this.paragraph.mongocollection;
       this.paragraph_id = this.paragraph._id;
     }
     this.update_pdfpage();
@@ -174,10 +174,21 @@ export default {
       api
         .call("quicktask", {
           query: "?" + api.querify(this.paragraph_id ? {id: this.paragraph_id} : {source: {file: this.file, page: this.page}}),
-          mongocollection: this.dataset
+          mongocollection: this.mongocollection
         })
         .then((data) => {
           this.paragraphs = data.result
+          if (!data.result.length) {
+            this.paragraphs = [{
+              source: {
+                file: this.file,
+                page: this.page
+              },
+              keywords: [],
+              content: '',
+              _id: ''
+            }]
+          }  
           if (this.paragraphs.length) {
             var p = this.paragraphs[0]
             if (p.source.file) {
@@ -191,7 +202,7 @@ export default {
             } else {
               this.pdf_image = ''
             }
-          }  
+          }
         });
     },
     swipe_handler(direction) {
@@ -213,7 +224,7 @@ export default {
     fav(r) { api.fav(r); },
     favored(r) { return api.favored(r) },
     save_pagenum() {
-      api.call(`edit/${this.dataset || 'paragraph'}/${this.paragraphs[0]._id}/pagenum`, this.pagenum_editor);
+      api.call(`edit/${this.mongocollection}/${this.paragraphs[0]._id}/pagenum`, this.pagenum_editor);
       this.pagenum_edit = false;
     }
   },

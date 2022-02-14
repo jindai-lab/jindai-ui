@@ -261,14 +261,14 @@ export default {
             r.keywords.push(key)
             bundle = { $push: bundle }
         }
-        this.call(`edit/${r.dataset || 'paragraph'}/${r._id}`, bundle)
+        this.call(`edit/${r.mongocollection || 'paragraph'}/${r._id}`, bundle)
     },
 
     favored(r) {
         return r.keywords.includes('favored:' + this.user)
     },
 
-    get_collections() {
+    get_datasets() {
 
         function _segs(x) {
             var r = [], s = ''
@@ -280,7 +280,7 @@ export default {
             return r
         }
 
-        return this.call("collections").then((data) => {
+        return this.call("datasets").then((data) => {
             var weights = {}, colls = data.result.sort(x => x.order_weight);
             for (var c of colls) {
                 for (var s of _segs(c))

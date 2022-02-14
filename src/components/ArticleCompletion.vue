@@ -22,7 +22,7 @@ import ParamInput from "./ParamInput";
 import api from "../api";
 
 export default {
-  name: "CollectionList",
+  name: "ArticleCompletion",
   components: {
     ParamInput,
   },

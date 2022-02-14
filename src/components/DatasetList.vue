@@ -3,8 +3,8 @@
     <v-card-title>数据集</v-card-title>
     <v-card-text>
       <v-list two-line>
-        <draggable v-model="collections">
-          <template v-for="ds in collections">
+        <draggable v-model="datasets">
+          <template v-for="ds in datasets">
             <v-list-item :key="ds._id">
               <v-list-item-content>
                 <v-list-item-title>
@@ -13,7 +13,7 @@
                   <v-btn
                     class="oper"
                     icon
-                    @click="rename_collection(ds.name, prompt('更名为：'))"
+                    @click="rename_collection(ds.name, prompt('更名为：', ds.name))"
                   >
                     <v-icon>mdi-form-textbox</v-icon>
                   </v-btn>
@@ -58,33 +58,33 @@ import draggable from 'vuedraggable'
 import api from "../api";
 
 export default {
-  name: "CollectionList",
+  name: "DatasetList",
   components: {
     ParamInput,
     draggable
   },
   data() {
     return {
-      collections: [],
+      datasets: [],
       input_coll: {},
       valid: [],
     };
   },
   mounted() {
-    this.load_collections();
+    this.load_datasets();
   },
   methods: {
-    load_collections() {
-      api.get_collections().then(x => this.collections = x);
+    load_datasets() {
+      api.get_datasets().then(x => this.datasets = x);
     },
-    prompt(t) {
-      return window.prompt(t);
+    prompt(t, v) {
+      return window.prompt(t, v);
     },
     update_valid(id, field, value) {
       var coll = { _id: id };
       coll[field] = value;
       api
-        .call("collections", { collection: coll })
+        .call("datasets", { dataset: coll })
         .then(() => api.notify({ title: "更新成功" }));
     },
     save() {
@@ -93,8 +93,8 @@ export default {
         return;
       }
       api
-        .call("collections", {
-          collections: this.collections.map((x, i) =>
+        .call("datasets", {
+          datasets: this.datasets.map((x, i) =>
             Object.assign({}, x, { order_weight: i, sources: null })
           ),
         })
@@ -102,19 +102,19 @@ export default {
     },
     append_dataset() {
       if (!this.input_coll.name) return;
-      this.collections.push(this.input_coll);
+      this.datasets.push(this.input_coll);
       this.input_coll = {};
     },
     rename_collection(from, to) {
       if (from && to)
         api
-          .call("collections", { rename: { from, to } })
+          .call("datasets", { rename: { from, to } })
           .then(() => api.notify({ title: "重命名成功" }))
-          .then(this.load_collections);
+          .then(this.load_datasets);
     },
     refresh_sources(id) {
       api
-        .call("collections", { sources: { _id: id } })
+        .call("datasets", { sources: { _id: id } })
         .then(() => api.notify({ title: "刷新完成" }));
     },
   },

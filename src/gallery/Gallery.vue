@@ -138,7 +138,7 @@
             <v-img
               :contain="config.contain"
               height="150"
-              :src="get_item_image(g.items[0])"
+              :src="get_item_image(g.images[0])"
             ></v-img>
             <v-card-text>{{ g.group_id }}</v-card-text>
           </v-card>
@@ -166,7 +166,7 @@
             <v-img
               :contain="config.contain"
               height="250"
-              :src="get_item_image(album.items[0])"
+              :src="get_item_image(album.images[0])"
             ></v-img>
             <v-card-text>
               <album-description :album="album"></album-description>
@@ -486,7 +486,7 @@ export default {
       var items = [];
       for (var album of this.albums)
         items = items.concat(
-          album.items.map((x) => {
+          album.images.map((x) => {
             x.album = album;
             return x;
           })
@@ -514,7 +514,7 @@ export default {
     browsing(val) {
       if (val) {
         this.albums.forEach((a) =>
-          a.items.forEach((i) => {
+          a.images.forEach((i) => {
             var im = new Image();
             im.src = this.get_item_image(i);
           })
@@ -892,7 +892,7 @@ export default {
       return this.selected_albums().reduce(
         (y, e) =>
           y.concat(
-            e.items.map((i) => {
+            e.images.map((i) => {
               if (!i.album_id) i.album_id = e._id;
               return i;
             })
@@ -923,7 +923,7 @@ export default {
     browse(album_index) {
       this.browsing_index = this.albums
         .slice(0, album_index)
-        .reduce((x, y) => x + y.items.length, 0);
+        .reduce((x, y) => x + y.images.length, 0);
       this.browsing = true;
       this._clear_selected(this.albums);
     },
@@ -1012,7 +1012,7 @@ export default {
           0,
           ...(this.browsing
             ? [this.browsing_item._id]
-            : p.items.map((i) => i._id))
+            : p.images.map((i) => i._id))
         );
       });
 
@@ -1022,7 +1022,7 @@ export default {
         })
         .then(() => {
           s.forEach((x) => {
-            x.items = x.items.filter(
+            x.images = x.images.filter(
               (i) => !visible_album_items[x._id].includes(i._id)
             );
           });
@@ -1043,7 +1043,7 @@ export default {
           data = data.result || {};
           this._clear_selected(s);
           s.forEach((p) =>
-            p.items.forEach(
+            p.images.forEach(
               (i) =>
                 typeof data[i._id] !== "undefined" && (i.rating = data[i._id])
             )

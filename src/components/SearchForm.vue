@@ -31,8 +31,8 @@
         <v-col>
           <treeselect
             :multiple="true"
-            :options="collections"
-            v-model="selected_collections"
+            :options="datasets"
+            v-model="selected_datasets"
             placeholder="数据集"
           />
         </v-col>
@@ -44,14 +44,18 @@
       <v-sheet v-show="total">
         共找到 {{ total }} 个结果。
         <v-btn @click="export_query">
-          <v-icon>mdi-share</v-icon> 导出为任务
+          <v-icon>mdi-clipboard-outline</v-icon> 导出为任务
         </v-btn>
         <v-btn @click="export_xlsx">
           <v-icon>mdi-download</v-icon> 直接导出 Excel
         </v-btn>
+        <v-btn @click="toolbar = !toolbar" :dark="!toolbar">
+          <v-icon>mdi-tools</v-icon>
+        </v-btn>
       </v-sheet>
       <v-divider class="mt-5 mb-5"></v-divider>
       <ResultsView
+        :class="toolbar ? '' : 'hide-toolbar'"
         :page_size="50"
         :total="total"
         @load="load_search"
@@ -72,11 +76,10 @@ export default {
   components: { ResultsView, Treeselect },
   data() {
     return {
-      collections: [],
       datasets: [],
-      selected_dataset: "",
-      selected_collections: [],
-      open_collections: [],
+      selected_datasets: [],
+      open_datasets: [],
+      selected_mongocollections: [],
       q: "",
       req: {},
       sort: "",
@@ -84,7 +87,8 @@ export default {
       reqstr: "",
       total: 0,
       selection_bundles: {},
-      external_json: null
+      external_json: null,
+      toolbar: true,
     };
   },
   mounted() {
@@ -92,7 +96,7 @@ export default {
       const search_params = api.querystring_parse(location.search);
       Object.assign(this, search_params);
     }
-    api.get_collections().then((data) => {
+    api.get_datasets().then((data) => {
       var hierarchy = {
         id: "ROOT",
         name: "",
@@ -144,7 +148,7 @@ export default {
         );
       }
       
-      this.collections = hierarchy.children;
+      this.datasets = hierarchy.children;
     });
     
     if (this.q) this.search();
@@ -156,51 +160,43 @@ export default {
         return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
       }
       var req = {},
-        selected = this.selected_collections.map(
+        selected = this.selected_datasets.map(
           (sid) => this.selection_bundles[sid]
         );
       this.reqstr = "";
       if (selected.length > 0) {
         req = { $or: [] };
-        var colls = selected
+        var datasets = selected
             .filter((x) => !x.source)
             .map((x) => escapeRegExp(x.name)),
           sourcefiles = selected
             .filter((x) => x.source)
             .map((x) => ({
               file: x.source.split(":", 2).pop(),
-              collection: x.name,
+              dataset: x.name,
             })),
-          reqstr_colls = "",
+          reqstr_datasets = "",
           reqstr_sourcefiles = "";
-        var selected_datasets = new Set(selected.map((x) => x.mongocollection));
-        if (selected_datasets.size > 1) {
-          api.notify({
-            title: "您选择的数据集存在跨数据库搜索情况，请重新选择",
-            type: "warn",
-          });
-          return;
-        }
-        this.selected_dataset = Array.from(selected_datasets)[0];
-
-        if (colls.length > 0) {
+        this.selected_mongocollections = Array.from(new Set(selected.map((x) => x.mongocollection)));
+        
+        if (datasets.length > 0) {
           req.$or.push({
-            collection: {
-              $regex: "^" + colls.join("|^"),
+            dataset: {
+              $regex: "^" + datasets.join("|^"),
             },
           });
-          reqstr_colls = "collection%`^" + colls.join("|^") + "`";
+          reqstr_datasets = "dataset%`^" + datasets.join("|^") + "`";
         }
         if (sourcefiles.length > 0) {
           req.$or.push(
             ...sourcefiles.map((sf) => ({
-              collection: sf.collection,
+              dataset: sf.dataset,
               "source.file": sf.file,
             }))
           );
           reqstr_sourcefiles = sourcefiles
             .map(
-              (sf) => `(collection='${sf.collection}',source.file='${sf.file}')`
+              (sf) => `(dataset='${sf.dataset}',source.file='${sf.file}')`
             )
             .join("|");
         }
@@ -209,7 +205,7 @@ export default {
         }
         this.reqstr =
           "(" +
-          [reqstr_colls, reqstr_sourcefiles]
+          [reqstr_datasets, reqstr_sourcefiles]
             .filter((x) => x.length > 0)
             .join("|") +
           ")";
@@ -229,7 +225,7 @@ export default {
           q: this.q,
           sort: this.sort,
           req: this.req,
-          dataset: this.selected_dataset,
+          mongocollections: this.selected_mongocollections,
           offset: e.offset,
           limit: e.limit,
         })
@@ -258,7 +254,7 @@ export default {
             api.querystring_stringify({
               q: [this.querystr, this.reqstr].filter((x) => x !== "").join(","),
               sort: this.sort,
-              selected_dataset: this.selected_dataset,
+              selected_mongocollections: this.selected_mongocollections,
             })
           );
         });
@@ -271,7 +267,7 @@ export default {
         .put("tasks/", {
           datasource_config: {
             query: "?" + this.querystr + this.reqstr,
-            mongocollection: this.selected_dataset,
+            mongocollections: this.selected_mongocollections,
           },
           name: "搜索 " + this.querystr,
           pipeline: [
@@ -322,5 +318,11 @@ export default {
 }
 .theme--dark .vue-treeselect {
   color: rgba(0, 0, 0, 0.7) !important;
+}
+</style>
+
+<style>
+.hide-toolbar div:not(.paragraph)>p, .hide-toolbar hr, .hide-toolbar .v-btn {
+  display: none;
 }
 </style>

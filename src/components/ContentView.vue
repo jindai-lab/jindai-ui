@@ -2,11 +2,11 @@
   <div class="paragraph">
     <p v-html="content" v-if="is_html"></p>
     <p v-else v-text="content"></p>
-    <v-row justify="start" v-if="paragraph.items">
+    <v-row justify="start" v-if="paragraph.images">
       <v-col
         v-for="item in first_item_only
-          ? paragraph.items
-          : paragraph.items.slice(0, 1)"
+          ? paragraph.images
+          : paragraph.images.slice(0, 1)"
         :key="item._id"
         cols="12"
         xs="12"
@@ -21,7 +21,7 @@
           <v-img
             :contain="true"
             :height="item_height"
-            :src="get_item_image(g.items[0])"
+            :src="get_item_image(g.images[0])"
           ></v-img>
         </v-card>
       </v-col>

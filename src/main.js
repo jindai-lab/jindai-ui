@@ -11,7 +11,7 @@ import TaskDetail from './components/TaskDetail.vue'
 import TaskShortcut from './components/TaskShortcut.vue'
 import TaskList from './components/TaskList.vue'
 import PageView from './components/PageView.vue'
-import CollectionList from './components/CollectionList.vue'
+import DatasetList from './components/DatasetList.vue'
 import History from './components/History.vue'
 import Login from './components/Login.vue'
 import QueueResult from './components/QueueResult.vue'
@@ -31,7 +31,7 @@ const routes = [
     { path: '/tasks/shortcut/:id', component: TaskShortcut, props: true },
     { path: '/tasks/:id', component: TaskDetail, props: true },
     { path: '/tasks', component: TaskList },
-    { path: '/collections', component: CollectionList },
+    { path: '/datasets', component: DatasetList },
     { path: '/history', component: History },
     { path: '/results/:id(.*)', component: QueueResult, props: true },
     { path: '/storage', component: StorageList },

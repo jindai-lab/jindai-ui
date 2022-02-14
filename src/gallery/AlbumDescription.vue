@@ -7,7 +7,7 @@
       <span class="score" v-show="album.score">{{ album.score }}</span>
       <span class="count"
         ><a class="counter secondary--text" target="_blank" :href="album.group">{{
-          album.count || album.items.length
+          album.count || album.images.length
         }}</a></span
       >
     </span>
