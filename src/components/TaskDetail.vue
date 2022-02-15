@@ -72,6 +72,7 @@
           @shortcut="update_shortcut"
           :map_id="'pipeline'"
           @validation="update_valid('pipeline_main', $event)"
+          style="margin-left: 0 !important;"
         />
       </div>
 

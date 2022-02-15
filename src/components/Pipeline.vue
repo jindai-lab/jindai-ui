@@ -1,8 +1,9 @@
 <template>
-  <div>
+  <div class="ml-10">
     <v-btn @click="append_stage()" class="mb-5 mt-5">
       <v-icon>mdi-plus</v-icon>
     </v-btn>
+    <draggable :list="value">
     <div
       v-for="(stage, index) in value"
       :key="index"
@@ -38,16 +39,19 @@
       </div>
         <v-divider class="mb-5"></v-divider>
     </div>
+    </draggable>
   </div>
 </template>
 
 <script>
 import api from '../api'
+import draggable from 'vuedraggable'
 
 export default {
   name: "Pipeline",
   components: {
-    StageDetail: () => import('./StageDetail.vue')
+    StageDetail: () => import('./StageDetail.vue'),
+    draggable
   },
   data() {
     return {
