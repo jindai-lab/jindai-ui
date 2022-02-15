@@ -29,7 +29,7 @@
                       <h4>{{ task.name }}</h4>
           <span>{{ task.id.split("/")[0] }}</span>
           运行于:
-          {{ new Date(task.last_run + ' UTC').toLocaleString() }}<br />
+          {{ new Date(task.last_run + ' UTC') | dateSafe }}<br />
           <v-btn :href="download_link(task)" v-if="!task.isnull" target="_blank">
             <v-icon>mdi-download</v-icon> 下载
           </v-btn>

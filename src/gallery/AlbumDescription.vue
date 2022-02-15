@@ -2,7 +2,7 @@
   <v-row>
     <span class="nums">
       <span class="datetime">
-        {{ new Date(album.pdate).toLocaleDateString() }}
+        {{ album.pdate | dateSafe }}
       </span>
       <span class="score" v-show="album.score">{{ album.score }}</span>
       <span class="count"

@@ -30,8 +30,8 @@
             
         <div class="description" v-if="!f.folder">
           大小: {{ (f.size / 1024 / 1024).toFixed(2) }} MB 创建于:
-          {{ new Date(f.ctime * 1000).toLocaleString() }} 修改于:
-          {{ new Date(f.mtime * 1000).toLocaleString() }}
+          {{ (f.ctime * 1000) | dateSafe }} 修改于:
+          {{ (f.mtime * 1000) | dateSafe }}
         </div>
             </v-col
           >

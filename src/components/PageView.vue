@@ -27,12 +27,12 @@
       <v-col cols="6">
         <div class="paragraphs">
           <p v-for="p in paragraphs" :key="p._id">
-            {{ p.content }}
+          <ContentView :paragraph="p" item_width="100%" item_height="auto" />
           <v-btn class="fav-button" :color="favored(p) ? 'orange' : ''" :dark="favored(p)" icon small @click="fav(p); $forceUpdate()"><v-icon small>mdi-star</v-icon></v-btn>
           </p>
         </div>
         <div v-if="paragraphs.length > 0">
-          日期: {{ paragraphs[0].pdate }}<br />
+          日期: {{ paragraphs[0].pdate | dateSafe }}<br />
           页码: {{ paragraphs[0].pagenum }} <v-btn icon small @click="pagenum_editor.new_pagenum = paragraphs[0].pagenum; pagenum_edit = true"><v-icon small>mdi-form-textbox</v-icon></v-btn> <br />
           大纲: {{ paragraphs[0].outline }}<br />
           来源: <a :href="paragraphs[0].source.url" v-if="paragraphs[0].source.url" target="_blank">{{ paragraphs[0].source.url }}</a>
@@ -71,11 +71,13 @@
 <script>
 import api from "../api";
 import ParamInput from "./ParamInput.vue"
+import ContentView from "./ContentView.vue"
 
 export default {
   name: "PageView",
   components: {
-    ParamInput
+    ParamInput,
+    ContentView
   },
   data() {
     return {

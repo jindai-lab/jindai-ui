@@ -4,6 +4,12 @@ import App from './App'
 // use vue-router
 import VueRouter from 'vue-router'
 Vue.use(VueRouter)
+Vue.filter('dateSafe', function (value) {
+    if (!value) return ''
+    var ds = new Date(value).toLocaleString()
+    if (ds === 'Invalid Date') return value;
+    return ds;
+  })
 
 // load components
 import SearchForm from './components/SearchForm.vue'

@@ -4,11 +4,11 @@
       <div v-for="(r, index) in visible_data" :key="index">
         <p class="">
           数据集: {{ r.dataset }} 大纲: {{ r.outline }} 来源:
-          {{ r.source.file }} <a :href="r.source.url" target="_blank">{{ r.source.url }}</a> 页码: {{ r.pagenum }} 日期: {{ r.pdate || "" }}
+          {{ r.source.file }} <a :href="r.source.url" target="_blank">{{ r.source.url }}</a> 页码: {{ r.pagenum }} 日期: {{ r.pdate | dateSafe }}
         </p>
         <v-divider></v-divider>
         <br />
-        <ContentView :paragraph="r" :item_width="200" :item_height="200" />
+        <ContentView :paragraph="r" :item_width="200" :item_height="200" :first_item_only="false" />
         <br />
         <v-btn @click="view_page(index)"> <v-icon>mdi-eye</v-icon> 查看 </v-btn>
         <v-btn
@@ -324,7 +324,7 @@ export default {
             "matched_content",
             "content",
             "pagenum",
-            "pdate",
+            "pdate | dateSafe",
             "source",
           ].includes(k)
         )
