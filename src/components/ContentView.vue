@@ -1,7 +1,10 @@
 <template>
-  <div class="paragraph">
+  <div class="paragraph mt-5">
     <p v-html="content" v-if="is_html"></p>
-    <p v-else v-text="content"></p>
+    <p v-else>
+      {{ content }}
+      <v-btn class="fav-button" :color="favored ? 'orange' : ''" :dark="favored" icon small @click="fav(); $forceUpdate()"><v-icon small>mdi-star</v-icon></v-btn>
+    </p>
     <div v-if="paragraph.images">
       <v-row float>
         <v-card
@@ -26,6 +29,7 @@
 
 <script>
 import galleryApi from "../gallery/gallery-api";
+import api from "../api"
 
 export default {
   name: "ContentView",
@@ -36,15 +40,23 @@ export default {
     },
     content() {
       return this.paragraph.matched_content || this.paragraph.content;
-    },
+    },    
+    favored() { return api.favored(this.paragraph) },
   },
   methods: {
     get_item_image(i) {
       return galleryApi.get_item_image(i);
     },
+    fav() { api.fav(this.paragraph); },
   },
 };
 </script>
 
-<style>
+<style scoped>
+.fav-button {
+  opacity: 0;
+}
+p:hover .fav-button, .fav-button.orange--text {
+  opacity: 1;
+}
 </style>

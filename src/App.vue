@@ -97,7 +97,7 @@
 
       <div style="height: 40px"></div>
 
-      <v-card flat v-show="console_outputs.length > 0" ref="console">
+      <v-card flat v-show="console_outputs.length > 0" ref="console" v-if="!viewer">
         <v-btn small left bottom text class="ma-3" @click="console_outputs = []"
           ><v-icon>mdi-delete</v-icon> 清除</v-btn
         >
@@ -191,7 +191,7 @@ export default {
         });
       });
     this.$on("logined", () => {
-      this.update_queue()
+      if (!this.viewer) this.update_queue()
       api
         .logined()
         .then((data) => (this.admin = data.result.roles.indexOf("admin") >= 0))

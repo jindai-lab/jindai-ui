@@ -2,9 +2,9 @@
   <v-sheet v-if="total > 0" ref="results">
     <div v-if="columns.includes('content')">
       <div v-for="(r, index) in visible_data" :key="index">
-        <p class="">
-          数据集: {{ r.dataset }} 大纲: {{ r.outline }} 来源:
-          {{ r.source.file }} <a :href="r.source.url" target="_blank">{{ r.source.url }}</a> 页码: {{ r.pagenum }} 日期: {{ r.pdate | dateSafe }}
+        <p class="meta">
+          数据集: <a :href="`/?q=dataset=\`${r.dataset}\``" target="_blank">{{ r.dataset }}</a> 大纲: {{ r.outline }} 来源:
+          <a :href="`/?q=dataset=\`${r.dataset}\`,source.file=\`${r.source.file}\``" target="_blank">{{ r.source.file }}</a> <a :href="r.source.url" target="_blank">{{ r.source.url }}</a> 页码: {{ r.pagenum }} 日期: {{ r.pdate | dateSafe }}
         </p>
         <v-divider></v-divider>
         <br />
@@ -355,11 +355,14 @@ export default {
   overflow-y: auto;
   max-height: 100%;
 }
-
 .v-dialog .v-card__title .v-btn {
   margin-right: 50px;
   position: fixed;
   z-index: 200;
   right: 20px;
+}
+.meta a {
+  color: #333;
+  text-decoration: none;
 }
 </style>
