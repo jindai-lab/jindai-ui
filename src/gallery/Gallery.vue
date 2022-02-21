@@ -403,7 +403,7 @@ export default {
       query: "",
       post: "",
       order: {
-        keys: ["-liked_at"],
+        keys: ["-_id"],
       },
       limit: 40,
       archive: false,
@@ -415,7 +415,7 @@ export default {
       { text: "默认", value: "" },
       {
         text: "导入日期",
-        value: { order: { keys: ["-liked_at"] } },
+        value: { order: { keys: ["-_id"] } },
       },
       {
         text: "创建日期",
@@ -436,12 +436,12 @@ export default {
       {
         text: "图像网址",
         value: {
-          order: { keys: ["items.source.url"], "items.source.url": "" },
+          order: { keys: ["images.source.url"], "images.source.url": "" },
         },
       },
       {
         text: "评价",
-        value: { order: { keys: ["-items.rating"], "items.rating": 10 } },
+        value: { order: { keys: ["-images.rating"], "images.rating": 10 } },
       },
     ],
     config: {
@@ -568,7 +568,7 @@ export default {
     },
     update(obj) {
       if (obj && (!obj.order || (!obj.order.keys && !obj.order.offset))) {
-        obj.order = { keys: ["-liked_at"] };
+        obj.order = { keys: ["-_id"] };
         this.page = 1;
       }
       Object.assign(this.params, obj);
@@ -753,7 +753,7 @@ export default {
               case "z":
                 this._open_window(
                   e.shiftKey
-                    ? `?query=id%3D${_album._id},items.source=exists(1)`
+                    ? `?query=id%3D${_album._id},images.source=exists(1)`
                     : `?query=source.url%25%27${_album.source.url
                         .replace(/[-\\^$*+?.()|[\]{}]/g, "\\$&")
                         .replace(/\/\d+\//, "/.*/")}'`
@@ -981,7 +981,7 @@ export default {
         this.selected_albums().reduce((a, e) => a.concat(e.keywords), [])
       );
       api
-        .call("album/tag", {
+        .call("paragraph/tag", {
           albums: this._selected_album_ids(),
           append: append ? e : e.filter((x) => !existing_tags.has(x)),
           delete: append
@@ -1053,7 +1053,7 @@ export default {
     group(del) {
       var s = this.selected_albums();
       api
-        .call("album/group", {
+        .call("paragraph/group", {
           albums: this._selected_album_ids(),
           delete: del,
         })
@@ -1070,7 +1070,7 @@ export default {
     merge() {
       var s = this.selected_albums();
       api
-        .call("album/merge", {
+        .call("paragraph/merge", {
           albums: this._selected_album_ids(),
         })
         .then(() => this._clear_selected(s));
@@ -1078,7 +1078,7 @@ export default {
     split() {
       var s = this.selected_albums();
       api
-        .call("album/split", {
+        .call("paragraph/split", {
           albums: this._selected_album_ids(),
         })
         .then(() => this._clear_selected(s));

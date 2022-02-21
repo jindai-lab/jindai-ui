@@ -7,9 +7,8 @@
           <a :href="`/?q=dataset=\`${r.dataset}\`,source.file=\`${r.source.file}\``" target="_blank">{{ r.source.file }}</a> <a :href="r.source.url" target="_blank">{{ r.source.url }}</a> 页码: {{ r.pagenum }} 日期: {{ r.pdate | dateSafe }}
         </p>
         <v-divider></v-divider>
-        <br />
         <ContentView :paragraph="r" :item_width="200" :item_height="200" :first_item_only="false" />
-        <br />
+        <div class="mt-10 operations">
         <v-btn @click="view_page(index)"> <v-icon>mdi-eye</v-icon> 查看 </v-btn>
         <v-btn
           :href="`/view/${r.mongocollection}/${r.source.file ? (r.source.file + '/' + r.source.page) : r._id}`"
@@ -32,16 +31,13 @@
           <v-icon>mdi-file-edit-outline</v-icon>
           编辑
         </v-btn>
-        <v-btn @click="fav(r); $forceUpdate();" :dark="favored(r)" :color="favored(r) ? 'orange' : ''">
-          <v-icon>mdi-star</v-icon>
-          收藏
-        </v-btn>
         <v-textarea
           readonly
           v-show="!!show_meta[index]"
           :value="metas(r)"
           rows="5"
         ></v-textarea>
+        </div>
         <v-divider class="mt-5 mb-5"></v-divider>
       </div>
     </div>

@@ -16,15 +16,23 @@
       :style="options.style || {}"
       @play="handleVideoPlay"
       @playing="handleVideoPlaying"
-      @pause="playing=false"
+      @pause="playing = false"
       @dblclick="requestFullscreen"
+      @mouseup="handleMouseup"
       :key="src"
     >
       <source :src="src" />
     </video>
     <div class="controls" v-if="!options.controls">
-      <v-btn icon @click="toggle_play"><v-icon v-show="!playing">mdi-play</v-icon><v-icon v-show="playing">mdi-pause</v-icon></v-btn>
-      <select class="rates" @change="playbackRate = vp.playbackRate = +$event.target.value" :value="vp.playbackRate">
+      <v-btn icon @click="toggle_play"
+        ><v-icon v-show="!playing">mdi-play</v-icon
+        ><v-icon v-show="playing">mdi-pause</v-icon></v-btn
+      >
+      <select
+        class="rates"
+        @change="playbackRate = vp.playbackRate = +$event.target.value"
+        :value="vp.playbackRate"
+      >
         <option :value="0.5">0.5x</option>
         <option :value="1">1.0x</option>
         <option :value="2">2.0x</option>
@@ -38,7 +46,8 @@
         :value="currentTime"
         ref="slider"
         hide-details
-        dark dense
+        dark
+        dense
         class="d-inline-block"
         @change="vp.currentTime = $event"
         color="white"
@@ -50,61 +59,75 @@
 
 <script>
 export default {
-  name: 'VideoPlayer',
+  name: "VideoPlayer",
   props: ["src", "options"],
-  data () {
+  data() {
     return {
       playing: false,
       vp: {},
       currentTime: 0,
       playbackRate: 1,
-    }
+    };
   },
   methods: {
     handleVideoPlay(e) {
-      this.$emit('play', e);
+      this.$emit("play", e);
     },
     handleVideoPlaying(e) {
       this.playing = true;
       this.vp = e.target;
       this.vp.playbackRate = this.playbackRate;
     },
+    handleMouseup(e) {
+      var delta = 0;
+      e.cancelBubble = true;
+      if (e.clientX < window.innerWidth / 3) delta = -15;
+      else if (e.clientX > (window.innerWidth * 2) / 3) delta = 15;
+      if (delta !== 0) {
+        this.vp.currentTime += delta;
+      } else {
+        this.toggle_play();
+      }
+    },
     requestFullscreen(e) {
-      e.target.requestFullscreen()
+      e.target.requestFullscreen();
     },
     toggle_play() {
-      if (this.playing) this.vp.pause(); else this.vp.play();
+      if (this.playing) this.vp.pause();
+      else this.vp.play();
     },
     to_friendly_time(secs) {
       function _lz(x) {
-        return x < 10 ? '0' + x : '' + x
+        return x < 10 ? "0" + x : "" + x;
       }
       secs = secs | 0;
-      const mins = ((secs / 60) % 60) | 0;
+      const mins = (secs / 60) % 60 | 0;
       const hours = (secs / 3600) | 0;
       secs = secs % 60;
-      if (hours > 0)
-        return `${hours}:${_lz(mins)}:${_lz(secs)}`
-      else
-        return `${_lz(mins)}:${_lz(secs)}`
+      if (hours > 0) return `${hours}:${_lz(mins)}:${_lz(secs)}`;
+      else return `${_lz(mins)}:${_lz(secs)}`;
     },
     fullscreen() {
-      this.vp.requestFullscreen()
-    }
+      this.vp.requestFullscreen();
+    },
   },
-  mounted () {
+  mounted() {
     const vm = this;
     setInterval(() => {
       if (vm.playing && vm.vp.currentTime) {
-        const span = vm.$refs.duration, slider = vm.$refs.slider;
+        const span = vm.$refs.duration,
+          slider = vm.$refs.slider;
         if (span) {
-          span.innerText = `${vm.to_friendly_time(vm.vp.currentTime)}/${vm.to_friendly_time(vm.vp.duration)}`;
-          slider.$el.style.width = (window.innerWidth - span.offsetLeft - span.offsetWidth - 70) + 'px';
+          span.innerText = `${vm.to_friendly_time(
+            vm.vp.currentTime
+          )}/${vm.to_friendly_time(vm.vp.duration)}`;
+          slider.$el.style.width =
+            window.innerWidth - span.offsetLeft - span.offsetWidth - 70 + "px";
         }
         vm.currentTime = vm.vp.currentTime;
       }
-    }, 1000)
-  }
+    }, 1000);
+  },
 };
 </script>
 

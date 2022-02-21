@@ -23,7 +23,7 @@
           <v-text-field
             v-model="q"
             @keyup.enter="search"
-            label="搜索条件"
+             label="搜索条件"
           ></v-text-field>
         </v-col>
       </v-row>
@@ -49,9 +49,7 @@
         <v-btn @click="export_xlsx">
           <v-icon>mdi-download</v-icon> 直接导出 Excel
         </v-btn>
-        <v-btn @click="toolbar = !toolbar" :dark="!toolbar">
-          <v-icon>mdi-tools</v-icon>
-        </v-btn>
+        <v-switch v-model="toolbar" class="d-inline-block" flat label="显示工具"></v-switch>
       </v-sheet>
       <v-divider class="mt-5 mb-5"></v-divider>
       <ResultsView
@@ -247,6 +245,8 @@ export default {
           }
           this.total = data.result.total;
           this.querystr = data.result.query;
+          if (this.querystr && !this.querystr.match(/^\(.*\)$/) && this.reqstr)
+            this.querystr = '(' + this.querystr + ')'
           e.callback({ result: data.result.results, offset: e.offset });
           history.pushState(
             "",
