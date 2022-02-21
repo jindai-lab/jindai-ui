@@ -29,7 +29,7 @@
 </template>
 
 <script>
-import api from "./gallery-api";
+import api from "../api"
 
 export default {
   name: "TaggingDialog",
@@ -68,13 +68,15 @@ export default {
     },
     search_tag(search) {
       if (this.loading) return
+      if (search.length == 0 || search == '*' || search == '@') return
       this.tag_choices = [...this.tag_new]
       this.loading = true;
       api
         .call(
-          "search_tags",
+          "paragraph/search_values",
           {
-            tag: search,
+            search,
+            field: 'keywords',
             match_initials: ((search.match(/^[@*]/)) ? true : false)
           },
           "post",

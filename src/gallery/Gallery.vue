@@ -3,7 +3,7 @@
     <link
       rel="stylesheet"
       type="text/css"
-      href="/api/gallery/plugins/style.css"
+      href="/api/gallery/styles.css"
     />
     <v-toolbar flat>
       <v-row>
@@ -357,7 +357,8 @@
 </template>
 
 <script>
-import api from "./gallery-api";
+import api from "../api"
+import galleryApi from "./gallery-api";
 import AlbumDescription from "./AlbumDescription.vue";
 import TaggingDialog from "./TaggingDialog.vue";
 import TaggingShortcutsDialog from "./TaggingShortcutsDialog.vue";
@@ -529,17 +530,17 @@ export default {
     },
   },
   mounted() {
-    this.config = api.load_config("gallery", this.config);
+    this.config = galleryApi.load_config("gallery", this.config);
     this.params.limit = this.config.limit;
     Object.assign(this.params, api.querystring_parse(location.search));
     this.post_option.post = this.params.post.split("/")[0];
     this.post_option.args = this.params.post.split("/").slice(1).join(" ");
     this.update();
-    api
-      .call("plugins/special_pages")
+    galleryApi
+      .call("plugin_pages")
       .then((data) => (this.pages = data.result));
 
-    api.call("shortcuts", {}, "get").then((data) => {
+    galleryApi.call("shortcuts", {}, "get").then((data) => {
       data = data.result;
       for (var k in data)
         this.tagging_shortcut_list.push({
@@ -558,7 +559,7 @@ export default {
     },
     _save_config() {
       this.config.limit = this.params.limit;
-      api.save_config("gallery", this.config);
+      galleryApi.save_config("gallery", this.config);
     },
     clear_selection() {
       this.groups.concat(this.albums).forEach((x) => (x.selected = false));
@@ -577,7 +578,7 @@ export default {
 
       this.fetch_sources.main.cancel();
       this.fetch_sources.main = api.cancel_source();
-      api.fetch(this.params, this.fetch_sources.main).then((data) => {
+      galleryApi.fetch(this.params, this.fetch_sources.main).then((data) => {
         if (!data) return;
         this.albums = data.results;
         if (!data.prev) this.page = 1;
@@ -790,9 +791,9 @@ export default {
       this.last_key = this.last_key === null ? "" : e.key;
     },
     get_item_image(item) {
-      return api.get_item_image(item, this.config);
+      return galleryApi.get_item_image(item, this.config);
     },
-    get_item_video: api.get_item_video,
+    get_item_video: galleryApi.get_item_video,
     select_album(album_id, event) {
       var id_start = album_id,
         id_end = this.last_id;
@@ -980,18 +981,22 @@ export default {
       var existing_tags = new Set(
         this.selected_albums().reduce((a, e) => a.concat(e.keywords), [])
       );
+      var push =  append ? e : e.filter((x) => !existing_tags.has(x)),
+      pull = append ? [] : Array.from(existing_tags).filter((x) => !e.includes(x));
+      var updates = {
+          ids: this._selected_album_ids(),
+          $push: {keywords: push},
+          $pull: {keywords: pull}
+        }
+      if (push.filter(x => x.startsWith('@'))) updates.author = push.filter(x => x.startsWith('@'))[0]
+      else if (pull.filter(x => x.startsWith('@'))) updates.author = ''
+
       api
-        .call("paragraph/tag", {
-          albums: this._selected_album_ids(),
-          append: append ? e : e.filter((x) => !existing_tags.has(x)),
-          delete: append
-            ? []
-            : Array.from(existing_tags).filter((x) => !e.includes(x)),
-        })
+        .call("edit/paragraph/batch", updates)
         .then((data) => {
           this._clear_selected(s);
           s.forEach((p) => {
-            data.result[p._id] && (p.keywords = data.result[p._id]);
+            data.result[p._id] && (p.keywords = data.result[p._id].keywords);
           });
         });
     },
@@ -1052,8 +1057,8 @@ export default {
     },
     group(del) {
       var s = this.selected_albums();
-      api
-        .call("paragraph/group", {
+      galleryApi
+        .call("paragraph/grouping", {
           albums: this._selected_album_ids(),
           delete: del,
         })

@@ -300,6 +300,12 @@ export default {
 
             return colls.sort(_comp)
         })
-    }
-
+    },
+    
+    quote(s) {
+        s = s || '';
+        if (s.match(/[`'"()\s.,+%:/]/)) return "`" + s.replace(/`/g, "\\`") + "`";
+        return s;
+    },
+    
 }

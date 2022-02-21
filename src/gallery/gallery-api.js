@@ -39,8 +39,6 @@ export default {
         })
     },
 
-    cancel_source: api.cancel_source,
-
     fetch(params, cancel) {
         return this.call('get', params, 'post', true, cancel).then(data => {
             if (!data) return;
@@ -87,13 +85,4 @@ export default {
         return item.source.url;
     },
 
-    quote(tag) {
-        tag = tag || '';
-        if (tag.match(/[`'"()\s.,+%:/]/)) return "`" + tag.replace(/`/g, "\\`") + "`";
-        return tag;
-    },
-
-    querystring_parse: api.querystring_parse,
-    
-    querystring_stringify: api.querystring_stringify,
 }
