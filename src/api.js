@@ -152,7 +152,7 @@ export default {
                 if (x.length > 0 && x.filter(y => y.length == 2).length == x.length)
                     return '([]' + _querify(x, indent + '  ') + '\n' + indent + ')'
                 return '([]' + (x.length > 0 ? ' => ' + x.map(_values).join(' => ') : '') + ')'
-            } else if (typeof (x) === 'object') {
+            } else if (typeof(x) === 'object') {
                 return '(' + _params(x, indent + '  ') + ')'
             } else
                 return JSON.stringify(x)
@@ -161,7 +161,7 @@ export default {
         function _params(c, indent) {
             var r = []
             for (var k in c) {
-                if (typeof (c[k]) === 'undefined') continue
+                if (typeof(c[k]) === 'undefined') continue
                 r.push(indent + k + '=' + _values(c[k], indent))
             }
             if (r.length > 1)
@@ -198,7 +198,7 @@ export default {
     call(name, params, cancel = null) {
         _stack.push(name)
         this.bus.$emit('loading', _stack.length)
-        if (typeof (params) !== 'undefined')
+        if (typeof(params) !== 'undefined')
             return this._catch_and_then(axios.post(apiBase + name, params, this._config(cancel ? { cancelToken: cancel.token } : {})))
         else
             return this._catch_and_then(axios.get(apiBase + name, this._config(cancel ? { cancelToken: cancel.token } : {})))
@@ -208,7 +208,7 @@ export default {
         var last_response_len = false
         const that = this
         axios.get(`${apiBase}queue/logs/${key}`, {
-            onDownloadProgress: function (e) {
+            onDownloadProgress: function(e) {
                 var this_response, response = e.currentTarget.response;
                 if (last_response_len === false) {
                     this_response = response;
@@ -228,7 +228,7 @@ export default {
     delete(name, params) {
         _stack.push(name)
         this.bus.$emit('loading', _stack.length)
-        if (typeof (params) !== 'undefined')
+        if (typeof(params) !== 'undefined')
             return this._catch_and_then(axios.delete(apiBase + name, params, this._config()))
         else
             return this._catch_and_then(axios.delete(apiBase + name, this._config()))
@@ -248,7 +248,7 @@ export default {
         this._queue_cancel = this.cancel_source()
         return axios.get(apiBase + 'queue/', this._config({
             cancelToken: this._queue_cancel.token
-        })).then(resp => resp.data.result).catch(() => { })
+        })).then(resp => resp.data.result).catch(() => {})
     },
 
     fav(r) {
@@ -271,7 +271,8 @@ export default {
     get_datasets() {
 
         function _segs(x) {
-            var r = [], s = ''
+            var r = [],
+                s = ''
             for (var seg of x.name.split('--')) {
                 s += seg
                 r.push(s)
@@ -281,7 +282,8 @@ export default {
         }
 
         return this.call("datasets").then((data) => {
-            var weights = {}, colls = data.result.sort(x => x.order_weight);
+            var weights = {},
+                colls = data.result.sort(x => x.order_weight);
             for (var c of colls) {
                 for (var s of _segs(c))
                     if (!weights[s])
@@ -289,9 +291,11 @@ export default {
             }
 
             function _comp(x, y) {
-                var s1 = _segs(x), s2 = _segs(y)
+                var s1 = _segs(x),
+                    s2 = _segs(y)
                 for (var si = 0; si < s1.length && si < s2.length; ++si) {
-                    let xx = s1[si], yy = s2[si]
+                    let xx = s1[si],
+                        yy = s2[si]
                     if (weights[xx] !== weights[yy])
                         return weights[xx] - weights[yy]
                 }
@@ -301,11 +305,67 @@ export default {
             return colls.sort(_comp)
         })
     },
-    
+
+    get_datasets_hierarchy() {
+        var bundles = {}
+        return this.get_datasets().then(data => {
+            var hierarchy = {
+                id: "ROOT",
+                name: "",
+                children: [],
+            };
+
+            data = data
+                .map((x) => {
+                    x.segments = x.name.split("--");
+                    x.level = x.segments.length;
+                    return x;
+                })
+
+            for (var x of data) {
+                var parent_obj = hierarchy;
+                for (
+                    var i = 0, segs = x.segments[0]; i < x.level; i++, segs += "--" + x.segments[i]
+                ) {
+                    var cand = parent_obj.children.filter((child) => child.id == segs)[0];
+                    if (typeof cand === "undefined") {
+                        cand = {
+                            id: segs,
+                            label: x.segments[i],
+                            children: [],
+                        };
+                        bundles[cand.id] = {
+                            name: segs,
+                            mongocollection: x.mongocollection,
+                        };
+                        parent_obj.children.push(cand);
+                    }
+                    parent_obj = cand;
+                }
+
+                parent_obj.children = parent_obj.children.concat(
+                    x.sources.filter(y => y).sort().filter(y => !y.match(/[^/]\d+\.pdf$/)).map((y) => {
+                        bundles[x.name + '//' + y] = {
+                            name: x.name,
+                            mongocollection: x.mongocollection,
+                            source: y,
+                        };
+                        return {
+                            id: x.name + '//' + y,
+                            label: y.match(/(.*\/)?(.*)/)[2],
+                        };
+                    })
+                );
+            }
+
+            return { hierarchy: hierarchy.children, bundles: bundles };
+        })
+    },
+
     quote(s) {
         s = s || '';
-        if (s.match(/[`'"()\s.,+%:/]/)) return "`" + s.replace(/`/g, "\\`") + "`";
+        if (s.match(/[`'"()\s.,+%:/]|(^\d+(\.\d+)?$)/)) return "`" + s.replace(/`/g, "\\`") + "`";
         return s;
     },
-    
+
 }

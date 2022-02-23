@@ -66,12 +66,10 @@
 <script>
 import api from "../api";
 import ResultsView from "./ResultsView";
-import Treeselect from "@riophae/vue-treeselect";
-import "@riophae/vue-treeselect/dist/vue-treeselect.css";
 
 export default {
   name: "SearchForm",
-  components: { ResultsView, Treeselect },
+  components: { ResultsView },
   data() {
     return {
       datasets: [],
@@ -94,59 +92,9 @@ export default {
       const search_params = api.querystring_parse(location.search);
       Object.assign(this, search_params);
     }
-    api.get_datasets().then((data) => {
-      var hierarchy = {
-        id: "ROOT",
-        name: "",
-        children: [],
-      };
-      
-      data = data
-        .map((x) => {
-          x.segments = x.name.split("--");
-          x.level = x.segments.length;
-          return x;
-        })
-      
-      for (var x of data) {
-        var parent_obj = hierarchy;
-        for (
-          var i = 0, segs = x.segments[0];
-          i < x.level;
-          i++, segs += "--" + x.segments[i]
-        ) {
-          var cand = parent_obj.children.filter((child) => child.id == segs)[0];
-          if (typeof cand === "undefined") {
-            cand = {
-              id: segs,
-              label: x.segments[i],
-              children: [],
-            };
-            this.selection_bundles[cand.id] = {
-              name: segs,
-              mongocollection: x.mongocollection,
-            };
-            parent_obj.children.push(cand);
-          }
-          parent_obj = cand;
-        }
-
-        parent_obj.children = parent_obj.children.concat(
-          x.sources.filter(y => y).sort().filter(y => !y.match(/[^/]\d+\.pdf$/)).map((y) => {
-            this.selection_bundles[x.name + '//' + y] = {
-              name: x.name,
-              mongocollection: x.mongocollection,
-              source: y,
-            };
-            return {
-              id: x.name + '//' + y,
-              label: y.match(/(.*\/)?(.*)/)[2],
-            };
-          })
-        );
-      }
-      
-      this.datasets = hierarchy.children;
+    api.get_datasets_hierarchy().then((data) => {
+      this.datasets = data.hierarchy;
+      this.selection_bundles = data.bundles;
     });
     
     if (this.q) this.search();
@@ -157,6 +105,8 @@ export default {
       function escapeRegExp(string) {
         return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
       }
+      if (this.selected_datasets.length == 0)
+        this.selected_datasets = this.datasets.map(s => s.id)
       var req = {},
         selected = this.selected_datasets.map(
           (sid) => this.selection_bundles[sid]

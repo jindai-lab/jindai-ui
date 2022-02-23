@@ -49,16 +49,16 @@
         <v-card-text v-else>没有已完成的任务。</v-card-text>
         <v-card-title>正在运行的任务</v-card-title>
         <v-card-text>
-          <div v-for="task in data.running" :key="task">
+          <div v-for="task in data.running" :key="task" class="mb-5">
             {{ task }}
             <v-btn @click="delete_result({id: task})"><v-icon>mdi-stop</v-icon> 终止</v-btn>
           </div>
         </v-card-text>
         <v-card-title>正在等待的任务</v-card-title>
         <v-card-text>
-          <div v-for="task in data.waiting" :key="task">
+          <div v-for="task in data.waiting" :key="task" class="mb-5">
             {{ task }}
-            <v-btn @click="delete_result({id: task})"><v-icon>mdi-trash</v-icon> 取消</v-btn>
+            <v-btn @click="delete_result({id: task})"><v-icon>mdi-delete</v-icon> 取消</v-btn>
           </div>
         </v-card-text>
       </v-card>
@@ -67,12 +67,13 @@
 </template>
 
 <script>
-import api from "../api";
+
+import api from '../api'
 
 export default {
   data() {
     return {
-      show_finished: false
+      show_finished: false,
     };
   },
   props: ["data"],
@@ -91,7 +92,7 @@ export default {
       var id = encodeURIComponent(task.id)
       this.$router.push("/results/" + id).catch(()=>{});
       this.show_finished = false;
-    }
+    },
   },
 };
 </script>

@@ -56,16 +56,19 @@
           <template v-slot:activator>
             <v-list-item-title>管理</v-list-item-title>
           </template>
+          <v-list-item link @click="$router.push('/scheduler')" v-if="admin">
+            <v-list-item-title>计划</v-list-item-title>
+          </v-list-item>
           <v-list-item link @click="$router.push('/storage')">
             <v-list-item-title>文件</v-list-item-title>
           </v-list-item>
-          <v-list-item link @click="$router.push('/datasets')">
+          <v-list-item link @click="$router.push('/datasets')" v-if="admin">
             <v-list-item-title>数据集</v-list-item-title>
           </v-list-item>
-          <v-list-item link @click="$router.push('/dbconsole')">
+          <v-list-item link @click="$router.push('/dbconsole')" v-if="admin">
             <v-list-item-title>控制台</v-list-item-title>
           </v-list-item>
-          <v-list-item link @click="$router.push('/users')">
+          <v-list-item link @click="$router.push('/users')" v-if="admin">
             <v-list-item-title>权限</v-list-item-title>
           </v-list-item>
         </v-list-group>

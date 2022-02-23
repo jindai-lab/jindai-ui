@@ -1,10 +1,5 @@
 <template>
   <div>
-    <link
-      rel="stylesheet"
-      type="text/css"
-      href="/api/gallery/styles.css"
-    />
     <v-toolbar flat>
       <v-row>
         <v-col>
@@ -186,7 +181,7 @@
       </v-card>
     </v-container>
 
-    <v-dialog v-model="dialogs.auto_tagging" fullscreen persistent>
+    <v-dialog v-model="dialogs.auto_tagging" fullscreen>
       <auto-tags @close="dialogs.auto_tagging = false"></auto-tags>
     </v-dialog>
 
@@ -536,11 +531,11 @@ export default {
     this.post_option.post = this.params.post.split("/")[0];
     this.post_option.args = this.params.post.split("/").slice(1).join(" ");
     this.update();
-    galleryApi
-      .call("plugin_pages")
+    api
+      .call("plugins/pages")
       .then((data) => (this.pages = data.result));
 
-    galleryApi.call("shortcuts", {}, "get").then((data) => {
+    api.call("plugins/shortcuts", {}, "get").then((data) => {
       data = data.result;
       for (var k in data)
         this.tagging_shortcut_list.push({
@@ -607,13 +602,13 @@ export default {
       if (state != this.params_state) {
         this.fetch_sources.groups.cancel();
         this.fetch_sources.groups = api.cancel_source();
-        api
+        galleryApi
           .fetch(
             Object.assign({}, this.params, { groups: true, archive: false }),
             this.fetch_sources.groups
           )
           .then((data) => data && (this.groups = data.results));
-        api
+        galleryApi
           .call(
             "get",
             Object.assign({}, this.params, { count: true }),
@@ -1038,7 +1033,7 @@ export default {
       var s = this.selected_albums();
       api
         .call("imageitem/rating", {
-          items: this.browsing
+          ids: this.browsing
             ? [this.browsing_item._id]
             : this.selected_items().map((x) => x._id),
           inc: inc.val ? 0 : inc,
@@ -1058,8 +1053,8 @@ export default {
     group(del) {
       var s = this.selected_albums();
       galleryApi
-        .call("paragraph/grouping", {
-          albums: this._selected_album_ids(),
+        .call("grouping", {
+          ids: this._selected_album_ids(),
           delete: del,
         })
         .then((data) => {
@@ -1076,7 +1071,7 @@ export default {
       var s = this.selected_albums();
       api
         .call("paragraph/merge", {
-          albums: this._selected_album_ids(),
+          ids: this._selected_album_ids(),
         })
         .then(() => this._clear_selected(s));
     },
@@ -1084,7 +1079,7 @@ export default {
       var s = this.selected_albums();
       api
         .call("paragraph/split", {
-          albums: this._selected_album_ids(),
+          ids: this._selected_album_ids(),
         })
         .then(() => this._clear_selected(s));
     },
@@ -1092,7 +1087,7 @@ export default {
       var s = this.selected_albums();
       api
         .call("imageitem/reset_storage", {
-          items: this.browsing
+          ids: this.browsing
             ? [this.browsing_item._id]
             : this.selected_items().map((x) => x._id),
         })

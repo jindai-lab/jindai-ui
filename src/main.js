@@ -4,7 +4,7 @@ import App from './App'
 // use vue-router
 import VueRouter from 'vue-router'
 Vue.use(VueRouter)
-Vue.filter('dateSafe', function (value) {
+Vue.filter('dateSafe', function(value) {
     if (!value) return ''
     if ((typeof value === 'number' && value < 10000) || ('' + value).match(/^\d{4}(-\d{1,2})?$/)) return value;
     var ds = new Date(value).toLocaleString()
@@ -12,11 +12,17 @@ Vue.filter('dateSafe', function (value) {
     return ds;
 })
 
+// use vue-treeselect
+import Treeselect from "@riophae/vue-treeselect";
+Vue.component('treeselect', Treeselect)
+import "@riophae/vue-treeselect/dist/vue-treeselect.css";
+
 // load components
 import SearchForm from './components/SearchForm.vue'
 import TaskDetail from './components/TaskDetail.vue'
 import TaskShortcut from './components/TaskShortcut.vue'
 import TaskList from './components/TaskList.vue'
+import TaskScheduler from './components/TaskScheduler.vue'
 import PageView from './components/PageView.vue'
 import DatasetList from './components/DatasetList.vue'
 import History from './components/History.vue'
@@ -46,6 +52,7 @@ const routes = [
     { path: '/security', component: AccountSecurity },
     { path: '/articlecompletion', component: ArticleCompletion },
     { path: '/dbconsole', component: DbConsole },
+    { path: '/scheduler', component: TaskScheduler },
     { path: '/gallery', component: Gallery },
 ]
 

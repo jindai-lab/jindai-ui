@@ -105,7 +105,7 @@
 </template>
 
 <script>
-import api from "./gallery-api";
+import api from "../api";
 
 export default {
   name: "AutoTags",
@@ -129,7 +129,7 @@ export default {
   },
   methods: {
     auto_tags_create() {
-      api.call("auto_tags", this.new_tag, "put").then((data) => {
+      api.put("plugins/autotags", this.new_tag).then((data) => {
         if (data.result) {
           this.new_tag = {
             tag: "",
@@ -142,7 +142,7 @@ export default {
     },
     auto_tags_delete(ids) {
       api
-        .call("auto_tags", { ids, delete: true }, "post")
+        .call("plugins/autotags", { ids, delete: true })
         .then(
           () =>
             (this.auto_tags = this.auto_tags.filter(
@@ -151,7 +151,7 @@ export default {
         );
     },
     reload() {
-      api.call("auto_tags").then((data) => (this.auto_tags = data.result));
+      api.call("plugins/autotags").then((data) => (this.auto_tags = data.result));
     },
     nextPage() {
       if (this.page + 1 <= this.numberOfPages) this.page += 1;

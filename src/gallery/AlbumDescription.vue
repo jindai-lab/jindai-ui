@@ -45,7 +45,7 @@
 </template>
 
 <script>
-import api from "./gallery-api"
+import api from "../api"
 export default {
   name: "AlbumDescription",
   props: ["album"],
