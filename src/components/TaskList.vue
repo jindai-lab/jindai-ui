@@ -1,6 +1,6 @@
 <template>
   <v-card flat>
-    <v-card-title>工作流
+    <v-card-title>任务
       <v-spacer></v-spacer>
       <v-btn color="primary" @click="create_task()">
         <v-icon>mdi-plus</v-icon> 新建
@@ -43,7 +43,7 @@ export default {
   methods: {
     create_task() {
       api
-        .put("tasks/", { name: "新建工作流 " + new Date() })
+        .put("tasks/", { name: "新建任务 " + new Date() })
         .then((data) => this.$router.push("/tasks/" + data.result));
     },
     duplicate_task(task) {

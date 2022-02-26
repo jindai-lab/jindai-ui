@@ -13,8 +13,18 @@
               { text: '从旧到新', value: 'pdate' },
               { text: '从新到旧', value: '-pdate' },
               { text: '出处', value: 'source' },
+              { text: '随机图集', value: 'random' },
             ]"
           ></v-select>
+        </v-col>
+        <v-col cols="3">
+          <v-text-field
+            hint="每页数量"
+            v-model="page_size"
+            type="number"
+            dense
+            >40</v-text-field
+          >
         </v-col>
         <v-spacer></v-spacer>
       </v-row>
@@ -37,28 +47,44 @@
           />
         </v-col>
       </v-row>
-      <v-row class="ml-1 mb-3">
+      <v-row class="ml-0 mb-3">
         <v-btn @click="search" color="primary">查询</v-btn>
       </v-row>
       <v-spacer></v-spacer>
-      <v-sheet v-show="total">
-        共找到 {{ total }} 个结果。
+      <v-sheet class="tools">
         <v-btn @click="export_query">
           <v-icon>mdi-clipboard-outline</v-icon> 导出为任务
         </v-btn>
         <v-btn @click="export_xlsx">
           <v-icon>mdi-download</v-icon> 直接导出 Excel
         </v-btn>
-        <v-switch v-model="toolbar" class="d-inline-block" flat label="显示工具"></v-switch>
+        <v-btn-toggle
+          v-model="view_mode"
+          mandatory
+          class="view-mode-toggler"
+          dense
+        >
+          <v-btn value="list">
+            <v-icon>mdi-view-list</v-icon>
+          </v-btn>
+          <v-btn value="page">
+            <v-icon>mdi-text-long</v-icon>
+          </v-btn>
+          <v-btn value="gallery">
+            <v-icon>mdi-view-module</v-icon>
+          </v-btn>
+        </v-btn-toggle>
       </v-sheet>
-      <v-divider class="mt-5 mb-5"></v-divider>
-      <ResultsView
-        :class="toolbar ? '' : 'hide-toolbar'"
-        :page_size="50"
-        :total="total"
-        @load="load_search"
-        ref="results"
-      />
+      <div class="mt-5">
+        <ResultsView
+          v-if="view_mode != 'gallery'"
+          :class="view_mode == 'list' ? '' : 'hide-toolbar'"
+          :page_size="page_size"
+          @load="load_search"
+            ref="results"
+        />
+        <Gallery v-else :q="q" :req="req" :sort="sort" :page_size="page_size" ref="gallery" />
+      </div>
     </v-card-text>
   </v-card>
 </template>
@@ -66,10 +92,11 @@
 <script>
 import api from "../api";
 import ResultsView from "./ResultsView";
+import Gallery from "../gallery/Gallery";
 
 export default {
   name: "SearchForm",
-  components: { ResultsView },
+  components: { ResultsView, Gallery },
   data() {
     return {
       datasets: [],
@@ -77,14 +104,13 @@ export default {
       open_datasets: [],
       selected_mongocollections: [],
       q: "",
-      req: {},
       sort: "",
       querystr: "",
-      reqstr: "",
-      total: 0,
+      req: "",
       selection_bundles: {},
       external_json: null,
-      toolbar: true,
+      view_mode: 'list',
+      page_size: 50,
     };
   },
   mounted() {
@@ -92,28 +118,36 @@ export default {
       const search_params = api.querystring_parse(location.search);
       Object.assign(this, search_params);
     }
+
+    let config = api.load_config("main")
+    if (config.view_mode) this.view_mode = config.view_mode
+    if (config.page_size) this.page_size = +config.page_size
+
     api.get_datasets_hierarchy().then((data) => {
       this.datasets = data.hierarchy;
       this.selection_bundles = data.bundles;
+      if (config.selected_datasets) this.selected_datasets = config.selected_datasets
+      if (this.q) this.search();
     });
-    
-    if (this.q) this.search();
   },
   methods: {
     search() {
+
+      api.save_config("main", { page_size: this.page_size, view_mode: this.view_mode, selected_datasets: this.selected_datasets })
+
       this.external_json = null
       function escapeRegExp(string) {
         return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
       }
       if (this.selected_datasets.length == 0)
         this.selected_datasets = this.datasets.map(s => s.id)
-      var req = {},
-        selected = this.selected_datasets.map(
+
+      var selected = this.selected_datasets.map(
           (sid) => this.selection_bundles[sid]
         );
-      this.reqstr = "";
+
+      this.req = "";
       if (selected.length > 0) {
-        req = { $or: [] };
         var datasets = selected
             .filter((x) => !x.source)
             .map((x) => escapeRegExp(x.name)),
@@ -123,56 +157,43 @@ export default {
               file: x.source.split(":", 2).pop(),
               dataset: x.name,
             })),
-          reqstr_datasets = "",
-          reqstr_sourcefiles = "";
+          req_datasets = "",
+          req_sourcefiles = "";
         this.selected_mongocollections = Array.from(new Set(selected.map((x) => x.mongocollection)));
         
         if (datasets.length > 0) {
-          req.$or.push({
-            dataset: {
-              $regex: "^" + datasets.join("|^"),
-            },
-          });
-          reqstr_datasets = "dataset%`^" + datasets.join("|^") + "`";
+          req_datasets = "dataset%`^" + datasets.join("|^") + "`";
         }
         if (sourcefiles.length > 0) {
-          req.$or.push(
-            ...sourcefiles.map((sf) => ({
-              dataset: sf.dataset,
-              "source.file": sf.file,
-            }))
-          );
-          reqstr_sourcefiles = sourcefiles
+          req_sourcefiles = sourcefiles
             .map(
               (sf) => `(dataset='${sf.dataset}',source.file='${sf.file}')`
             )
             .join("|");
         }
-        if (req.$or.length == 1) {
-          req = req.$or[0];
-        }
-        this.reqstr =
+        this.req =
           "(" +
-          [reqstr_datasets, reqstr_sourcefiles]
+          [req_datasets, req_sourcefiles]
             .filter((x) => x.length > 0)
             .join("|") +
           ")";
       }
-      this.req = req;
-      this.$refs.results.start();
+      if (this.view_mode != 'gallery')
+        this.$refs.results.start();
+      else
+        this.$refs.gallery.start();
     },
     load_search(e) {
       if (this.external_json) {
-        this.total = this.external_json.result.total
-        e.callback({ result: this.external_json.result.results.slice(e.offset, e.offset + e.limit), offset: e.offset });
+        e.callback({ result: this.external_json.result.results.slice(e.offset, e.offset + e.limit), offset: e.offset, total: this.external_json.result.total });
         return
       }
       if (!this.q && !this.req) return;
       api
         .call("search", {
           q: this.q,
-          sort: this.sort,
           req: this.req,
+          sort: this.sort,
           mongocollections: this.selected_mongocollections,
           offset: e.offset,
           limit: e.limit,
@@ -193,16 +214,16 @@ export default {
               return x;
             });
           }
-          this.total = data.result.total;
           this.querystr = data.result.query;
-          if (this.querystr && !this.querystr.match(/^\(.*\)$/) && this.reqstr)
+          if (this.querystr && !this.querystr.match(/^\(.*\)$/) && this.req)
             this.querystr = '(' + this.querystr + ')'
-          e.callback({ result: data.result.results, offset: e.offset });
+          e.callback({ result: data.result.results, offset: e.offset, total: data.result.total });
           history.pushState(
             "",
             "",
             api.querystring_stringify({
-              q: [this.querystr, this.reqstr].filter((x) => x !== "").join(","),
+              q: this.q,
+              req: this.req,
               sort: this.sort,
               selected_mongocollections: this.selected_mongocollections,
             })
@@ -216,7 +237,7 @@ export default {
       api
         .put("tasks/", {
           datasource_config: {
-            query: "?" + this.querystr + this.reqstr,
+            query: "?" + this.querystr + this.req,
             mongocollections: this.selected_mongocollections,
           },
           name: "搜索 " + this.querystr,
@@ -257,8 +278,12 @@ export default {
   clear: both;
 }
 
-.v-btn {
+.v-sheet>.v-btn {
   margin-right: 12px;
+}
+
+.view-mode-toggler {
+  vertical-align: middle;
 }
 </style>
 
@@ -269,9 +294,6 @@ export default {
 .theme--dark .vue-treeselect {
   color: rgba(0, 0, 0, 0.7) !important;
 }
-</style>
-
-<style>
 .hide-toolbar div:not(.paragraph)>p, .hide-toolbar hr, .hide-toolbar .v-btn {
   display: none;
 }

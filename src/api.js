@@ -52,6 +52,16 @@ export default {
         return '?' + str.substring(1)
     },
 
+    load_config(name, defaults = {}) {
+        var s = localStorage[name]
+        if (s) Object.assign(defaults, JSON.parse(s))
+        return defaults
+    },
+
+    save_config(name, config) {
+        localStorage[name] = JSON.stringify(config);
+    },
+
     blob_download(blob, filename) {
         var url = URL.createObjectURL(blob);
 

@@ -1,10 +1,12 @@
 <template>
   <v-sheet v-if="total > 0" ref="results">
+    <div class="count">共找到 {{ total }} 个结果。</div>
+    <v-divider class="mt-5 mb-5"></v-divider>
     <div v-if="columns.includes('content')">
       <div v-for="(r, index) in visible_data" :key="index">
         <p class="meta">
-          数据集: <a :href="`/?q=dataset=\`${r.dataset}\``" target="_blank">{{ r.dataset }}</a> 大纲: {{ r.outline }} 来源:
-          <a :href="`/?q=dataset=\`${r.dataset}\`,source.file=\`${r.source.file}\``" target="_blank">{{ r.source.file }}</a> <a :href="r.source.url" target="_blank">{{ r.source.url }}</a> 页码: {{ r.pagenum }} 日期: {{ r.pdate | dateSafe }}
+          数据集: <a :href="`/?q=dataset=${stringify(r.dataset)}`" target="_blank">{{ r.dataset }}</a> 大纲: {{ r.outline }} 来源:
+          <a :href="`/?q=dataset=${stringify(r.dataset)},source.file=${stringify(r.source.file)}`" target="_blank">{{ r.source.file }}</a> <a :href="r.source.url" target="_blank">{{ r.source.url }}</a> 页码: {{ r.pagenum }} 日期: {{ r.pdate | dateSafe }}
         </p>
         <v-divider></v-divider>
         <ContentView :paragraph="r" :item_width="200" :item_height="200" :first_item_only="false" />
@@ -181,7 +183,6 @@ export default {
   name: "ResultsView",
   props: {
     load: {},
-    total: { default: 0 },
     page_size: { default: 20 },
   },
   components: {
@@ -191,6 +192,7 @@ export default {
   },
   data() {
     return {
+      total: 0,
       page: 1,
       value: [],
       show_meta: {},
@@ -297,6 +299,7 @@ export default {
           callback: (data) => {
             this.page_range = [data.offset, data.offset + data.result.length];
             this.value = data.result;
+            this.total = data.total
             if (typeof cb !== "undefined") cb();
           },
         });
@@ -339,6 +342,7 @@ export default {
     },
     fav(r) { api.fav(r); },
     favored(r) { return api.favored(r) },
+    stringify(x) { return encodeURIComponent(api.quote(x)) }
   },
 };
 </script>
@@ -358,7 +362,9 @@ export default {
   right: 20px;
 }
 .meta a {
-  color: #333;
   text-decoration: none;
+}
+.count {
+  margin-bottom: 5px;
 }
 </style>

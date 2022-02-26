@@ -59,6 +59,7 @@ export default {
         }
         this.update_scheduler()
       })
+      this.show_creation = false;
     },
     delete_schedule(key) {
       api.delete("scheduler/" + key).then(() => {

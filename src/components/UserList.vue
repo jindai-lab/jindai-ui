@@ -58,7 +58,7 @@
           <v-checkbox label="查询" disabled :input-value="true"></v-checkbox>
           <v-checkbox label="任务" disabled :input-value="true"></v-checkbox>
           <!-- <v-checkbox label="文件" disabled :input-value="true"></v-checkbox> -->
-          <v-checkbox label="数据集" disabled :input-value="true"></v-checkbox>
+          <!-- <v-checkbox label="数据集" disabled :input-value="true"></v-checkbox> -->
           <v-checkbox
             label="用户及其他管理"
             value="admin"

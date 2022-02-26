@@ -2,21 +2,13 @@
   <v-app>
     <v-navigation-drawer v-model="drawer" app v-if="!viewer">
       <v-list nav>
-        <v-list-group :value="true">
-          <template v-slot:activator>
-            <v-list-item-title>文献</v-list-item-title>
-          </template>
-          <v-list-item link @click="$router.push('/')">
-            <v-list-item-title>搜索</v-list-item-title>
-          </v-list-item>
-          <v-list-item link @click="$router.push('/gallery')">
-            <v-list-item-title>图集</v-list-item-title>
-          </v-list-item>
-        </v-list-group>
+        <v-list-item link @click="$router.push('/')">
+          <v-list-item-title>查询</v-list-item-title>
+        </v-list-item>
 
         <v-list-group v-show="shortcuts.length > 0">
           <template v-slot:activator>
-            <v-list-item-title>工作流</v-list-item-title>
+            <v-list-item-title>任务</v-list-item-title>
           </template>
           <v-list-item link @click="$router.push('/tasks')">
             <v-list-item-title>全部</v-list-item-title>

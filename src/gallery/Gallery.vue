@@ -2,96 +2,23 @@
   <div>
     <v-toolbar flat>
       <v-row>
-        <v-col>
-          <v-checkbox
-            v-model="config.contain"
-            label="全图显示"
-            @change="_save_config"
-          ></v-checkbox>
-        </v-col>
-        <v-col>
-          <v-checkbox
-            v-model="config.force_thumbnail"
-            label="缩略图"
-            @change="_save_config"
-          ></v-checkbox> </v-col
-        ><v-col>
-          <v-checkbox
-            v-model="config.enhance"
-            label="增强图像"
-            @change="_save_config"
-          ></v-checkbox>
-        </v-col>
-        <v-col>
-          <v-btn text @click="_show_dialog('auto_tagging')">自动标签</v-btn>
-        </v-col>
-        <v-col>
-          <v-autocomplete
-            :items="pages"
-            clearable
-            v-model="post_option.post"
-            @keyup.enter="call_tool"
-            auto-select-first
-          ></v-autocomplete>
-        </v-col>
-        <v-col>
-          <v-text-field
-            clearable
-            @keyup.enter="call_tool"
-            v-model="post_option.args"
-          ></v-text-field>
-        </v-col>
-        <v-col>
-          <v-btn @click="call_tool">跳转</v-btn>
-        </v-col>
-      </v-row>
-    </v-toolbar>
-
-    <v-toolbar flat>
-      <v-row>
-        <v-col cols="4">
-          <v-text-field
-            @keyup.enter="
-              params_state = '';
-              update({ ...sorting, direction: 'next' });
-            "
-            dense
-            hint="查询条件"
-            v-model="params.query"
-          ></v-text-field>
-        </v-col>
-        <v-col cols="2" lg="1">
-          <v-text-field
-            hint="每页数量"
-            v-model="params.limit"
-            type="number"
-            dense
-            @change="_save_config"
-            >40</v-text-field
-          >
-        </v-col>
-        <v-col cols="2" lg="1">
-          <v-select
-            v-model="sorting"
-            hint="排序"
-            :items="sorts"
-            single-line
-            dense
-          ></v-select>
-        </v-col>
-        <v-col cols="2" lg="1">
-          <v-checkbox v-model="params.archive" label="归档" dense></v-checkbox>
-        </v-col>
-        <v-col cols="2" lg="1">
-          <v-btn
-            @click="
-              params_state = '';
-              update({ ...sorting, direction: 'next' });
-            "
-          >
-            刷新
-          </v-btn>
-        </v-col>
+        <v-checkbox v-model="params.archive" label="归档"></v-checkbox>
+        <v-checkbox
+          v-model="config.contain"
+          label="全图显示"
+          @change="_save_config"
+        ></v-checkbox>
+        <v-checkbox
+          v-model="config.force_thumbnail"
+          label="缩略图"
+          @change="_save_config"
+        ></v-checkbox>
+        <v-checkbox
+          v-model="config.enhance"
+          label="增强图像"
+          @change="_save_config"
+        ></v-checkbox>
+        <v-btn text @click="_show_dialog('auto_tagging')">自动标签</v-btn>
       </v-row>
     </v-toolbar>
     <tagging-dialog
@@ -126,7 +53,7 @@
               g.selected = !g.selected;
               selected_albums_count = selected_albums().length;
             "
-            @dblclick="_open_window(`?query=${g.group_id}`)"
+            @dblclick="_open_window(`?q=${g.group_id}`)"
             :class="g.selected ? 'selected' : ''"
             style="overflow: hidden"
           >
@@ -163,7 +90,7 @@
               height="250"
               :src="get_item_image(album.images[0])"
             ></v-img>
-            <v-card-text>
+            <v-card-text class="card-description">
               <album-description :album="album"></album-description>
             </v-card-text>
           </v-card>
@@ -199,18 +126,18 @@
           <v-icon>mdi-close</v-icon>
         </v-btn>
         <v-card v-if="browsing && browsing_index >= 0">
-          <video-player 
+          <video-player
             :src="get_item_video(browsing_item)"
             :options="{
               muted: false,
               autoplay: true,
               style: {
                 width: '100%',
-                height: '100vh'
-              }
+                height: '100vh',
+              },
             }"
-            class="video-player" 
-            ref="videoPlayer" 
+            class="video-player"
+            ref="videoPlayer"
             v-if="browsing_video"
           />
           <div
@@ -252,7 +179,6 @@
                       v-model="browsing_item.rating"
                       background-color="white"
                       color="yellow accent-4"
-                      dense
                       half-increments
                       hover
                       size="18"
@@ -266,7 +192,7 @@
                     <v-btn
                       icon
                       dense
-                      :href="`?post=face/${browsing_item._id}&query=${quote(
+                      :href="`?view_mode=gallery&post=face/${browsing_item._id}&q=${quote(
                         browsing_album.author
                       )}&archive=true`"
                       class="t_func facedet"
@@ -278,7 +204,7 @@
                     <v-btn
                       icon
                       dense
-                      :href="`?post=sim/${browsing_item._id}&query=${quote(
+                      :href="`?view_mode=gallery&post=sim/${browsing_item._id}&q=${quote(
                         browsing_album.author
                       )}&archive=true`"
                       class="t_func sim"
@@ -352,7 +278,7 @@
 </template>
 
 <script>
-import api from "../api"
+import api from "../api";
 import galleryApi from "./gallery-api";
 import AlbumDescription from "./AlbumDescription.vue";
 import TaggingDialog from "./TaggingDialog.vue";
@@ -367,7 +293,7 @@ export default {
     AlbumDescription,
     TaggingDialog,
     TaggingShortcutsDialog,
-    VideoPlayer
+    VideoPlayer,
   },
   data: () => ({
     bus: api.bus,
@@ -396,7 +322,8 @@ export default {
     prev: {},
     next: {},
     params: {
-      query: "",
+      view_mode: "gallery",
+      q: "",
       post: "",
       order: {
         keys: ["-_id"],
@@ -407,39 +334,6 @@ export default {
     page: 1,
     length: 999,
     count: 0,
-    sorts: [
-      { text: "默认", value: "" },
-      {
-        text: "导入日期",
-        value: { order: { keys: ["-_id"] } },
-      },
-      {
-        text: "创建日期",
-        value: { order: { keys: ["-pdate"] } },
-      },
-      {
-        text: "随机",
-        value: { order: { keys: ["random"] } },
-      },
-      {
-        text: "分组",
-        value: { order: { keys: ["group_id"], group_id: "" } },
-      },
-      {
-        text: "相册来源",
-        value: { order: { keys: ["source"], group_id: "" } },
-      },
-      {
-        text: "图像网址",
-        value: {
-          order: { keys: ["images.source.url"], "images.source.url": "" },
-        },
-      },
-      {
-        text: "评价",
-        value: { order: { keys: ["-images.rating"], "images.rating": 10 } },
-      },
-    ],
     config: {
       fit: "both",
       contain: false,
@@ -447,8 +341,6 @@ export default {
       force_thumbnail: false,
       limit: 50,
     },
-    sorting: "",
-    post_option: { post: "", args: "" },
     pages: [],
     fab: false,
     params_state: "",
@@ -461,6 +353,7 @@ export default {
     fetch_sources: {
       groups: api.cancel_source(),
       main: api.cancel_source(),
+      counter: api.cancel_source(),
     },
   }),
   beforeDestroy() {
@@ -525,17 +418,15 @@ export default {
     },
   },
   mounted() {
-    this.config = galleryApi.load_config("gallery", this.config);
+    this.config = api.load_config("gallery", this.config);
     this.params.limit = this.config.limit;
-    Object.assign(this.params, api.querystring_parse(location.search));
-    this.post_option.post = this.params.post.split("/")[0];
-    this.post_option.args = this.params.post.split("/").slice(1).join(" ");
-    this.update();
-    api
-      .call("plugins/pages")
-      .then((data) => (this.pages = data.result));
-
-    api.call("plugins/shortcuts", {}, "get").then((data) => {
+    var ps = api.querystring_parse(location.search);
+    if (ps.view_mode === 'gallery') {
+      Object.assign(this.params, ps);
+      this.start()
+    }
+    api.call("plugins/pages").then((data) => (this.pages = data.result));
+    api.call("plugins/shortcuts").then((data) => {
       data = data.result;
       for (var k in data)
         this.tagging_shortcut_list.push({
@@ -543,6 +434,15 @@ export default {
           value: data[k],
         });
     });
+  },
+  props: {
+    q: { type: String },
+    sort: { type: String },
+    req: { type: String },
+    page_size: {
+      type: Number,
+      default: 50,
+    },
   },
   methods: {
     _open_window(url) {
@@ -554,7 +454,7 @@ export default {
     },
     _save_config() {
       this.config.limit = this.params.limit;
-      galleryApi.save_config("gallery", this.config);
+      api.save_config("gallery", this.config);
     },
     clear_selection() {
       this.groups.concat(this.albums).forEach((x) => (x.selected = false));
@@ -562,14 +462,22 @@ export default {
     quote(x) {
       return encodeURIComponent(api.quote(x));
     },
+    start() {
+      this.params_state = "";
+      this.update({ order: { keys: (this.sort || '-_id').split(',') }, direction: "next" });
+    },
     update(obj) {
       if (obj && (!obj.order || (!obj.order.keys && !obj.order.offset))) {
         obj.order = { keys: ["-_id"] };
         this.page = 1;
       }
       Object.assign(this.params, obj);
-      this.params.limit = +this.params.limit;
-      document.title = `${this.params.post} ${this.params.query}`;
+
+      if (this.page_size) this.params.limit = +this.page_size;
+      this.params.q = this.q
+      this.params.req = this.req
+
+      document.title = `${this.params.post} ${this.params.q}`;
 
       this.fetch_sources.main.cancel();
       this.fetch_sources.main = api.cancel_source();
@@ -589,7 +497,8 @@ export default {
         window.scrollTo(0, 0);
       });
 
-      history.pushState(null, null, api.querystring_stringify(this.params));
+      history.pushState(null, null, api.querystring_stringify(Object.assign(
+        {}, this.params, { sort: this.sort, q: this.q, req: this.req })));
 
       var state = JSON.stringify(
         Object.assign({}, this.params, {
@@ -602,6 +511,8 @@ export default {
       if (state != this.params_state) {
         this.fetch_sources.groups.cancel();
         this.fetch_sources.groups = api.cancel_source();
+        this.fetch_sources.counter.cancel();
+        this.fetch_sources.counter = api.cancel_source();
         galleryApi
           .fetch(
             Object.assign({}, this.params, { groups: true, archive: false }),
@@ -609,30 +520,12 @@ export default {
           )
           .then((data) => data && (this.groups = data.results));
         galleryApi
-          .call(
-            "get",
+          .fetch(
             Object.assign({}, this.params, { count: true }),
-            "post",
-            false,
-            this.fetch_sources.groups
+            this.fetch_sources.counter
           )
           .then((data) => data && (this.count = data.result));
         this.params_state = state;
-      }
-    },
-    call_tool() {
-      if (!this.post_option.post) {
-        this.params_state = "";
-        this.post_option.args = "";
-        this.update({ post: "" });
-      } else {
-        let topost = this.post_option.post;
-        this.params_state = "";
-        this.update({
-          post: [topost || "", ...(this.post_option.args || "").split(" ")]
-            .filter((x) => x)
-            .join("/"),
-        });
       }
     },
     _wheel_listener(e) {
@@ -730,18 +623,18 @@ export default {
                 this._open_window(_album.source.url);
                 break;
               case "c":
-                this._open_window(`?query=${this.quote(_album.author) || ""}`);
+                this._open_window(`?q=${this.quote(_album.author) || ""}`);
                 break;
               case "s":
                 this._open_window(
-                  `?post=sim/${_item._id}&archive=true&query=${
+                  `?view_mode=gallery&post=sim/${_item._id}&archive=true&q=${
                     this.quote(_album.author) || ""
                   }`
                 );
                 break;
               case "e":
                 this._open_window(
-                  `?post=face/${_item._id}&archive=true&query=${
+                  `?view_mode=gallery&post=face/${_item._id}&archive=true&q=${
                     this.quote(_album.author) || ""
                   }`
                 );
@@ -749,8 +642,8 @@ export default {
               case "z":
                 this._open_window(
                   e.shiftKey
-                    ? `?query=id%3D${_album._id},images.source=exists(1)`
-                    : `?query=source.url%25%27${_album.source.url
+                    ? `?q=id%3D${_album._id},images.source=exists(1)`
+                    : `?q=source.url%25%27${_album.source.url
                         .replace(/[-\\^$*+?.()|[\]{}]/g, "\\$&")
                         .replace(/\/\d+\//, "/.*/")}'`
                 );
@@ -830,7 +723,7 @@ export default {
         offsetY = 0,
         rr = imgr < 1 != scrr < 1;
 
-      if (this.config.fit == 'both' && rr) {
+      if (this.config.fit == "both" && rr) {
         mode = 1 / imgr >= scrr ? "fit-height" : "fit-width";
         switch (mode) {
           case "fit-width":
@@ -849,8 +742,8 @@ export default {
         transform = "rotate(90deg)";
       } else {
         switch (this.config.fit) {
-          case 'both':
-          case 'maximize':
+          case "both":
+          case "maximize":
             mode = imgr >= scrr ? "fit-height" : "fit-width";
             break;
           default:
@@ -959,8 +852,9 @@ export default {
     toggle_fits() {
       const fits = ["both", "visible", "maximize"];
       this.config.fit = fits[(fits.indexOf(this.config.fit) + 1) % fits.length];
-      api.save_config("gallery", this.config);
-      this._fit_image({target: this.$refs.browsing_image});
+      this._save_config();
+      this._fit_image({ target: this.$refs.browsing_image });
+      this.$forceUpdate();
     },
     // api calls
     show_tagging_dialog() {
@@ -976,24 +870,25 @@ export default {
       var existing_tags = new Set(
         this.selected_albums().reduce((a, e) => a.concat(e.keywords), [])
       );
-      var push =  append ? e : e.filter((x) => !existing_tags.has(x)),
-      pull = append ? [] : Array.from(existing_tags).filter((x) => !e.includes(x));
+      var push = append ? e : e.filter((x) => !existing_tags.has(x)),
+        pull = append
+          ? []
+          : Array.from(existing_tags).filter((x) => !e.includes(x));
       var updates = {
-          ids: this._selected_album_ids(),
-          $push: {keywords: push},
-          $pull: {keywords: pull}
-        }
-      if (push.filter(x => x.startsWith('@'))) updates.author = push.filter(x => x.startsWith('@'))[0]
-      else if (pull.filter(x => x.startsWith('@'))) updates.author = ''
+        ids: this._selected_album_ids(),
+        $push: { keywords: push },
+        $pull: { keywords: pull },
+      };
+      if (push.filter((x) => x.startsWith("@")))
+        updates.author = push.filter((x) => x.startsWith("@"))[0];
+      else if (pull.filter((x) => x.startsWith("@"))) updates.author = "";
 
-      api
-        .call("edit/paragraph/batch", updates)
-        .then((data) => {
-          this._clear_selected(s);
-          s.forEach((p) => {
-            data.result[p._id] && (p.keywords = data.result[p._id].keywords);
-          });
+      api.call("edit/paragraph/batch", updates).then((data) => {
+        this._clear_selected(s);
+        s.forEach((p) => {
+          data.result[p._id] && (p.keywords = data.result[p._id].keywords);
         });
+      });
     },
     delete_items() {
       var s = this.selected_albums();
@@ -1052,8 +947,8 @@ export default {
     },
     group(del) {
       var s = this.selected_albums();
-      galleryApi
-        .call("grouping", {
+      api
+        .call("gallery/grouping", {
           ids: this._selected_album_ids(),
           delete: del,
         })
@@ -1164,5 +1059,12 @@ export default {
 .no-padding-margin {
   margin: 0;
   padding: 0;
+}
+.card-description {
+  max-height: 200px;
+  overflow: hidden;
+}
+.v-toolbar .row>* {
+  margin: 5px;
 }
 </style>

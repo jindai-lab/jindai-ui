@@ -13,7 +13,7 @@
     </span>
     <a
       :href="
-        '?archive=0&query=source.url%25`' +
+        '?archive=0&q=source.url%25`' +
         (album.source.url||'').replace(/\/\d+(\/|$)/, '/.*$1') +
         '`'
       "
@@ -24,7 +24,7 @@
     {{ text }}
     <a
       :href="
-        '?query=' +
+        '?q=' +
         encodeURIComponent(
           quote(tag) +
             (album.author && !tag.match(/^[*@]/)

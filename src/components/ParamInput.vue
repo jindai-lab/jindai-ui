@@ -79,6 +79,10 @@
       :label="arg.name"
     ></v-textarea>
 
+    <div v-else-if="arg.type.startsWith('file')" @drop.prevent="upload_file($event, arg.type.substr(5))" @dragover.prevent class="file_drop">
+      <input type="file" ref="file_inp" @change="upload_file($event, arg.type.substr(5))">
+    </div>
+
     <v-text-field
       v-else
       type="text"
@@ -200,6 +204,14 @@ export default {
           }))))));
           break;
       }
+    },
+    drop_file(e, atype) {
+      let types = atype.split(',')
+      let types_check = new RegExp('\\.(' + types.join('|') + ')$')
+      let droppedFiles = Array.from(e.dataTransfer.files).filter(x => x.match(types_check));
+      if (!droppedFiles.length) return;
+      let file = droppedFiles[0];
+      console.log(file); // TODO: set the file field and get ready to upload
     }
   },
   mounted() {
