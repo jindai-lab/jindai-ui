@@ -2,29 +2,41 @@
   <v-card flat>
     <v-card-text>
       <ParamInput v-model="task.name" :arg="{ name: '名称', type: '' }" />
-      <span>ID: {{ task._id }}</span
-      ><br />
-      <v-btn color="primary" @click="enqueue">
-        <v-icon>mdi-play</v-icon> 后台执行
-      </v-btn>
+      <span>ID: {{ task._id }} 创建者: {{ task.creator }}</span>
       <v-row>
         <v-col>
           <v-checkbox
+            class="d-inline-block"
+            label="共享"
+            v-model="task.shared"
+            :disabled="task.creator !== user"
+          ></v-checkbox>
+          <v-checkbox
+            class="d-inline-block ml-5"
             label="忽略运行中间的错误"
             v-model="task.resume_next"
           ></v-checkbox>
-        </v-col>
-        <v-col>
           <v-select
+            class="d-inline-block ml-5"
+            label="并行运行"
             v-model="task.concurrent"
             :items="[
-              { text: '不并行处理', value: 1 },
-              { text: '并行处理', value: 3 },
+              { text: '1（不并行）', value: 1 },
+              { text: '2', value: 2 },
+              { text: '3', value: 3 },
             ]"
           >
           </v-select>
         </v-col>
       </v-row>
+      <v-row>
+        <v-col>
+          <v-btn color="primary" @click="enqueue">
+            <v-icon>mdi-play</v-icon> 后台执行
+          </v-btn></v-col
+        ></v-row
+      >
+      <v-divider class="mt-5 mb-5"></v-divider>
       <h2>数据源</h2>
       <div id="datasource">
         <v-autocomplete
@@ -37,7 +49,7 @@
           <div v-for="arg in datasource_doc.args" :key="arg.name">
             <v-row>
               <v-col>
-                {{ arg.description.replace('%1', arg.name) }}
+                {{ arg.description.replace("%1", arg.name) }}
                 <ParamInput
                   :arg="arg"
                   v-model="task.datasource_config[arg.name]"
@@ -72,7 +84,7 @@
           @shortcut="update_shortcut"
           :map_id="'pipeline'"
           @validation="update_valid('pipeline_main', $event)"
-          style="margin-left: 0 !important;"
+          style="margin-left: 0 !important"
         />
       </div>
 
@@ -179,6 +191,9 @@ export default {
       }
       return items;
     },
+    user() {
+      return api.user
+    }
   },
   methods: {
     update_valid(name, valid) {

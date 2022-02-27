@@ -192,7 +192,7 @@
                     <v-btn
                       icon
                       dense
-                      :href="`?view_mode=gallery&post=face/${browsing_item._id}&q=${quote(
+                      :href="`?post=face/${browsing_item._id}&q=${quote(
                         browsing_album.author
                       )}&archive=true`"
                       class="t_func facedet"
@@ -204,7 +204,7 @@
                     <v-btn
                       icon
                       dense
-                      :href="`?view_mode=gallery&post=sim/${browsing_item._id}&q=${quote(
+                      :href="`?post=sim/${browsing_item._id}&q=${quote(
                         browsing_album.author
                       )}&archive=true`"
                       class="t_func sim"
@@ -322,7 +322,6 @@ export default {
     prev: {},
     next: {},
     params: {
-      view_mode: "gallery",
       q: "",
       post: "",
       order: {
@@ -419,12 +418,7 @@ export default {
   },
   mounted() {
     this.config = api.load_config("gallery", this.config);
-    this.params.limit = this.config.limit;
-    var ps = api.querystring_parse(location.search);
-    if (ps.view_mode === 'gallery') {
-      Object.assign(this.params, ps);
-      this.start()
-    }
+    this.start()
     api.call("plugins/pages").then((data) => (this.pages = data.result));
     api.call("plugins/shortcuts").then((data) => {
       data = data.result;
@@ -457,7 +451,8 @@ export default {
       api.save_config("gallery", this.config);
     },
     clear_selection() {
-      this.groups.concat(this.albums).forEach((x) => (x.selected = false));
+      [... this.groups, ... this.albums].forEach((x) => (x.selected = false));
+      this.selected_albums_count = 0;
     },
     quote(x) {
       return encodeURIComponent(api.quote(x));
@@ -496,10 +491,6 @@ export default {
         }
         window.scrollTo(0, 0);
       });
-
-      history.pushState(null, null, api.querystring_stringify(Object.assign(
-        {}, this.params, { sort: this.sort, q: this.q, req: this.req })));
-
       var state = JSON.stringify(
         Object.assign({}, this.params, {
           order: null,
@@ -627,14 +618,14 @@ export default {
                 break;
               case "s":
                 this._open_window(
-                  `?view_mode=gallery&post=sim/${_item._id}&archive=true&q=${
+                  `?post=sim/${_item._id}&archive=true&q=${
                     this.quote(_album.author) || ""
                   }`
                 );
                 break;
               case "e":
                 this._open_window(
-                  `?view_mode=gallery&post=face/${_item._id}&archive=true&q=${
+                  `?post=face/${_item._id}&archive=true&q=${
                     this.quote(_album.author) || ""
                   }`
                 );
@@ -839,6 +830,7 @@ export default {
         this.continue_browsing = true;
       }
       this.browsing_page = 2;
+      this.last_key = ''
     },
     browse_prev() {
       if (this.browsing_index > 0) {
@@ -848,6 +840,7 @@ export default {
         this.continue_browsing = true;
       }
       this.browsing_page = 2;
+      this.last_key = ''
     },
     toggle_fits() {
       const fits = ["both", "visible", "maximize"];

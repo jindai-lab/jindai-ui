@@ -6,7 +6,7 @@
           <v-list-item-title>查询</v-list-item-title>
         </v-list-item>
 
-        <v-list-group v-show="shortcuts.length > 0">
+        <v-list-group>
           <template v-slot:activator>
             <v-list-item-title>任务</v-list-item-title>
           </template>

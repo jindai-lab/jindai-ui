@@ -3,11 +3,21 @@
     <v-card-title>搜索</v-card-title>
     <v-card-text @drop.prevent="drop_json_file" @dragover.prevent>
       <v-row>
-        <v-col cols="3">
+        <v-col>
+          <v-text-field
+            class="d-inline-block"
+            :style="{width: 'calc(100% - 200px)', 'min-width': '200px' }"
+            dense
+            v-model="q"
+            @keyup.enter="search"
+             label="搜索条件"
+          ></v-text-field>
           <v-select
+            class="d-inline-block ml-5"
             v-model="sort"
             label="排序"
             dense
+            :style="{width: '100px'}"
             :items="[
               { text: '默认排序', value: '' },
               { text: '从旧到新', value: 'pdate' },
@@ -16,26 +26,16 @@
               { text: '随机图集', value: 'random' },
             ]"
           ></v-select>
-        </v-col>
-        <v-col cols="3">
           <v-text-field
-            hint="每页数量"
+            class="d-inline-block ml-5"
+            label="每页数量"
             v-model="page_size"
             type="number"
             dense
-            >40</v-text-field
+            :style="{width: '50px'}"
+            >50</v-text-field
           >
-        </v-col>
-        <v-spacer></v-spacer>
-      </v-row>
-      <v-row>
-        <v-col>
-          <v-text-field
-            v-model="q"
-            @keyup.enter="search"
-             label="搜索条件"
-          ></v-text-field>
-        </v-col>
+          </v-col>
       </v-row>
       <v-row>
         <v-col>
@@ -55,8 +55,11 @@
         <v-btn @click="export_query">
           <v-icon>mdi-clipboard-outline</v-icon> 导出为任务
         </v-btn>
-        <v-btn @click="export_xlsx">
-          <v-icon>mdi-download</v-icon> 直接导出 Excel
+        <v-btn @click="export_file('xlsx')">
+          <v-icon>mdi-file-excel</v-icon> 导出 Excel
+        </v-btn>
+        <v-btn @click="export_file('json')">
+          <v-icon>mdi-download</v-icon> 导出 JSON
         </v-btn>
         <v-btn-toggle
           v-model="view_mode"
@@ -114,10 +117,10 @@ export default {
     };
   },
   mounted() {
-    if (location.search) {
-      const search_params = api.querystring_parse(location.search);
-      Object.assign(this, search_params);
-    }
+
+    const search_params = api.querystring_parse(location.search);
+    for (var k of ['q', 'sort'])
+      if (search_params[k]) this[k] = search_params[k]
 
     let config = api.load_config("main")
     if (config.view_mode) this.view_mode = config.view_mode
@@ -126,27 +129,21 @@ export default {
     api.get_datasets_hierarchy().then((data) => {
       this.datasets = data.hierarchy;
       this.selection_bundles = data.bundles;
-      if (config.selected_datasets) this.selected_datasets = config.selected_datasets
+      this.selected_datasets = search_params.selected_datasets || config.selected_datasets || []
       if (this.q) this.search();
     });
   },
   methods: {
-    search() {
+    datasets_req() {
 
-      api.save_config("main", { page_size: this.page_size, view_mode: this.view_mode, selected_datasets: this.selected_datasets })
-
-      this.external_json = null
       function escapeRegExp(string) {
         return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
       }
-      if (this.selected_datasets.length == 0)
-        this.selected_datasets = this.datasets.map(s => s.id)
 
       var selected = this.selected_datasets.map(
           (sid) => this.selection_bundles[sid]
-        );
+        ), req = '';
 
-      this.req = "";
       if (selected.length > 0) {
         var datasets = selected
             .filter((x) => !x.source)
@@ -171,17 +168,42 @@ export default {
             )
             .join("|");
         }
-        this.req =
+        req =
           "(" +
           [req_datasets, req_sourcefiles]
             .filter((x) => x.length > 0)
             .join("|") +
           ")";
       }
+
+      return req
+    },
+    _start() {
       if (this.view_mode != 'gallery')
         this.$refs.results.start();
       else
         this.$refs.gallery.start();
+    },
+    search() {
+      api.save_config("main", { page_size: this.page_size, view_mode: this.view_mode, selected_datasets: this.selected_datasets })
+
+      this.external_json = null
+      if (this.selected_datasets.length == 0)
+        this.selected_datasets = this.datasets.map(s => s.id)
+      
+      this.req = this.datasets_req();
+      this._start();
+      
+      history.pushState(
+            "",
+            "",
+            api.querystring_stringify({
+              q: this.q,
+              selected_datasets: this.selected_datasets,
+              sort: this.sort,
+              selected_mongocollections: this.selected_mongocollections,
+            })
+          );
     },
     load_search(e) {
       if (this.external_json) {
@@ -218,19 +240,10 @@ export default {
           if (this.querystr && !this.querystr.match(/^\(.*\)$/) && this.req)
             this.querystr = '(' + this.querystr + ')'
           e.callback({ result: data.result.results, offset: e.offset, total: data.result.total });
-          history.pushState(
-            "",
-            "",
-            api.querystring_stringify({
-              q: this.q,
-              req: this.req,
-              sort: this.sort,
-              selected_mongocollections: this.selected_mongocollections,
-            })
-          );
+          
         });
     },
-    export_query(callback) {
+    export_query(format, callback) {
       if (typeof callback !== "function")
         callback = (data) =>
           this.$router.push("/tasks/" + data.result).catch(() => {});
@@ -243,13 +256,13 @@ export default {
           name: "搜索 " + this.querystr,
           pipeline: [
             ["AccumulateParagraphs", {}],
-            ["Export", { format: "xlsx" }],
+            ["Export", { format }],
           ],
         })
         .then(callback);
     },
-    export_xlsx() {
-      this.export_query((data) => {
+    export_file(fmt) {
+      this.export_query(fmt, (data) => {
         api.put("queue/", { id: data.result }).then(() =>
           api.notify({
             title: "已加入到任务队列",

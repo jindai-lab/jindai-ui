@@ -19,25 +19,25 @@
       <v-sheet>
         <v-row v-for="f in files" :key="f.name">
           <v-col class="name">
-            <v-btn icon :href="file_link(f)" v-if="!f.folder">
+            <v-btn icon :href="file_link(f)" v-if="f.type === 'file'">
               <v-icon>mdi-download</v-icon>
             </v-btn>
             <v-btn icon v-else @click="enter(f.name)">
-              <v-icon>mdi-folder-open</v-icon>
+              <v-icon v-if="f.type == 'folder'">mdi-folder-open</v-icon>
+              <v-icon v-else>mdi-arrow-left-circle</v-icon>
             </v-btn>
 
-            {{ f.name }}
-            
-        <div class="description" v-if="!f.folder">
-          大小: {{ (f.size / 1024 / 1024).toFixed(2) }} MB 创建于:
-          {{ (f.ctime * 1000) | dateSafe }} 修改于:
-          {{ (f.mtime * 1000) | dateSafe }}
-        </div>
-            </v-col
-          >
+            {{ f.name == '..' ? '返回上一级' : f.name }}
+
+            <div class="description" v-if="f.type == 'file'">
+              大小: {{ (f.size / 1024 / 1024).toFixed(2) }} MB 创建于:
+              {{ (f.ctime * 1000) | dateSafe }} 修改于:
+              {{ (f.mtime * 1000) | dateSafe }}
+            </div>
+          </v-col>
           <v-spacer></v-spacer>
           <v-col class="opers">
-            <v-btn class="copy" @click="copy_file_path(f)">
+            <v-btn class="copy" @click="copy_file_path(f)" v-if="f.type !== 'back'">
               <v-icon>mdi-content-copy</v-icon>
             </v-btn>
           </v-col>
@@ -45,7 +45,7 @@
       </v-sheet>
     </v-sheet>
     <v-card-actions>
-      <input type="hidden" id="testing-code">
+      <input type="hidden" id="testing-code" />
     </v-card-actions>
   </v-card>
 </template>
@@ -97,22 +97,29 @@ export default {
       api.call("storage/" + this.selected_dir).then((data) => {
         this.files = data.result;
         if (this.selected_dir !== "")
-          this.files.splice(0, 0, { name: "..", folder: true });
+          this.files.splice(0, 0, { name: "..", type: "back" });
+        history.pushState(
+          null,
+          null,
+          api.querystring_stringify({
+            path: this.selected_dir,
+          })
+        );
       });
     },
     copy_file_path(f) {
-      const text = (f.fullpath).substr(1);
-      const testingCodeToCopy = document.querySelector('#testing-code')
-      testingCodeToCopy.setAttribute('type', 'text')
-      testingCodeToCopy.setAttribute('value', text)
-      testingCodeToCopy.select()
+      const text = f.fullpath.substr(1);
+      const testingCodeToCopy = document.querySelector("#testing-code");
+      testingCodeToCopy.setAttribute("type", "text");
+      testingCodeToCopy.setAttribute("value", text);
+      testingCodeToCopy.select();
       try {
-        document.execCommand('copy');
+        document.execCommand("copy");
       } catch (err) {
-        alert('Oops, unable to copy');
+        alert("Oops, unable to copy");
       }
-      testingCodeToCopy.setAttribute('type', 'hidden')
-      window.getSelection().removeAllRanges()
+      testingCodeToCopy.setAttribute("type", "hidden");
+      window.getSelection().removeAllRanges();
     },
     enter(d) {
       if (d === "..")
@@ -126,6 +133,7 @@ export default {
     },
   },
   mounted() {
+    this.selected_dir = api.querystring_parse(location.search).path || "";
     this.update_files();
   },
   watch: {
