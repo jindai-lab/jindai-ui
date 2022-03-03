@@ -190,26 +190,17 @@
                   </v-col>
                   <v-col cols="2" sm="3" class="no-padding-margin">
                     <v-btn
+                      v-for="(page, page_name) in pages"
+                      :key="page_name"
                       icon
                       dense
-                      :href="`?post=face/${browsing_item._id}&q=${quote(
-                        browsing_album.author
-                      )}&archive=true`"
-                      class="t_func facedet"
-                      target="_blank"
-                      v-show="browsing_item.faces && browsing_item.faces.length"
-                    >
-                      <v-icon>mdi-emoticon-outline</v-icon>
-                    </v-btn>
-                    <v-btn
-                      icon
-                      dense
-                      :href="`?post=sim/${browsing_item._id}&q=${quote(
-                        browsing_album.author
-                      )}&archive=true`"
+                      :href="`?q=keywords%3D${quote(browsing_album.author)};page('${format(
+                        page.format,
+                        { imageitem: browsing_item, paragraph: browsing_album }
+                      )}')&archive=true`"
                       class="t_func sim"
                       target="_blank"
-                      ><v-icon>mdi-image</v-icon></v-btn
+                      ><v-icon>{{ page.icon }}</v-icon></v-btn
                     >
                     <v-btn icon dense @click="item_info = true" target="_blank"
                       ><v-icon>mdi-information</v-icon></v-btn
@@ -296,7 +287,7 @@ export default {
     VideoPlayer,
   },
   data: () => ({
-    bus: api.bus,
+    pages: {},
 
     last_id: -1,
     browsing: false,
@@ -340,7 +331,7 @@ export default {
       force_thumbnail: false,
       limit: 50,
     },
-    pages: [],
+
     fab: false,
     params_state: "",
     selected_albums_count: 0,
@@ -418,7 +409,6 @@ export default {
   },
   mounted() {
     this.config = api.load_config("gallery", this.config);
-    this.start()
     api.call("plugins/pages").then((data) => (this.pages = data.result));
     api.call("plugins/shortcuts").then((data) => {
       data = data.result;
@@ -457,9 +447,19 @@ export default {
     quote(x) {
       return encodeURIComponent(api.quote(x));
     },
+    format(str, bundle) {
+      function _replace(_, i) {
+        var b = bundle;
+        for (var k of i.split('.'))
+            b = b[k] || ''
+        return b
+      }
+      return str.replace(/\{([\w\d._]+)\}/g, _replace)
+    },
     start() {
       this.params_state = "";
-      this.update({ order: { keys: (this.sort || '-_id').split(',') }, direction: "next" });
+      var other_params = api.querystring_parse(location.search)
+      this.update(Object.assign({}, other_params, { order: { keys: (this.sort || '-_id').split(',') }, direction: "next" }));
     },
     update(obj) {
       if (obj && (!obj.order || (!obj.order.keys && !obj.order.offset))) {
@@ -601,34 +601,17 @@ export default {
           break;
         case "c":
         case "z":
-        case "s":
-        case "e":
         case "o":
         case "i":
           if (e.ctrlKey || e.metaKey) return;
           if (this.selected_albums().length > 0) {
-            var _item = this.selected_items()[0],
-              _album = this.selected_albums()[0];
+            var _album = this.selected_albums()[0];
             switch (e.key.toLowerCase()) {
               case "o":
                 this._open_window(_album.source.url);
                 break;
               case "c":
                 this._open_window(`?q=${this.quote(_album.author) || ""}`);
-                break;
-              case "s":
-                this._open_window(
-                  `?post=sim/${_item._id}&archive=true&q=${
-                    this.quote(_album.author) || ""
-                  }`
-                );
-                break;
-              case "e":
-                this._open_window(
-                  `?post=face/${_item._id}&archive=true&q=${
-                    this.quote(_album.author) || ""
-                  }`
-                );
                 break;
               case "z":
                 this._open_window(
@@ -664,6 +647,16 @@ export default {
         case "9":
           this.tagging_shortcuts = this.selected_albums().length > 0;
           this.tagging_shortcut_initial = e.key;
+          break;
+        default:
+          var pages = Object.values(this.pages).filter(x => x.shortcut == e.key)
+          if (pages.length) {
+              this._open_window(
+                  `?archive=true&q=keywords%3D${
+                    this.quote(this.selected_albums()[0].author) || ""
+                  };page('${this.format(pages[0].format, {imageitem: this.selected_items()[0], paragraph: this.selected_albums()[0]})}')` 
+              )
+          }
           break;
       }
 
@@ -1057,7 +1050,7 @@ export default {
   max-height: 200px;
   overflow: hidden;
 }
-.v-toolbar .row>* {
+.v-toolbar .row > * {
   margin: 5px;
 }
 </style>

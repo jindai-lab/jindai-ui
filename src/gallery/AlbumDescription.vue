@@ -4,7 +4,6 @@
       <span class="datetime">
         {{ album.pdate | dateSafe }}
       </span>
-      <span class="score" v-show="album.score">{{ album.score }}</span>
       <span class="count"
         ><a class="counter secondary--text" target="_blank" :href="album.group">{{
           album.count || album.images.length
@@ -51,7 +50,7 @@ export default {
   props: ["album"],
   computed: {
     special_page() {
-      return new URLSearchParams(location.search.substr(1)).get("post", "");
+      return new URLSearchParams(location.search.substr(1)).get("post") || '';
     },
     text() {
       var t = this.album.content || ''

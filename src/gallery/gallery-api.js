@@ -3,17 +3,12 @@ import api from '../api'
 export default {
 
     fetch(params, cancel) {
-        var name = 'gallery/get'
-        if (params.post) {
-            name = 'plugins/' + params.post
-            params = Object.assign({}, params, { post: undefined })
-        }
         params = Object.assign({}, params, {
             query: '(' + [params.q, params.req].filter(x => x).join('),(') + ')',
             req: undefined,
             q: undefined
         })
-        return api.call(name, params, cancel).then(data => {
+        return api.call('gallery/get', params, cancel).then(data => {
             if (!data) return;
             if (data.redirect) {
                 location.href = data.redirect
