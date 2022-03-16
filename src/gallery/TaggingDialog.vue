@@ -7,8 +7,8 @@
           autofocus
           v-model="tag_new"
           :items="tag_choices"
-          :loading="loading"
           :search-input.sync="tag_typing"
+          :loading="cancel !== null"
           flat multiple
           auto-select-first
           label="标签"
@@ -36,7 +36,7 @@ export default {
   data() {
     return {
       tag_choices: [],
-      loading: false,
+      cancel: null,
       tag_new: [],
       tag_typing: "",
       visible: false
@@ -67,10 +67,10 @@ export default {
       this.tag_choices = [...values]
     },
     search_tag(search) {
-      if (this.loading) return
+      if (this.cancel) this.cancel.cancel()
       if (search.length == 0 || search == '*' || search == '@') return
       this.tag_choices = [...this.tag_new]
-      this.loading = true;
+      this.cancel = api.cancel_source();
       api
         .call(
           "paragraph/search_values",
@@ -79,10 +79,10 @@ export default {
             field: 'keywords',
             match_initials: ((search.match(/^[@*]/)) ? true : false)
           },
-          "post",
-          false
+          this.cancel
         )
         .then((data) => {
+          this.cancel = null
           this.tag_choices = this.tag_new.map(x => ({
             text: x,
             value: x
@@ -90,11 +90,10 @@ export default {
             text: x._id + ' (' + x.count + ')',
             value: x._id
           })));
-          this.loading = false;
         })
         .catch((err) => {
+          this.cancel = null
           console.log(err);
-          this.loading = false;
           this.tag_choices = [...this.tag_new];
         });
     },

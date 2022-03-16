@@ -120,10 +120,12 @@ export default {
                 _stack.pop()
                 this.bus.$emit('loading', _stack.length)
             }
-            if (ex.message.match('code 502'))
+            if (typeof ex.message === 'string' && ex.message.match('code 502'))
                 ex = '后台连接失败，请重试。'
-            this.notify({ title: '错误', text: ex, type: 'warn' })
-            throw ex
+            else if (ex.toString() !== 'Cancel') {
+                this.notify({ title: '错误', text: ex, type: 'warn' })
+                throw ex
+            }
         })
     },
 

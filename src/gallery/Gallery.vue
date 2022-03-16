@@ -194,7 +194,7 @@
                       :key="page_name"
                       icon
                       dense
-                      :href="`?q=keywords%3D${quote(browsing_album.author)};page('${format(
+                      :href="`?q=author%3D${quote(browsing_album.author)};page('${format(
                         page.format,
                         { imageitem: browsing_item, paragraph: browsing_album }
                       )}')&archive=true`"
@@ -652,7 +652,7 @@ export default {
           var pages = Object.values(this.pages).filter(x => x.shortcut == e.key)
           if (pages.length) {
               this._open_window(
-                  `?archive=true&q=keywords%3D${
+                  `?archive=true&q=author%3D${
                     this.quote(this.selected_albums()[0].author) || ""
                   };page('${this.format(pages[0].format, {imageitem: this.selected_items()[0], paragraph: this.selected_albums()[0]})}')` 
               )
