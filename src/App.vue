@@ -246,6 +246,7 @@ export default {
 em {
   background-color: yellow;
   font-style: normal;
+  color: black;
 }
 
 .toplogo {

@@ -2,8 +2,8 @@
   <v-card
     flat
     v-touch="{
-      left: () => swipe_handler('left'),
-      right: () => swipe_handler('right'),
+      left: () => _event_handler('left'),
+      right: () => _event_handler('right'),
     }"
   >
     <v-card-text>
@@ -12,7 +12,7 @@
           <h3>{{ file }}</h3>
         </v-col>
         <v-spacer></v-spacer>
-        <v-btn icon @click="swipe_handler('right')" :enabled="page > 0">
+        <v-btn icon @click="_event_handler('right')" :enabled="page > 0">
           <v-icon>mdi-chevron-left</v-icon>
         </v-btn>
         <v-text-field
@@ -23,44 +23,40 @@
           :value="page"
           @input="try_page"
         ></v-text-field>
-        <v-btn icon @click="swipe_handler('left')">
+        <v-btn icon @click="_event_handler('left')">
           <v-icon>mdi-chevron-right</v-icon>
         </v-btn>
       </v-row>
 
       <v-row class="main">
-          <div class="paragraphs">
-            <div v-for="p in paragraphs" :key="p._id">
-              <ContentView
-                :paragraph="p"
-                item_width="100%"
-              />
-            </div>
+        <div class="paragraphs">
+          <div v-for="p in paragraphs" :key="p._id">
+            <ContentView :paragraph="p" item_width="100%" :view_mode="view_mode" />
           </div>
-          <div class="mt-5 meta" v-if="paragraphs.length > 0">
-            日期: {{ paragraphs[0].pdate | dateSafe }}<br />
-            页码: {{ paragraphs[0].pagenum }}
-            <v-btn
-              icon
-              small
-              @click="
-                pagenum_editor.new_pagenum = paragraphs[0].pagenum;
-                pagenum_edit = true;
-              "
-              ><v-icon small>mdi-form-textbox</v-icon></v-btn
-            >
-            <br />
-            大纲: {{ paragraphs[0].outline }}<br />
-            来源:
-            <a
-              :href="paragraphs[0].source.url"
-              v-if="paragraphs[0].source.url"
-              target="_blank"
-              >{{ paragraphs[0].source.url }}</a
-            >
-            {{ paragraphs[0].source.file }} {{ paragraphs[0].source.page
-            }}<br />
-          </div>
+        </div>
+        <div class="mt-5 meta" v-if="paragraphs.length > 0">
+          日期: {{ paragraphs[0].pdate | dateSafe }}<br />
+          页码: {{ paragraphs[0].pagenum }}
+          <v-btn
+            icon
+            small
+            @click="
+              pagenum_editor.new_pagenum = paragraphs[0].pagenum;
+              pagenum_edit = true;
+            "
+            ><v-icon small>mdi-form-textbox</v-icon></v-btn
+          >
+          <br />
+          大纲: {{ paragraphs[0].outline }}<br />
+          来源:
+          <a
+            :href="paragraphs[0].source.url"
+            v-if="paragraphs[0].source.url"
+            target="_blank"
+            >{{ paragraphs[0].source.url }}</a
+          >
+          {{ paragraphs[0].source.file }} {{ paragraphs[0].source.page }}<br />
+        </div>
         <div class="image" @click="show_modal = !!pdf_image">
           <img
             :src="pdf_image"
@@ -153,27 +149,10 @@ export default {
     },
   },
   beforeDestroy() {
-    if (!this.view_mode) {
-      window.removeEventListener("keyup", this.handler)
-    }
+    window.removeEventListener("keyup", this._event_handler);
   },
   created() {
-    if (!this.view_mode) {
-      this.handler = (e) => {
-        if (e.target.tagName == "INPUT") return;
-        switch (e.key) {
-          case "ArrowRight":
-            this.page = +this.page + 1;
-            break;
-          case "ArrowLeft":
-            if (+this.page > 0) this.page = +this.page - 1;
-            break;
-          default:
-            break;
-        }
-      };
-      window.addEventListener("keyup", this.handler);
-    }
+    window.addEventListener("keyup", this._event_handler);
     if (this.paragraph) {
       this.paragraphs = [this.paragraph];
     }
@@ -262,15 +241,20 @@ export default {
           }
         });
     },
-    swipe_handler(direction) {
+    _event_handler(direction) {
       if (document.getSelection().toString()) return;
+      if (typeof direction !== 'string')
+        direction = direction.key.toLowerCase();
+
       switch (direction) {
         case "right":
-          if (this.view_mode) this.$emit('prev')
+        case "arrowleft":
+          if (this.view_mode) this.$emit("prev");
           else this.page = +this.page - 1;
           break;
+        case "arrowright":
         case "left":
-          if (this.view_mode) this.$emit('next')
+          if (this.view_mode) this.$emit("next");
           else this.page = +this.page + 1;
           break;
       }

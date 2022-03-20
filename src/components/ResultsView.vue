@@ -44,7 +44,7 @@
           >
           <a :href="r.source.url" target="_blank">{{ r.source.url }}</a> 页码:
           {{ r.pagenum }} 日期: {{ r.pdate | dateSafe }}
-          <v-divider></v-divider>
+          <v-divider class="mt-5"></v-divider>
         </div>
         <ContentView
           :view_mode="view_mode"
@@ -147,7 +147,7 @@
         :visible="dialogs.paragraph.visible"
         @next="page_view_handler('next')"
         @prev="page_view_handler('prev')"
-        @browse="_browsing_item = $event"
+        @browse="browsing_item = $event"
         @info="dialogs.info.visible = true; dialogs.info.target = $event"
       />
     </v-dialog>
@@ -355,8 +355,8 @@ export default {
         }
       },
       // selection
-      _selection: [],
-      _browsing_item: {},
+      selection: [],
+      browsing_item: {},
       selection_count: 0,
       select_index: -1,
       last_key: ''
@@ -365,11 +365,6 @@ export default {
   watch: {
     page(val) {
       this.turn_page(val);
-      history.pushState(
-        "",
-        "",
-        api.querystring_stringify(Object.assign(api.querystring_parse(location.search), {page: this.page}))
-      )
     },
   },
   computed: {
@@ -435,6 +430,11 @@ export default {
     },
     querify: api.querify,
     turn_page(p, cb) {
+      history.pushState(
+        "",
+        "",
+        api.querystring_stringify(Object.assign(api.querystring_parse(location.search), {page: this.page}))
+      )
       if (this.page !== p) this.page = p;
       window.scroll({ top: this.$refs.results.offsetTop - 64 });
       if (!this._fetched()) {
@@ -446,7 +446,7 @@ export default {
             data.result.forEach((x) => (x.selected = false));
             this.value = data.result;
             this.total = data.total;
-            this._selection = [];
+            this.selection = [];
             if (typeof cb == "function") cb();
           },
         });
@@ -468,15 +468,11 @@ export default {
       if (e.target.tagName == "INPUT" || e.target.tagName == "TEXTAREA") return;
       switch (e.key.toLowerCase()) {
         case "arrowleft":
-          if (this.dialogs.paragraph.visible)
-            this.page_view_handler('prev')
-          else
+          if (!this.dialogs.paragraph.visible)
             this.turn_page(this.page - 1)
           break;
         case "arrowright":
-          if (this.dialogs.paragraph.visible)
-            this.page_view_handler('next')
-          else
+          if (!this.dialogs.paragraph.visible)
             this.turn_page(this.page + 1)
           break;
         case "f":
@@ -544,6 +540,7 @@ export default {
                 break;
               case "i":
                 this.dialogs.info.visible = !this.dialogs.info.visible;
+                this.dialogs.info.target = this.selected_paragraphs()[0]
                 break;
             }
           }
@@ -628,12 +625,12 @@ export default {
       if (this.dialogs.paragraph.visible) {
         return [this.visible_data[this.dialogs.paragraph.target_index]]
       } else {
-        return [... this._selection]
+        return [... this.selection]
       }
     },
     selected_items() {
       if (this.dialogs.paragraph.visible) {
-        return [Object.assign({}, this._browsing_item.images[0], {paragraph_id: this.selected_paragraphs()[0]._id})];
+        return [Object.assign({}, this.browsing_item.images[0], {paragraph_id: this.selected_paragraphs()[0]._id})];
       } else {
         return this.selected_paragraphs().reduce(
           (y, e) =>
@@ -666,26 +663,26 @@ export default {
       }
       this.select_index = index
       
-      for (var i of s) {
-          i.selected = !i.selected;
-          if (i.selected) this._selection.push(i)
-          else this._selection.splice(this._selection.indexOf(i), 1);
+      for (var it of s) {
+          it.selected = !it.selected;
+          if (it.selected) this.selection.push(it)
+          else this.selection.splice(this.selection.indexOf(it), 1);
         }
 
-      this.selection_count = this._selection.length
+      this.selection_count = this.selection.length
     },
     toggle_selection() {
       this.visible_data.forEach((x) => (x.selected = !x.selected));
-      this._selection = this.visible_data.filter((x) => x.selected);
-      this.selection_count = this._selection.length
+      this.selection = this.visible_data.filter((x) => x.selected);
+      this.selection_count = this.selection.length
     },
     clear_selection(s) {
       if (typeof s === "undefined") s = this.visible_data;
       s.forEach((x) => {
         x.selected = false;
-        this._selection.splice(this._selection.indexOf(x), 1);
+        this.selection.splice(this.selection.indexOf(x), 1);
       });
-      this.selection_count = this._selection.length
+      this.selection_count = this.selection.length
     },
     show_tagging_dialog() {
       if (this.selected_paragraphs().length > 0) {
@@ -871,7 +868,6 @@ export default {
 }
 
 .gallery .wrapper-container .paragraph {
-  flex: 1;
   padding: 5px;
   min-width: 250px;
   width: 25%;

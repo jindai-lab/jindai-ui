@@ -51,7 +51,17 @@
         <v-btn @click="search" color="primary">查询</v-btn>
         <span class="ml-5" style="line-height: 100%; vertical-align: middle">
           分组
-          <ParamInput class="d-inline-block ml-1" style="width: 80px;" dense flat :arg="{type: '无:none|按组:group|按来源:source|分组和来源:both', name: ''}" v-model="groups" />
+          <ParamInput
+            class="d-inline-block ml-1"
+            style="width: 80px"
+            dense
+            flat
+            :arg="{
+              type: '无:none|按组:group|按来源:source|分组和来源:both',
+              name: '',
+            }"
+            v-model="groups"
+          />
         </span>
         <v-spacer></v-spacer>
         <div class="tools">
@@ -82,7 +92,8 @@
           </v-btn-toggle>
         </div>
       </v-row>
-      <ResultsView class="mt-5"
+      <ResultsView
+        class="mt-5"
         :view_mode="view_mode"
         :page_size="page_size"
         @load="load_search"
@@ -107,7 +118,7 @@ export default {
       open_datasets: [],
       selected_mongocollections: [],
       q: "",
-      groups: 'none',
+      groups: "none",
       sort: "",
       querystr: "",
       req: "",
@@ -115,7 +126,7 @@ export default {
       external_json: null,
       view_mode: "list",
       page_size: 50,
-      cancel_source: api.cancel_source()
+      cancel_source: api.cancel_source(),
     };
   },
   mounted() {
@@ -134,6 +145,11 @@ export default {
         search_params.selected_datasets || config.selected_datasets || [];
       if (this.q) this.search(true);
     });
+  },
+  watch: {
+    view_mode() {
+      this._save_config();
+    },
   },
   methods: {
     datasets_req() {
@@ -180,20 +196,37 @@ export default {
 
       return req;
     },
-    search(pagenum_preserve) {
+    _save_config() {
       api.save_config("main", {
         page_size: this.page_size,
         view_mode: this.view_mode,
         selected_datasets: this.selected_datasets,
       });
-
+    },
+    search(pagenum_preserve) {
+      this._save_config();
       this.external_json = null;
 
       if (this.selected_datasets.length == 0)
         this.selected_datasets = this.datasets.map((s) => s.id);
 
       this.req = this.datasets_req();
-      
+
+      if (pagenum_preserve !== true)
+        history.pushState(
+          "",
+          "",
+          api.querystring_stringify(
+            Object.assign(api.querystring_parse(location.search), {
+              q: this.q,
+              selected_datasets: this.selected_datasets,
+              sort: this.sort,
+              groups: this.groups,
+              selected_mongocollections: this.selected_mongocollections,
+            })
+          )
+        );
+
       this.$refs.results.start(pagenum_preserve === true ? undefined : 1);
     },
     load_search(e) {
@@ -209,28 +242,32 @@ export default {
         return;
       }
       if (!this.q && !this.req) return;
-      if (this.cancel_source) this.cancel_source.cancel()
-      this.cancel_source = api.cancel_source()
+      if (this.cancel_source) this.cancel_source.cancel();
+      this.cancel_source = api.cancel_source();
       api
-        .call("search", {
-          q: this.q,
-          req: this.req,
-          sort: this.sort,
-          mongocollections: this.selected_mongocollections,
-          offset: e.offset,
-          limit: e.limit,
-          groups: this.groups,
-        }, this.cancel_source)
+        .call(
+          "search",
+          {
+            q: this.q,
+            req: this.req,
+            sort: this.sort,
+            mongocollections: this.selected_mongocollections,
+            offset: e.offset,
+            limit: e.limit,
+            groups: this.groups,
+          },
+          this.cancel_source
+        )
         .then((data) => {
           if (!data) {
-            console.log('WARNING: no data returned.')
-            return
+            console.log("WARNING: no data returned.");
+            return;
           }
           if (data.result.query) {
             var reg = new RegExp(
               "(" +
                 data.result.query
-                  .split(/[.,/#!$%^&*;:{}=\-_`"'~()|]/g)
+                  .split(/[^\w]/g)
                   .filter((x) => x)
                   .join("|") +
                 ")",
@@ -242,8 +279,6 @@ export default {
             });
           }
           this.querystr = data.result.query;
-          if (this.querystr && !this.querystr.match(/^\(.*\)$/) && this.req)
-            this.querystr = "(" + this.querystr + ")";
           e.callback({
             result: data.result.results,
             offset: e.offset,
@@ -258,7 +293,7 @@ export default {
       api
         .put("tasks/", {
           datasource_config: {
-            query: "?" + this.querystr + this.req,
+            query: this.querystr,
             mongocollections: this.selected_mongocollections,
           },
           name: "搜索 " + this.querystr,
