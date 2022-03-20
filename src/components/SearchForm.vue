@@ -49,7 +49,10 @@
       </v-row>
       <v-row class="ml-0 mb-3">
         <v-btn @click="search" color="primary">查询</v-btn>
-
+        <span class="ml-5" style="line-height: 100%; vertical-align: middle">
+          分组
+          <ParamInput class="d-inline-block ml-1" style="width: 80px;" dense flat :arg="{type: '无:none|按组:group|按来源:source|分组和来源:both', name: ''}" v-model="groups" />
+        </span>
         <v-spacer></v-spacer>
         <div class="tools">
           <v-btn @click="export_query">
@@ -79,35 +82,24 @@
           </v-btn-toggle>
         </div>
       </v-row>
-      <div class="mt-5">
-        <ResultsView
-          v-if="view_mode != 'gallery'"
-          :class="view_mode == 'list' ? '' : 'hide-toolbar'"
-          :page_size="page_size"
-          @load="load_search"
-          ref="results"
-        />
-        <Gallery
-          v-else
-          :q="q"
-          :req="req"
-          :sort="sort"
-          :page_size="page_size"
-          ref="gallery"
-        />
-      </div>
+      <ResultsView class="mt-5"
+        :view_mode="view_mode"
+        :page_size="page_size"
+        @load="load_search"
+        ref="results"
+      />
     </v-card-text>
   </v-card>
 </template>
     
 <script>
 import api from "../api";
+import ParamInput from "./ParamInput";
 import ResultsView from "./ResultsView";
-import Gallery from "../gallery/Gallery";
 
 export default {
   name: "SearchForm",
-  components: { ResultsView, Gallery },
+  components: { ResultsView, ParamInput },
   data() {
     return {
       datasets: [],
@@ -115,6 +107,7 @@ export default {
       open_datasets: [],
       selected_mongocollections: [],
       q: "",
+      groups: 'none',
       sort: "",
       querystr: "",
       req: "",
@@ -127,7 +120,7 @@ export default {
   },
   mounted() {
     const search_params = api.querystring_parse(location.search);
-    for (var k of ["q", "sort"])
+    for (var k of ["q", "sort", "groups"])
       if (search_params[k]) this[k] = search_params[k];
 
     let config = api.load_config("main");
@@ -139,7 +132,7 @@ export default {
       this.selection_bundles = data.bundles;
       this.selected_datasets =
         search_params.selected_datasets || config.selected_datasets || [];
-      if (this.q) this.search();
+      if (this.q) this.search(true);
     });
   },
   methods: {
@@ -187,11 +180,7 @@ export default {
 
       return req;
     },
-    _start() {
-      if (this.view_mode != "gallery") this.$refs.results.start();
-      else this.$refs.gallery.start();
-    },
-    search() {
+    search(pagenum_preserve) {
       api.save_config("main", {
         page_size: this.page_size,
         view_mode: this.view_mode,
@@ -199,22 +188,13 @@ export default {
       });
 
       this.external_json = null;
+
       if (this.selected_datasets.length == 0)
         this.selected_datasets = this.datasets.map((s) => s.id);
 
       this.req = this.datasets_req();
-      this._start();
-
-      history.pushState(
-        "",
-        "",
-        api.querystring_stringify(Object.assign(api.querystring_parse(location.search), {
-          q: this.q,
-          selected_datasets: this.selected_datasets,
-          sort: this.sort,
-          selected_mongocollections: this.selected_mongocollections,
-        }))
-      );
+      
+      this.$refs.results.start(pagenum_preserve === true ? undefined : 1);
     },
     load_search(e) {
       if (this.external_json) {
@@ -229,7 +209,8 @@ export default {
         return;
       }
       if (!this.q && !this.req) return;
-      this.cancel_source.cancel();
+      if (this.cancel_source) this.cancel_source.cancel()
+      this.cancel_source = api.cancel_source()
       api
         .call("search", {
           q: this.q,
@@ -238,8 +219,13 @@ export default {
           mongocollections: this.selected_mongocollections,
           offset: e.offset,
           limit: e.limit,
-        }, undefined, this.cancel_source)
+          groups: this.groups,
+        }, this.cancel_source)
         .then((data) => {
+          if (!data) {
+            console.log('WARNING: no data returned.')
+            return
+          }
           if (data.result.query) {
             var reg = new RegExp(
               "(" +
@@ -326,18 +312,11 @@ export default {
 .view-mode-toggler {
   vertical-align: middle;
 }
-</style>
 
-<style>
 .vue-treeselect__control {
   border-radius: 0;
 }
 .theme--dark .vue-treeselect {
   color: rgba(0, 0, 0, 0.7) !important;
-}
-.hide-toolbar div:not(.paragraph) > p,
-.hide-toolbar hr,
-.hide-toolbar .v-btn {
-  display: none;
 }
 </style>

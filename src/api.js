@@ -379,5 +379,34 @@ export default {
         if (s.match(/[`'"()\s.,+%:/]|(^\d+(\.\d+)?$)/)) return "`" + s.replace(/`/g, "\\`") + "`";
         return s;
     },
+    
+    get_item_image(item, config = {}) {
 
+        if (typeof item === "undefined" || (!item.source.url && !item.source.file))
+            return "https://via.placeholder.com/350x150.png?text=No Image";
+
+        var ext = (item.source.url || item.source.file).split(".").pop(),
+            args = '';
+        if (ext === "mp4") {
+            if (item.thumbnail) return `/api/image?file=blocks.h5&block_id=${item.thumbnail}`;
+            return "https://via.placeholder.com/350x150.png?text=Video";
+        }
+        if (config.force_thumbnail)
+            args += '&w=1280'
+        if (config.enhance)
+            args += '&enhance=1'
+        if (item.source.file) {
+            if (item.source.file == 'blocks.h5') item.source.block_id = item._id;
+            return `/api/image${this.querystring_stringify(item.source)}${args}`;
+        }
+        return item.source.url;
+    },
+
+    get_item_video(item) {
+        if (item.source.file) {
+            if (item.source.file == 'blocks.h5') item.source.block_id = item._id;
+            return `/api/image${this.querystring_stringify(item.source)}`;
+        }
+        return item.source.url;
+    },
 }

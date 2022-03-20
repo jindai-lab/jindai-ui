@@ -1,48 +1,96 @@
 <template>
-  <v-sheet v-if="total > 0" ref="results">
+  <v-sheet v-if="total > 0" ref="results" :class="view_mode">
+    <!-- gallery toolbar -->
+    <div v-if="view_mode == 'gallery'" class="gallery-toolbar">
+      <v-checkbox
+        flat
+        v-model="config.contain"
+        label="全图显示"
+        @change="_save_config"
+      ></v-checkbox>
+      <v-checkbox
+        flat
+        v-model="config.force_thumbnail"
+        label="缩略图"
+        @change="_save_config"
+      ></v-checkbox>
+      <v-checkbox
+        flat
+        v-model="config.enhance"
+        label="增强图像"
+        @change="_save_config"
+      ></v-checkbox>
+      <v-btn text @click="_show_dialog('auto_tagging')">自动标签</v-btn>
+    </div>
+    <!-- total results count -->
     <div class="count">共找到 {{ total }} 个结果。</div>
+    <!-- divider -->
     <v-divider class="mt-5 mb-5"></v-divider>
-    <div v-if="columns.includes('content')">
-      <div v-for="(r, index) in visible_data" :key="index">
-        <p class="meta">
-          数据集: <a :href="`/?q=dataset=${stringify(r.dataset)}`" target="_blank">{{ r.dataset }}</a> 大纲: {{ r.outline }} 来源:
-          <a :href="`/?q=dataset=${stringify(r.dataset)},source.file=${stringify(r.source.file)}`" target="_blank">{{ r.source.file }}</a> <a :href="r.source.url" target="_blank">{{ r.source.url }}</a> 页码: {{ r.pagenum }} 日期: {{ r.pdate | dateSafe }}
-        </p>
-        <v-divider></v-divider>
-        <ContentView :paragraph="r" :item_width="200" :item_height="200" :first_item_only="false" />
-        <div class="mt-10 operations">
-        <v-btn @click="view_page(index)"> <v-icon>mdi-eye</v-icon> 查看 </v-btn>
-        <v-btn
-          :href="`/view/${r.mongocollection}/${r.source.file ? (r.source.file + '/' + r.source.page) : r._id}`"
-          target="_blank"
-        >
-          <v-icon>mdi-dock-window</v-icon> 浏览
-        </v-btn>
-        <v-btn
-          @click="
-            show_meta[index] = !show_meta[index];
-            $forceUpdate();
-          "
-        >
-          <v-icon>{{
-            "mdi-menu-" + (!show_meta[index] ? "down" : "up")
-          }}</v-icon>
-          其他元数据
-        </v-btn>
-        <v-btn @click="edit_target = r">
-          <v-icon>mdi-file-edit-outline</v-icon>
-          编辑
-        </v-btn>
-        <v-textarea
-          readonly
-          v-show="!!show_meta[index]"
-          :value="metas(r)"
-          rows="5"
-        ></v-textarea>
+    <!-- show content -->
+    <div class="wrapper-container" v-if="columns.includes('content')">
+      <div class="paragraph" v-for="(r, index) in visible_data" :key="index">
+        <div class="meta">
+          数据集:
+          <a :href="`/?q=dataset=${stringify(r.dataset)}`" target="_blank">{{
+            r.dataset
+          }}</a>
+          大纲: {{ r.outline }} 来源:
+          <a
+            :href="`/?q=dataset=${stringify(r.dataset)},source.file=${stringify(
+              r.source.file
+            )}`"
+            target="_blank"
+            >{{ r.source.file }}</a
+          >
+          <a :href="r.source.url" target="_blank">{{ r.source.url }}</a> 页码:
+          {{ r.pagenum }} 日期: {{ r.pdate | dateSafe }}
+          <v-divider></v-divider>
         </div>
-        <v-divider class="mt-5 mb-5"></v-divider>
+        <ContentView
+          :view_mode="view_mode"
+          :paragraph="r"
+          :item_width="200"
+          :item_height="200"
+          :first_item_only="view_mode === 'gallery'"
+          :contain="config.contain"
+          @toggle-select="update_selection($event.paragraph, $event.e, index)"
+          @browse="view_page(index)"
+        />
+        <div class="mt-10 operations">
+          <v-btn @click="view_page(index)">
+            <v-icon>mdi-eye</v-icon> 查看
+          </v-btn>
+          <v-btn
+            :href="`/view/${r.mongocollection}/${
+              r.source.file ? r.source.file + '/' + r.source.page : r._id
+            }`"
+            target="_blank"
+          >
+            <v-icon>mdi-dock-window</v-icon> 浏览
+          </v-btn>
+          <v-btn
+            @click="
+              dialogs.info.target = r;
+              dialogs.info.visible = true;
+            "
+          >
+            <v-icon>mdi-information</v-icon>
+            元数据
+          </v-btn>
+          <v-btn
+            @click="
+              dialogs.edit.target = r;
+              dialogs.edit.visible = true;
+            "
+          >
+            <v-icon>mdi-file-edit-outline</v-icon>
+            编辑
+          </v-btn>
+          <v-divider class="mt-5 mb-5"></v-divider>
+        </div>
       </div>
     </div>
+    <!-- show array info -->
     <v-sheet v-else>
       <table>
         <thead>
@@ -66,7 +114,8 @@
         </tbody>
       </table>
     </v-sheet>
-    <v-row>
+    <!-- pagination -->
+    <v-row class="mt-5">
       <v-pagination v-model="page" :length="pages.length"></v-pagination>
       <div>
         <label> 页码</label>
@@ -77,43 +126,75 @@
         ></v-text-field>
       </div>
     </v-row>
-
-    <v-dialog
-      v-if="view_paragraph !== null"
-      :value="view_paragraph !== null"
-      @input="view_paragraph = null"
-    >
-    <v-card>
-      <v-card-title>
-          <v-spacer></v-spacer>
-          <v-btn icon @click="view_paragraph = null"
-            ><v-icon>mdi-close</v-icon></v-btn
-          ></v-card-title>
-        <v-card-text>
-          <PageView class="page-view" :paragraph="showing_result" :key="view_paragraph" :compact="true" />
-        </v-card-text>
-    </v-card>
+    <!-- dialogs -->
+    <v-dialog v-model="dialogs.paragraph.visible" fullscreen>
+      <v-btn icon @click="dialogs.paragraph.visible = false" class="close"
+        ><v-icon>mdi-close</v-icon></v-btn
+      >
+      <PageView
+        class="page-view"
+        :key="dialogs.paragraph.target_index"
+        :paragraph="visible_data[dialogs.paragraph.target_index]"
+        :view_mode="view_mode"
+        @next="page_view_handler('next')"
+        @prev="page_view_handler('prev')"
+        v-if="view_mode != 'gallery'"
+      />
+      <ImageBrowsing
+        v-else
+        :paragraph="visible_data[dialogs.paragraph.target_index]"
+        :view_mode="view_mode"
+        :visible="dialogs.paragraph.visible"
+        @next="page_view_handler('next')"
+        @prev="page_view_handler('prev')"
+        @browse="_browsing_item = $event"
+        @info="dialogs.info.visible = true; dialogs.info.target = $event"
+      />
     </v-dialog>
 
-    <v-dialog
-      v-if="edit_target"
-      :value="edit_target !== null"
-      @input="edit_target = null"
-    >
+    <v-dialog v-model="dialogs.info.visible">
+      <v-card>
+        <v-card-title>
+          <v-btn
+            icon
+            @click="dialogs.info.visible = false"
+            style="margin-right: 12px"
+          >
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+          元数据</v-card-title
+        >
+        <v-card-text>
+          <v-row v-for="(v, k) in dialogs.info.target" :key="k">
+            <v-col cols="4">{{ k }}</v-col>
+            <v-col cols="8" v-if="!['album'].includes(k)">{{ v }}</v-col>
+          </v-row>
+        </v-card-text>
+        <v-card-actions>
+          <v-btn @click="dialogs.info.visible = false"> OK </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <v-dialog v-model="dialogs.auto_tagging.visible" fullscreen>
+      <auto-tags @close="dialogs.auto_tagging.visible = false"></auto-tags>
+    </v-dialog>
+
+    <v-dialog v-model="dialogs.edit.visible">
       <v-card>
         <v-card-title
-          >编辑语段 {{ edit_target._id }}
+          >编辑语段 {{ dialogs.edit.target._id }}
           <v-spacer></v-spacer>
-          <v-btn icon @click="edit_target = null"
+          <v-btn icon @click="dialogs.edit.visible = false"
             ><v-icon>mdi-close</v-icon></v-btn
           ></v-card-title
         >
         <v-card-text>
           <v-list>
-            <v-list-item v-for="(field, key) in edit_target" :key="key">
+            <v-list-item v-for="(field, key) in dialogs.edit.target" :key="key">
               <v-list-item-content>
                 <ParamInput
-                  v-model="edit_target[key]"
+                  v-model="dialogs.edit.target[key]"
                   :arg="{ type: typeof field, name: key, default: '\'\'' }"
                   v-if="
                     !(
@@ -127,12 +208,12 @@
             <v-list-item>
               <v-list-item-content>
                 <ParamInput
-                  v-model="edit_new_field"
+                  v-model="dialogs.edit.new_field"
                   :arg="{ type: 'string', name: '新字段', default: '' }"
                 />
                 <v-btn
                   @click="
-                    edit_target[edit_new_field] = '';
+                    dialogs.edit.target[dialogs.edit.new_field] = '';
                     $forceUpdate();
                   "
                 >
@@ -144,69 +225,152 @@
         </v-card-text>
         <v-card-actions>
           <v-btn color="primary" @click="save()">保存</v-btn>
-          <v-btn @click="edit_target = null">取消</v-btn>
+          <v-btn @click="dialogs.edit.visible = false">取消</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
 
-    <v-dialog
-      v-if="embedded"
-      :value="embedded !== null"
-      @input="embedded = null"
-    >
+    <v-dialog v-model="dialogs.embedded.visible">
       <v-card>
         <v-card-title>
-          查看 {{ querify(embedded.source) }}
+          查看 {{ querify(dialogs.embedded.target.source) }}
           <v-spacer></v-spacer>
-          <v-btn icon @click="embedded = null"
+          <v-btn icon @click="dialogs.embedded.visible = false"
             ><v-icon>mdi-close</v-icon></v-btn
           >
         </v-card-title>
         <v-card-text>
           <ResultsView
-            @load="(a) => a.callback({ offset: 0, result: embedded.arr })"
-            :total="embedded.arr.length"
+            @load="(a) => a.callback({ offset: 0, result: dialogs.embedded.target.arr })"
+            :total="(dialogs.embedded.target.arr || []).length"
           />
         </v-card-text>
       </v-card>
     </v-dialog>
+
+    <v-dialog v-model="dialogs.auto_tagging.visible" fullscreen>
+      <auto-tags @close="dialogs.auto_tagging.visible = false"></auto-tags>
+    </v-dialog>
+
+    <tagging-shortcuts-dialog
+      v-model="dialogs.tagging_shortcuts.visible"
+      :choices="dialogs.tagging_shortcuts.list"
+      :initial="dialogs.tagging_shortcuts.initial"
+      :multiple="false"
+      :match_initials="true"
+      @submit="tag($event, true)"
+    ></tagging-shortcuts-dialog>
+
+    <tagging-dialog
+      ref="tagging_dialog"
+      :choices="dialogs.tagging.choices"
+      @submit="tag($event, false)"
+    ></tagging-dialog>
+
+    <QuickActionButtons
+      :selection_count="selection_count"
+      @toggle-selection="toggle_selection"
+      @clear-selection="clear_selection"
+      @delete="delete_items"
+      @rating="rating(1)"
+      @group="group"
+      @tag="show_tagging_dialog"
+    />
   </v-sheet>
   <v-sheet v-else ref="results">未找到匹配的结果。</v-sheet>
 </template>
 
 <script>
 import ParamInput from "./ParamInput";
-import PageView from './PageView.vue';
-import ContentView from './ContentView.vue';
+import PageView from "./PageView.vue";
+import ContentView from "./ContentView.vue";
+import QuickActionButtons from "./QuickActionButtons";
+import TaggingDialog from "./TaggingDialog.vue";
+import TaggingShortcutsDialog from "./TaggingShortcutsDialog.vue";
+import ImageBrowsing from "./ImageBrowsing.vue";
+import AutoTags from "./AutoTags.vue";
 import api from "../api";
 export default {
   name: "ResultsView",
   props: {
     load: {},
     page_size: { default: 20 },
+    view_mode: { default: "list" },
   },
   components: {
     ParamInput,
     PageView,
-    ContentView
+    ContentView,
+    QuickActionButtons,
+    TaggingDialog,
+    TaggingShortcutsDialog,
+    AutoTags,
+    ImageBrowsing
   },
   data() {
     return {
       total: 0,
       page: 1,
       value: [],
-      show_meta: {},
-      view_paragraph: null,
-      embedded: null,
-      edit_target: null,
-      edit_new_field: "",
       page_range: [0, 0],
+      plugin_pages: [],
+      // local config
+      config: {
+        fit: "both",
+        contain: false,
+        enhance: false,
+        force_thumbnail: false,
+        limit: 50,
+      },
+      // dialog bools
+      dialogs: {
+        embedded: {
+          visible: false,
+          target: {}
+        },
+        edit: {
+          visible: false,
+          target: {},
+          new_field: '',
+        },
+        paragraph: {
+          visible: false,
+          target_index: null
+        },
+        info: {
+          visible: false,
+          target: {}
+        },
+        auto_tagging: {
+          visible: false
+        },
+        tagging_shortcuts: {
+          visible: false,
+          list: [],
+          initial: ''
+        },
+        tagging: {
+          visible: false,
+          choices: []
+        }
+      },
+      // selection
+      _selection: [],
+      _browsing_item: {},
+      selection_count: 0,
+      select_index: -1,
+      last_key: ''
     };
   },
   watch: {
     page(val) {
-      this.turn_page(val)
-    }
+      this.turn_page(val);
+      history.pushState(
+        "",
+        "",
+        api.querystring_stringify(Object.assign(api.querystring_parse(location.search), {page: this.page}))
+      )
+    },
   },
   computed: {
     pages() {
@@ -235,47 +399,25 @@ export default {
       }
       return Array.from(cols).sort();
     },
-    showing_result() {
-      return this.visible_data[this.view_paragraph] || null;
-    },
   },
   mounted() {
+    this.config = api.load_config("results", this.config);
     this.start();
+
+    api.call("plugins/shortcuts").then((data) => {
+      data = data.result;
+      for (var k in data)
+        this.dialogs.tagging_shortcuts.list.push({
+          text: `${k} ${data[k]}`,
+          value: data[k],
+        });
+    });
   },
   created() {
-    this.handler = (e) => {
-      this.$emit("keyup", e);
-      if (e.target.tagName == "INPUT" || this.view_paragraph === null) return;
-
-      const that = this;
-      function __cb_update_view_paragraph(set_value) {
-        return () => {
-          that.view_paragraph =
-            set_value >= 0 ? set_value : that.visible_data.length + set_value;
-        };
-      }
-
-      switch (e.key) {
-        case "ArrowRight":
-        case "ArrowLeft":
-          var inc = e.key == "ArrowRight" ? 1 : -1;
-          this.view_paragraph += inc;
-          if (this.view_paragraph >= this.visible_data.length) {
-            this.view_paragraph = null;
-            this.turn_page(this.page + 1, __cb_update_view_paragraph(0));
-          } else if (this.view_paragraph < 0) {
-            this.view_paragraph = null;
-            this.turn_page(this.page - 1, __cb_update_view_paragraph(-1));
-          }
-          break;
-        default:
-          break;
-      }
-    };
-    window.addEventListener("keyup", this.handler);
+    window.addEventListener('keyup', this._keyup_handler)
   },
   beforeDestroy() {
-    window.removeEventListener("keyup", this.handler);
+    window.removeEventListener('keyup', this._keyup_handler)
   },
   methods: {
     _fetched() {
@@ -283,14 +425,17 @@ export default {
         this.page_range[0] <= this.offset && this.page_range[1] > this.offset
       );
     },
-    start() {
+    start(page) {
       this.page_range = [0, 0];
-      this.turn_page(1);
+      let params = api.querystring_parse(location.search)
+      if (!page)
+        if (params.page) page = params.page | 0
+        else page = 1
+      this.turn_page(page);
     },
     querify: api.querify,
     turn_page(p, cb) {
       if (this.page !== p) this.page = p;
-      this.show_meta = {};
       window.scroll({ top: this.$refs.results.offsetTop - 64 });
       if (!this._fetched()) {
         this.$emit("load", {
@@ -298,11 +443,15 @@ export default {
           limit: this.page_size * 5,
           callback: (data) => {
             this.page_range = [data.offset, data.offset + data.result.length];
+            data.result.forEach((x) => (x.selected = false));
             this.value = data.result;
-            this.total = data.total
-            if (typeof cb !== "undefined") cb();
+            this.total = data.total;
+            this._selection = [];
+            if (typeof cb == "function") cb();
           },
         });
+      } else {
+        if (typeof cb == "function") cb();
       }
     },
     show_embedded(r, col) {
@@ -311,38 +460,360 @@ export default {
       this.embedded = { arr: r[col], source };
     },
     view_page(index) {
-      this.view_paragraph = index;
+      this.dialogs.paragraph.visible = true;
+      this.dialogs.paragraph.target_index = index;
+      this.clear_selection();
     },
-    metas(r) {
-      var s = "";
-      for (var k in r) {
-        if (
-          [
-            "_id",
-            "collectoin",
-            "matched_content",
-            "content",
-            "pagenum",
-            "pdate | dateSafe",
-            "source",
-          ].includes(k)
-        )
-          continue;
-        s += k + ": " + JSON.stringify(r[k]) + "\n";
+    _keyup_handler(e) {
+      if (e.target.tagName == "INPUT" || e.target.tagName == "TEXTAREA") return;
+      switch (e.key.toLowerCase()) {
+        case "arrowleft":
+          if (this.dialogs.paragraph.visible)
+            this.page_view_handler('prev')
+          else
+            this.turn_page(this.page - 1)
+          break;
+        case "arrowright":
+          if (this.dialogs.paragraph.visible)
+            this.page_view_handler('next')
+          else
+            this.turn_page(this.page + 1)
+          break;
+        case "f":
+          this.toggle_selection();
+          break;
+        case "g":
+          this.group(e.altKey || e.ctrlKey);
+          break;
+        case "p":
+          e.altKey || e.ctrlKey ? this.split() : this.merge();
+          break;
+        case "t":
+        case "@":
+          this.show_tagging_dialog();
+          break;
+        case "n":
+          this.tag([`noted:${new Date().toISOString()}`]);
+          break;
+        case "d":
+          if (this.last_key == e.key && this.selected_paragraphs().length > 0) {
+            this.delete_items();
+            this.last_key = null;
+          }
+          break;
+        case "q":
+        case "`":
+        case "escape":
+          this.dialogs.paragraph.visible = false;
+          this.clear_selection();
+          break;
+        case "a":
+        case "arrowup":
+        case "arrowdown":
+          if (this.selected_items().length)
+            this.rating(e.key != "ArrowDown" ? 1 : -1);
+          break;
+        case "r":
+          if (this.last_key == e.key && this.selected_paragraphs().length > 0) {
+            this.reset_storage();
+            this.last_key = null;
+          }
+          break;
+        case "c":
+        case "z":
+        case "o":
+        case "i":
+          if (e.ctrlKey || e.metaKey) return;
+          if (this.selected_paragraphs().length > 0) {
+            var _album = this.selected_paragraphs()[0];
+            switch (e.key.toLowerCase()) {
+              case "o":
+                this._open_window(_album.source.url);
+                break;
+              case "c":
+                this._open_window(`?q=${this.quote(_album.author) || ""}`);
+                break;
+              case "z":
+                this._open_window(
+                  e.shiftKey
+                    ? `?q=id%3D${_album._id},images.source=exists(1)`
+                    : `?q=source.url%25%27${_album.source.url
+                        .replace(/[-\\^$*+?.()|[\]{}]/g, "\\$&")
+                        .replace(/\/\d+\//, "/.*/")}'`
+                );
+                break;
+              case "i":
+                this.dialogs.info.visible = !this.dialogs.info.visible;
+                break;
+            }
+          }
+          break;
+        case "0":
+        case "1":
+        case "2":
+        case "3":
+        case "4":
+        case "5":
+        case "6":
+        case "7":
+        case "8":
+        case "9":
+          this.dialogs.tagging_shortcuts.visible = this.selected_paragraphs().length > 0;
+          this.dialogs.tagging_shortcuts.initial = e.key;
+          break;
+        default:
+          var pages = Object.values(this.plugin_pages).filter(x => x.shortcut == e.key)
+          if (pages.length) {
+              this._open_window(
+                  `?archive=true&q=author%3D${
+                    this.quote(this.selected_paragraphs()[0].author) || ""
+                  };page('${this.format(pages[0].format, {imageitem: this.selected_items()[0], paragraph: this.selected_paragraphs()[0]})}')` 
+              )
+          }
+          break;
       }
-      return s;
+
+      this.last_key = this.last_key === null ? "" : e.key;
+    },
+    page_view_handler(direction) {
+      const that = this;
+      function _update_target_index(set_value) {
+        return () => {
+          that.dialogs.paragraph.target_index =
+            set_value < 0 ? that.visible_data.length - 1 : 0;
+        };
+      }
+
+      var inc = direction == 'next' ? 1 : -1;
+      var vp = this.dialogs.paragraph.target_index + inc;
+      if (vp >= this.visible_data.length) {
+        this.turn_page(this.page + 1, _update_target_index(0));
+      } else if (vp < 0) {
+        this.turn_page(this.page - 1, _update_target_index(-1));
+      } else {
+        this.dialogs.paragraph.target_index = vp;
+      }
     },
     save() {
       api
-        .call(`edit/${this.edit_target.mongocollection}/${this.edit_target._id}`, this.edit_target)
+        .call(
+          `edit/${this.dialogs.edit.target.mongocollection}/${this.dialogs.edit.target._id}`,
+          this.dialogs.edit.target
+        )
         .then(() => {
-          this.edit_target = null;
+          this.dialogs.edit.target = null;
           api.notify({ title: "保存成功" });
         });
     },
-    fav(r) { api.fav(r); },
-    favored(r) { return api.favored(r) },
-    stringify(x) { return encodeURIComponent(api.quote(x)) }
+    _open_window(url) {
+      window.open(url);
+    },
+    _show_dialog(dialog) {
+      this.drawer = false;
+      this.dialogs[dialog] = true;
+    },
+    _save_config() {
+      api.save_config("results", this.config);
+    },
+    fav(r) {
+      api.fav(r);
+    },
+    favored(r) {
+      return api.favored(r);
+    },
+    stringify(x) {
+      return encodeURIComponent(api.quote(x));
+    },
+    selected_paragraphs() {
+      if (this.dialogs.paragraph.visible) {
+        return [this.visible_data[this.dialogs.paragraph.target_index]]
+      } else {
+        return [... this._selection]
+      }
+    },
+    selected_items() {
+      if (this.dialogs.paragraph.visible) {
+        return [Object.assign({}, this._browsing_item.images[0], {paragraph_id: this.selected_paragraphs()[0]._id})];
+      } else {
+        return this.selected_paragraphs().reduce(
+          (y, e) =>
+            y.concat(
+              e.images.map((i) => {
+                if (!i.paragraph_id) i.paragraph_id = e._id;
+                return i;
+              })
+            ),
+          []
+        );
+      }
+    },
+    selected_ids() {
+      return this.selected_paragraphs().map(x => x._id)
+    },
+    // api calls
+    update_selection(r, e, index) {
+      var s = []
+      if (e.shiftKey && this.select_index >= 0) {
+        document.getSelection().removeAllRanges()
+        let sel_start = Math.min(this.select_index, index),
+            sel_end = Math.max(this.select_index, index)
+        for (var i = sel_start; i <= sel_end; ++i) {
+          if (i == this.select_index) continue
+          s.push(this.visible_data[i])
+        }
+      } else {
+        s = [r]
+      }
+      this.select_index = index
+      
+      for (var i of s) {
+          i.selected = !i.selected;
+          if (i.selected) this._selection.push(i)
+          else this._selection.splice(this._selection.indexOf(i), 1);
+        }
+
+      this.selection_count = this._selection.length
+    },
+    toggle_selection() {
+      this.visible_data.forEach((x) => (x.selected = !x.selected));
+      this._selection = this.visible_data.filter((x) => x.selected);
+      this.selection_count = this._selection.length
+    },
+    clear_selection(s) {
+      if (typeof s === "undefined") s = this.visible_data;
+      s.forEach((x) => {
+        x.selected = false;
+        this._selection.splice(this._selection.indexOf(x), 1);
+      });
+      this.selection_count = this._selection.length
+    },
+    show_tagging_dialog() {
+      if (this.selected_paragraphs().length > 0) {
+        var existing_tags = new Set(
+          this.selected_paragraphs().reduce((a, e) => a.concat(e.keywords), [])
+        );
+        this.$refs.tagging_dialog.show(Array.from(existing_tags));
+      }
+    },
+    tag(e, append = true) {
+      var s = this.selected_paragraphs();
+      var existing_tags = new Set(
+        this.selected_paragraphs().reduce((a, e) => a.concat(e.keywords), [])
+      );
+      var push = append ? e : e.filter((x) => !existing_tags.has(x)),
+        pull = append
+          ? []
+          : Array.from(existing_tags).filter((x) => !e.includes(x));
+      var updates = {
+        ids: this.selected_ids(),
+        $push: { keywords: push },
+        $pull: { keywords: pull },
+      };
+      if (push.filter((x) => x.startsWith("@")))
+        updates.author = push.filter((x) => x.startsWith("@"))[0];
+      else if (pull.filter((x) => x.startsWith("@"))) updates.author = "";
+
+      api.call("edit/paragraph/batch", updates).then((data) => {
+        this.clear_selection(s);
+        s.forEach((p) => {
+          data.result[p._id] && (p.keywords = data.result[p._id].keywords);
+        });
+      });
+    },
+    delete_items() {
+      var s = this.selected_paragraphs();
+      var album_items = {},
+        visible_album_items = {};
+
+      this.selected_items().forEach((item) => {
+        if (!album_items[item.paragraph_id]) album_items[item.paragraph_id] = [];
+        album_items[item.paragraph_id].push(item._id);
+      });
+
+      s.forEach((p) => {
+        if (!visible_album_items[p._id]) visible_album_items[p._id] = [];
+        visible_album_items[p._id].splice(
+          0,
+          0,
+          ...(this.dialogs.paragraph.visible
+            ? this.selected_items().map(i => i._id)
+            : p.images.map((i) => i._id))
+        );
+      });
+
+      api
+        .call("imageitem/delete", {
+          album_items,
+        })
+        .then(() => {
+          s.forEach((x) => {
+            x.images = x.images.filter(
+              (i) => !visible_album_items[x._id].includes(i._id)
+            );
+          });
+          this.clear_selection(s);
+        });
+    },
+    rating(inc) {
+      var s = this.selected_paragraphs();
+      api
+        .call("imageitem/rating", {
+          ids: this.selected_items().map((x) => x._id),
+          inc: inc.val ? 0 : inc,
+          val: inc.val ? inc.val : 0,
+        })
+        .then((data) => {
+          data = data.result || {};
+          this.clear_selection(s);
+          s.forEach((p) =>
+            p.images.forEach(
+              (i) =>
+                typeof data[i._id] !== "undefined" && (i.rating = data[i._id])
+            )
+          );
+        });
+    },
+    group(del) {
+      var s = this.selected_paragraphs();
+      api
+        .call("gallery/grouping", {
+          ids: this.selected_ids(),
+          delete: del,
+        })
+        .then((data) => {
+          this.clear_selection(s);
+          s.forEach(
+            (p) =>
+              (p.keywords = p.keywords
+                .filter((x) => !x.startsWith("*0") && x !== data.result)
+                .concat(data.result ? [data.result] : []))
+          );
+        });
+    },
+    merge() {
+      var s = this.selected_paragraphs();
+      api
+        .call("paragraph/merge", {
+          ids: this.selected_ids(),
+        })
+        .then(() => this.clear_selection(s));
+    },
+    split() {
+      var s = this.selected_paragraphs();
+      api
+        .call("paragraph/split", {
+          ids: this.selected_ids(),
+        })
+        .then(() => this.clear_selection(s));
+    },
+    reset_storage() {
+      var s = this.selected_paragraphs();
+      api
+        .call("imageitem/reset_storage", {
+          ids: this.selected_items().map((x) => x._id),
+        })
+        .then(() => this.clear_selection(s));
+    },
   },
 };
 </script>
@@ -364,7 +835,55 @@ export default {
 .meta a {
   text-decoration: none;
 }
+
 .count {
   margin-bottom: 5px;
+}
+
+.page .operations,
+.page .v-btn,
+.page .meta,
+.gallery .operations,
+.gallery .meta,
+.gallery .v-btn {
+  display: none;
+}
+
+.gallery-toolbar > * {
+  margin: 5px;
+}
+
+.gallery-toolbar {
+  display: flex;
+  clear: both;
+}
+
+.wrapper-container {
+  clear: both;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+.gallery .wrapper-container {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.gallery .wrapper-container .paragraph {
+  flex: 1;
+  padding: 5px;
+  min-width: 250px;
+  width: 25%;
+}
+
+.close {
+  position: absolute;
+  z-index: 400;
+  right: 20px;
+  top: 20px;
+  border-radius: 20px;
+  border: 0px;
+  background: rgba(0, 0, 0, 0.5);
 }
 </style>

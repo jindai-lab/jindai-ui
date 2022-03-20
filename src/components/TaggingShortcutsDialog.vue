@@ -83,6 +83,9 @@ export default {
       if (!val) this.$emit("input", false);
     },
   },
+  mounted() {
+    this.tag_choices = this.choices || []
+  },
   methods: {
     search_tag(search) {
       if (!search) return;

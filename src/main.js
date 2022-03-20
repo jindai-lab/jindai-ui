@@ -33,7 +33,6 @@ import UserList from './components/UserList.vue'
 import AccountSecurity from './components/AccountSecurity.vue'
 import ArticleCompletion from './components/ArticleCompletion.vue'
 import DbConsole from './components/DbConsole.vue'
-import Gallery from './gallery/Gallery.vue'
 import vuetify from './plugins/vuetify'
 
 // configure routes
@@ -53,7 +52,6 @@ const routes = [
     { path: '/articlecompletion', component: ArticleCompletion },
     { path: '/dbconsole', component: DbConsole },
     { path: '/scheduler', component: TaskScheduler },
-    { path: '/gallery', component: Gallery },
 ]
 
 const router = new VueRouter({

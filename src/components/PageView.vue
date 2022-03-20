@@ -7,7 +7,7 @@
     }"
   >
     <v-card-text>
-      <v-row v-if="!compact">
+      <v-row v-if="!view_mode">
         <v-col class="heading">
           <h3>{{ file }}</h3>
         </v-col>
@@ -28,18 +28,16 @@
         </v-btn>
       </v-row>
 
-      <v-row>
-        <v-col cols="6">
+      <v-row class="main">
           <div class="paragraphs">
             <div v-for="p in paragraphs" :key="p._id">
               <ContentView
                 :paragraph="p"
                 item_width="100%"
-                item_height="auto"
               />
             </div>
           </div>
-          <div class="mt-5" v-if="paragraphs.length > 0">
+          <div class="mt-5 meta" v-if="paragraphs.length > 0">
             日期: {{ paragraphs[0].pdate | dateSafe }}<br />
             页码: {{ paragraphs[0].pagenum }}
             <v-btn
@@ -63,8 +61,7 @@
             {{ paragraphs[0].source.file }} {{ paragraphs[0].source.page
             }}<br />
           </div>
-        </v-col>
-        <v-col cols="6" class="image" @click="show_modal = true">
+        <div class="image" @click="show_modal = !!pdf_image">
           <img
             :src="pdf_image"
             alt=""
@@ -73,7 +70,7 @@
                 window_height - $event.target.offsetTop - 20 + 'px'
             "
           />
-        </v-col>
+        </div>
       </v-row>
       <v-dialog v-model="show_modal" fullscreen>
         <v-btn
@@ -149,16 +146,20 @@ export default {
       loading_image: require("../../public/assets/loading.png"),
     };
   },
-  props: ["compact", "paragraph"],
+  props: ["view_mode", "paragraph"],
   computed: {
     window_height() {
       return window.innerHeight;
     },
   },
+  beforeDestroy() {
+    if (!this.view_mode) {
+      window.removeEventListener("keyup", this.handler)
+    }
+  },
   created() {
-    if (!this.compact) {
+    if (!this.view_mode) {
       this.handler = (e) => {
-        this.$emit("keyup", e);
         if (e.target.tagName == "INPUT") return;
         switch (e.key) {
           case "ArrowRight":
@@ -175,11 +176,6 @@ export default {
     }
     if (this.paragraph) {
       this.paragraphs = [this.paragraph];
-    }
-  },
-  beforeDestroy() {
-    if (!this.compact) {
-      window.removeEventListener("keyup", this.handler);
     }
   },
   mounted() {
@@ -267,14 +263,15 @@ export default {
         });
     },
     swipe_handler(direction) {
-      if (document.getSelection().toString() || this.compact) return;
+      if (document.getSelection().toString()) return;
       switch (direction) {
         case "right":
-          this.page = +this.page - 1;
+          if (this.view_mode) this.$emit('prev')
+          else this.page = +this.page - 1;
           break;
-
         case "left":
-          this.page = +this.page + 1;
+          if (this.view_mode) this.$emit('next')
+          else this.page = +this.page + 1;
           break;
       }
     },
@@ -296,5 +293,11 @@ export default {
 <style scoped>
 .paragraphs {
   line-height: 200%;
+}
+.main > div {
+  width: 50%;
+}
+.browsing {
+  overflow: hidden;
 }
 </style>
