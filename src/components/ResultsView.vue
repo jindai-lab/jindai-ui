@@ -1,5 +1,5 @@
 <template>
-  <v-sheet v-if="total > 0" ref="results" :class="view_mode">
+  <v-sheet v-if="total !== 0" ref="results" :class="view_mode">
     <!-- gallery toolbar -->
     <div v-if="view_mode == 'gallery'" class="gallery-toolbar">
       <v-checkbox
@@ -20,10 +20,10 @@
         label="增强图像"
         @change="_save_config"
       ></v-checkbox>
-      <v-btn text @click="_show_dialog('auto_tagging')">自动标签</v-btn>
+      <v-btn text @click="dialogs.auto_tagging.visible = true;">自动标签</v-btn>
     </div>
     <!-- total results count -->
-    <div class="count">共找到 {{ total }} 个结果。</div>
+    <div class="count" v-show="total !== null">共找到 {{ total }} 个结果。</div>
     <!-- divider -->
     <v-divider class="mt-5 mb-5"></v-divider>
     <!-- show content -->
@@ -127,7 +127,7 @@
       </div>
     </v-row>
     <!-- dialogs -->
-    <v-dialog v-model="dialogs.paragraph.visible" fullscreen>
+    <v-dialog v-model="dialogs.paragraph.visible" fullscreen persistent>
       <v-btn icon @click="dialogs.paragraph.visible = false" class="close"
         ><v-icon>mdi-close</v-icon></v-btn
       >
@@ -312,6 +312,7 @@ export default {
       total: 0,
       page: 1,
       value: [],
+      token: null,
       page_range: [0, 0],
       plugin_pages: [],
       // local config
@@ -442,12 +443,22 @@ export default {
           offset: this.offset,
           limit: this.page_size * 5,
           callback: (data) => {
-            this.page_range = [data.offset, data.offset + data.result.length];
-            data.result.forEach((x) => (x.selected = false));
-            this.value = data.result;
-            this.total = data.total;
-            this.selection = [];
-            if (typeof cb == "function") cb();
+            if (this.token != data.token) {
+              this.token = data.token
+              this.value = []
+              this.total = null
+              this.selection = [];
+            }
+            if (typeof data.result !== 'undefined') 
+            {
+              this.page_range = [data.offset, data.offset + data.result.length];
+              data.result.forEach((x) => (x.selected = false));
+              this.value = data.result;
+              if (typeof cb == "function") cb();
+            }
+            if (typeof data.total !== 'undefined') 
+              this.total = data.total;
+            this.$forceUpdate()
           },
         });
       } else {
@@ -838,11 +849,9 @@ export default {
 }
 
 .page .operations,
-.page .v-btn,
 .page .meta,
 .gallery .operations,
-.gallery .meta,
-.gallery .v-btn {
+.gallery .meta {
   display: none;
 }
 

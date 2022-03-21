@@ -124,6 +124,7 @@ export default {
       if (this.item_index < 0 || this.item_index >= this.paragraph_images.length)
         this.$emit(this.start_item >= 0 ? 'next' : 'prev')
       this._emit_browse()
+      this.start_item = 0
     },
     'paragraph.images': function (val) {
       if (!val || val.length <= this.item_index) {
@@ -134,6 +135,9 @@ export default {
         }
       }
       this._emit_browse()
+    },
+    visible(val) {
+      if (val) this.$forceUpdate()
     }
   },
   data() {

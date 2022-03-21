@@ -142,6 +142,7 @@ export default {
       api.fav(this.paragraph);
     },
     _is_text(x) {
+      x = x || ''
       return (
         encodeURIComponent(x).replace(/%[0-9a-f]{2}/gi, "x").length > 20 ||
         x.match(/[\s.,?!。，？…]/)
@@ -212,8 +213,12 @@ p:hover .fav-button,
   margin-right: 5px;
 }
 
-.gallery-description .force-text {
-  color: var(--seconday--text);
+.gallery-description, .gallery-description .force-text {
+  color: rgba(0, 0, 0, 0.6)
+}
+
+.theme--dark .gallery-description, .theme--dark .gallery-description .force-text {
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .v-image.selected::before {

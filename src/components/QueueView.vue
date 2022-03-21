@@ -9,7 +9,7 @@
     处理结果
     </v-badge>
     <v-badge class="ml-5 mr-5"
-      :value="data.waiting > 0"
+      :value="data.waiting.length > 0"
       :content="data.waiting.length"
     >
     等待中

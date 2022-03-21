@@ -129,14 +129,15 @@ export default {
       cancel_source: api.cancel_source(),
     };
   },
-  mounted() {
-    const search_params = api.querystring_parse(location.search);
-    for (var k of ["q", "sort", "groups"])
-      if (search_params[k]) this[k] = search_params[k];
-
+  mounted() {    
     let config = api.load_config("main");
     if (config.view_mode) this.view_mode = config.view_mode;
     if (config.page_size) this.page_size = +config.page_size;
+    if (config.sort) this.sort = config.sort
+    
+    const search_params = api.querystring_parse(location.search);
+    for (var k of ["q", "sort", "groups"])
+      if (search_params[k]) this[k] = search_params[k];
 
     api.get_datasets_hierarchy().then((data) => {
       this.datasets = data.hierarchy;
@@ -200,6 +201,7 @@ export default {
       api.save_config("main", {
         page_size: this.page_size,
         view_mode: this.view_mode,
+        sort: this.sort,
         selected_datasets: this.selected_datasets,
       });
     },
@@ -242,49 +244,54 @@ export default {
         return;
       }
       if (!this.q && !this.req) return;
+
       if (this.cancel_source) this.cancel_source.cancel();
+
       this.cancel_source = api.cancel_source();
-      api
-        .call(
-          "search",
-          {
-            q: this.q,
-            req: this.req,
-            sort: this.sort,
-            mongocollections: this.selected_mongocollections,
-            offset: e.offset,
-            limit: e.limit,
-            groups: this.groups,
-          },
-          this.cancel_source
-        )
-        .then((data) => {
-          if (!data) {
-            console.log("WARNING: no data returned.");
-            return;
-          }
-          if (data.result.query) {
-            var reg = new RegExp(
-              "(" +
-                data.result.query
-                  .split(/[^\w]/g)
-                  .filter((x) => x)
-                  .join("|") +
-                ")",
-              "ig"
-            );
-            this.results = data.result.results.map((x) => {
-              x.matched_content = x.content.replace(reg, "<em>$1</em>");
-              return x;
-            });
-          }
-          this.querystr = data.result.query;
-          e.callback({
-            result: data.result.results,
-            offset: e.offset,
-            total: data.result.total,
+
+      var params = {
+        q: this.q,
+        req: this.req,
+        sort: this.sort,
+        mongocollections: this.selected_mongocollections,
+        offset: e.offset,
+        limit: e.limit,
+        groups: this.groups,
+      };
+
+      var token = new Date().getTime() + Math.random()
+
+      api.call("search", params, this.cancel_source).then((data) => {
+        if (!data) {
+          console.log("WARNING: no data returned.");
+          return;
+        }
+        if (data.result.query) {
+          var reg = new RegExp(
+            "(" +
+              data.result.query
+                .split(/[^\w]/g)
+                .filter((x) => x)
+                .join("|") +
+              ")",
+            "ig"
+          );
+          this.results = data.result.results.map((x) => {
+            x.matched_content = x.content.replace(reg, "<em>$1</em>");
+            return x;
           });
+        }
+        this.querystr = data.result.query;
+        e.callback({
+          token,
+          result: data.result.results,
+          offset: e.offset,
         });
+      });
+
+      api.call("search", Object.assign({count: true}, params, this.cancel_source)).then((data) => {
+        if (data.result) e.callback({token, total: data.result})
+      })
     },
     export_query(format, callback) {
       if (typeof callback !== "function")
