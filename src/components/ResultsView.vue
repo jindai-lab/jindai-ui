@@ -31,12 +31,12 @@
       <div class="paragraph" v-for="(r, index) in visible_data" :key="index">
         <div class="meta">
           数据集:
-          <a :href="`/?q=dataset=${stringify(r.dataset)}`" target="_blank">{{
+          <a :href="`/?q=dataset=${quote(r.dataset)}`" target="_blank">{{
             r.dataset
           }}</a>
           大纲: {{ r.outline }} 来源:
           <a
-            :href="`/?q=dataset=${stringify(r.dataset)},source.file=${stringify(
+            :href="`/?q=dataset=${quote(r.dataset)},source.file=${quote(
               r.source.file
             )}`"
             target="_blank"
@@ -149,6 +149,8 @@
         @prev="page_view_handler('prev')"
         @browse="browsing_item = $event"
         @info="dialogs.info.visible = true; dialogs.info.target = $event"
+        @rating="rating"
+        @close="dialogs.paragraph.visible=false;"
       />
     </v-dialog>
 
@@ -629,7 +631,7 @@ export default {
     favored(r) {
       return api.favored(r);
     },
-    stringify(x) {
+    quote(x) {
       return encodeURIComponent(api.quote(x));
     },
     selected_paragraphs() {
@@ -762,14 +764,17 @@ export default {
           this.clear_selection(s);
         });
     },
-    rating(inc) {
+    rating(val) {
       var s = this.selected_paragraphs();
+      if (typeof val === 'number') {
+        val = {
+          inc: val,
+        }
+      }
+      val.ids = (val.item ? [val.item] : this.selected_items()).map((x) => x._id) 
+      if (val.item) delete val.item;
       api
-        .call("imageitem/rating", {
-          ids: this.selected_items().map((x) => x._id),
-          inc: inc.val ? 0 : inc,
-          val: inc.val ? inc.val : 0,
-        })
+        .call("imageitem/rating", val)
         .then((data) => {
           data = data.result || {};
           this.clear_selection(s);
