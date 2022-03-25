@@ -33,7 +33,6 @@
           <div v-for="p in paragraphs" :key="p._id">
             <ContentView :paragraph="p" item_width="100%" :view_mode="view_mode" />
           </div>
-        </div>
         <div class="mt-5 meta" v-if="paragraphs.length > 0">
           日期: {{ paragraphs[0].pdate | dateSafe }}<br />
           页码: {{ paragraphs[0].pagenum }}
@@ -56,6 +55,7 @@
             >{{ paragraphs[0].source.url }}</a
           >
           {{ paragraphs[0].source.file }} {{ paragraphs[0].source.page }}<br />
+        </div>
         </div>
         <div class="image" @click="show_modal = !!pdf_image">
           <img

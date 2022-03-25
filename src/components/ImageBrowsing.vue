@@ -7,7 +7,7 @@
       up: () => $emit('rating', {item: active_item, inc: 1}),
     }"
     @wheel.prevent="_wheel_handler"
-    v-if="paragraph_images.length"
+    v-if="paragraph_images.length && visible"
   >
     <video-player
       :src="get_item_video(active_item)"
@@ -148,7 +148,7 @@ export default {
       playing_timer: 0,
       playing_interval: 2000,
       plugin_pages: [],
-      browsing_page: 1,
+      browsing_page: 2,
     };
   },
   mounted() {
@@ -205,7 +205,9 @@ export default {
     get_item_image(item) {
       return api.get_item_image(item, this.config);
     },
-    get_item_video: api.get_item_video,
+    get_item_video(item) {
+      return api.get_item_video(item)
+    },
 
     fit_image(e) {
       const img = e.target,
@@ -284,6 +286,7 @@ export default {
       } else {
         this.item_index++;
       }
+      this.browsing_page = 2
     },
     browse_prev() {
       if (this.item_index == 0) {
@@ -292,6 +295,7 @@ export default {
       } else {
         this.item_index--;
       }
+      this.browsing_page = 2
     },
     playing() {
       this.playing_timer = setInterval(() => {

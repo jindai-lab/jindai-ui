@@ -1,5 +1,5 @@
 <template>
-  <div class="paragraph mt-5" v-if="['list', 'page'].includes(view_mode)">
+  <div class="paragraph mt-5" v-if="!view_mode || ['list', 'page'].includes(view_mode)">
     <p v-html="content" v-if="is_html"></p>
     <p v-else>
       {{ content }}
@@ -16,7 +16,7 @@
         ><v-icon small>mdi-star</v-icon></v-btn
       >
     </p>
-    <div v-if="paragraph.images">
+    <div v-if="paragraph.images && paragraph.images.length">
       <v-row float>
         <v-card
           v-for="item in first_item_only

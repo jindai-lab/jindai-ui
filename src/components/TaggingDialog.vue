@@ -71,13 +71,13 @@ export default {
       if (search.length == 0 || search == '*' || search == '@') return
       this.tag_choices = [...this.tag_new]
       this.cancel = api.cancel_source();
+      search = api.escape_regex(search)
       api
         .call(
-          "paragraph/search_values",
+          "quicktask",
           {
-            search,
-            field: 'keywords',
-            match_initials: ((search.match(/^[@*]/)) ? true : false)
+            query: `??match(keywords%${api.querify(search)});project(keywords=1);unwind($keywords);match(keywords%${api.querify(search)});group(id=$keywords,count=sum(1));limit(20)`,
+            mongocollection: ''
           },
           this.cancel
         )

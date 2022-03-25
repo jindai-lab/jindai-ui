@@ -12,7 +12,7 @@
             @keyup.enter="search"
             label="搜索条件"
           ></v-text-field>
-          <v-select
+          <v-combobox
             class="d-inline-block ml-5"
             v-model="sort"
             label="排序"
@@ -25,7 +25,7 @@
               { text: '出处', value: 'source' },
               { text: '随机', value: 'random' },
             ]"
-          ></v-select>
+          ></v-combobox>
           <v-text-field
             class="d-inline-block ml-5"
             label="每页数量"
@@ -154,9 +154,6 @@ export default {
   },
   methods: {
     datasets_req() {
-      function escapeRegExp(string) {
-        return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
-      }
 
       var selected = this.selected_datasets.map(
           (sid) => this.selection_bundles[sid]
@@ -166,7 +163,7 @@ export default {
       if (selected.length > 0) {
         var datasets = selected
             .filter((x) => !x.source)
-            .map((x) => escapeRegExp(x.name)),
+            .map((x) => api.escape_regex(x.name)),
           sourcefiles = selected
             .filter((x) => x.source)
             .map((x) => ({
@@ -201,7 +198,7 @@ export default {
       api.save_config("main", {
         page_size: this.page_size,
         view_mode: this.view_mode,
-        sort: this.sort,
+        sort: this.sort == 'random' ? '' : this.sort,
         selected_datasets: this.selected_datasets,
       });
     },
@@ -252,7 +249,7 @@ export default {
       var params = {
         q: this.q,
         req: this.req,
-        sort: this.sort,
+        sort: typeof this.sort === 'object' ? this.sort.value : this.sort,
         mongocollections: this.selected_mongocollections,
         offset: e.offset,
         limit: e.limit,

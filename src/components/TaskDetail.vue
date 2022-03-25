@@ -16,17 +16,15 @@
             label="忽略运行中间的错误"
             v-model="task.resume_next"
           ></v-checkbox>
-          <v-select
+          <v-text-field
             class="d-inline-block ml-5"
             label="并行运行"
             v-model="task.concurrent"
-            :items="[
-              { text: '1（不并行）', value: 1 },
-              { text: '2', value: 2 },
-              { text: '3', value: 3 },
-            ]"
+            type="number"
+            :rules="[v => ((v >= 1) && (v <= 10) && (v == parseInt(v))) || '应为 1-10 之间的整数']"
+            @input="v => task.concurrent = parseInt(v)"
           >
-          </v-select>
+          </v-text-field>
         </v-col>
       </v-row>
       <v-row>

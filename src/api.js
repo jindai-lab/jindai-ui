@@ -158,12 +158,14 @@ export default {
         return this.call('authenticate', {}, 'delete').then(() => { location.reload() })
     },
 
+    escape_regex(x) {
+        return x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); 
+    },
+    
     querify(obj) {
         function _values(x, indent) {
             if (Array.isArray(x)) {
-                if (x.length > 0 && x.filter(y => y.length == 2).length == x.length)
-                    return '([]' + _querify(x, indent + '  ') + '\n' + indent + ')'
-                return '([]' + (x.length > 0 ? ' => ' + x.map(_values).join(' => ') : '') + ')'
+                return '[' + x.map(_values).join(', ') + ']'
             } else if (typeof(x) === 'object') {
                 return '(' + _params(x, indent + '  ') + ')'
             } else
@@ -194,8 +196,10 @@ export default {
 
         if (Array.isArray(obj))
             return _querify(obj, '').substr(2)
-        else
+        else if (typeof(x) === 'object')
             return _params(obj, '')
+        else
+            return _values(obj, '')
     },
 
     logined() {

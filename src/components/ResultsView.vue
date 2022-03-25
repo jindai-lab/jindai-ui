@@ -546,8 +546,7 @@ export default {
                 this._open_window(
                   e.shiftKey
                     ? `?q=id%3D${_album._id},images.source=exists(1)`
-                    : `?q=source.url%25%27${_album.source.url
-                        .replace(/[-\\^$*+?.()|[\]{}]/g, "\\$&")
+                    : `?q=source.url%25%27${escape_regex(_album.source.url)
                         .replace(/\/\d+\//, "/.*/")}'`
                 );
                 break;
@@ -633,6 +632,9 @@ export default {
     },
     quote(x) {
       return encodeURIComponent(api.quote(x));
+    },
+    escape_regex(x) {
+      return api.escape_regex(x)
     },
     selected_paragraphs() {
       if (this.dialogs.paragraph.visible) {
