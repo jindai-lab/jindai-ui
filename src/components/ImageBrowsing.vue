@@ -88,6 +88,7 @@
               <v-btn icon dense @click="$emit('info', active_item)" target="_blank"
                 ><v-icon>mdi-information</v-icon></v-btn
               >
+              <v-btn icon dense @click="google"><v-icon>mdi-google</v-icon></v-btn>
             </v-col>
             <v-spacer></v-spacer>
           </v-row>
@@ -202,13 +203,39 @@ export default {
       }
       return str.replace(/\{([\w\d._]+)\}/g, _replace);
     },
+    google(e) {
+      e = e.target
+      var level = 10
+      while (e && !e.querySelector('img') && --level) e = e.parentElement
+      var image = e.querySelector('img')
+
+      function getDataUri(image, callback) {
+          var canvas = document.createElement('canvas');
+          canvas.width = image.naturalWidth * 300 / image.naturalHeight;
+          canvas.height = 300;
+          canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
+          callback(canvas.toDataURL('image/jpeg').replace(/^data:image\/(png|jpeg);base64,/, ''));
+      }
+
+      getDataUri(image, function (dataUrl) {
+          dataUrl = dataUrl.replace(/\//g, '_').replace(/\+/g, '-');
+          var html = `<html>
+          <head><title>Search by Image (by Google)</title></head>
+          <body><form id="f" method="POST" action="https://www.google.com/searchbyimage/upload" enctype="multipart/form-data">
+            <input type="hidden" name="image_content" value="${dataUrl}">
+            <input type="hidden" name="filename" value=""><input type="hidden" name="image_url" value=""><input type="hidden" name="sbisrc" value="cr_1_5_2">
+            <input type="hidden" name="width" value="${image.naturalWidth}"><input type="hidden" name="height" value="${image.naturalHeight}">
+          </form><script>document.getElementById("f").submit();</scr` + `ipt></body></html>`;
+          var win = window.open();
+          win.document.write(html);
+      });
+    },
     get_item_image(item) {
       return api.get_item_image(item, this.config);
     },
     get_item_video(item) {
       return api.get_item_video(item)
     },
-
     fit_image(e) {
       const img = e.target,
         wh = window.innerHeight,
