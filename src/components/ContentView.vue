@@ -118,20 +118,10 @@ export default {
       return api.favored(this.paragraph);
     },
     tags() {
-      return this.paragraph.keywords.filter((x) => !this._is_text(x)).sort();
+      return [... this.paragraph.keywords].sort()
     },
     text() {
-      var t = this.paragraph.content || "";
-      var candidates = this.paragraph.keywords.filter(this._is_text);
-      if (candidates) {
-        var longest = candidates.sort((x) => x.length).pop();
-        candidates = [
-          longest,
-          ...candidates.filter((x) => !longest.includes(x)),
-        ];
-        return t + " " + candidates.join(" ");
-      }
-      return t;
+      return this.paragraph.content || "";
     },
   },
   methods: {
@@ -140,13 +130,6 @@ export default {
     },
     fav() {
       api.fav(this.paragraph);
-    },
-    _is_text(x) {
-      x = x || ''
-      return (
-        encodeURIComponent(x).replace(/%[0-9a-f]{2}/gi, "x").length > 20 ||
-        x.match(/[\s.,?!。，？…]/)
-      );
     },
     quote: api.quote,
     tag_class(tag) {

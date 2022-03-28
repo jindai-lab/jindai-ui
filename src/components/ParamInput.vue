@@ -29,7 +29,7 @@
       persistent-hint
       item-value="value"
       item-text="text"
-      v-else-if="arg.type == 'TASK' || arg.type == 'DATASOURCE'"
+      v-else-if="arg.type == 'TASK' || arg.type == 'PIPELINE'"
     ></v-autocomplete>
 
     <v-combobox
@@ -196,8 +196,8 @@ export default {
             value: this.arg.type == 'TASK' ? x._id : x.name,
           }))));
           break;
-        case "DATASOURCE":
-          api.call("help/datasources").then(data => (this.choices = [].concat(...Object.values(data.result).map(x => Object.keys(x).map(k => ({
+        case "PIPELINE":
+          api.call("help/pipelines").then(data => (this.choices = [].concat(...Object.values(data.result).map(x => Object.keys(x).map(k => ({
             text: `${x[k].doc} ${k}`,
             value: k,
             hint: x[k].args.map(x=>`${x.name} (${x.type}${x.default !== null ? ' optional' : ''})`).join(', ')

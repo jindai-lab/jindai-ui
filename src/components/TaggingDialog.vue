@@ -14,6 +14,16 @@
           label="标签"
           ref="ac"
         ></v-combobox>
+        <v-expansion-panels>
+          <v-expansion-panel dense key="batched">
+            <v-expansion-panel-header>批量添加</v-expansion-panel-header>
+            <v-expansion-panel-content>
+              <v-text-field v-model="batch" label="文本"></v-text-field>
+              <v-text-field v-model="batch_delim" label="分隔符"></v-text-field>
+              <v-text-field v-model="batch_prefix" label="前缀"></v-text-field>
+            </v-expansion-panel-content>
+          </v-expansion-panel>
+        </v-expansion-panels>
       </v-card-text>
       <v-card-actions>
         <v-btn
@@ -39,7 +49,10 @@ export default {
       cancel: null,
       tag_new: [],
       tag_typing: "",
-      visible: false
+      visible: false,
+      batch: '',
+      batch_delim: '',
+      batch_prefix: '',
     };
   },
   props: {
@@ -60,11 +73,15 @@ export default {
       if (this.tag_typing) this.tag_typing = ''
     }
   },
+  mounted () {
+    Object.assign(this, api.load_config("tagging", {batch_delim: ', ', batch_prefix: '*'}))
+  },
   methods: {
     show(values) {
       this.visible = true
       this.tag_new = [...values]
       this.tag_choices = [...values]
+      this.batch = ''
     },
     search_tag(search) {
       if (this.cancel) this.cancel.cancel()
@@ -98,6 +115,8 @@ export default {
         });
     },
     do_submit() {
+      if (this.batch) this.tag_new.push(... this.batch.split(this.batch_delim || ', ').map(x => x.trim()).filter(x => x).map(x => this.batch_prefix + x))
+      api.save_config("tagging", {batch_delim: this.batch_delim})
       this.$emit('submit', this.tag_new.map(x => x.value || x) || [this.tag_typing])
     }
   },

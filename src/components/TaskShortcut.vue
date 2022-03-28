@@ -54,12 +54,9 @@ export default {
   props: ["id"],
   data() {
     return {
-      datasources: {},
       stages: {},
       task: {
         _id: "",
-        datasource: "",
-        datasource_config: {},
         name: "",
         shortcut_map: {},
         pipeline: [],
@@ -71,20 +68,15 @@ export default {
     };
   },
   mounted() {
-    api.call("help/datasources").then((data) => {
+    api.call("help/pipelines").then((data) => {
       for (var k in data.result) {
-        Object.assign(this.datasources, data.result[k]);
+        Object.assign(this.stages, data.result[k]);
       }
-      api.call("help/pipelines").then((data) => {
-        for (var k in data.result) {
-          Object.assign(this.stages, data.result[k]);
+      api.call("tasks/" + this.id).then((data) => {
+        this.task = data.result;
+        for (var k in this.task.shortcut_map) {
+          this.shortcut_params[k] = this.get_map_val(k)
         }
-        api.call("tasks/" + this.id).then((data) => {
-          this.task = data.result;
-          for (var k in this.task.shortcut_map) {
-            this.shortcut_params[k] = this.get_map_val(k)
-          }
-        });
       });
     });
   },
@@ -101,10 +93,7 @@ export default {
       for (var k in this.shortcut_params) {
         const v = this.shortcut_params[k];
         const mapped_to = k.split(".");
-        var target =
-          mapped_to[0] === "datasource"
-            ? this.task.datasource_config
-            : this.task.pipeline;
+        var target = this.task.pipeline;
         for (var seg of mapped_to.slice(1, -1)) {
           target = seg.match(/^\d+$/) ? target[+seg][1] : target[seg];
         }
@@ -115,7 +104,7 @@ export default {
       this.update_params();
       api
         .call("quicktask", {
-          query: this.querify(),
+          pipeline: this.querify(),
         })
         .then((data) => {
           if (Array.isArray(data.result)) {
@@ -187,34 +176,20 @@ export default {
         );
     },
     querify() {
-      return (
-        "datasource=" +
-        api.querify([[this.task.datasource, this.task.datasource_config]]) +
-        ";\n" +
-        api.querify(this.task.pipeline, "")
-      );
+      return api.querify(this.task.pipeline, "")
     },
     get_map_arg(v) {
       v = v.split(".");
-      // maping value shoud be like datasource.[arg name] or pipeline.[index].[arg name]
       var arg = {};
-      if (v[0] === "datasource")
-        arg = this.datasources[this.task.datasource].args.filter(
-          (x) => x.name == v[1]
-        )[0];
-      else
-        arg = this.stages[this.task.pipeline[+v[1]][0]].args.filter(
-          (x) => x.name == v[2]
-        )[0];
+      arg = this.stages[this.task.pipeline[+v[1]][0]].args.filter(
+        (x) => x.name == v[2]
+      )[0];
       return arg;
     },
     get_map_val(v) {
       v = v.split(".");
       var arg = null;
-      if (v[0] === "datasource")
-        arg = this.task.datasource_config[v[1]]
-      else
-        arg = this.task.pipeline[+v[1]][1][v[2]];
+      arg = this.task.pipeline[+v[1]][1][v[2]];
       return arg;
     },
     load_search(e) {

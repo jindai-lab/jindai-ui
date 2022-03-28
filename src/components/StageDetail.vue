@@ -1,7 +1,6 @@
 <template>
   <div class="stage">
-    <div>
-      
+    <div class="drag-handle">
       {{ stage_doc.doc }}
     <v-autocomplete
       :items="stage_options"

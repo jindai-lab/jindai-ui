@@ -445,7 +445,7 @@ export default {
           offset: this.offset,
           limit: this.page_size * 5,
           callback: (data) => {
-            if (this.token != data.token) {
+            if (this.token < data.token) {
               this.token = data.token
               this.value = []
               this.total = null

@@ -129,12 +129,12 @@ export default {
       cancel_source: api.cancel_source(),
     };
   },
-  mounted() {    
+  mounted() {
     let config = api.load_config("main");
     if (config.view_mode) this.view_mode = config.view_mode;
     if (config.page_size) this.page_size = +config.page_size;
-    if (config.sort) this.sort = config.sort
-    
+    if (config.sort) this.sort = config.sort;
+
     const search_params = api.querystring_parse(location.search);
     for (var k of ["q", "sort", "groups"])
       if (search_params[k]) this[k] = search_params[k];
@@ -154,7 +154,6 @@ export default {
   },
   methods: {
     datasets_req() {
-
       var selected = this.selected_datasets.map(
           (sid) => this.selection_bundles[sid]
         ),
@@ -198,7 +197,7 @@ export default {
       api.save_config("main", {
         page_size: this.page_size,
         view_mode: this.view_mode,
-        sort: this.sort == 'random' ? '' : this.sort,
+        sort: this.sort == "random" ? "" : this.sort,
         selected_datasets: this.selected_datasets,
       });
     },
@@ -249,14 +248,14 @@ export default {
       var params = {
         q: this.q,
         req: this.req,
-        sort: typeof this.sort === 'object' ? this.sort.value : this.sort,
+        sort: typeof this.sort === "object" ? this.sort.value : this.sort,
         mongocollections: this.selected_mongocollections,
         offset: e.offset,
         limit: e.limit,
         groups: this.groups,
       };
 
-      var token = new Date().getTime() + Math.random()
+      var token = new Date().getTime() + Math.random();
 
       api.call("search", params, this.cancel_source).then((data) => {
         if (!data) {
@@ -286,9 +285,14 @@ export default {
         });
       });
 
-      api.call("search", Object.assign({count: true}, params, this.cancel_source)).then((data) => {
-        if (data.result) e.callback({token, total: data.result})
-      })
+      api
+        .call(
+          "search",
+          Object.assign({ count: true }, params, this.cancel_source)
+        )
+        .then((data) => {
+          if (data.result) e.callback({ token, total: data.result });
+        });
     },
     export_query(format, callback) {
       if (typeof callback !== "function")
@@ -296,12 +300,15 @@ export default {
           this.$router.push("/tasks/" + data.result).catch(() => {});
       api
         .put("tasks/", {
-          datasource_config: {
-            query: this.querystr,
-            mongocollections: this.selected_mongocollections,
-          },
           name: "搜索 " + this.querystr,
           pipeline: [
+            [
+              "DBQueryDataSource",
+              {
+                query: this.querystr,
+                mongocollections: this.selected_mongocollections,
+              },
+            ],
             ["AccumulateParagraphs", {}],
             ["Export", { format }],
           ],

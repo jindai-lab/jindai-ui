@@ -33,9 +33,9 @@ export default {
     export_query(h) {
       api
         .put("tasks/", {
-          datasource_config: {
+          pipeline: [('DBQueryDataSource', {
             query: h.querystr
-          },
+          })],
           name: '搜索 ' + h.querystr
         })
         .then((data) => this.$router.push("/tasks/" + data.result)).catch(()=>{});

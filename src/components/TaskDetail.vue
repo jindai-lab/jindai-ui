@@ -35,41 +35,6 @@
         ></v-row
       >
       <v-divider class="mt-5 mb-5"></v-divider>
-      <h2>数据源</h2>
-      <div id="datasource">
-        <v-autocomplete
-          v-model="task.datasource"
-          :items="datasource_items"
-          flat
-        >
-        </v-autocomplete>
-        <div id="datasource_args">
-          <div v-for="arg in datasource_doc.args" :key="arg.name">
-            <v-row>
-              <v-col>
-                {{ arg.description.replace("%1", arg.name) }}
-                <ParamInput
-                  :arg="arg"
-                  v-model="task.datasource_config[arg.name]"
-                  @validation="update_valid('ds_args_' + arg.name, $event)"
-                />
-              </v-col>
-              <v-col cols="1">
-                <v-btn
-                  @click="
-                    update_shortcut(
-                      'datasource.' + arg.name,
-                      arg.description.replace('%1', arg.name) || arg.name
-                    )
-                  "
-                >
-                  <v-icon>mdi-asterisk</v-icon> 快捷
-                </v-btn>
-              </v-col>
-            </v-row>
-          </div>
-        </div>
-      </div>
       <div id="pipeline">
         <h2>
           处理流程
@@ -138,11 +103,8 @@ export default {
   props: ["id"],
   data() {
     return {
-      datasources: {},
       task: {
         _id: "",
-        datasource: "",
-        datasource_config: {},
         name: "",
         shortcut_map: {},
         pipeline: [],
@@ -152,43 +114,11 @@ export default {
     };
   },
   mounted() {
-    api.call("help/datasources").then((data) => {
-      this.datasources = data.result;
-    });
     api.call("tasks/" + this.id).then((data) => {
       this.task = data.result;
     });
   },
   computed: {
-    datasource_doc() {
-      for (var x in this.datasources)
-        if (this.datasources[x][this.task.datasource])
-          return this.datasources[x][this.task.datasource];
-      return {};
-    },
-    datasource_items() {
-      function _items(obj) {
-        var items = [];
-        for (var k in obj) {
-          let x = obj[k];
-          items.push({
-            text: `${x.doc.split("\n")[0]} ${x.name}`,
-            value: `${x.name}`,
-          });
-        }
-        return items;
-      }
-      var items = [];
-      for (var group in this.datasources) {
-        items.push(
-          {
-            header: group,
-          },
-          ..._items(this.datasources[group])
-        );
-      }
-      return items;
-    },
     user() {
       return api.user
     }
@@ -243,12 +173,7 @@ export default {
       this.$forceUpdate();
     },
     querify() {
-      return (
-        "datasource=" +
-        api.querify([[this.task.datasource, this.task.datasource_config]]) +
-        ";\n" +
-        api.querify(this.task.pipeline, "")
-      );
+      return api.querify(this.task.pipeline, "")
     },
   },
 };

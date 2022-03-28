@@ -52,8 +52,8 @@
           ></v-pagination>
         </v-col>
         <v-col cols="10" class="item-description" v-if="active_item">
-          <v-row>
-            <v-col cols="8" sm="6" class="no-padding-margin">
+          <v-row class="mt-3 mb-3">
+            <div class="mr-3">
               <v-rating
                 style="display: inline-block"
                 v-model="active_item.rating"
@@ -67,13 +67,14 @@
               <span class="grey--text text--lighten-2">
                 ({{ active_item.rating.toFixed(1) }})
               </span>
-            </v-col>
-            <v-col cols="2" sm="3" class="no-padding-margin">
+            </div>
+            <div>
               <v-btn
                 v-for="(page, page_name) in plugin_pages"
                 :key="page_name"
                 icon
                 dense
+                :data-keybind="page.shortcut"
                 :href="`?q=author%3D${quote(paragraph.author)};page('${format(
                   page.format,
                   {
@@ -85,12 +86,11 @@
                 target="_blank"
                 ><v-icon>{{ page.icon }}</v-icon></v-btn
               >
-              <v-btn icon dense @click="$emit('info', active_item)" target="_blank"
+              <v-btn icon dense @click="$emit('info', active_item)" target="_blank" data-keybind="i"
                 ><v-icon>mdi-information</v-icon></v-btn
               >
-              <v-btn icon dense @click="google"><v-icon>mdi-google</v-icon></v-btn>
-            </v-col>
-            <v-spacer></v-spacer>
+              <v-btn icon dense @click="google" data-keybind="m"><v-icon>mdi-google</v-icon></v-btn>
+            </div>
           </v-row>
           <ContentView :paragraph="paragraph" view_mode="gallery-description" />
         </v-col>
@@ -203,12 +203,8 @@ export default {
       }
       return str.replace(/\{([\w\d._]+)\}/g, _replace);
     },
-    google(e) {
-      e = e.target
-      var level = 10
-      while (e && !e.querySelector('img') && --level) e = e.parentElement
-      var image = e.querySelector('img')
-
+    google() {
+      var image = this.$refs.browsing_image;
       function getDataUri(image, callback) {
           var canvas = document.createElement('canvas');
           canvas.width = image.naturalWidth * 300 / image.naturalHeight;
@@ -358,6 +354,10 @@ export default {
           this.playing();
           e.preventDefault()
           break;
+        default:
+          var btn = document.querySelector(`[data-keybind="${e.key.toLowerCase()}"]`)
+          if (btn) btn.click()
+          break
       }
     },
   },

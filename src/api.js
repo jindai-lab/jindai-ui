@@ -380,7 +380,8 @@ export default {
 
     quote(s) {
         s = s || '';
-        if (s.match(/[`'"()\s.,+%:/]|(^\d+(\.\d+)?$)/)) return "`" + s.replace(/`/g, "\\`") + "`";
+        if (s.match(/[`'"()\s.&,+%:/]|(^\d+(\.\d+)?$)/)) return "`" + s.replace(/`/g, "\\`") + "`";
+        if (s === '') s = "''"
         return s;
     },
     

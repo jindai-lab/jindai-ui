@@ -3,7 +3,7 @@
     <v-btn @click="append_stage()" class="mb-5 mt-5">
       <v-icon>mdi-plus</v-icon>
     </v-btn>
-    <draggable :list="value">
+    <draggable :options="{handle:'.drag-handle'}" :list="value">
     <div
       v-for="(stage, index) in value"
       :key="index"
