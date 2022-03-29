@@ -51,8 +51,8 @@ export default {
 .fabs {
   position: fixed;
   z-index: 300;
-  bottom: 32px;
-  right: 16px;
+  bottom: 30px;
+  right: 30px;
 }
 .fabs > * {
   margin: 5px;

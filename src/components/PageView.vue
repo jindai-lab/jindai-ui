@@ -15,9 +15,9 @@
     >
       <v-card-text v-if="active_paragraph">
         <!-- operation buttons -->
-        <v-row v-if="!view_mode" class="pt-3">
+        <v-row v-if="view_mode == 'file'" class="pt-3">
           <v-col class="heading">
-            <h3>&nbsp; {{ file }}</h3>
+            <h3>{{ file }} &nbsp;</h3>
           </v-col>
           <v-spacer></v-spacer>
           <v-btn icon @click="_event_handler('right')" :enabled="page > 0">
@@ -49,29 +49,29 @@
                 :view_mode="view_mode"
               />
             </div>
-            <div class="mt-5 meta" v-if="paragraphs.length > 0">
-              日期: {{ shown_paragraphs[0].pdate | dateSafe }}<br />
-              页码: {{ shown_paragraphs[0].pagenum }}
+            <div class="mt-5 meta" v-if="active_paragraph">
+              日期: {{ active_paragraph.pdate | dateSafe }}<br />
+              页码: {{ active_paragraph.pagenum }}
               <v-btn
                 icon
                 small
                 @click="
-                  pagenum_editor.new_pagenum = shown_paragraphs[0].pagenum;
+                  pagenum_editor.new_pagenum = active_paragraph.pagenum;
                   pagenum_edit = true;
                 "
                 ><v-icon small>mdi-form-textbox</v-icon></v-btn
               >
               <br />
-              大纲: {{ shown_paragraphs[0].outline }}<br />
+              大纲: {{ active_paragraph.outline }}<br />
               来源:
               <a
-                :href="shown_paragraphs[0].source.url"
-                v-if="shown_paragraphs[0].source.url"
+                :href="active_paragraph.source.url"
+                v-if="active_paragraph.source.url"
                 target="_blank"
-                >{{ shown_paragraphs[0].source.url }}</a
+                >{{ active_paragraph.source.url }}</a
               >
-              {{ shown_paragraphs[0].source.file }}
-              {{ shown_paragraphs[0].source.page }}<br />
+              {{ active_paragraph.source.file }}
+              {{ active_paragraph.source.page }}<br />
             </div>
           </div>
           <div class="image" @click="show_modal = !!pdf_image">
@@ -90,7 +90,7 @@
           <ImageBrowsing
             :paragraph="active_paragraph"
             :item="active_item"
-            v-if="active_item && value"
+            v-if="value"
             @info="$emit('info', $event)"
             @browse="_event_handler"
           />
@@ -160,7 +160,6 @@ export default {
   data() {
     return {
       file: "",
-      paragraph_id: "",
       page: 0,
       pdf_image: "",
       show_modal: false,
@@ -170,7 +169,7 @@ export default {
         sequential: "all",
       },
       fetched_paragraphs: [],
-      mongocollection: "",
+      mongocollection: "paragraph",
       loading_image: require("../../public/assets/loading.png"),
       paragraph_index: 0,
       item_index: 0,
@@ -182,7 +181,7 @@ export default {
   },
   props: {
     view_mode: {
-      default: "",
+      default: "file",
     },
     paragraphs: {
       default: () => [],
@@ -199,13 +198,16 @@ export default {
       return window.innerHeight;
     },
     active_paragraph() {
-      return Object.assign({}, this.paragraphs[this.paragraph_index]);
+      if (this.view_mode == 'file')
+        return this.fetched_paragraphs[0]
+      else
+        return Object.assign({}, this.paragraphs[this.paragraph_index]);
     },
     active_item() {
-      return (this.active_paragraph.images || [])[this.item_index] || {};
+      return (this.active_paragraph.images || [])[this.item_index];
     },
     shown_paragraphs() {
-      return this.view_mode ? [this.active_paragraph] : this.fetched_paragraphs;
+      return this.view_mode !== 'file' ? [this.active_paragraph] : this.fetched_paragraphs;
     },
   },
   beforeDestroy() {
@@ -217,36 +219,26 @@ export default {
   mounted() {
     if (!this.paragraph) {
       let params = window.location.href.split("/");
+      if (!params.includes("view")) return;
       params = params.slice(params.indexOf("view") + 1);
       this.mongocollection = params[0];
       if (params.length > 2) {
         this.file = decodeURIComponent(params.slice(1, -1).join("/"));
         this.page = +params.slice(-1)[0];
-      } else {
-        this.page = 0;
-        this.paragraph_id = params[1];
-        this.file = "";
       }
-    } else {
-      this.file = this.paragraph.source.file || false;
-      this.page = this.paragraph.source.page || 0;
-      this.mongocollection = this.paragraph.mongocollection;
-      this.paragraph_id = this.paragraph._id;
     }
     this.update_pdfpage();
   },
   watch: {
-    page() {
-      this.update_pdfpage();
-    },
     value() {
       this.paragraph_index = this.start_index;
       this.item_index = 0;
+      this.update_pdfpage()
     },
     paragraphs() {
       if (this.paragraph_index < 0) {
         this.paragraph_index = this.paragraphs.length - 1;
-        if (this.view_mode === "gallery")
+        if (this.view_mode == "gallery")
           this.item_index = this.paragraphs.slice(-1)[0].images.length - 1;
       }
     },
@@ -258,7 +250,7 @@ export default {
       e.preventDefault();
     },
     update_pdfpage() {
-      if (!this.view_mode && this.file) {
+      if (this.view_mode == 'file' && this.file) {
         var path = location.href.split("/");
         path.pop();
         path.push("" + this.page);
@@ -266,53 +258,48 @@ export default {
       }
       this.pdf_image = this.loading_image;
 
-      if (!this.paragraph_id && !this.file) {
-        this.pdf_image = "";
-        return;
+      if (this.view_mode == 'file' && this.file) {
+        api
+          .call("quicktask", {
+            query:
+              "?" +
+              api.querify(
+                this.paragraph_id
+                  ? { id: this.paragraph_id }
+                  : { source: { file: this.file, page: this.page } }
+              ),
+            mongocollection: this.mongocollection,
+          })
+          .then((data) => {
+            this.fetched_paragraphs = data.result;
+            if (!data.result.length) {
+              this.fetched_paragraphs = [
+                {
+                  source: {
+                    file: this.file,
+                    page: this.page,
+                  },
+                  keywords: [],
+                  content: "",
+                  _id: "",
+                },
+              ];
+            }
+          });
       }
 
-      api
-        .call("quicktask", {
-          query:
-            "?" +
-            api.querify(
-              this.paragraph_id
-                ? { id: this.paragraph_id }
-                : { source: { file: this.file, page: this.page } }
-            ),
-          mongocollection: this.mongocollection,
-        })
-        .then((data) => {
-          this.fetched_paragraphs = data.result;
-          if (!data.result.length) {
-            this.fetched_paragraphs = [
-              {
-                source: {
-                  file: this.file,
-                  page: this.page,
-                },
-                keywords: [],
-                content: "",
-                _id: "",
-              },
-            ];
-          }
-          if (this.fetched_paragraphs.length) {
-            var p = this.shown_paragraphs[0];
-            if (p.source.file) {
-              var image_url = `/api/image${api.querystring_stringify(
-                p.source
-              )}`;
-              var image_element = new Image();
-              image_element.src = image_url;
-              image_element.onload = () => {
-                this.pdf_image = image_element.src;
-              };
-            } else {
-              this.pdf_image = "";
-            }
-          }
-        });
+      var src =
+        this.view_mode == 'file' ? { file: this.file, page: this.page } : this.active_paragraph.source;
+      if (src.file && typeof src.page !== 'undefined') {
+        var image_url = `/api/image${api.querystring_stringify(src)}`;
+        var image_element = new Image();
+        image_element.src = image_url;
+        image_element.onload = () => {
+          this.pdf_image = image_element.src;
+        };
+      } else {
+        this.pdf_image = "";
+      }
     },
     playing() {
       this.playing_timer = setInterval(() => {
@@ -368,18 +355,19 @@ export default {
           if (this.item_index < 0)
             this.item_index = this.active_paragraph.images.length - 1;
           else this.item_index = 0;
-          if (this.active_paragraph.images.length == 0)
+          if (this.view_mode == 'gallery' && this.active_paragraph.images.length == 0)
             this._event_handler(direction);
         } else {
           this.$emit(inc < 0 ? "prev" : "next");
           this.paragraph_index = inc > 0 ? 0 : -1;
         }
-        this.update_pdfpage()
+        this.update_pdfpage();
       };
 
       switch (this.view_mode) {
-        case "":
+        case "file":
           this.page = +this.page + inc;
+          this.update_pdfpage()
           break;
         case "gallery":
           // previous item
@@ -403,10 +391,11 @@ export default {
     try_page(e) {
       e = e | 0;
       this.page = e;
+      update_pdfpage()
     },
     save_pagenum() {
       api.call(
-        `edit/${this.mongocollection}/${this.shown_paragraphs[0]._id}/pagenum`,
+        `edit/${this.mongocollection}/${this.active_paragraph._id}/pagenum`,
         this.pagenum_editor
       );
       this.pagenum_edit = false;

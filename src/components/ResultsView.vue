@@ -20,7 +20,7 @@
         label="增强图像"
         @change="_save_config"
       ></v-checkbox>
-      <v-btn text @click="dialogs.auto_tagging.visible = true;">自动标签</v-btn>
+      <v-btn text @click="dialogs.auto_tagging.visible = true">自动标签</v-btn>
     </div>
     <!-- total results count -->
     <div class="count" v-show="total !== null">共找到 {{ total }} 个结果。</div>
@@ -44,6 +44,14 @@
           >
           <a :href="r.source.url" target="_blank">{{ r.source.url }}</a> 页码:
           {{ r.pagenum }} 日期: {{ r.pdate | dateSafe }}
+          <div style="float: right">
+            <v-checkbox
+              v-model="r.selected"
+              dense
+              style="vertical-align: middle"
+              @change="update_selection(r, null, index)"
+            ></v-checkbox>
+          </div>
           <v-divider class="mt-5"></v-divider>
         </div>
         <ContentView
@@ -137,7 +145,10 @@
       @next="turn_page(page + 1)"
       @prev="turn_page(page - 1)"
       @browse="browsing = $event"
-      @info="dialogs.info.visible = true; dialogs.info.target = $event"
+      @info="
+        dialogs.info.visible = true;
+        dialogs.info.target = $event;
+      "
       @rating="rating"
     />
     <v-dialog v-model="dialogs.info.visible">
@@ -155,7 +166,7 @@
         <v-card-text>
           <v-row v-for="(v, k) in dialogs.info.target" :key="k">
             <v-col cols="4">{{ k }}</v-col>
-            <v-col cols="8" v-if="!['album'].includes(k)">{{ v }}</v-col>
+            <v-col cols="8">{{ v }}</v-col>
           </v-row>
         </v-card-text>
         <v-card-actions>
@@ -229,7 +240,10 @@
         </v-card-title>
         <v-card-text>
           <ResultsView
-            @load="(a) => a.callback({ offset: 0, result: dialogs.embedded.target.arr })"
+            @load="
+              (a) =>
+                a.callback({ offset: 0, result: dialogs.embedded.target.arr })
+            "
             :total="(dialogs.embedded.target.arr || []).length"
           />
         </v-card-text>
@@ -313,41 +327,41 @@ export default {
       dialogs: {
         embedded: {
           visible: false,
-          target: {}
+          target: {},
         },
         edit: {
           visible: false,
           target: {},
-          new_field: '',
+          new_field: "",
         },
         paragraph: {
           visible: false,
           start_index: 0,
-          item: {}
+          item: {},
         },
         info: {
           visible: false,
-          target: {}
+          target: {},
         },
         auto_tagging: {
-          visible: false
+          visible: false,
         },
         tagging_shortcuts: {
           visible: false,
           list: [],
-          initial: ''
+          initial: "",
         },
         tagging: {
           visible: false,
-          choices: []
-        }
+          choices: [],
+        },
       },
       // selection
       selection: [],
       browsing_item: {},
       selection_count: 0,
       select_index: -1,
-      last_key: ''
+      last_key: "",
     };
   },
   watch: {
@@ -397,10 +411,10 @@ export default {
     });
   },
   created() {
-    window.addEventListener('keyup', this._keyup_handler)
+    window.addEventListener("keyup", this._keyup_handler);
   },
   beforeDestroy() {
-    window.removeEventListener('keyup', this._keyup_handler)
+    window.removeEventListener("keyup", this._keyup_handler);
   },
   methods: {
     _fetched() {
@@ -410,20 +424,24 @@ export default {
     },
     start(page) {
       this.page_range = [0, 0];
-      let params = api.querystring_parse(location.search)
+      let params = api.querystring_parse(location.search);
       if (!page)
-        if (params.page) page = params.page | 0
-        else page = 1
+        if (params.page) page = params.page | 0;
+        else page = 1;
       this.turn_page(page);
     },
     querify: api.querify,
     turn_page(p, cb) {
-      if (p == 0) return
+      if (p == 0) return;
       history.pushState(
         "",
         "",
-        api.querystring_stringify(Object.assign(api.querystring_parse(location.search), {page: this.page}))
-      )
+        api.querystring_stringify(
+          Object.assign(api.querystring_parse(location.search), {
+            page: this.page,
+          })
+        )
+      );
       if (this.page !== p) this.page = p;
       window.scroll({ top: this.$refs.results.offsetTop - 64 });
       if (!this._fetched()) {
@@ -432,20 +450,18 @@ export default {
           limit: this.page_size * 5,
           callback: (data) => {
             if (this.token < data.token) {
-              this.token = data.token
-              this.total = null
+              this.token = data.token;
+              this.total = null;
               this.selection = [];
             }
-            if (typeof data.result !== 'undefined') 
-            {
+            if (typeof data.result !== "undefined") {
               this.page_range = [data.offset, data.offset + data.result.length];
               data.result.forEach((x) => (x.selected = false));
               this.value = data.result;
               if (typeof cb == "function") cb();
             }
-            if (typeof data.total !== 'undefined') 
-              this.total = data.total;
-            this.$forceUpdate()
+            if (typeof data.total !== "undefined") this.total = data.total;
+            this.$forceUpdate();
           },
         });
       } else {
@@ -466,12 +482,10 @@ export default {
       if (e.target.tagName == "INPUT" || e.target.tagName == "TEXTAREA") return;
       switch (e.key.toLowerCase()) {
         case "arrowleft":
-          if (!this.dialogs.paragraph.visible)
-            this.turn_page(this.page - 1)
+          if (!this.dialogs.paragraph.visible) this.turn_page(this.page - 1);
           break;
         case "arrowright":
-          if (!this.dialogs.paragraph.visible)
-            this.turn_page(this.page + 1)
+          if (!this.dialogs.paragraph.visible) this.turn_page(this.page + 1);
           break;
         case "f":
           this.toggle_selection();
@@ -531,13 +545,14 @@ export default {
                 this._open_window(
                   e.shiftKey
                     ? `?q=id%3D${_album._id},images.source=exists(1)`
-                    : `?q=source.url%25%27${api.escape_regex(_album.source.url)
+                    : `?q=source.url%25%27${api
+                        .escape_regex(_album.source.url)
                         .replace(/\/\d+\//, "/.*/")}'`
                 );
                 break;
               case "i":
                 this.dialogs.info.visible = !this.dialogs.info.visible;
-                this.dialogs.info.target = this.selected_paragraphs()[0]
+                this.dialogs.info.target = this.selected_paragraphs()[0];
                 break;
             }
           }
@@ -552,17 +567,23 @@ export default {
         case "7":
         case "8":
         case "9":
-          this.dialogs.tagging_shortcuts.visible = this.selected_paragraphs().length > 0;
+          this.dialogs.tagging_shortcuts.visible =
+            this.selected_paragraphs().length > 0;
           this.dialogs.tagging_shortcuts.initial = e.key;
           break;
         default:
-          var pages = Object.values(this.plugin_pages).filter(x => x.shortcut == e.key)
+          var pages = Object.values(this.plugin_pages).filter(
+            (x) => x.shortcut == e.key
+          );
           if (pages.length) {
-              this._open_window(
-                  `?archive=true&q=author%3D${
-                    this.quote(this.selected_paragraphs()[0].author) || ""
-                  };page('${this.format(pages[0].format, {imageitem: this.selected_items()[0], paragraph: this.selected_paragraphs()[0]})}')` 
-              )
+            this._open_window(
+              `?archive=true&q=author%3D${
+                this.quote(this.selected_paragraphs()[0].author) || ""
+              };page('${this.format(pages[0].format, {
+                imageitem: this.selected_items()[0],
+                paragraph: this.selected_paragraphs()[0],
+              })}')`
+            );
           }
           break;
       }
@@ -601,14 +622,20 @@ export default {
     },
     selected_paragraphs() {
       if (this.dialogs.paragraph.visible) {
-        return this.visible_data.filter(x => x._id == this.$refs.page_view.active_paragraph._id)
+        return this.visible_data.filter(
+          (x) => x._id == this.$refs.page_view.active_paragraph._id
+        );
       } else {
-        return [... this.selection]
+        return [...this.selection];
       }
     },
     selected_items() {
       if (this.dialogs.paragraph.visible) {
-        return [Object.assign({}, this.$refs.page_view.active_item, {paragraph_id: this.selected_paragraphs()[0]._id})];
+        return [
+          Object.assign({}, this.$refs.page_view.active_item, {
+            paragraph_id: this.selected_paragraphs()[0]._id,
+          }),
+        ];
       } else {
         return this.selected_paragraphs().reduce(
           (y, e) =>
@@ -623,36 +650,36 @@ export default {
       }
     },
     selected_ids() {
-      return this.selected_paragraphs().map(x => x._id)
+      return this.selected_paragraphs().map((x) => x._id);
     },
     // api calls
     update_selection(r, e, index) {
-      var s = []
-      if (e.shiftKey && this.select_index >= 0) {
-        document.getSelection().removeAllRanges()
-        let sel_start = Math.min(this.select_index, index),
-            sel_end = Math.max(this.select_index, index)
-        for (var i = sel_start; i <= sel_end; ++i) {
-          if (i == this.select_index) continue
-          s.push(this.visible_data[i])
-        }
+      var s = [];
+      if (e && e.shiftKey && this.select_index >= 0) {
+          document.getSelection().removeAllRanges();
+          let sel_start = Math.min(this.select_index, index),
+            sel_end = Math.max(this.select_index, index);
+          for (var i = sel_start; i <= sel_end; ++i) {
+            if (i == this.select_index) continue;
+            s.push(this.visible_data[i]);
+          }
       } else {
-        s = [r]
+        s = [r];
       }
-      this.select_index = index
-      
-      for (var it of s) {
-          it.selected = !it.selected;
-          if (it.selected) this.selection.push(it)
-          else this.selection.splice(this.selection.indexOf(it), 1);
-        }
 
-      this.selection_count = this.selection.length
+      this.select_index = index;
+      for (var it of s) {
+        if (e) it.selected = !it.selected;
+        if (it.selected) this.selection.push(it);
+        else this.selection.splice(this.selection.indexOf(it), 1);
+      }
+
+      this.selection_count = this.selection.length;
     },
     toggle_selection() {
       this.visible_data.forEach((x) => (x.selected = !x.selected));
       this.selection = this.visible_data.filter((x) => x.selected);
-      this.selection_count = this.selection.length
+      this.selection_count = this.selection.length;
     },
     clear_selection(s) {
       if (typeof s === "undefined") s = this.visible_data;
@@ -660,7 +687,7 @@ export default {
         x.selected = false;
         this.selection.splice(this.selection.indexOf(x), 1);
       });
-      this.selection_count = this.selection.length
+      this.selection_count = this.selection.length;
     },
     show_tagging_dialog() {
       if (this.selected_paragraphs().length > 0) {
@@ -701,7 +728,8 @@ export default {
         visible_album_items = {};
 
       this.selected_items().forEach((item) => {
-        if (!album_items[item.paragraph_id]) album_items[item.paragraph_id] = [];
+        if (!album_items[item.paragraph_id])
+          album_items[item.paragraph_id] = [];
         album_items[item.paragraph_id].push(item._id);
       });
 
@@ -711,7 +739,7 @@ export default {
           0,
           0,
           ...(this.dialogs.paragraph.visible
-            ? this.selected_items().map(i => i._id)
+            ? this.selected_items().map((i) => i._id)
             : p.images.map((i) => i._id))
         );
       });
@@ -731,25 +759,32 @@ export default {
     },
     rating(val) {
       var s = this.selected_paragraphs();
-      if (typeof val === 'number') {
+      if (typeof val === "number") {
         val = {
           inc: val,
-        }
+        };
       }
-      val.ids = (val.item ? [val.item] : this.selected_items()).map((x) => x._id) 
+      val.ids = (val.item ? [val.item] : this.selected_items()).map(
+        (x) => x._id
+      );
       if (val.item) delete val.item;
-      api
-        .call("imageitem/rating", val)
-        .then((data) => {
-          data = data.result || {};
-          this.clear_selection(s);
-          s.forEach((p) =>
-            p.images.forEach(
-              (i) =>
-                typeof data[i._id] !== "undefined" && (i.rating = data[i._id])
-            )
-          );
-        });
+      if (this.view_mode == 'gallery') {
+      api.call("imageitem/rating", val).then((data) => {
+        data = data.result || {};
+        this.clear_selection(s);
+        s.forEach((p) =>
+          p.images.forEach(
+            (i) =>
+              typeof data[i._id] !== "undefined" && (i.rating = data[i._id])
+          )
+        );
+      });
+      } else {
+        // fav paragraphs
+        var s = this.selected_paragraphs()
+        s.forEach(x => this.fav(x))
+        this.clear_selection(s)
+      }
     },
     group(del) {
       var s = this.selected_paragraphs();
@@ -851,5 +886,4 @@ export default {
   min-width: 250px;
   width: 25%;
 }
-
 </style>
