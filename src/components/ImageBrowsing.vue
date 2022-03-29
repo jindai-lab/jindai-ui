@@ -1,16 +1,7 @@
 <template>
-  <v-card
-    v-touch="{
-      left: () => browse_next(),
-      right: () => browse_prev(),
-      down: () => $emit('close'),
-      up: () => $emit('rating', {item: active_item, inc: 1}),
-    }"
-    @wheel.prevent="_wheel_handler"
-    v-if="paragraph_images.length && visible"
-  >
+  <div class="browser" v-if="item">
     <video-player
-      :src="get_item_video(active_item)"
+      :src="get_item_video(item)"
       :options="{
         muted: false,
         autoplay: true,
@@ -32,15 +23,15 @@
         }"
       >
         <img
-          v-if="active_item"
-          :src="get_item_image(active_item)"
+          v-if="item"
+          :src="get_item_image(item)"
           alt="Browsing Image"
           ref="browsing_image"
           @load="fit_image"
         />
       </div>
     </div>
-    <v-card-text class="browsing description">
+    <div class="browsing description">
       <v-row align="end">
         <v-col cols="2">
           <v-pagination
@@ -51,21 +42,21 @@
             @next="browse_next"
           ></v-pagination>
         </v-col>
-        <v-col cols="10" class="item-description" v-if="active_item">
+        <v-col cols="10" class="item-description" v-if="item">
           <v-row class="mt-3 mb-3">
             <div class="mr-3">
               <v-rating
                 style="display: inline-block"
-                v-model="active_item.rating"
+                v-model="item.rating"
                 background-color="white"
                 color="yellow accent-4"
                 half-increments
                 hover
                 size="18"
-                @input="$emit('rating', { item: active_item, val: $event })"
+                @input="$emit('rating', { item: item, val: $event })"
               ></v-rating>
               <span class="grey--text text--lighten-2">
-                ({{ active_item.rating.toFixed(1) }})
+                ({{ item.rating.toFixed(1) }})
               </span>
             </div>
             <div>
@@ -78,7 +69,7 @@
                 :href="`?q=author%3D${quote(paragraph.author)};page('${format(
                   page.format,
                   {
-                    imageitem: active_item,
+                    imageitem: item,
                     paragraph: paragraph,
                   }
                 )}')&archive=true`"
@@ -86,7 +77,7 @@
                 target="_blank"
                 ><v-icon>{{ page.icon }}</v-icon></v-btn
               >
-              <v-btn icon dense @click="$emit('info', active_item)" target="_blank" data-keybind="i"
+              <v-btn icon dense @click="$emit('info', item)" target="_blank" data-keybind="i"
                 ><v-icon>mdi-information</v-icon></v-btn
               >
               <v-btn icon dense @click="google" data-keybind="m"><v-icon>mdi-google</v-icon></v-btn>
@@ -95,8 +86,8 @@
           <ContentView :paragraph="paragraph" view_mode="gallery-description" />
         </v-col>
       </v-row>
-    </v-card-text>
-  </v-card>
+    </div>
+  </div>
 </template>
 
 <script>
@@ -111,87 +102,39 @@ export default {
     VideoPlayer,
   },
   props: [
-    "paragraph", "visible"
+    "paragraph", "item"
   ],
-  watch: {
-    item_index() {
-      this._emit_browse()
-    },
-    paragraph() {
-      this.item_index =
-        this.start_item >= 0
-          ? this.start_item
-          : this.paragraph_images.length - 1;
-      if (this.item_index < 0 || this.item_index >= this.paragraph_images.length)
-        this.$emit(this.start_item >= 0 ? 'next' : 'prev')
-      this._emit_browse()
-      this.start_item = 0
-    },
-    'paragraph.images': function (val) {
-      if (!val || val.length <= this.item_index) {
-        this.item_index = val.length - 1
-        if (this.item_index < 0) {
-          this.$emit("next");
-          this.start_item = 0;
-        }
-      }
-      this._emit_browse()
-    },
-    visible(val) {
-      if (val) this.$forceUpdate()
-    }
-  },
   data() {
     return {
-      item_index: 0,
-      start_item: 0,
       fit: "both",
-      playing_timer: 0,
-      playing_interval: 2000,
       plugin_pages: [],
       browsing_page: 2,
     };
   },
+  watch: {
+    item(val) {
+      if (!val || !val.source) this.$emit('browse', 'continue')
+    }
+  },
   mounted() {
     var config = api.load_config("browse", {
       fit: "both",
-      playing_interval: 2000,
     });
     this.fit = config.fit;
-    this.playing_interval = config.playing_interval;
     api.call("plugins/pages").then((data) => (this.plugin_pages = data.result));
-    this._emit_browse()
   },
   computed: {
-    active_item() {
-      return this.paragraph_images[this.item_index];
-    },
-    paragraph_images() {
-      return this.paragraph.images || [];
-    },
     browsing_video() {
       return (
-        this.active_item &&
-        this.active_item.source &&
-        (this.active_item.source.url || this.active_item.source.file || "")
+        this.item &&
+        this.item.source &&
+        (this.item.source.url || this.item.source.file || "")
           .split(".")
           .pop() == "mp4"
       );
     },
   },
-  created() {
-    window.addEventListener('keyup', this._keyup_handler)
-  },
-  beforeDestroy() {
-    window.removeEventListener('keyup', this._keyup_handler)
-  },
   methods: {
-    _emit_browse(){
-      this.$emit(
-        "browse",
-        Object.assign({}, this.paragraph, { images: [this.active_item] })
-      );
-    },
     quote(x) {
       return encodeURIComponent(api.quote(x));
     },
@@ -303,69 +246,19 @@ export default {
       this.$forceUpdate();
     },
     browse_next() {
-      if (this.item_index == this.paragraph_images.length - 1) {
-        this.$emit("next");
-        this.start_item = 0;
-      } else {
-        this.item_index++;
-      }
+      this.$emit('browse', 'arrowright')
       this.browsing_page = 2
     },
     browse_prev() {
-      if (this.item_index == 0) {
-        this.$emit("prev");
-        this.start_item = -1;
-      } else {
-        this.item_index--;
-      }
+      this.$emit('browse', 'arrowleft')
       this.browsing_page = 2
-    },
-    playing() {
-      this.playing_timer = setInterval(() => {
-        this.browse_next();
-      }, this.playing_interval);
-    },
-    _wheel_handler(e) {
-      if (e.deltaY > 0) {
-        this.browse_next();
-      } else {
-        this.browse_prev();
-      }
-    },
-    _keyup_handler(e) {
-      if (!this.visible) return;
-      if (e.target.tagName == "INPUT" || e.target.tagName == "TEXTAREA") return;
-      switch (e.key) {
-        case "ArrowLeft":
-          if (this.playing_timer) clearInterval(this.playing_timer);
-          this.browse_prev();
-          e.preventDefault()
-          break;
-        case "ArrowRight":
-          if (this.playing_timer) clearInterval(this.playing_timer);
-          this.browse_next();
-          e.preventDefault()
-          break;
-        case "g":
-          document.querySelector(".browsing.description a.t_group").click();
-          e.preventDefault()
-          break;
-        case "Enter":
-          this.playing();
-          e.preventDefault()
-          break;
-        default:
-          var btn = document.querySelector(`[data-keybind="${e.key.toLowerCase()}"]`)
-          if (btn) btn.click()
-          break
-      }
     },
   },
 };
 </script>
 
 <style scoped>
-.v-card {
+.browser {
   overflow: hidden;
   height: 100vh;
   width: 100%;
@@ -373,6 +266,8 @@ export default {
 .description {
   position: fixed;
   bottom: 0;
+  left: 0;
+  width: 100%;
   backdrop-filter: blur(5px);
   background-color: rgba(255, 255, 255, 0.5);
   opacity: 0;
@@ -387,7 +282,7 @@ export default {
 </style>
 
 <style>
-.description .v-card {
+.description {
   border: hidden;
   background: none;
   box-shadow: none !important;

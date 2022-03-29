@@ -73,14 +73,13 @@
       {{ text }}
       <a
         :href="
-          '?q=' +
+        '?q=' +
           encodeURIComponent(
             quote(tag) +
-              (paragraph.author && !tag.match(/^[*@]/)
+              (paragraph.author && !tag.match(/^[@]/)
                 ? ',`' + paragraph.author + '`'
                 : '')
-          )
-        "
+          )"
         :class="['tag', tag_class(tag), 'force-text']"
         target="_blank"
         v-for="tag in tags"
@@ -125,6 +124,9 @@ export default {
     },
   },
   methods: {
+    _open_window(url) {
+      window.open(url)
+    },
     get_item_image(i) {
       return api.get_item_image(i);
     },

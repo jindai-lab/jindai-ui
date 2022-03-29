@@ -130,12 +130,10 @@ export default {
   methods: {
     auto_tags_create() {
       api.put("plugins/autotags", this.new_tag).then((data) => {
-        if (data.result) {
-          this.new_tag = {
-            tag: "",
-            from_tag: "",
-            pattern: "",
-          };
+        if (!data.exception) {
+          this.new_tag.tag = "";
+          this.new_tag.from_tag = "";
+          this.new_tag.pattern = "";
           this.reload();
         }
       });

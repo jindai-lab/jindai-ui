@@ -385,9 +385,11 @@ export default {
         return s;
     },
     
-    get_item_image(item, config = {}) {
+    get_item_image(item, config = null) {
+        if (!this._results_config) this._results_config = this.load_config("results", {})
+        if (!config) config = this._results_config
 
-        if (typeof item === "undefined" || (!item.source.url && !item.source.file))
+        if (!item || !item.source || (!item.source.url && !item.source.file))
             return "https://via.placeholder.com/350x150.png?text=No Image";
 
         var ext = (item.source.url || item.source.file).split(".").pop(),

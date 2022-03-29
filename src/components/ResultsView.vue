@@ -127,33 +127,19 @@
       </div>
     </v-row>
     <!-- dialogs -->
-    <v-dialog v-model="dialogs.paragraph.visible" fullscreen persistent>
-      <v-btn icon @click="dialogs.paragraph.visible = false" class="close"
-        ><v-icon>mdi-close</v-icon></v-btn
-      >
-      <PageView
-        class="page-view"
-        :key="dialogs.paragraph.target_index"
-        :paragraph="visible_data[dialogs.paragraph.target_index]"
-        :view_mode="view_mode"
-        @next="page_view_handler('next')"
-        @prev="page_view_handler('prev')"
-        v-if="view_mode != 'gallery'"
-      />
-      <ImageBrowsing
-        v-else
-        :paragraph="visible_data[dialogs.paragraph.target_index]"
-        :view_mode="view_mode"
-        :visible="dialogs.paragraph.visible"
-        @next="page_view_handler('next')"
-        @prev="page_view_handler('prev')"
-        @browse="browsing_item = $event"
-        @info="dialogs.info.visible = true; dialogs.info.target = $event"
-        @rating="rating"
-        @close="dialogs.paragraph.visible=false;"
-      />
-    </v-dialog>
-
+    <PageView
+      v-model="dialogs.paragraph.visible"
+      class="page-view"
+      ref="page_view"
+      :paragraphs="visible_data"
+      :view_mode="view_mode"
+      :start_index="dialogs.paragraph.start_index"
+      @next="turn_page(page + 1)"
+      @prev="turn_page(page - 1)"
+      @browse="browsing = $event"
+      @info="dialogs.info.visible = true; dialogs.info.target = $event"
+      @rating="rating"
+    />
     <v-dialog v-model="dialogs.info.visible">
       <v-card>
         <v-card-title>
@@ -289,7 +275,6 @@ import ContentView from "./ContentView.vue";
 import QuickActionButtons from "./QuickActionButtons";
 import TaggingDialog from "./TaggingDialog.vue";
 import TaggingShortcutsDialog from "./TaggingShortcutsDialog.vue";
-import ImageBrowsing from "./ImageBrowsing.vue";
 import AutoTags from "./AutoTags.vue";
 import api from "../api";
 export default {
@@ -307,7 +292,6 @@ export default {
     TaggingDialog,
     TaggingShortcutsDialog,
     AutoTags,
-    ImageBrowsing
   },
   data() {
     return {
@@ -338,7 +322,8 @@ export default {
         },
         paragraph: {
           visible: false,
-          target_index: null
+          start_index: 0,
+          item: {}
         },
         info: {
           visible: false,
@@ -433,6 +418,7 @@ export default {
     },
     querify: api.querify,
     turn_page(p, cb) {
+      if (p == 0) return
       history.pushState(
         "",
         "",
@@ -447,7 +433,6 @@ export default {
           callback: (data) => {
             if (this.token < data.token) {
               this.token = data.token
-              this.value = []
               this.total = null
               this.selection = [];
             }
@@ -474,7 +459,7 @@ export default {
     },
     view_page(index) {
       this.dialogs.paragraph.visible = true;
-      this.dialogs.paragraph.target_index = index;
+      this.dialogs.paragraph.start_index = index;
       this.clear_selection();
     },
     _keyup_handler(e) {
@@ -584,25 +569,6 @@ export default {
 
       this.last_key = this.last_key === null ? "" : e.key;
     },
-    page_view_handler(direction) {
-      const that = this;
-      function _update_target_index(set_value) {
-        return () => {
-          that.dialogs.paragraph.target_index =
-            set_value < 0 ? that.visible_data.length - 1 : 0;
-        };
-      }
-
-      var inc = direction == 'next' ? 1 : -1;
-      var vp = this.dialogs.paragraph.target_index + inc;
-      if (vp >= this.visible_data.length) {
-        this.turn_page(this.page + 1, _update_target_index(0));
-      } else if (vp < 0) {
-        this.turn_page(this.page - 1, _update_target_index(-1));
-      } else {
-        this.dialogs.paragraph.target_index = vp;
-      }
-    },
     save() {
       api
         .call(
@@ -635,14 +601,14 @@ export default {
     },
     selected_paragraphs() {
       if (this.dialogs.paragraph.visible) {
-        return [this.visible_data[this.dialogs.paragraph.target_index]]
+        return this.visible_data.filter(x => x._id == this.$refs.page_view.active_paragraph._id)
       } else {
         return [... this.selection]
       }
     },
     selected_items() {
       if (this.dialogs.paragraph.visible) {
-        return [Object.assign({}, this.browsing_item.images[0], {paragraph_id: this.selected_paragraphs()[0]._id})];
+        return [Object.assign({}, this.$refs.page_view.active_item, {paragraph_id: this.selected_paragraphs()[0]._id})];
       } else {
         return this.selected_paragraphs().reduce(
           (y, e) =>
@@ -886,13 +852,4 @@ export default {
   width: 25%;
 }
 
-.close {
-  position: absolute;
-  z-index: 400;
-  right: 20px;
-  top: 20px;
-  border-radius: 20px;
-  border: 0px;
-  background: rgba(0, 0, 0, 0.5);
-}
 </style>
