@@ -175,7 +175,7 @@ export default {
       item_index: 0,
 
       playing_timer: 0,
-      playing_interval: 2000,
+      playing_interval: 1000,
       last_inc: 1,
     };
   },
@@ -198,16 +198,16 @@ export default {
       return window.innerHeight;
     },
     active_paragraph() {
-      if (this.view_mode == 'file')
-        return this.fetched_paragraphs[0]
-      else
-        return Object.assign({}, this.paragraphs[this.paragraph_index]);
+      if (this.view_mode == "file") return this.fetched_paragraphs[0];
+      else return Object.assign({}, this.paragraphs[this.paragraph_index]);
     },
     active_item() {
       return (this.active_paragraph.images || [])[this.item_index];
     },
     shown_paragraphs() {
-      return this.view_mode !== 'file' ? [this.active_paragraph] : this.fetched_paragraphs;
+      return this.view_mode !== "file"
+        ? [this.active_paragraph]
+        : this.fetched_paragraphs;
     },
   },
   beforeDestroy() {
@@ -230,10 +230,14 @@ export default {
     this.update_pdfpage();
   },
   watch: {
-    value() {
-      this.paragraph_index = this.start_index;
-      this.item_index = 0;
-      this.update_pdfpage()
+    value(val) {
+      if (val) {
+        this.paragraph_index = this.start_index;
+        this.item_index = 0;
+        this.update_pdfpage();
+      } else {
+        if (this.playing_timer) window.clearInterval(this.playing_timer);
+      }
     },
     paragraphs() {
       if (this.paragraph_index < 0) {
@@ -250,7 +254,7 @@ export default {
       e.preventDefault();
     },
     update_pdfpage() {
-      if (this.view_mode == 'file' && this.file) {
+      if (this.view_mode == "file" && this.file) {
         var path = location.href.split("/");
         path.pop();
         path.push("" + this.page);
@@ -258,7 +262,7 @@ export default {
       }
       this.pdf_image = this.loading_image;
 
-      if (this.view_mode == 'file' && this.file) {
+      if (this.view_mode == "file" && this.file) {
         api
           .call("quicktask", {
             query:
@@ -289,8 +293,10 @@ export default {
       }
 
       var src =
-        this.view_mode == 'file' ? { file: this.file, page: this.page } : this.active_paragraph.source;
-      if (src.file && typeof src.page !== 'undefined') {
+        this.view_mode == "file"
+          ? { file: this.file, page: this.page }
+          : this.active_paragraph.source;
+      if (src.file && typeof src.page !== "undefined") {
         var image_url = `/api/image${api.querystring_stringify(src)}`;
         var image_element = new Image();
         image_element.src = image_url;
@@ -301,7 +307,8 @@ export default {
         this.pdf_image = "";
       }
     },
-    playing() {
+    playing(interval) {
+      if (interval) this.playing_interval = interval
       this.playing_timer = setInterval(() => {
         this._event_handler("arrowright");
       }, this.playing_interval);
@@ -355,7 +362,10 @@ export default {
           if (this.item_index < 0)
             this.item_index = this.active_paragraph.images.length - 1;
           else this.item_index = 0;
-          if (this.view_mode == 'gallery' && this.active_paragraph.images.length == 0)
+          if (
+            this.view_mode == "gallery" &&
+            this.active_paragraph.images.length == 0
+          )
             this._event_handler(direction);
         } else {
           this.$emit(inc < 0 ? "prev" : "next");
@@ -367,7 +377,7 @@ export default {
       switch (this.view_mode) {
         case "file":
           this.page = +this.page + inc;
-          this.update_pdfpage()
+          this.update_pdfpage();
           break;
         case "gallery":
           // previous item
@@ -391,7 +401,7 @@ export default {
     try_page(e) {
       e = e | 0;
       this.page = e;
-      update_pdfpage()
+      update_pdfpage();
     },
     save_pagenum() {
       api.call(

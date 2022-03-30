@@ -75,10 +75,9 @@
         :href="
         '?q=' +
           encodeURIComponent(
+            tag.match(/^[@]/) ? 'author=' + quote(tag) : (
             quote(tag) +
-              (paragraph.author && !tag.match(/^[@]/)
-                ? ',`' + paragraph.author + '`'
-                : '')
+              (paragraph.author ? ',author=' + quote(paragraph.author) : ''))
           )"
         :class="['tag', tag_class(tag), 'force-text']"
         target="_blank"
@@ -133,7 +132,9 @@ export default {
     fav() {
       api.fav(this.paragraph);
     },
-    quote: api.quote,
+    quote(x) {
+      return JSON.stringify('' + x)
+    },
     tag_class(tag) {
       return tag.startsWith("*")
         ? "t_group"

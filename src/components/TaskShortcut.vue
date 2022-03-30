@@ -67,6 +67,14 @@ export default {
       valid: [],
     };
   },
+  watch: {
+    id() {
+      this.shortcut_params = {}
+      this.results = []
+      this.total = 0
+      this.valid = []
+    }
+  },
   mounted() {
     api.call("help/pipelines").then((data) => {
       for (var k in data.result) {
@@ -176,7 +184,10 @@ export default {
         );
     },
     querify() {
-      return api.querify(this.task.pipeline, "")
+      var s = api.querify(this.task.pipeline, "")
+      if (this.task.pipeline.length == 1)
+        return '[];' + s
+      return s
     },
     get_map_arg(v) {
       v = v.split(".");

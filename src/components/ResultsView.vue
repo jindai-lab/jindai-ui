@@ -28,75 +28,78 @@
     <v-divider class="mt-5 mb-5"></v-divider>
     <!-- show content -->
     <div class="wrapper-container" v-if="columns.includes('content')">
-      <div class="paragraph" v-for="(r, index) in visible_data" :key="index">
-        <div class="meta">
-          数据集:
-          <a :href="`/?q=dataset=${quote(r.dataset)}`" target="_blank">{{
-            r.dataset
-          }}</a>
-          大纲: {{ r.outline }} 来源:
-          <a
-            :href="`/?q=dataset=${quote(r.dataset)},source.file=${quote(
-              r.source.file
-            )}`"
-            target="_blank"
-            >{{ r.source.file }}</a
-          >
-          <a :href="r.source.url" target="_blank">{{ r.source.url }}</a> 页码:
-          {{ r.pagenum }} 日期: {{ r.pdate | dateSafe }}
-          <div style="float: right">
-            <v-checkbox
-              v-model="r.selected"
-              dense
-              style="vertical-align: middle"
-              @change="update_selection(r, null, index)"
-            ></v-checkbox>
+      <template v-for="(r, index) in visible_data">
+        <div class="spacer" v-if="r.spacer" :key="index"></div>
+        <div class="paragraph" v-else :key="index">
+          <div class="meta">
+            数据集:
+            <a :href="`/?q=dataset=${quote(r.dataset)}`" target="_blank">{{
+              r.dataset
+            }}</a>
+            大纲: {{ r.outline }} 来源:
+            <a
+              :href="`/?q=dataset=${quote(r.dataset)},source.file=${quote(
+                r.source.file
+              )}`"
+              target="_blank"
+              >{{ r.source.file }}</a
+            >
+            <a :href="r.source.url" target="_blank">{{ r.source.url }}</a> 页码:
+            {{ r.pagenum }} 日期: {{ r.pdate | dateSafe }}
+            <div style="float: right">
+              <v-checkbox
+                v-model="r.selected"
+                dense
+                style="vertical-align: middle"
+                @change="update_selection(r, null, index)"
+              ></v-checkbox>
+            </div>
+            <v-divider class="mt-5"></v-divider>
           </div>
-          <v-divider class="mt-5"></v-divider>
+          <ContentView
+            :view_mode="view_mode"
+            :paragraph="r"
+            :item_width="200"
+            :item_height="200"
+            :first_item_only="view_mode === 'gallery'"
+            :contain="config.contain"
+            @toggle-select="update_selection($event.paragraph, $event.e, index)"
+            @browse="view_page(index)"
+          />
+          <div class="mt-10 operations">
+            <v-btn @click="view_page(index)">
+              <v-icon>mdi-eye</v-icon> 查看
+            </v-btn>
+            <v-btn
+              :href="`/view/${r.mongocollection}/${
+                r.source.file ? r.source.file + '/' + r.source.page : r._id
+              }`"
+              target="_blank"
+            >
+              <v-icon>mdi-dock-window</v-icon> 浏览
+            </v-btn>
+            <v-btn
+              @click="
+                dialogs.info.target = r;
+                dialogs.info.visible = true;
+              "
+            >
+              <v-icon>mdi-information</v-icon>
+              元数据
+            </v-btn>
+            <v-btn
+              @click="
+                dialogs.edit.target = r;
+                dialogs.edit.visible = true;
+              "
+            >
+              <v-icon>mdi-file-edit-outline</v-icon>
+              编辑
+            </v-btn>
+            <v-divider class="mt-5 mb-5"></v-divider>
+          </div>
         </div>
-        <ContentView
-          :view_mode="view_mode"
-          :paragraph="r"
-          :item_width="200"
-          :item_height="200"
-          :first_item_only="view_mode === 'gallery'"
-          :contain="config.contain"
-          @toggle-select="update_selection($event.paragraph, $event.e, index)"
-          @browse="view_page(index)"
-        />
-        <div class="mt-10 operations">
-          <v-btn @click="view_page(index)">
-            <v-icon>mdi-eye</v-icon> 查看
-          </v-btn>
-          <v-btn
-            :href="`/view/${r.mongocollection}/${
-              r.source.file ? r.source.file + '/' + r.source.page : r._id
-            }`"
-            target="_blank"
-          >
-            <v-icon>mdi-dock-window</v-icon> 浏览
-          </v-btn>
-          <v-btn
-            @click="
-              dialogs.info.target = r;
-              dialogs.info.visible = true;
-            "
-          >
-            <v-icon>mdi-information</v-icon>
-            元数据
-          </v-btn>
-          <v-btn
-            @click="
-              dialogs.edit.target = r;
-              dialogs.edit.visible = true;
-            "
-          >
-            <v-icon>mdi-file-edit-outline</v-icon>
-            编辑
-          </v-btn>
-          <v-divider class="mt-5 mb-5"></v-divider>
-        </div>
-      </div>
+      </template>
     </div>
     <!-- show array info -->
     <v-sheet v-else>
@@ -277,6 +280,11 @@
       @rating="rating(1)"
       @group="group"
       @tag="show_tagging_dialog"
+      @merge="merge"
+      @split="split"
+      @play="playing"
+      @playing-interval="config.playing_interval = +$event; _save_config()"
+      :playing_interval="config.playing_interval"
     />
   </v-sheet>
   <v-sheet v-else ref="results">未找到匹配的结果。</v-sheet>
@@ -322,6 +330,7 @@ export default {
         enhance: false,
         force_thumbnail: false,
         limit: 50,
+        playing_interval: 1000
       },
       // dialog bools
       dialogs: {
@@ -478,6 +487,12 @@ export default {
       this.dialogs.paragraph.start_index = index;
       this.clear_selection();
     },
+    playing() {
+      if (this.view_mode != 'gallery') return
+      this.view_page(0)
+      this.$refs.page_view.playing(this.config.playing_interval)
+      this._save_config()
+    },
     _keyup_handler(e) {
       if (e.target.tagName == "INPUT" || e.target.tagName == "TEXTAREA") return;
       switch (e.key.toLowerCase()) {
@@ -539,7 +554,9 @@ export default {
                 this._open_window(_album.source.url);
                 break;
               case "c":
-                this._open_window(`?q=${this.quote(_album.author) || ""}`);
+                this._open_window(
+                  `?q=author%3D${this.quote(_album.author) || ""}`
+                );
                 break;
               case "z":
                 this._open_window(
@@ -656,13 +673,13 @@ export default {
     update_selection(r, e, index) {
       var s = [];
       if (e && e.shiftKey && this.select_index >= 0) {
-          document.getSelection().removeAllRanges();
-          let sel_start = Math.min(this.select_index, index),
-            sel_end = Math.max(this.select_index, index);
-          for (var i = sel_start; i <= sel_end; ++i) {
-            if (i == this.select_index) continue;
-            s.push(this.visible_data[i]);
-          }
+        document.getSelection().removeAllRanges();
+        let sel_start = Math.min(this.select_index, index),
+          sel_end = Math.max(this.select_index, index);
+        for (var i = sel_start; i <= sel_end; ++i) {
+          if (i == this.select_index) continue;
+          s.push(this.visible_data[i]);
+        }
       } else {
         s = [r];
       }
@@ -768,22 +785,22 @@ export default {
         (x) => x._id
       );
       if (val.item) delete val.item;
-      if (this.view_mode == 'gallery') {
-      api.call("imageitem/rating", val).then((data) => {
-        data = data.result || {};
-        this.clear_selection(s);
-        s.forEach((p) =>
-          p.images.forEach(
-            (i) =>
-              typeof data[i._id] !== "undefined" && (i.rating = data[i._id])
-          )
-        );
-      });
+      if (this.view_mode == "gallery") {
+        api.call("imageitem/rating", val).then((data) => {
+          data = data.result || {};
+          this.clear_selection(s);
+          s.forEach((p) =>
+            p.images.forEach(
+              (i) =>
+                typeof data[i._id] !== "undefined" && (i.rating = data[i._id])
+            )
+          );
+        });
       } else {
         // fav paragraphs
-        var s = this.selected_paragraphs()
-        s.forEach(x => this.fav(x))
-        this.clear_selection(s)
+        var s = this.selected_paragraphs();
+        s.forEach((x) => this.fav(x));
+        this.clear_selection(s);
       }
     },
     group(del) {
@@ -885,5 +902,9 @@ export default {
   padding: 5px;
   min-width: 250px;
   width: 25%;
+}
+
+.spacer {
+  clear: right;
 }
 </style>

@@ -35,6 +35,7 @@
             <v-text-field
               v-model="new_tag.from_tag"
               label="From Tag"
+              @input="$event && $event.startsWith('@') ? (new_tag.tag = $event.replace(/@\d*/, '*')):  ''"
             ></v-text-field>
 
             <v-text-field v-model="new_tag.tag" label="Tag"></v-text-field>
