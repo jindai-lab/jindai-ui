@@ -296,7 +296,7 @@ export default {
         this.view_mode == "file"
           ? { file: this.file, page: this.page }
           : this.active_paragraph.source;
-      if (src.file && typeof src.page !== "undefined") {
+      if (src && src.file && typeof src.page !== "undefined") {
         var image_url = `/api/image${api.querystring_stringify(src)}`;
         var image_element = new Image();
         image_element.src = image_url;
@@ -364,7 +364,8 @@ export default {
           else this.item_index = 0;
           if (
             this.view_mode == "gallery" &&
-            this.active_paragraph.images.length == 0
+            (!this.active_paragraph.images ||
+            this.active_paragraph.images.length == 0)
           )
             this._event_handler(direction);
         } else {
@@ -381,8 +382,8 @@ export default {
           break;
         case "gallery":
           // previous item
-          if (!this.active_paragraph.images) return;
           if (
+            this.active_paragraph.images &&
             this.item_index + inc >= 0 &&
             this.item_index + inc < this.active_paragraph.images.length
           ) {
@@ -401,7 +402,7 @@ export default {
     try_page(e) {
       e = e | 0;
       this.page = e;
-      update_pdfpage();
+      this.update_pdfpage();
     },
     save_pagenum() {
       api.call(

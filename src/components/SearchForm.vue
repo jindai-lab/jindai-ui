@@ -273,7 +273,7 @@ export default {
             "ig"
           );
           this.results = data.result.results.map((x) => {
-            x.matched_content = x.content.replace(reg, "<em>$1</em>");
+            x.matched_content = (x.content || '').replace(reg, "<em>$1</em>");
             return x;
           });
         }

@@ -59,7 +59,7 @@ export default {
     }
   },
   mounted() {
-    api.call("tasks/0/100").then((data) => (this.tasks = data.result));
+    api.call("tasks/0/0").then((data) => (this.tasks = data.result));
   },
 };
 </script>

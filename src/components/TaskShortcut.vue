@@ -34,6 +34,7 @@
       <v-card-title>运行结果</v-card-title>
       <v-card-text>
         <ResultsView :total="total" @load="load_search" ref="results" />
+        {{ result_plain }}
       </v-card-text>
     </v-card>
   </v-sheet>
@@ -63,6 +64,7 @@ export default {
       },
       shortcut_params: {},
       results: [],
+      result_plain: '',
       total: 0,
       valid: [],
     };
@@ -73,6 +75,7 @@ export default {
       this.results = []
       this.total = 0
       this.valid = []
+      this.result_plain = ''
     }
   },
   mounted() {
@@ -110,6 +113,7 @@ export default {
     },
     quicktask() {
       this.update_params();
+      this.result_plain = '';
       api
         .call("quicktask", {
           pipeline: this.querify(),
@@ -150,6 +154,8 @@ export default {
               b64toBlob(data.result.data),
               this.task.name + "." + data.result.__file_ext__
             );
+          } else {
+            this.result_plain = JSON.stringify(data.result)
           }
         });
     },

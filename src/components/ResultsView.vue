@@ -677,7 +677,7 @@ export default {
         let sel_start = Math.min(this.select_index, index),
           sel_end = Math.max(this.select_index, index);
         for (var i = sel_start; i <= sel_end; ++i) {
-          if (i == this.select_index) continue;
+          if (i == this.select_index || this.visible_data[i].spacer) continue;
           s.push(this.visible_data[i]);
         }
       } else {
@@ -905,6 +905,6 @@ export default {
 }
 
 .spacer {
-  clear: right;
+  margin-right: 100%;
 }
 </style>

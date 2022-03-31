@@ -1,5 +1,6 @@
 <template>
-  <div class="video">
+  <div class="video"
+  >
     <!-- video player -->
     <video
       class="video__player"
@@ -18,8 +19,8 @@
       @playing="handleVideoPlaying"
       @pause="playing = false"
       @dblclick="requestFullscreen"
-      @mouseup="handleMouseup"
       :key="src"
+      @mousedown="handleMouse"
     >
       <source :src="src" />
     </video>
@@ -78,15 +79,18 @@ export default {
       this.vp = e.target;
       this.vp.playbackRate = this.playbackRate;
     },
-    handleMouseup(e) {
-      var delta = 0;
-      e.cancelBubble = true;
-      if (e.clientX < window.innerWidth / 3) delta = -15;
-      else if (e.clientX > (window.innerWidth * 2) / 3) delta = 15;
-      if (delta !== 0) {
-        this.vp.currentTime += delta;
-      } else {
-        this.toggle_play();
+    handleMouse(e) {
+      var delta = null;
+      if (e.type && e.type == 'mousedown') {
+        e.cancelBubble = true;
+        if (e.clientX < window.innerWidth / 3) delta = -15;
+        else if (e.clientX > (window.innerWidth * 2) / 3) delta = 15;
+        else delta = 0
+      }
+      if (delta == null) return
+      if (delta == 0) this.toggle_play();
+      else {
+        this.vp.currentTime += delta
       }
     },
     requestFullscreen(e) {
@@ -110,6 +114,20 @@ export default {
     fullscreen() {
       this.vp.requestFullscreen();
     },
+    handleKey(e) {
+      if (!this.playing) return
+      switch(e.key) {
+        case ",":
+          this.vp.currentTime -= 15
+          break
+        case ".":
+          this.vp.currentTime += 15
+          break
+        case "/":
+          this.vp.currentTime = this.vp.duration / 2
+          break
+      }
+    },
   },
   mounted() {
     const vm = this;
@@ -126,8 +144,14 @@ export default {
         }
         vm.currentTime = vm.vp.currentTime;
       }
-    }, 1000);
+    }, 500);
   },
+  created() {
+    window.addEventListener('keydown', this.handleKey)
+  },
+  beforeDestroy() {
+    window.removeEventListener('keydown', this.handleKey)
+  }
 };
 </script>
 
