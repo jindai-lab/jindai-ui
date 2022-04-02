@@ -47,6 +47,9 @@
           <v-list-item-title @click="$emit('split')">分离</v-list-item-title>
         </v-list-item>
         <v-list-item>
+          <v-list-item-title @click="$emit('reset-storage')">重载</v-list-item-title>
+        </v-list-item>
+        <v-list-item>
           <v-list-item-title @click="$emit('delete')">
             删除 
             <!-- <v-icon>mdi-delete</v-icon> -->

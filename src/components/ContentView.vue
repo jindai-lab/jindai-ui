@@ -53,12 +53,14 @@
         </span>
         <span class="count"
           ><a
-            class="counter secondary--text"
+            class="counter secondary--text chip"
             target="_blank"
             :href="paragraph.group || `?q=id%3DObjectId(${paragraph._id})`"
             >{{ paragraph.count || paragraph.images.length }}</a
           ></span
-        >
+        > <a :href="paragraph.source.url" target="_blank" class="orig no-underline"
+        >🌍</a
+      >
       </span>
       <a
         :href="
@@ -69,9 +71,10 @@
         class="force-text break-anywhere"
         target="_blank"
         >{{ paragraph.source.url }}</a
-      >
-      {{ text }}
-      <a
+      > 
+      {{ text }}      
+      <a v-for="tag in tags"
+        :key="`${paragraph._id}-${Math.random()}-${tag}`"
         :href="
         '?q=' +
           encodeURIComponent(
@@ -79,15 +82,9 @@
             quote(tag) +
               (paragraph.author ? ',author=' + quote(paragraph.author) : ''))
           )"
-        :class="['tag', tag_class(tag), 'force-text']"
-        target="_blank"
-        v-for="tag in tags"
-        :key="`${paragraph._id}-${Math.random()}-${tag}`"
-        >{{ tag }}</a
-      >
-      <a :href="paragraph.source.url" target="_blank" class="orig no-underline"
-        >🌍</a
-      >
+        :class="['tag', 'chip', tag_class(tag)]"
+        target="_blank"        
+        >{{ tag }}</a>
     </div>
   </div>
 </template>
@@ -160,10 +157,6 @@ p:hover .fav-button,
 }
 .gallery-description a {
   margin-right: 5px;
-}
-
-.gallery-description a.tag {
-  text-decoration: underline;
 }
 
 .gallery-description a.tag.t_author,

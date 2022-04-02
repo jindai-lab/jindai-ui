@@ -216,7 +216,7 @@ export default {
     nav_click(e) {
       this.$router.push(e.target.getAttribute("to")).catch(() => {});
     },
-    log_out: api.log_out,
+    log_out() { api.log_out() },
     update_queue() {
       return api.queue().then((queue) => {
         if (!queue || !queue.running) return;
@@ -257,5 +257,23 @@ em {
   height: 200px;
   overflow-y: auto;
   font-size: 12px;
+}
+
+.chip {
+  border-radius: 20px;
+  min-width: 30px;
+  max-width: 120px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  text-align: center;
+  background: #eee;
+  color: #333 !important;
+  text-decoration: none !important;
+  padding: 4px;
+  margin-top: 4px;
+  display: inline-block;
+  white-space: nowrap;
+  vertical-align: middle;
 }
 </style>

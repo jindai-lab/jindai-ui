@@ -13,7 +13,7 @@
         view_mode == 'gallery' ? { overflow: 'hidden', height: '100%' } : {}
       "
     >
-      <v-card-text v-if="active_paragraph">
+      <v-card-text v-if="active_paragraph && active_paragraph.source">
         <!-- operation buttons -->
         <v-row v-if="view_mode == 'file'" class="pt-3">
           <v-col class="heading">
@@ -406,7 +406,7 @@ export default {
     },
     save_pagenum() {
       api.call(
-        `edit/${this.mongocollection}/${this.active_paragraph._id}/pagenum`,
+        `collections/${this.mongocollection || 'paragraph'}/${this.active_paragraph._id}/pagenum`,
         this.pagenum_editor
       );
       this.pagenum_edit = false;

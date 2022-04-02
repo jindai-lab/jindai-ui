@@ -5,7 +5,7 @@
       <v-row>
         <v-col>
           <v-text-field
-            class="d-inline-block"
+            class="d-inline-block selector"
             :style="{ width: 'calc(100% - 200px)', 'min-width': '200px' }"
             dense
             v-model="q"
@@ -13,7 +13,7 @@
             label="搜索条件"
           ></v-text-field>
           <v-combobox
-            class="d-inline-block ml-5"
+            class="d-inline-block ml-5 selector"
             v-model="sort"
             label="排序"
             dense
@@ -27,7 +27,7 @@
             ]"
           ></v-combobox>
           <v-text-field
-            class="d-inline-block ml-5"
+            class="d-inline-block ml-5 selector"
             label="每页数量"
             v-model="page_size"
             type="number"
@@ -51,15 +51,17 @@
         <v-btn @click="search" color="primary">查询</v-btn>
         <span class="ml-5" style="line-height: 100%; vertical-align: middle">
           分组
-          <ParamInput
+          <v-combobox
             class="d-inline-block ml-1"
             style="width: 80px"
             dense
             flat
-            :arg="{
-              type: '无:none|按组:group|按来源:source|分组和来源:both',
-              name: '',
-            }"
+            :items="[
+              {text: '无', value: 'none'},
+              {text: '按组', value: 'group'},
+              {text: '按来源', value: 'source'},
+              {text: '按作者', value: 'author'}
+            ]"
             v-model="groups"
           />
         </span>
@@ -105,12 +107,11 @@
     
 <script>
 import api from "../api";
-import ParamInput from "./ParamInput";
 import ResultsView from "./ResultsView";
 
 export default {
   name: "SearchForm",
-  components: { ResultsView, ParamInput },
+  components: { ResultsView, },
   data() {
     return {
       datasets: [],
@@ -252,7 +253,7 @@ export default {
         mongocollections: this.selected_mongocollections,
         offset: e.offset,
         limit: e.limit,
-        groups: this.groups,
+        groups: typeof this.groups === "object" ? this.groups.value : this.groups,
       };
 
       var token = new Date().getTime() + Math.random();
@@ -265,8 +266,11 @@ export default {
         if (data.result.query) {
           var reg = new RegExp(
             "(" +
-              data.result.query
-                .split(/[^\w]/g)
+              [... data.result.query.matchAll(/"(.*?)"/g)]
+                .map(element =>
+                  element[1].split(/[.,:=\-+()?*%#!@^&|`'"]/g)
+                )
+                .reduce((previous, current) => previous.concat(current), [])
                 .filter((x) => x)
                 .join("|") +
               ")",
@@ -364,5 +368,9 @@ export default {
 }
 .theme--dark .vue-treeselect {
   color: rgba(0, 0, 0, 0.7) !important;
+}
+
+.selector {
+  vertical-align: bottom;
 }
 </style>

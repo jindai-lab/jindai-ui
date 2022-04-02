@@ -285,6 +285,7 @@
       @play="playing"
       @playing-interval="config.playing_interval = +$event; _save_config()"
       :playing_interval="config.playing_interval"
+      @reset-storage="reset_storage"
     />
   </v-sheet>
   <v-sheet v-else ref="results">未找到匹配的结果。</v-sheet>
@@ -454,16 +455,17 @@ export default {
       if (this.page !== p) this.page = p;
       window.scroll({ top: this.$refs.results.offsetTop - 64 });
       if (!this._fetched()) {
+        this.total = null
         this.$emit("load", {
           offset: this.offset,
           limit: this.page_size * 5,
           callback: (data) => {
-            if (this.token < data.token) {
-              this.token = data.token;
-              this.total = null;
-              this.selection = [];
-            }
+            if (this.token > data.token) return
+          
+            this.token = data.token;
+            
             if (typeof data.result !== "undefined") {
+              this.selection = []
               this.page_range = [data.offset, data.offset + data.result.length];
               data.result.forEach((x) => (x.selected = false));
               this.value = data.result;
@@ -555,13 +557,13 @@ export default {
                 break;
               case "c":
                 this._open_window(
-                  `?q=author%3D${this.quote(_album.author) || ""}`
+                  `?q=author%3D${this.quote(_album.author || _album.keywords.filter(x=> x.startsWith('@'))[0] || '')}`
                 );
                 break;
               case "z":
                 this._open_window(
                   e.shiftKey
-                    ? `?q=id%3D${_album._id},images.source=exists(1)`
+                    ? `?q=id%3D${_album._id}=>expand()`
                     : `?q=source.url%25%27${api
                         .escape_regex(_album.source.url)
                         .replace(/\/\d+\//, "/.*/")}'`
@@ -610,7 +612,7 @@ export default {
     save() {
       api
         .call(
-          `edit/${this.dialogs.edit.target.mongocollection}/${this.dialogs.edit.target._id}`,
+          `collections/${this.dialogs.edit.target.mongocollection || 'paragraph'}/${this.dialogs.edit.target._id}`,
           this.dialogs.edit.target
         )
         .then(() => {
@@ -716,6 +718,8 @@ export default {
     },
     tag(e, append = true) {
       var s = this.selected_paragraphs();
+      if (!s || !s.length) return
+
       var existing_tags = new Set(
         this.selected_paragraphs().reduce((a, e) => a.concat(e.keywords), [])
       );
@@ -732,7 +736,7 @@ export default {
         updates.author = push.filter((x) => x.startsWith("@"))[0];
       else if (pull.filter((x) => x.startsWith("@"))) updates.author = "";
 
-      api.call("edit/paragraph/batch", updates).then((data) => {
+      api.call(`collections/${s[0].mongocollection || 'paragraph'}/batch`, updates).then((data) => {
         this.clear_selection(s);
         s.forEach((p) => {
           data.result[p._id] && (p.keywords = data.result[p._id].keywords);
@@ -798,17 +802,17 @@ export default {
         });
       } else {
         // fav paragraphs
-        var s = this.selected_paragraphs();
         s.forEach((x) => this.fav(x));
         this.clear_selection(s);
       }
     },
     group(del) {
       var s = this.selected_paragraphs();
+      if (!s || !s.length) return
       api
-        .call("gallery/grouping", {
+        .call(`collections/${s[0].mongocollection || 'paragraph'}/group`, {
           ids: this.selected_ids(),
-          delete: del,
+          ungroup: del,
         })
         .then((data) => {
           this.clear_selection(s);
@@ -822,16 +826,18 @@ export default {
     },
     merge() {
       var s = this.selected_paragraphs();
+      if (!s || !s.length) return
       api
-        .call("paragraph/merge", {
+        .call(`collections/${s[0].mongocollection || 'paragraph'}/merge`, {
           ids: this.selected_ids(),
         })
         .then(() => this.clear_selection(s));
     },
     split() {
       var s = this.selected_paragraphs();
+      if (!s || !s.length) return
       api
-        .call("paragraph/split", {
+        .call(`collections/${s[0].mongocollection || 'paragraph'}/split`, {
           ids: this.selected_ids(),
         })
         .then(() => this.clear_selection(s));

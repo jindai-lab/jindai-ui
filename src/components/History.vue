@@ -41,7 +41,7 @@ export default {
         .then((data) => this.$router.push("/tasks/" + data.result)).catch(()=>{});
     },
     replay(h) {
-      this.$router.push('search?q=' + encodeURIComponent('?' + h.querystr))
+      this.$router.push('search?q=' + encodeURIComponent(h.querystr))
     }
   },
 };

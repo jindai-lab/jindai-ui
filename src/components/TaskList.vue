@@ -11,7 +11,7 @@
           <span class="name">{{ task.name }}</span>
           <span class="opers">
             <v-btn 
-              :to="'/tasks/' + task._id"
+              :to="`/tasks/${task._id}`"
             >
               <v-icon>mdi-file-edit-outline</v-icon>
             </v-btn>
@@ -20,8 +20,8 @@
               <v-icon>mdi-content-copy</v-icon>
             </v-btn>
 
-            <v-btn @click="delete_task(task)">
-              <v-icon>mdi-delete</v-icon>
+            <v-btn @click="enqueue_task(task)">
+              <v-icon>mdi-play</v-icon>
             </v-btn>
              </span
           ><br />
@@ -56,10 +56,15 @@ export default {
     },
     delete_task(task) {
       api.delete("tasks/" + task._id).then(() => this.tasks = this.tasks.filter((x) => x._id != task._id))
-    }
+    },
+    enqueue_task(task) {
+      api.put("queue/", { id: task._id }).then((data) => {
+        this.notify(data.result + " 已成功加入后台处理队列。");
+      })
+    },
   },
   mounted() {
-    api.call("tasks/0/0").then((data) => (this.tasks = data.result));
+    api.call("tasks/").then((data) => (this.tasks = data.result));
   },
 };
 </script>

@@ -20,6 +20,7 @@
         "core-js": "^3.6.5",
         "js-cookie": "^3.0.1",
         "prismjs": "^1.23.0",
+        "qrcodejs2": "^0.0.2",
         "socket.io-client": "^4.2.0",
         "string-hash": "^1.1.3",
         "vue": "^2.6.11",

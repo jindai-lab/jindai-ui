@@ -9,7 +9,7 @@
           :items="tag_choices"
           :search-input.sync="tag_typing"
           :loading="cancel !== null"
-          flat multiple
+          flat multiple chips deletable-chips hide-selected
           auto-select-first
           label="标签"
           ref="ac"
@@ -78,9 +78,10 @@ export default {
   },
   methods: {
     show(values) {
+      var sorted = [...values].sort()
       this.visible = true
-      this.tag_new = [...values]
-      this.tag_choices = [...values]
+      this.tag_new = sorted
+      this.tag_choices = sorted
       this.batch = ''
     },
     search_tag(search) {
