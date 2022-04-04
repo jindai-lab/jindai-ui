@@ -65,7 +65,7 @@
       <a
         :href="
           '?archive=0&q=source.url%25`' +
-          (paragraph.source.url || '').replace(/\/\d+(\/|$)/, '/.*$1') +
+          (paragraph.source.url || '') +
           '`'
         "
         class="force-text break-anywhere"

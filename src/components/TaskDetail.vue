@@ -1,4 +1,5 @@
 <template>
+  <div>
   <v-card flat>
     <v-card-text>
       <ParamInput v-model="task.name" :arg="{ name: '名称', type: '' }" />
@@ -21,8 +22,12 @@
             label="并行运行"
             v-model="task.concurrent"
             type="number"
-            :rules="[v => ((v >= 1) && (v <= 10) && (v == parseInt(v))) || '应为 1-10 之间的整数']"
-            @input="v => task.concurrent = parseInt(v)"
+            :rules="[
+              (v) =>
+                (v >= 1 && v <= 10 && v == parseInt(v)) ||
+                '应为 1-10 之间的整数',
+            ]"
+            @input="(v) => (task.concurrent = parseInt(v))"
           >
           </v-text-field>
         </v-col>
@@ -38,7 +43,7 @@
       <div id="pipeline">
         <h2>
           处理流程
-          <v-btn :href="`/api/blockly/${task._id}`"
+          <v-btn @click="blockly = true" v-if="pipelines"
             ><v-icon>mdi-layers</v-icon> 设计视图</v-btn
           >
         </h2>
@@ -86,6 +91,18 @@
       ></v-textarea>
     </v-row>
   </v-card>
+    <!-- <v-dialog fullscreen persistent v-model="blockly"> -->
+    <BlocklyComponent
+      :json="task.pipeline"
+      :pipelines="pipelines"
+      :tasks="tasks"
+      @save="task.pipeline = $event; blockly = false"
+      @cancel="blockly = false"
+      v-show="blockly"
+      v-if="pipelines"
+    />
+    <!-- </v-dialog> -->
+  </div>
 </template>
 
 
@@ -93,11 +110,13 @@
 import api from "../api";
 import ParamInput from "./ParamInput.vue";
 import Pipeline from "./Pipeline";
+import BlocklyComponent from "./BlocklyComponent.vue";
 
 export default {
   name: "TaskDetail",
   components: {
     Pipeline,
+    BlocklyComponent,
     ParamInput,
   },
   props: ["id"],
@@ -109,19 +128,24 @@ export default {
         shortcut_map: {},
         pipeline: [],
       },
+      blockly: false,
+      pipelines: null,
       valid: [],
       show_code: false,
+      tasks: [],
     };
   },
   mounted() {
     api.call("tasks/" + this.id).then((data) => {
       this.task = data.result;
     });
+    api.call("tasks/").then((data) => this.tasks = data.result);
+    api.call("help/pipelines").then((data) => (this.pipelines = data.result));
   },
   computed: {
     user() {
-      return api.user
-    }
+      return api.user;
+    },
   },
   methods: {
     update_valid(name, valid) {
@@ -173,7 +197,7 @@ export default {
       this.$forceUpdate();
     },
     querify() {
-      return api.querify(this.task.pipeline, "")
+      return api.querify(this.task.pipeline, "");
     },
   },
 };

@@ -84,7 +84,7 @@
 
       <div :id="viewer ? 'viewer' : 'content-wrapper'">
         <keep-alive
-          :include="['SearchForm', 'ResultsView', 'DbConsole', 'Gallery']"
+          :include="['SearchForm', 'ResultsView', 'DbConsole']"
         >
           <router-view @logined="$emit('logined')" :key="$route.fullPath" />
         </keep-alive>
@@ -92,21 +92,25 @@
 
       <div style="height: 40px"></div>
 
-      <v-card flat v-show="console_outputs.length > 0" ref="console" v-if="!viewer">
-        <v-btn small left bottom text class="ma-3" @click="console_outputs = []"
-          ><v-icon>mdi-delete</v-icon> 清除</v-btn
-        >
-        <div class="console">
-          <div v-for="(line, index) in console_outputs.slice(0, 50)" :key="index">
-            {{ line }}
-          </div>
-        </div>
-      </v-card>
+      <template v-if="!viewer">
 
-      <v-footer :id="viewer ? '' : 'footer'">
-        Powered by Jindai &copy; 2018-{{ new Date().getFullYear() }} zhuth &amp;
-        contributors <div v-html="copyright"></div>
-      </v-footer>
+        <v-card flat v-show="console_outputs.length > 0" ref="console">
+          <v-btn small left bottom text class="ma-3" @click="console_outputs = []"
+            ><v-icon>mdi-delete</v-icon> 清除</v-btn
+          >
+          <div class="console">
+            <div v-for="(line, index) in console_outputs.slice(0, 50)" :key="index">
+              {{ line }}
+            </div>
+          </div>
+        </v-card>
+
+        <v-footer id="footer">
+          Powered by Jindai &copy; 2018-{{ new Date().getFullYear() }} zhuth &amp;
+          contributors <div v-html="copyright"></div>
+        </v-footer>
+
+      </template>
     </v-main>
 
     <v-snackbar
@@ -204,8 +208,6 @@ export default {
       Object.assign(this, data.result);
     });
     this.$emit("logined");
-
-    if (this.viewer) return;
   },
   computed: {
     viewer() {

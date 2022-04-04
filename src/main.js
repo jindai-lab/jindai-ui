@@ -1,9 +1,15 @@
 import Vue from 'vue'
 import App from './App'
+import vuetify from './plugins/vuetify'
+
+// patch for Blockly
+//Add unimported components to ignore list to prevent warnings.
+Vue.config.ignoredElements = ['field','block','category','xml','mutation','value','sep']
 
 // use vue-router
 import VueRouter from 'vue-router'
 Vue.use(VueRouter)
+
 Vue.filter('dateSafe', function(value) {
     if (!value) return ''
     if ((typeof value === 'number' && value < 10000) || ('' + value).match(/^\d{4}(-\d{1,2})?$/)) return value;
@@ -33,7 +39,6 @@ import UserList from './components/UserList.vue'
 import AccountSecurity from './components/AccountSecurity.vue'
 import ArticleCompletion from './components/ArticleCompletion.vue'
 import DbConsole from './components/DbConsole.vue'
-import vuetify from './plugins/vuetify'
 
 // configure routes
 const routes = [
@@ -68,7 +73,7 @@ router.beforeEach((to, from, next) => {
 })
 
 new Vue({
-    render: h => h(App),
     vuetify,
-    router
-}).$mount('body#app')
+    router,
+    render: h => h(App),
+}).$mount('#app')
