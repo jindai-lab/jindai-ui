@@ -132,9 +132,9 @@ export default {
   mounted() {
     const vm = this;
     setInterval(() => {
-      if (vm.playing && vm.vp.currentTime) {
-        const span = vm.$refs.duration,
+      const span = vm.$refs.duration,
           slider = vm.$refs.slider;
+      if (vm.playing && vm.vp.currentTime && document.activeElement != slider) {  
         if (span) {
           span.innerText = `${vm.to_friendly_time(
             vm.vp.currentTime

@@ -32,6 +32,13 @@
         <div class="spacer" v-if="r.spacer" :key="index"></div>
         <div class="paragraph" v-else :key="index">
           <div class="meta">
+            <v-checkbox
+              v-model="r.selected"
+              dense
+              hide-details
+              class="d-inline-block"
+              @change="update_selection(r, null, index)"
+            ></v-checkbox>
             数据集:
             <a :href="`/?q=dataset=${quote(r.dataset)}`" target="_blank">{{
               r.dataset
@@ -46,14 +53,6 @@
             >
             <a :href="r.source.url" target="_blank">{{ r.source.url }}</a> 页码:
             {{ r.pagenum }} 日期: {{ r.pdate | dateSafe }}
-            <div style="float: right">
-              <v-checkbox
-                v-model="r.selected"
-                dense
-                style="vertical-align: middle"
-                @change="update_selection(r, null, index)"
-              ></v-checkbox>
-            </div>
             <v-divider class="mt-5"></v-divider>
           </div>
           <ContentView
@@ -283,7 +282,10 @@
       @merge="merge"
       @split="split"
       @play="playing"
-      @playing-interval="config.playing_interval = +$event; _save_config()"
+      @playing-interval="
+        config.playing_interval = +$event;
+        _save_config();
+      "
       :playing_interval="config.playing_interval"
       @reset-storage="reset_storage"
     />
@@ -331,7 +333,7 @@ export default {
         enhance: false,
         force_thumbnail: false,
         limit: 50,
-        playing_interval: 1000
+        playing_interval: 1000,
       },
       // dialog bools
       dialogs: {
@@ -455,17 +457,17 @@ export default {
       if (this.page !== p) this.page = p;
       window.scroll({ top: this.$refs.results.offsetTop - 64 });
       if (!this._fetched()) {
-        this.total = null
+        this.total = null;
         this.$emit("load", {
           offset: this.offset,
           limit: this.page_size * 5,
           callback: (data) => {
-            if (this.token > data.token) return
-          
+            if (this.token > data.token) return;
+
             this.token = data.token;
-            
+
             if (typeof data.result !== "undefined") {
-              this.selection = []
+              this.selection = [];
               this.page_range = [data.offset, data.offset + data.result.length];
               data.result.forEach((x) => (x.selected = false));
               this.value = data.result;
@@ -490,10 +492,10 @@ export default {
       this.clear_selection();
     },
     playing() {
-      if (this.view_mode != 'gallery') return
-      this.view_page(0)
-      this.$refs.page_view.playing(this.config.playing_interval)
-      this._save_config()
+      if (this.view_mode != "gallery") return;
+      this.view_page(0);
+      this.$refs.page_view.playing(this.config.playing_interval);
+      this._save_config();
     },
     _keyup_handler(e) {
       if (e.target.tagName == "INPUT" || e.target.tagName == "TEXTAREA") return;
@@ -557,7 +559,11 @@ export default {
                 break;
               case "c":
                 this._open_window(
-                  `?q=author%3D${this.quote(_album.author || _album.keywords.filter(x=> x.startsWith('@'))[0] || '')}`
+                  `?q=author%3D${this.quote(
+                    _album.author ||
+                      _album.keywords.filter((x) => x.startsWith("@"))[0] ||
+                      ""
+                  )}`
                 );
                 break;
               case "z":
@@ -612,7 +618,9 @@ export default {
     save() {
       api
         .call(
-          `collections/${this.dialogs.edit.target.mongocollection || 'paragraph'}/${this.dialogs.edit.target._id}`,
+          `collections/${
+            this.dialogs.edit.target.mongocollection || "paragraph"
+          }/${this.dialogs.edit.target._id}`,
           this.dialogs.edit.target
         )
         .then(() => {
@@ -718,7 +726,7 @@ export default {
     },
     tag(e, append = true) {
       var s = this.selected_paragraphs();
-      if (!s || !s.length) return
+      if (!s || !s.length) return;
 
       var existing_tags = new Set(
         this.selected_paragraphs().reduce((a, e) => a.concat(e.keywords), [])
@@ -736,12 +744,17 @@ export default {
         updates.author = push.filter((x) => x.startsWith("@"))[0];
       else if (pull.filter((x) => x.startsWith("@"))) updates.author = "";
 
-      api.call(`collections/${s[0].mongocollection || 'paragraph'}/batch`, updates).then((data) => {
-        this.clear_selection(s);
-        s.forEach((p) => {
-          data.result[p._id] && (p.keywords = data.result[p._id].keywords);
+      api
+        .call(
+          `collections/${s[0].mongocollection || "paragraph"}/batch`,
+          updates
+        )
+        .then((data) => {
+          this.clear_selection(s);
+          s.forEach((p) => {
+            data.result[p._id] && (p.keywords = data.result[p._id].keywords);
+          });
         });
-      });
     },
     delete_items() {
       var s = this.selected_paragraphs();
@@ -808,9 +821,9 @@ export default {
     },
     group(del) {
       var s = this.selected_paragraphs();
-      if (!s || !s.length) return
+      if (!s || !s.length) return;
       api
-        .call(`collections/${s[0].mongocollection || 'paragraph'}/group`, {
+        .call(`collections/${s[0].mongocollection || "paragraph"}/group`, {
           ids: this.selected_ids(),
           ungroup: del,
         })
@@ -826,18 +839,18 @@ export default {
     },
     merge() {
       var s = this.selected_paragraphs();
-      if (!s || !s.length) return
+      if (!s || !s.length) return;
       api
-        .call(`collections/${s[0].mongocollection || 'paragraph'}/merge`, {
+        .call(`collections/${s[0].mongocollection || "paragraph"}/merge`, {
           ids: this.selected_ids(),
         })
         .then(() => this.clear_selection(s));
     },
     split() {
       var s = this.selected_paragraphs();
-      if (!s || !s.length) return
+      if (!s || !s.length) return;
       api
-        .call(`collections/${s[0].mongocollection || 'paragraph'}/split`, {
+        .call(`collections/${s[0].mongocollection || "paragraph"}/split`, {
           ids: this.selected_ids(),
         })
         .then(() => this.clear_selection(s));

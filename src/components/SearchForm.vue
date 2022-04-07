@@ -314,7 +314,7 @@ export default {
               },
             ],
             ["AccumulateParagraphs", {}],
-            ["Export", { format }],
+            ["Export", { output_format: format }],
           ],
         })
         .then(callback);

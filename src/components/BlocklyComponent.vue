@@ -146,6 +146,94 @@ export default {
         ],
       });
 
+      var query_blocks = [
+        {
+          type: "function_size",
+          name: "数组长度",
+          message0: "数组 %1 的长度",
+          args0: [
+            {
+              type: "input_value",
+              name: "VALUE",
+            },
+          ],
+          output: "Number",
+          colour: 160,
+          tooltip: "Returns number of array element.",
+        },
+        {
+          type: "function_strlenCP",
+          name: "字符串长度",
+          message0: "字符串 %1 的长度",
+          args0: [
+            {
+              type: "input_value",
+              name: "VALUE",
+            },
+          ],
+          output: "Number",
+          colour: 160,
+          tooltip: "Returns number of letters in the provided text.",
+        },
+      ];
+
+      const constants = Object.entries({
+        文件来源: 'source__file',
+        网页来源: 'source__url',
+        文件页码: 'source__page',
+        页码: 'pagenum',
+        日期: 'pdate',
+        关键词和标签: 'keywords',
+        内容: 'content',
+        语言: 'lang',
+        数据集: 'dataset',
+        大纲: 'outline',
+        图像: 'images'
+      })
+
+      toolbox.contents.push({
+        kind: "category",
+        name: `查询`,
+        contents: [
+          {
+            kind: "block",
+            type: "logic_compare",
+          },
+          {
+            kind: "block",
+            type: "logic_operation",
+          },
+          {
+            kind: "block",
+            type: "logic_boolean",
+          },
+          ...constants.map(cst => {
+            var item = {
+                kind: "block",
+                type: `constant_${cst[1]}`,
+                name: cst[0],
+                message0: cst[0],
+                args0: [],
+                output: "String",
+                color: 160,
+              }
+            Blockly.Blocks[item.type] = {
+              init() {
+                this.jsonInit(item);
+              }
+            };
+            return { kind: "block", type: item.type };
+          }),
+          ...query_blocks.map((item) => {
+            Blockly.Blocks[item.type] = {
+              init() {
+                this.jsonInit(item);
+              },
+            };
+            return { kind: "block", type: item.type };
+          }),
+        ],
+      });
       return toolbox;
     },
     to_xml(parent, tuples) {
@@ -214,6 +302,35 @@ export default {
         ++index;
       }
     },
+    from_field_expr(block) {
+      var op = ''
+      block.type = block.getAttribute("type");
+      switch(block.type) {
+        case 'math_number':
+        case 'text':
+        case 'text_multiline':
+          return this.auto_parse(
+                block.getElementsByTagName("field")[0].innerHTML
+              );
+        case 'logic_compare':
+          op = block.querySelector('field[name="OP"]').textContent
+          return this.from_field_expr(block.querySelector('[name=A]')) + {
+            'EQ': '=',
+            'LT': '<',
+            'LE': '<=',
+            'GT': '>',
+            'GE': ">=",
+            'NE': '!='
+          }[op] + this.from_field_expr(block.querySelector('[name=B]'))
+        default:
+          if (block.type.startsWith('constant_'))
+            return block.type.split('_', 2)[1].replace(/__/g, '.')
+          if (block.type.startsWith('function_'))
+            return block.type.split('_', 2)[1] + '(' + this.from_field_expr(block.type.querySelector('[name=VALUE]')) + ')'
+          break
+      }
+      return ''
+    },
     from_xml(block) {
       var j = [];
       while (block) {
@@ -229,14 +346,8 @@ export default {
               next = child.children[0];
               break;
             case "field":
-              obj.args[child.getAttribute("name")] = this.auto_parse(
-                child.innerHTML
-              );
-              break;
             case "value":
-              obj.args[child.getAttribute("name")] = this.auto_parse(
-                child.getElementsByTagName("field")[0].innerHTML
-              );
+              obj.args[child.getAttribute("name")] = this.from_field_expr(child.children[0])
               break;
             case "statement":
               obj.args[child.getAttribute("name")] = this.from_xml(
@@ -267,7 +378,7 @@ export default {
 
 <style scoped>
 .blocklyDiv {
-  height: 100vh;
+  height: 100%;
   width: 100%;
   text-align: left;
   background: white;
