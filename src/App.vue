@@ -71,21 +71,19 @@
       <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
       <v-toolbar-title>{{ app_title }}</v-toolbar-title>
       <v-spacer></v-spacer>
-      <queue-view :data="queue" @updated="update_queue"></queue-view>
+      <queue-view :data="queue"></queue-view>
     </v-app-bar>
 
     <v-main>
       <v-progress-linear
         indeterminate
-        :style="{opacity: loading ? 1 : 0, 'z-index': 5}"
+        :style="{ opacity: loading ? 1 : 0, 'z-index': 5 }"
         app
         fixed
       ></v-progress-linear>
 
       <div :id="viewer ? 'viewer' : 'content-wrapper'">
-        <keep-alive
-          :include="['SearchForm', 'ResultsView', 'DbConsole']"
-        >
+        <keep-alive :include="['SearchForm', 'ResultsView', 'DbConsole']">
           <router-view @logined="$emit('logined')" :key="$route.fullPath" />
         </keep-alive>
       </div>
@@ -93,23 +91,31 @@
       <div style="height: 40px"></div>
 
       <template v-if="!viewer">
-
         <v-card flat v-show="console_outputs.length > 0" ref="console">
-          <v-btn small left bottom text class="ma-3" @click="console_outputs = []"
+          <v-btn
+            small
+            left
+            bottom
+            text
+            class="ma-3"
+            @click="console_outputs = []"
             ><v-icon>mdi-delete</v-icon> 清除</v-btn
           >
           <div class="console">
-            <div v-for="(line, index) in console_outputs.slice(0, 50)" :key="index">
+            <div
+              v-for="(line, index) in console_outputs.slice(0, 50)"
+              :key="index"
+            >
               {{ line }}
             </div>
           </div>
         </v-card>
 
         <v-footer id="footer">
-          Powered by Jindai &copy; 2018-{{ new Date().getFullYear() }} zhuth &amp;
-          contributors <div v-html="copyright"></div>
+          Powered by Jindai &copy; 2018-{{ new Date().getFullYear() }} zhuth
+          &amp; contributors
+          <div v-html="copyright"></div>
         </v-footer>
-
       </template>
     </v-main>
 
@@ -153,7 +159,7 @@ export default {
       console_outputs: [],
       app_title: "Jindai",
       app_dark: false,
-      copyright: '',
+      copyright: "",
     };
   },
   watch: {
@@ -168,8 +174,16 @@ export default {
     api.bus
       .$on("loading", (loading_num) => (this.loading = loading_num > 0))
       .$on("console", (data) => {
-        this.console_outputs.splice(0, 0, ...data.content.filter(x => x.trim()).map(x => `${data.key}|${x}`).reverse());
-        if (this.console_outputs.length > 100) this.console_outputs.splice(50, this.console_outputs.length-50);
+        this.console_outputs.splice(
+          0,
+          0,
+          ...data.content
+            .filter((x) => x.trim())
+            .map((x) => `${data.key}|${x}`)
+            .reverse()
+        );
+        if (this.console_outputs.length > 100)
+          this.console_outputs.splice(50, this.console_outputs.length - 50);
       })
       .$on("alert", (bundle) => {
         const message = bundle.title
@@ -185,12 +199,16 @@ export default {
           ]);
       })
       .$on("finish", (key) => {
-        this.update_queue().then(() => { 
-          if (this.logs[key]) delete this.logs[key]
-        });
+        if (this.logs[key]) delete this.logs[key];
       });
     this.$on("logined", () => {
-      if (!this.viewer) this.update_queue()
+      if (!this.viewer) {
+        api.queue().then((queue) => this.update_queue(queue));
+        var source = new EventSource('/api/queue/events');
+        source.onmessage = (event) => {
+          this.update_queue(JSON.parse(event.data));
+        };
+      }
       api
         .logined()
         .then((data) => (this.admin = data.result.roles.indexOf("admin") >= 0))
@@ -198,7 +216,6 @@ export default {
           api
             .call("tasks/shortcuts")
             .then((data) => (this.shortcuts = data.result));
-          if (!this.viewer) setInterval(this.update_queue, 10000);
         })
         .catch(() => (localStorage.token = ""));
     });
@@ -218,19 +235,22 @@ export default {
     nav_click(e) {
       this.$router.push(e.target.getAttribute("to")).catch(() => {});
     },
-    log_out() { api.log_out() },
-    update_queue() {
-      return api.queue().then((queue) => {
-        if (!queue || !queue.running) return;
-        this.queue = queue;
-        this.queue.running.forEach((k) => {
-          if (!this.logs[k]) {
-            api.fetch_logs(k);
-            this.logs[k] = true;
-          }
-        });
+    log_out() {
+      api.log_out();
+    },
+    update_queue(queue) {
+      if (!queue || !queue.running) return;
+      this.queue = queue;
+      this.queue.running.forEach((k) => {
+        if (!this.logs[k]) {
+          api.fetch_logs(k);
+          this.logs[k] = true;
+        }
       });
     },
+  },
+  sse: {
+    cleanup: true,
   },
 };
 </script>

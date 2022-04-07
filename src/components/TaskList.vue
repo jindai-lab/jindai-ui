@@ -59,7 +59,7 @@ export default {
     },
     enqueue_task(task) {
       api.put("queue/", { id: task._id }).then((data) => {
-        this.notify(data.result + " 已成功加入后台处理队列。");
+        api.notify(data.result + " 已成功加入后台处理队列。");
       })
     },
   },
