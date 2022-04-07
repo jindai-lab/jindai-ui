@@ -173,18 +173,6 @@ export default {
   created() {
     api.bus
       .$on("loading", (loading_num) => (this.loading = loading_num > 0))
-      .$on("console", (data) => {
-        this.console_outputs.splice(
-          0,
-          0,
-          ...data.content
-            .filter((x) => x.trim())
-            .map((x) => `${data.key}|${x}`)
-            .reverse()
-        );
-        if (this.console_outputs.length > 100)
-          this.console_outputs.splice(50, this.console_outputs.length - 50);
-      })
       .$on("alert", (bundle) => {
         const message = bundle.title
           ? `${bundle.title}\n${bundle.text || ""}`.trim()
@@ -204,9 +192,14 @@ export default {
     this.$on("logined", () => {
       if (!this.viewer) {
         api.queue().then((queue) => this.update_queue(queue));
-        var source = new EventSource('/api/queue/events');
+        var source = new EventSource("/api/queue/events");
         source.onmessage = (event) => {
-          this.update_queue(JSON.parse(event.data));
+          var data = JSON.parse(event.data);
+          if (data.log) {
+            this.console_outputs.splice(0, 0, data.log);
+            if (this.console_outputs.length > 100)
+              this.console_outputs.splice(50, this.console_outputs.length - 50);
+          } else this.update_queue(data);
         };
       }
       api
@@ -241,12 +234,6 @@ export default {
     update_queue(queue) {
       if (!queue || !queue.running) return;
       this.queue = queue;
-      this.queue.running.forEach((k) => {
-        if (!this.logs[k]) {
-          api.fetch_logs(k);
-          this.logs[k] = true;
-        }
-      });
     },
   },
   sse: {
