@@ -1,5 +1,5 @@
 <template>
-  <div class="paragraph mt-5" v-if="!view_mode || ['list', 'page'].includes(view_mode)">
+  <div class="paragraph mt-5" v-if="['file', 'list', 'page'].includes(view_mode)">
     <p v-html="content" v-if="is_html"></p>
     <p v-else>
       {{ content }}

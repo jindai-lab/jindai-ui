@@ -191,16 +191,7 @@ export default {
       });
     this.$on("logined", () => {
       if (!this.viewer) {
-        api.queue().then((queue) => this.update_queue(queue));
-        var source = new EventSource("/api/queue/events");
-        source.onmessage = (event) => {
-          var data = JSON.parse(event.data);
-          if (data.log) {
-            this.console_outputs.splice(0, 0, data.log);
-            if (this.console_outputs.length > 100)
-              this.console_outputs.splice(50, this.console_outputs.length - 50);
-          } else this.update_queue(data);
-        };
+        this.queue_event()
       }
       api
         .logined()
@@ -235,6 +226,19 @@ export default {
       if (!queue || !queue.running) return;
       this.queue = queue;
     },
+    queue_event() {
+      api.queue().then((queue) => this.update_queue(queue));
+        var source = new EventSource("/api/queue/events");
+        source.onmessage = (event) => {
+          var data = JSON.parse(event.data);
+          if (data.log) {
+            this.console_outputs.splice(0, 0, data.log);
+            if (this.console_outputs.length > 100)
+              this.console_outputs.splice(50, this.console_outputs.length - 50);
+          } else this.update_queue(data);
+        };
+        source.onerror = () => this.queue_event();
+    }
   },
   sse: {
     cleanup: true,
@@ -243,23 +247,10 @@ export default {
 </script>
 
 <style>
-.fs22 {
-  font-size: 22px;
-}
-
-#viewer {
-  max-width: 80%;
-  margin: 0 auto;
-}
-
 em {
   background-color: yellow;
   font-style: normal;
   color: black;
-}
-
-.toplogo {
-  text-align: center;
 }
 
 .console {

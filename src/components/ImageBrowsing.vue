@@ -144,7 +144,7 @@ export default {
         for (var k of i.split(".")) b = b[k] || "";
         return b;
       }
-      return str.replace(/\{([\w\d._]+)\}/g, _replace);
+      return (typeof str == 'string' && str.replace(/\{([\w\d._]+)\}/g, _replace)) || '';
     },
     google() {
       var image = this.$refs.browsing_image;

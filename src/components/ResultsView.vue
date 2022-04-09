@@ -796,6 +796,7 @@ export default {
       if (typeof val === "number") {
         val = {
           inc: val,
+          least: val > 0 ? 1: -1
         };
       }
       val.ids = (val.item ? [val.item] : this.selected_items()).map(
