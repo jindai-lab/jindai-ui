@@ -266,11 +266,7 @@ export default {
         if (data.result.query) {
           var reg = new RegExp(
             "(" +
-              [... data.result.query.matchAll(/"(.*?)"/g)]
-                .map(element =>
-                  element[1].split(/[.,:=\-+()?*%#!@^&|`'"]/g)
-                )
-                .reduce((previous, current) => previous.concat(current), [])
+              this.keyword_patterns(data.result.query)
                 .filter((x) => x)
                 .join("|") +
               ")",
@@ -281,7 +277,7 @@ export default {
             return x;
           });
         }
-        this.querystr = data.result.query;
+        this.querystr = api.querify(data.result.query).replace(/^\(|\)$/g, '');
         e.callback({
           token,
           result: data.result.results,
@@ -297,6 +293,20 @@ export default {
         .then((data) => {
           if (data.result) e.callback({ token, total: data.result });
         });
+    },
+    keyword_patterns(query) {
+      if (Array.isArray(query))
+        return query.map(x => this.keyword_patterns(x)).reduce((prev, curr) => prev = prev.concat(curr), [])
+      if (['string', 'number', 'boolean'].includes(typeof query))
+        return []
+      return Object.entries(query).map(kvpair => {
+        let key = kvpair[0], val = kvpair[1]
+        if (key == 'keywords') {
+          if (typeof val == 'string') return [api.escape_regex(val)]
+          else if (typeof val.$regex == 'string') return [val.$regex]
+        }
+        return this.keyword_patterns(val)
+      }).reduce((prev, curr) => prev = prev.concat(curr), [])      
     },
     export_query(format, callback) {
       if (typeof callback !== "function")

@@ -197,7 +197,11 @@ export default {
       this.$forceUpdate();
     },
     querify() {
-      return api.querify(this.task.pipeline, "");
+      return this.task.pipeline.map(kv => {
+        var o = {}
+        o['$' + kv[0]] = kv[1]
+        return api.querify(o).replace(/^\(|\)$/g, '')
+      }).join(';\n')
     },
   },
 };
