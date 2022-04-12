@@ -61,13 +61,13 @@
             </div>
             <div>
               <v-btn
-                v-for="(page, page_name) in plugin_pages"
+                v-for="(filter, page_name) in plugin_filters"
                 :key="page_name"
                 icon
                 dense
-                :data-keybind="page.shortcut"
+                :data-keybind="filter.keybind"
                 :href="`?q=author%3D${quote(paragraph.author)};page('${format(
-                  page.format,
+                  filter.format,
                   {
                     imageitem: item,
                     paragraph: paragraph,
@@ -75,7 +75,7 @@
                 )}')&archive=true`"
                 class="t_func sim"
                 target="_blank"
-                ><v-icon>{{ page.icon }}</v-icon></v-btn
+                ><v-icon>{{ filter.icon }}</v-icon></v-btn
               >
               <v-btn icon dense @click="$emit('info', item)" target="_blank" data-keybind="i"
                 ><v-icon>mdi-information</v-icon></v-btn
@@ -107,7 +107,7 @@ export default {
   data() {
     return {
       fit: "both",
-      plugin_pages: [],
+      plugin_filters: [],
       browsing_page: 2,
     };
   },
@@ -121,7 +121,7 @@ export default {
       fit: "both",
     });
     this.fit = config.fit;
-    api.call("plugins/pages").then((data) => (this.plugin_pages = data.result));
+    api.call("plugins/filters").then((data) => (this.plugin_filters = data.result));
   },
   computed: {
     browsing_video() {

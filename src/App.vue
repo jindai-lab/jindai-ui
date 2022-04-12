@@ -237,7 +237,7 @@ export default {
               this.console_outputs.splice(50, this.console_outputs.length - 50);
           } else this.update_queue(data);
         };
-        source.onerror = () => this.queue_event();
+        source.onerror = () => setTimeout(()=>this.queue_event(), 5000);
     }
   },
   sse: {
