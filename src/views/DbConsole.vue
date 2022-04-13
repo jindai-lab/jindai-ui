@@ -40,7 +40,7 @@
 
 <script>
 import api from "../api";
-import ParamInput from "./ParamInput";
+import ParamInput from "../components/ParamInput";
 
 export default {
   name: "DbConsole",

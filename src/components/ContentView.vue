@@ -1,5 +1,8 @@
 <template>
-  <div class="paragraph mt-5" v-if="['file', 'list', 'page'].includes(view_mode)">
+  <div
+    class="paragraph mt-5"
+    v-if="['file', 'list', 'page'].includes(view_mode)"
+  >
     <p v-html="content" v-if="is_html"></p>
     <p v-else>
       {{ content }}
@@ -37,15 +40,6 @@
     </div>
   </div>
   <div class="gallery-item" v-else>
-    <v-img
-      v-if="view_mode == 'gallery'"
-      :class="paragraph.selected ? 'selected' : ''"
-      @click="emit('toggle-select', { paragraph, e: $event })"
-      @dblclick="emit('browse', { paragraph })"
-      :contain="contain"
-      :height="item_height"
-      :src="get_item_image(paragraph.images[0])"
-    ></v-img>
     <div class="gallery-description">
       <span class="nums">
         <span class="datetime">
@@ -55,36 +49,42 @@
           ><a
             class="counter secondary--text chip"
             target="_blank"
-            :href="paragraph.group || `?q=id%3DObjectId(${paragraph._id})`"
+            :href="paragraph.group || `/?q=id%3DObjectId(${paragraph._id})`"
             >{{ paragraph.count || paragraph.images.length }}</a
           ></span
-        > <a :href="paragraph.source.url" target="_blank" class="orig no-underline"
-        >🌍</a
-      >
+        >
+        <a
+          :href="paragraph.source.url"
+          target="_blank"
+          class="orig no-underline"
+          >🌍</a
+        >
       </span>
       <a
         :href="
-          '?archive=0&q=source.url%25`' +
-          (paragraph.source.url || '') +
-          '`'
+          '?archive=0&q=source.url%25`' + (paragraph.source.url || '') + '`'
         "
         class="force-text break-anywhere"
         target="_blank"
         >{{ paragraph.source.url }}</a
-      > 
-      {{ text }}      
-      <a v-for="tag in tags"
+      >
+      {{ text }}
+      <a
+        v-for="tag in tags"
         :key="`${paragraph._id}-${Math.random()}-${tag}`"
         :href="
-        '?q=' +
+          '/?q=' +
           encodeURIComponent(
-            tag.match(/^[@]/) ? 'author=' + quote(tag) : (
-            quote(tag) +
-              (paragraph.author ? ',author=' + quote(paragraph.author) : ''))
-          )"
+            tag.match(/^[@*]/)
+              ? quote(tag)
+              : quote(tag) +
+                  (paragraph.author ? ',author=' + quote(paragraph.author) : '')
+          )
+        "
         :class="['tag', 'chip', tag_class(tag)]"
-        target="_blank"        
-        >{{ tag }}</a>
+        target="_blank"
+        >{{ tag }}</a
+      >
     </div>
   </div>
 </template>
@@ -113,7 +113,7 @@ export default {
       return api.favored(this.paragraph);
     },
     tags() {
-      return [... this.paragraph.keywords].sort()
+      return [...this.paragraph.keywords].sort().slice(0, 20);
     },
     text() {
       return this.paragraph.content || "";
@@ -121,7 +121,7 @@ export default {
   },
   methods: {
     _open_window(url) {
-      window.open(url)
+      window.open(url);
     },
     get_item_image(i) {
       return api.get_item_image(i);
@@ -130,7 +130,7 @@ export default {
       api.fav(this.paragraph);
     },
     quote(x) {
-      return JSON.stringify('' + x)
+      return JSON.stringify("" + x);
     },
     tag_class(tag) {
       return tag.startsWith("*")
@@ -138,10 +138,6 @@ export default {
         : tag == this.paragraph.author
         ? "t_author"
         : "t_" + tag;
-    },
-    emit(event, bundle) {
-      bundle.vm = this;
-      this.$emit(event, bundle);
     },
   },
 };
@@ -192,27 +188,13 @@ p:hover .fav-button,
   margin-right: 5px;
 }
 
-.gallery-description, .gallery-description .force-text {
-  color: rgba(0, 0, 0, 0.6)
+.gallery-description,
+.gallery-description .force-text {
+  color: rgba(0, 0, 0, 0.6);
 }
 
-.theme--dark .gallery-description, .theme--dark .gallery-description .force-text {
+.theme--dark .gallery-description,
+.theme--dark .gallery-description .force-text {
   color: rgba(255, 255, 255, 0.6);
 }
-
-.v-image.selected::before {
-  content: "\F012C";
-  color: green;
-  font-family: "Material Design Icons";
-  display: block;
-  z-index: 4;
-  position: absolute;
-  margin: 0;
-  font-size: 40px;
-  opacity: 1;
-  width: 100%;
-  height: 100%;
-  background: rgba(255, 255, 255, 0.5);
-}
-
 </style>

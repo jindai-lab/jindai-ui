@@ -66,7 +66,7 @@
                 icon
                 dense
                 :data-keybind="filter.keybind"
-                :href="`?q=author%3D${quote(paragraph.author)};page('${format(
+                :href="`?q=author%3D${quote(paragraph.author)};plugin('${format(
                   filter.format,
                   {
                     imageitem: item,
@@ -77,10 +77,17 @@
                 target="_blank"
                 ><v-icon>{{ filter.icon }}</v-icon></v-btn
               >
-              <v-btn icon dense @click="$emit('info', item)" target="_blank" data-keybind="i"
+              <v-btn
+                icon
+                dense
+                @click="$emit('info', item)"
+                target="_blank"
+                data-keybind="i"
                 ><v-icon>mdi-information</v-icon></v-btn
               >
-              <v-btn icon dense @click="google" data-keybind="m"><v-icon>mdi-google</v-icon></v-btn>
+              <v-btn icon dense @click="google" data-keybind="m"
+                ><v-icon>mdi-google</v-icon></v-btn
+              >
             </div>
           </v-row>
           <ContentView :paragraph="paragraph" view_mode="gallery-description" />
@@ -91,8 +98,8 @@
 </template>
 
 <script>
-import ContentView from "./ContentView.vue";
-import VideoPlayer from "./VideoPlayer.vue";
+import ContentView from "../components/ContentView.vue";
+import VideoPlayer from "../components/VideoPlayer.vue";
 import api from "../api";
 
 export default {
@@ -101,9 +108,7 @@ export default {
     ContentView,
     VideoPlayer,
   },
-  props: [
-    "paragraph", "item"
-  ],
+  props: ["paragraph", "item"],
   data() {
     return {
       fit: "both",
@@ -113,15 +118,19 @@ export default {
   },
   watch: {
     item(val) {
-      if (!val || !val.source) this.$emit('browse', 'continue')
-    }
+      if (!val || !val.source) this.$emit("browse", "continue");
+    },
+  },
+  created() {
+    api
+      .call("plugins/filters")
+      .then((data) => (this.plugin_filters = data.result));
   },
   mounted() {
     var config = api.load_config("browse", {
       fit: "both",
     });
     this.fit = config.fit;
-    api.call("plugins/filters").then((data) => (this.plugin_filters = data.result));
   },
   computed: {
     browsing_video() {
@@ -144,36 +153,47 @@ export default {
         for (var k of i.split(".")) b = b[k] || "";
         return b;
       }
-      return (typeof str == 'string' && str.replace(/\{([\w\d._]+)\}/g, _replace)) || '';
+      return (
+        (typeof str == "string" && str.replace(/\{([\w\d._]+)\}/g, _replace)) ||
+        ""
+      );
     },
     google() {
       var image = this.$refs.browsing_image;
       function getDataUri(image, callback) {
-          var canvas = document.createElement('canvas');
-          canvas.width = image.naturalWidth * 300 / image.naturalHeight;
-          canvas.height = 300;
-          canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
-          callback(canvas.toDataURL('image/jpeg').replace(/^data:image\/(png|jpeg);base64,/, ''));
+        var canvas = document.createElement("canvas");
+        canvas.width = (image.naturalWidth * 300) / image.naturalHeight;
+        canvas.height = 300;
+        canvas
+          .getContext("2d")
+          .drawImage(image, 0, 0, canvas.width, canvas.height);
+        callback(
+          canvas
+            .toDataURL("image/jpeg")
+            .replace(/^data:image\/(png|jpeg);base64,/, "")
+        );
       }
 
       getDataUri(image, function (dataUrl) {
-          dataUrl = dataUrl.replace(/\//g, '_').replace(/\+/g, '-');
-          var html = `<html>
+        dataUrl = dataUrl.replace(/\//g, "_").replace(/\+/g, "-");
+        var html =
+          `<html>
           <head><title>Search by Image (by Google)</title></head>
           <body><form id="f" method="POST" action="https://www.google.com/searchbyimage/upload" enctype="multipart/form-data">
             <input type="hidden" name="image_content" value="${dataUrl}">
             <input type="hidden" name="filename" value=""><input type="hidden" name="image_url" value=""><input type="hidden" name="sbisrc" value="cr_1_5_2">
             <input type="hidden" name="width" value="${image.naturalWidth}"><input type="hidden" name="height" value="${image.naturalHeight}">
-          </form><script>document.getElementById("f").submit();</scr` + `ipt></body></html>`;
-          var win = window.open();
-          win.document.write(html);
+          </form><script>document.getElementById("f").submit();</scr` +
+          `ipt></body></html>`;
+        var win = window.open();
+        win.document.write(html);
       });
     },
     get_item_image(item) {
       return api.get_item_image(item, this.config);
     },
     get_item_video(item) {
-      return api.get_item_video(item)
+      return api.get_item_video(item);
     },
     fit_image(e) {
       const img = e.target,
@@ -246,12 +266,12 @@ export default {
       this.$forceUpdate();
     },
     browse_next() {
-      this.$emit('browse', 'arrowright')
-      this.browsing_page = 2
+      this.$emit("browse", "arrowright");
+      this.browsing_page = 2;
     },
     browse_prev() {
-      this.$emit('browse', 'arrowleft')
-      this.browsing_page = 2
+      this.$emit("browse", "arrowleft");
+      this.browsing_page = 2;
     },
   },
 };

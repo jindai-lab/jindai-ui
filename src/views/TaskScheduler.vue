@@ -31,7 +31,7 @@
 
 <script>
 import api from "../api";
-import ParamInput from './ParamInput.vue'
+import ParamInput from '../components/ParamInput.vue'
 
 export default {
   components: { ParamInput },

@@ -1,0 +1,81 @@
+<template>
+  <v-card flat>
+    <v-card-title>任务结果 {{ id }}</v-card-title>
+    <v-card-text>
+      <ResultsView
+        @load="load_data"
+        v-if="typeof total === 'number'"
+        ref="results"
+      />
+      <iframe v-else-if="redirect" :src="redirect" />
+      <div v-else v-html="prompt || '结果为文件或其他类型，请直接下载'"></div>
+    </v-card-text>
+  </v-card>
+</template>
+
+<script>
+import api from "../api";
+import ResultsView from "../components/ResultsView";
+
+export default {
+  name: "QueueResult",
+  props: ["id"],
+  components: { ResultsView },
+  data() {
+    return {
+      total: 0,
+      prompt: "",
+      redirect: "",
+    };
+  },
+  watch: {
+    id() {
+      this.$refs.results.turn_page(1);
+    },
+  },
+  methods: {
+    load_data(e) {
+      var token = new Date().getTime() - Math.random();
+      api
+        .call(
+          "queue/" +
+            encodeURIComponent(this.id) +
+            "?offset=" +
+            e.offset +
+            "&limit=" +
+            e.limit
+        )
+        .then((data) => {
+          if (data.redirect) {
+            this.redirect = data.redirect;
+            this.total = null;
+          } else {
+            this.total = data.result.total;
+            e.callback({
+              offset: e.offset,
+              result: data.result.results,
+              token,
+            });
+          }
+        })
+        .catch((ex) => {
+          this.prompt =
+            "<h4>" +
+            ex.message +
+            "</h4><p>" +
+            ex.stack.replace(/\n/g, "<br>") +
+            "</p>";
+          this.total = undefined;
+        });
+    },
+  },
+};
+</script>
+
+<style scoped>
+iframe {
+  border: 0;
+  width: 100%;
+  height: 100vh;
+}
+</style>

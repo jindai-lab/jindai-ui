@@ -52,7 +52,7 @@
 </template>
 
 <script>
-import ParamInput from "./ParamInput";
+import ParamInput from "../components/ParamInput";
 import draggable from 'vuedraggable'
 
 import api from "../api";

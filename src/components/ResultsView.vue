@@ -1,7 +1,39 @@
 <template>
-  <v-sheet v-if="total !== 0" ref="results" :class="view_mode">
+  <v-sheet v-if="total !== 0" ref="results" :class="config.view_mode">
+    <div class="tools">
+      <v-btn text @click="dialogs.auto_tagging.visible = true">自动标签</v-btn>
+
+      <v-text-field
+        class="d-inline-block mr-5 selector"
+        label="每页数量"
+        v-model="config.page_size"
+        @change="_save_config"
+        type="number"
+        dense
+        :style="{ width: '50px' }"
+        >50</v-text-field
+      >
+
+      <v-btn-toggle
+        mandatory
+        class="view-mode-toggler"
+        dense
+        v-model="config.view_mode"
+        @change="_save_config"
+      >
+        <v-btn value="list">
+          <v-icon>mdi-view-list</v-icon>
+        </v-btn>
+        <v-btn value="page">
+          <v-icon>mdi-text-long</v-icon>
+        </v-btn>
+        <v-btn value="gallery">
+          <v-icon>mdi-view-module</v-icon>
+        </v-btn>
+      </v-btn-toggle>
+    </div>
     <!-- gallery toolbar -->
-    <div v-if="view_mode == 'gallery'" class="gallery-toolbar">
+    <div v-if="config.view_mode == 'gallery'" class="gallery-toolbar">
       <v-checkbox
         flat
         v-model="config.contain"
@@ -20,7 +52,6 @@
         label="增强图像"
         @change="_save_config"
       ></v-checkbox>
-      <v-btn text @click="dialogs.auto_tagging.visible = true">自动标签</v-btn>
     </div>
     <!-- total results count -->
     <div class="count" v-show="total !== null">共找到 {{ total }} 个结果。</div>
@@ -55,15 +86,20 @@
             {{ r.pagenum }} 日期: {{ r.pdate | dateSafe }}
             <v-divider class="mt-5"></v-divider>
           </div>
+          <v-img
+            v-if="config.view_mode == 'gallery'"
+            :class="r.selected ? 'selected' : ''"
+            @click="update_selection(r, $event, index)"
+            @dblclick="view_page(index)"
+            :contain="config.contain"
+            :height="200"
+            :src="get_item_image(r.images[0])"
+          ></v-img>
           <ContentView
-            :view_mode="view_mode"
+            :view_mode="config.view_mode"
             :paragraph="r"
             :item_width="200"
             :item_height="200"
-            :first_item_only="view_mode === 'gallery'"
-            :contain="config.contain"
-            @toggle-select="update_selection($event.paragraph, $event.e, index)"
-            @browse="view_page(index)"
           />
           <div class="mt-10 operations">
             <v-btn @click="view_page(index)">
@@ -142,7 +178,7 @@
       class="page-view"
       ref="page_view"
       :paragraphs="visible_data"
-      :view_mode="view_mode"
+      :view_mode="config.view_mode"
       :start_index="dialogs.paragraph.start_index"
       @next="turn_page(page + 1)"
       @prev="turn_page(page - 1)"
@@ -295,7 +331,7 @@
 
 <script>
 import ParamInput from "./ParamInput";
-import PageView from "./PageView.vue";
+import PageView from "../views/PageView.vue";
 import ContentView from "./ContentView.vue";
 import QuickActionButtons from "./QuickActionButtons";
 import TaggingDialog from "./TaggingDialog.vue";
@@ -306,8 +342,6 @@ export default {
   name: "ResultsView",
   props: {
     load: {},
-    page_size: { default: 20 },
-    view_mode: { default: "list" },
   },
   components: {
     ParamInput,
@@ -332,8 +366,9 @@ export default {
         contain: false,
         enhance: false,
         force_thumbnail: false,
-        limit: 50,
         playing_interval: 1000,
+        view_mode: "list",
+        page_size: 50,
       },
       // dialog bools
       dialogs: {
@@ -387,7 +422,7 @@ export default {
       for (
         let index = 0, i = 1;
         index < (this.total || this.value.length) && i <= 1000;
-        index += this.page_size, i++
+        index += this.config.page_size, i++
       ) {
         p.push(i);
       }
@@ -396,10 +431,10 @@ export default {
     visible_data() {
       return this.value
         .slice(this.offset - this.page_range[0])
-        .slice(0, this.page_size);
+        .slice(0, this.config.page_size);
     },
     offset() {
-      return (this.page - 1) * this.page_size;
+      return (this.page - 1) * this.config.page_size;
     },
     columns() {
       var cols = new Set();
@@ -460,20 +495,23 @@ export default {
         this.total = null;
         this.$emit("load", {
           offset: this.offset,
-          limit: this.page_size * 5,
+          limit: this.config.page_size * 5,
           callback: (data) => {
             if (this.token > data.token) return;
-
             this.token = data.token;
 
             if (typeof data.result !== "undefined") {
               this.selection = [];
               this.page_range = [data.offset, data.offset + data.result.length];
-              data.result.forEach((x) => (x.selected = false));
-              this.value = data.result;
+              this.value = data.result.map((x) =>
+                Object.assign(x, { selected: false })
+              );
+
               if (typeof cb == "function") cb();
             }
+
             if (typeof data.total !== "undefined") this.total = data.total;
+
             this.$forceUpdate();
           },
         });
@@ -492,7 +530,7 @@ export default {
       this.clear_selection();
     },
     playing() {
-      if (this.view_mode != "gallery") return;
+      if (this.config.view_mode != "gallery") return;
       this.view_page(0);
       this.$refs.page_view.playing(this.config.playing_interval);
       this._save_config();
@@ -559,7 +597,7 @@ export default {
                 break;
               case "c":
                 this._open_window(
-                  `?q=author%3D${this.quote(
+                  `/?q=author%3D${this.quote(
                     _album.author ||
                       _album.keywords.filter((x) => x.startsWith("@"))[0] ||
                       ""
@@ -569,8 +607,8 @@ export default {
               case "z":
                 this._open_window(
                   e.shiftKey
-                    ? `?q=id%3D${_album._id}=>expand()`
-                    : `?q=source.url%25%27${api
+                    ? `/?q=id%3D${_album._id}=>expand()`
+                    : `/?q=source.url%25%27${api
                         .escape_regex(_album.source.url)
                         .replace(/\/\d+\//, "/.*/")}'`
                 );
@@ -604,7 +642,7 @@ export default {
             this._open_window(
               `?archive=true&q=author%3D${
                 this.quote(this.selected_paragraphs()[0].author) || ""
-              };page('${this.format(pages[0].format, {
+              };plugin('${this.format(pages[0].format, {
                 imageitem: this.selected_items()[0],
                 paragraph: this.selected_paragraphs()[0],
               })}')`
@@ -796,14 +834,14 @@ export default {
       if (typeof val === "number") {
         val = {
           inc: val,
-          least: val > 0 ? 1: -1
+          least: val > 0 ? 1 : -1,
         };
       }
       val.ids = (val.item ? [val.item] : this.selected_items()).map(
         (x) => x._id
       );
       if (val.item) delete val.item;
-      if (this.view_mode == "gallery") {
+      if (this.config.view_mode == "gallery") {
         api.call("imageitem/rating", val).then((data) => {
           data = data.result || {};
           this.clear_selection(s);
@@ -863,6 +901,9 @@ export default {
           ids: this.selected_items().map((x) => x._id),
         })
         .then(() => this.clear_selection(s));
+    },
+    get_item_image(i) {
+      return api.get_item_image(i);
     },
   },
 };
@@ -926,5 +967,37 @@ export default {
 
 .spacer {
   margin-right: 100%;
+}
+
+.tools > .v-btn {
+  margin-right: 12px;
+}
+
+.tools {
+  padding-right: 12px;
+  padding-bottom: 12px;
+}
+
+.view-mode-toggler {
+  vertical-align: middle;
+}
+
+.view-mode-toggler > * {
+  margin: 0;
+}
+
+.v-image.selected::before {
+  content: "\F012C";
+  color: green;
+  font-family: "Material Design Icons";
+  display: block;
+  z-index: 4;
+  position: absolute;
+  margin: 0;
+  font-size: 40px;
+  opacity: 1;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.5);
 }
 </style>

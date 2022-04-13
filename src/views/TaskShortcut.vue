@@ -8,11 +8,11 @@
             <v-list-item-content>
               <v-list-item-title>{{ k }}</v-list-item-title>
               <v-list-item-subtitle>
-              <ParamInput
-                :arg="get_map_arg(v)"
-                v-model="shortcut_params[v]"
-                @validation="update_valid('shortcut_param_' + v, $event)"
-                @input="$forceUpdate()"
+                <ParamInput
+                  :arg="get_map_arg(v)"
+                  v-model="shortcut_params[v]"
+                  @validation="update_valid('shortcut_param_' + v, $event)"
+                  @input="$forceUpdate()"
               /></v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
@@ -33,7 +33,7 @@
     <v-card flat>
       <v-card-title>运行结果</v-card-title>
       <v-card-text>
-        <ResultsView :total="total" @load="load_search" ref="results" />
+        <ResultsView @load="load_search" ref="results" :view_mode="view_mode" />
         {{ result_plain }}
       </v-card-text>
     </v-card>
@@ -43,8 +43,8 @@
 
 <script>
 import api from "../api";
-import ParamInput from "./ParamInput.vue";
-import ResultsView from "./ResultsView.vue";
+import ParamInput from "../components/ParamInput.vue";
+import ResultsView from "../components/ResultsView.vue";
 
 export default {
   name: "TaskShortcut",
@@ -62,21 +62,20 @@ export default {
         shortcut_map: {},
         pipeline: [],
       },
+      view_mode: "list",
       shortcut_params: {},
       results: [],
-      result_plain: '',
-      total: 0,
+      result_plain: "",
       valid: [],
     };
   },
   watch: {
     id() {
-      this.shortcut_params = {}
-      this.results = []
-      this.total = 0
-      this.valid = []
-      this.result_plain = ''
-    }
+      this.shortcut_params = {};
+      this.results = [];
+      this.valid = [];
+      this.result_plain = "";
+    },
   },
   mounted() {
     api.call("help/pipelines").then((data) => {
@@ -86,7 +85,7 @@ export default {
       api.call("tasks/" + this.id).then((data) => {
         this.task = data.result;
         for (var k in this.task.shortcut_map) {
-          this.shortcut_params[k] = this.get_map_val(k)
+          this.shortcut_params[k] = this.get_map_val(k);
         }
       });
     });
@@ -113,15 +112,16 @@ export default {
     },
     quicktask() {
       this.update_params();
-      this.result_plain = '';
+      this.result_plain = "";
       api
         .call("quicktask", {
-          pipeline: this.querify(),
+          pipeline: this.task.pipeline,
         })
         .then((data) => {
           if (Array.isArray(data.result)) {
             this.results = data.result;
-            this.$refs.results.start();
+            this.$refs.results.start(1);
+            this.result_plain = "";
           } else if (
             typeof data.result === "object" &&
             data.result !== null &&
@@ -155,7 +155,9 @@ export default {
               this.task.name + "." + data.result.__file_ext__
             );
           } else {
-            this.result_plain = JSON.stringify(data.result)
+            this.result_plain = JSON.stringify(data.result);
+            this.results = [];
+            this.$refs.results.start(1);
           }
         });
     },
@@ -168,7 +170,7 @@ export default {
       }
       for (var k in this.task.shortcut_map) {
         if (
-          typeof this.task.shortcut_map[k] === 'undefined' ||
+          typeof this.task.shortcut_map[k] === "undefined" ||
           this.task.shortcut_map[k] === "" ||
           this.task.shortcut_map[k] === null
         )
@@ -190,10 +192,9 @@ export default {
         );
     },
     querify() {
-      var s = api.querify(this.task.pipeline, "")
-      if (this.task.pipeline.length == 1)
-        return '[];' + s
-      return s
+      var s = api.querify(this.task.pipeline, "");
+      if (this.task.pipeline.length == 1) return "[];" + s;
+      return s;
     },
     get_map_arg(v) {
       v = v.split(".");
@@ -210,8 +211,13 @@ export default {
       return arg;
     },
     load_search(e) {
-      this.total = this.results.length;
-      e.callback({ result: this.results, offset: 0 });
+      var token = new Date().getTime() + Math.random();
+      e.callback({
+        result: this.results,
+        offset: 0,
+        total: this.results.length,
+        token,
+      });
     },
   },
 };

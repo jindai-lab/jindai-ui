@@ -26,15 +26,6 @@
               { text: '随机', value: 'random' },
             ]"
           ></v-combobox>
-          <v-text-field
-            class="d-inline-block ml-5 selector"
-            label="每页数量"
-            v-model="page_size"
-            type="number"
-            dense
-            :style="{ width: '50px' }"
-            >50</v-text-field
-          >
         </v-col>
       </v-row>
       <v-row style="margin-top: -24px">
@@ -57,46 +48,27 @@
             dense
             flat
             :items="[
-              {text: '无', value: 'none'},
-              {text: '按组', value: 'group'},
-              {text: '按来源', value: 'source'},
-              {text: '按作者', value: 'author'}
+              { text: '无', value: 'none' },
+              { text: '按组', value: 'group' },
+              { text: '按来源', value: 'source' },
+              { text: '按作者', value: 'author' },
             ]"
             v-model="groups"
           />
         </span>
         <v-spacer></v-spacer>
-        <div class="tools">
-          <v-btn @click="export_query">
-            <v-icon>mdi-clipboard-outline</v-icon> 导出为任务
-          </v-btn>
-          <v-btn @click="export_file('xlsx')">
-            <v-icon>mdi-file-excel</v-icon> 导出 Excel
-          </v-btn>
-          <v-btn @click="export_file('json')">
-            <v-icon>mdi-download</v-icon> 导出 JSON
-          </v-btn>
-          <v-btn-toggle
-            v-model="view_mode"
-            mandatory
-            class="view-mode-toggler"
-            dense
-          >
-            <v-btn value="list">
-              <v-icon>mdi-view-list</v-icon>
-            </v-btn>
-            <v-btn value="page">
-              <v-icon>mdi-text-long</v-icon>
-            </v-btn>
-            <v-btn value="gallery">
-              <v-icon>mdi-view-module</v-icon>
-            </v-btn>
-          </v-btn-toggle>
-        </div>
+        <v-btn @click="export_query" class="exports">
+          <v-icon>mdi-clipboard-outline</v-icon> 导出为任务
+        </v-btn>
+        <v-btn @click="export_file('xlsx')" class="exports">
+          <v-icon>mdi-file-excel</v-icon> 导出 Excel
+        </v-btn>
+        <v-btn @click="export_file('json')" class="exports">
+          <v-icon>mdi-download</v-icon> 导出 JSON
+        </v-btn>
       </v-row>
       <ResultsView
         class="mt-5"
-        :view_mode="view_mode"
         :page_size="page_size"
         @load="load_search"
         ref="results"
@@ -107,11 +79,11 @@
     
 <script>
 import api from "../api";
-import ResultsView from "./ResultsView";
+import ResultsView from "../components/ResultsView";
 
 export default {
   name: "SearchForm",
-  components: { ResultsView, },
+  components: { ResultsView },
   data() {
     return {
       datasets: [],
@@ -125,14 +97,12 @@ export default {
       req: "",
       selection_bundles: {},
       external_json: null,
-      view_mode: "list",
       page_size: 50,
       cancel_source: api.cancel_source(),
     };
   },
   mounted() {
     let config = api.load_config("main");
-    if (config.view_mode) this.view_mode = config.view_mode;
     if (config.page_size) this.page_size = +config.page_size;
     if (config.sort) this.sort = config.sort;
 
@@ -147,11 +117,6 @@ export default {
         search_params.selected_datasets || config.selected_datasets || [];
       if (this.q) this.search(true);
     });
-  },
-  watch: {
-    view_mode() {
-      this._save_config();
-    },
   },
   methods: {
     datasets_req() {
@@ -197,7 +162,6 @@ export default {
     _save_config() {
       api.save_config("main", {
         page_size: this.page_size,
-        view_mode: this.view_mode,
         sort: this.sort == "random" ? "" : this.sort,
         selected_datasets: this.selected_datasets,
       });
@@ -229,6 +193,8 @@ export default {
       this.$refs.results.start(pagenum_preserve === true ? undefined : 1);
     },
     load_search(e) {
+      var token = new Date().getTime() + Math.random();
+
       if (this.external_json) {
         e.callback({
           result: this.external_json.result.results.slice(
@@ -237,6 +203,7 @@ export default {
           ),
           offset: e.offset,
           total: this.external_json.result.total,
+          token,
         });
         return;
       }
@@ -253,10 +220,9 @@ export default {
         mongocollections: this.selected_mongocollections,
         offset: e.offset,
         limit: e.limit,
-        groups: typeof this.groups === "object" ? this.groups.value : this.groups,
+        groups:
+          typeof this.groups === "object" ? this.groups.value : this.groups,
       };
-
-      var token = new Date().getTime() + Math.random();
 
       api.call("search", params, this.cancel_source).then((data) => {
         if (!data) {
@@ -273,11 +239,11 @@ export default {
             "ig"
           );
           this.results = data.result.results.map((x) => {
-            x.matched_content = (x.content || '').replace(reg, "<em>$1</em>");
+            x.matched_content = (x.content || "").replace(reg, "<em>$1</em>");
             return x;
           });
         }
-        this.querystr = api.querify(data.result.query).replace(/^\(|\)$/g, '');
+        this.querystr = api.querify(data.result.query).replace(/^\(|\)$/g, "");
         e.callback({
           token,
           result: data.result.results,
@@ -296,17 +262,21 @@ export default {
     },
     keyword_patterns(query) {
       if (Array.isArray(query))
-        return query.map(x => this.keyword_patterns(x)).reduce((prev, curr) => prev = prev.concat(curr), [])
-      if (['string', 'number', 'boolean'].includes(typeof query))
-        return []
-      return Object.entries(query).map(kvpair => {
-        let key = kvpair[0], val = kvpair[1]
-        if (key == 'keywords') {
-          if (typeof val == 'string') return [api.escape_regex(val)]
-          else if (typeof val.$regex == 'string') return [val.$regex]
-        }
-        return this.keyword_patterns(val)
-      }).reduce((prev, curr) => prev = prev.concat(curr), [])      
+        return query
+          .map((x) => this.keyword_patterns(x))
+          .reduce((prev, curr) => (prev = prev.concat(curr)), []);
+      if (["string", "number", "boolean"].includes(typeof query)) return [];
+      return Object.entries(query)
+        .map((kvpair) => {
+          let key = kvpair[0],
+            val = kvpair[1];
+          if (key == "keywords") {
+            if (typeof val == "string") return [api.escape_regex(val)];
+            else if (typeof val.$regex == "string") return [val.$regex];
+          }
+          return this.keyword_patterns(val);
+        })
+        .reduce((prev, curr) => (prev = prev.concat(curr)), []);
     },
     export_query(format, callback) {
       if (typeof callback !== "function")
@@ -361,18 +331,6 @@ export default {
   clear: both;
 }
 
-.tools > .v-btn {
-  margin-right: 12px;
-}
-
-.tools {
-  padding-right: 12px;
-}
-
-.view-mode-toggler {
-  vertical-align: middle;
-}
-
 .vue-treeselect__control {
   border-radius: 0;
 }
@@ -382,5 +340,9 @@ export default {
 
 .selector {
   vertical-align: bottom;
+}
+
+.exports {
+  margin-right: 12px;
 }
 </style>

@@ -13,7 +13,7 @@
         view_mode == 'gallery' ? { overflow: 'hidden', height: '100%' } : {}
       "
     >
-      <v-card-text v-if="active_paragraph && active_paragraph.source">
+      <v-card-text>
         <!-- operation buttons -->
         <v-row v-if="view_mode == 'file'" class="pt-3">
           <v-col class="heading">
@@ -40,105 +40,107 @@
         >
 
         <!-- main view -->
-        <v-row class="main" v-if="view_mode !== 'gallery'">
-          <div class="paragraphs">
-            <div v-for="p in shown_paragraphs" :key="p._id">
-              <ContentView
-                :paragraph="p"
-                item_width="100%"
-                :view_mode="view_mode"
+        <template v-if="active_paragraph && active_paragraph.source">
+          <v-row class="main" v-if="view_mode !== 'gallery'">
+            <div class="paragraphs">
+              <div v-for="p in shown_paragraphs" :key="p._id">
+                <ContentView
+                  :paragraph="p"
+                  item_width="100%"
+                  :view_mode="view_mode"
+                />
+              </div>
+              <div class="mt-5 meta" v-if="active_paragraph">
+                日期: {{ active_paragraph.pdate | dateSafe }}<br />
+                页码: {{ active_paragraph.pagenum }}
+                <v-btn
+                  icon
+                  small
+                  @click="
+                    pagenum_editor.new_pagenum = active_paragraph.pagenum;
+                    pagenum_edit = true;
+                  "
+                  ><v-icon small>mdi-form-textbox</v-icon></v-btn
+                >
+                <br />
+                大纲: {{ active_paragraph.outline }}<br />
+                来源:
+                <a
+                  :href="active_paragraph.source.url"
+                  v-if="active_paragraph.source.url"
+                  target="_blank"
+                  >{{ active_paragraph.source.url }}</a
+                >
+                {{ active_paragraph.source.file }}
+                {{ active_paragraph.source.page }}<br />
+              </div>
+            </div>
+            <div class="image" @click="show_modal = !!pdf_image">
+              <img
+                :src="pdf_image"
+                alt=""
+                @load="
+                  $event.target.style.height =
+                    window_height - $event.target.offsetTop - 20 + 'px'
+                "
               />
             </div>
-            <div class="mt-5 meta" v-if="active_paragraph">
-              日期: {{ active_paragraph.pdate | dateSafe }}<br />
-              页码: {{ active_paragraph.pagenum }}
-              <v-btn
-                icon
-                small
-                @click="
-                  pagenum_editor.new_pagenum = active_paragraph.pagenum;
-                  pagenum_edit = true;
-                "
-                ><v-icon small>mdi-form-textbox</v-icon></v-btn
-              >
-              <br />
-              大纲: {{ active_paragraph.outline }}<br />
-              来源:
-              <a
-                :href="active_paragraph.source.url"
-                v-if="active_paragraph.source.url"
-                target="_blank"
-                >{{ active_paragraph.source.url }}</a
-              >
-              {{ active_paragraph.source.file }}
-              {{ active_paragraph.source.page }}<br />
-            </div>
-          </div>
-          <div class="image" @click="show_modal = !!pdf_image">
-            <img
-              :src="pdf_image"
-              alt=""
-              @load="
-                $event.target.style.height =
-                  window_height - $event.target.offsetTop - 20 + 'px'
-              "
+          </v-row>
+          <!-- gallery view, image browser -->
+          <div v-else>
+            <ImageBrowsing
+              :paragraph="active_paragraph"
+              :item="active_item"
+              v-if="value"
+              @info="$emit('info', $event)"
+              @browse="_event_handler"
             />
           </div>
-        </v-row>
-        <!-- gallery view, image browser -->
-        <div v-else>
-          <ImageBrowsing
-            :paragraph="active_paragraph"
-            :item="active_item"
-            v-if="value"
-            @info="$emit('info', $event)"
-            @browse="_event_handler"
-          />
-        </div>
 
-        <!-- edit dialogs -->
-        <v-dialog v-model="show_modal" fullscreen>
-          <v-btn
-            fab
-            fixed
-            icon
-            top
-            right
-            class="ma-10"
-            @click="show_modal = false"
-            ><v-icon>mdi-close</v-icon></v-btn
-          >
-          <img :src="pdf_image" alt="" style="width: 100%" ref="image" />
-        </v-dialog>
-        <v-dialog v-model="pagenum_edit" width="unset">
-          <v-card>
-            <v-card-title
-              >编辑页码
-              <v-spacer></v-spacer>
-              <v-btn icon @click="pagenum_edit = false"
-                ><v-icon>mdi-close</v-icon></v-btn
-              >
-            </v-card-title>
-            <v-card-text>
-              <v-sheet>
-                <ParamInput
-                  :arg="{ name: '页码', type: 'int' }"
-                  v-model="pagenum_editor.new_pagenum"
-                />
-                <ParamInput
-                  :arg="{
-                    name: '页码',
-                    type: '修改全部页面:all|只修改当前页面:solo|只修改本页之后的页面:after',
-                  }"
-                  v-model="pagenum_editor.sequential"
-                />
-              </v-sheet>
-            </v-card-text>
-            <v-card-actions>
-              <v-btn color="primary" @click="save_pagenum">确定</v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-dialog>
+          <!-- edit dialogs -->
+          <v-dialog v-model="show_modal" fullscreen>
+            <v-btn
+              fab
+              fixed
+              icon
+              top
+              right
+              class="ma-10"
+              @click="show_modal = false"
+              ><v-icon>mdi-close</v-icon></v-btn
+            >
+            <img :src="pdf_image" alt="" style="width: 100%" ref="image" />
+          </v-dialog>
+          <v-dialog v-model="pagenum_edit" width="unset">
+            <v-card>
+              <v-card-title
+                >编辑页码
+                <v-spacer></v-spacer>
+                <v-btn icon @click="pagenum_edit = false"
+                  ><v-icon>mdi-close</v-icon></v-btn
+                >
+              </v-card-title>
+              <v-card-text>
+                <v-sheet>
+                  <ParamInput
+                    :arg="{ name: '页码', type: 'int' }"
+                    v-model="pagenum_editor.new_pagenum"
+                  />
+                  <ParamInput
+                    :arg="{
+                      name: '页码',
+                      type: '修改全部页面:all|只修改当前页面:solo|只修改本页之后的页面:after',
+                    }"
+                    v-model="pagenum_editor.sequential"
+                  />
+                </v-sheet>
+              </v-card-text>
+              <v-card-actions>
+                <v-btn color="primary" @click="save_pagenum">确定</v-btn>
+              </v-card-actions>
+            </v-card>
+          </v-dialog>
+        </template>
       </v-card-text>
     </v-card>
   </v-dialog>
@@ -146,9 +148,9 @@
 
 <script>
 import api from "../api";
-import ParamInput from "./ParamInput.vue";
-import ContentView from "./ContentView.vue";
-import ImageBrowsing from "./ImageBrowsing.vue";
+import ParamInput from "../components/ParamInput.vue";
+import ContentView from "../components/ContentView.vue";
+import ImageBrowsing from "../components/ImageBrowsing.vue";
 
 export default {
   name: "PageView",
@@ -217,6 +219,7 @@ export default {
     window.addEventListener("keyup", this._event_handler);
   },
   mounted() {
+    this.$el.focus();
     if (!this.paragraph) {
       let params = window.location.href.split("/");
       if (!params.includes("view")) return;
@@ -308,7 +311,7 @@ export default {
       }
     },
     playing(interval) {
-      if (interval) this.playing_interval = interval
+      if (interval) this.playing_interval = interval;
       this.playing_timer = setInterval(() => {
         this._event_handler("arrowright");
       }, this.playing_interval);
@@ -365,7 +368,7 @@ export default {
           if (
             this.view_mode == "gallery" &&
             (!this.active_paragraph.images ||
-            this.active_paragraph.images.length == 0)
+              this.active_paragraph.images.length == 0)
           )
             this._event_handler(direction);
         } else {
@@ -406,7 +409,9 @@ export default {
     },
     save_pagenum() {
       api.call(
-        `collections/${this.mongocollection || 'paragraph'}/${this.active_paragraph._id}/pagenum`,
+        `collections/${this.mongocollection || "paragraph"}/${
+          this.active_paragraph._id
+        }/pagenum`,
         this.pagenum_editor
       );
       this.pagenum_edit = false;

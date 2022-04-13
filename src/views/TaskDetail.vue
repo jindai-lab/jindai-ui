@@ -108,9 +108,9 @@
 
 <script>
 import api from "../api";
-import ParamInput from "./ParamInput.vue";
-import Pipeline from "./Pipeline";
-import BlocklyComponent from "./BlocklyComponent.vue";
+import ParamInput from "../components/ParamInput.vue";
+import Pipeline from "../components/Pipeline";
+import BlocklyComponent from "../components/BlocklyComponent.vue";
 
 export default {
   name: "TaskDetail",
