@@ -9,16 +9,18 @@
               <v-list-item-content>
                 <v-list-item-title>
                   {{ ds.name }}
-                  
+
                   <v-btn
                     class="oper"
                     icon
-                    @click="rename_collection(ds.name, prompt('更名为：', ds.name))"
+                    @click="
+                      rename_collection(ds.name, prompt('更名为：', ds.name))
+                    "
                   >
                     <v-icon>mdi-form-textbox</v-icon>
                   </v-btn>
 
-                  <v-btn class="oper" icon @click="refresh_sources(ds._id)">
+                  <v-btn class="oper" icon @click="refresh_sources(ds.name)">
                     <v-icon>mdi-sync</v-icon>
                   </v-btn>
                 </v-list-item-title>
@@ -53,7 +55,7 @@
 
 <script>
 import ParamInput from "../components/ParamInput";
-import draggable from 'vuedraggable'
+import draggable from "vuedraggable";
 
 import api from "../api";
 
@@ -61,7 +63,7 @@ export default {
   name: "DatasetList",
   components: {
     ParamInput,
-    draggable
+    draggable,
   },
   data() {
     return {
@@ -75,7 +77,7 @@ export default {
   },
   methods: {
     load_datasets() {
-      api.get_datasets().then(x => this.datasets = x);
+      api.get_datasets().then((x) => (this.datasets = x));
     },
     prompt(t, v) {
       return window.prompt(t, v);
@@ -112,9 +114,9 @@ export default {
           .then(() => api.notify({ title: "重命名成功" }))
           .then(this.load_datasets);
     },
-    refresh_sources(id) {
+    refresh_sources(name) {
       api
-        .call("datasets", { sources: { _id: id } })
+        .call("datasets", { sources: { name } })
         .then(() => api.notify({ title: "刷新完成" }));
     },
   },

@@ -1,5 +1,5 @@
 <template>
-  <v-dialog :value="value" fullscreen persistent>
+  <v-dialog :value="value" fullscreen persistent class="white-bg">
     <v-card
       flat
       v-touch="{
@@ -451,5 +451,9 @@ export default {
 
 .theme--dark .close {
   background: rgba(0, 0, 0, 0.5);
+}
+
+.white-bg {
+  background: white;
 }
 </style>

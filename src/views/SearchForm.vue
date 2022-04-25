@@ -17,7 +17,7 @@
             v-model="sort"
             label="排序"
             dense
-            :style="{ width: '100px' }"
+            :style="{ width: '180px' }"
             :items="[
               { text: '默认排序', value: '' },
               { text: '从旧到新', value: 'pdate' },

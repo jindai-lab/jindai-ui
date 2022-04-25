@@ -202,7 +202,6 @@ export default {
                         case ",":
                         case "|":
                             return x;
-                            break;
                     }
                 }
                 if (stack == 0) return x.substr(1, x.length - 2);

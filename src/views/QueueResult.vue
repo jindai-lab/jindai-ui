@@ -2,13 +2,14 @@
   <v-card flat>
     <v-card-title>任务结果 {{ id }}</v-card-title>
     <v-card-text>
+      <p v-if="prompt" v-html="prompt"></p>
       <ResultsView
         @load="load_data"
-        v-if="typeof total === 'number'"
+        v-else-if="typeof total === 'number'"
         ref="results"
       />
       <iframe v-else-if="redirect" :src="redirect" />
-      <div v-else v-html="prompt || '结果为文件或其他类型，请直接下载'"></div>
+      <div v-else>结果为文件或其他类型，请直接下载</div>
     </v-card-text>
   </v-card>
 </template>
@@ -49,13 +50,17 @@ export default {
           if (data.redirect) {
             this.redirect = data.redirect;
             this.total = null;
-          } else {
+          } else if (data.result) {
             this.total = data.result.total;
             e.callback({
               offset: e.offset,
               result: data.result.results,
               token,
             });
+          } else if (typeof data.exception !== "undefined") {
+            this.prompt = `<h4>${
+              data.exception
+            }</h4><pre>${data.tracestack.join("\n")}</pre>`;
           }
         })
         .catch((ex) => {

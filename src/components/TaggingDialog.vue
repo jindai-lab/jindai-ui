@@ -9,7 +9,11 @@
           :items="tag_choices"
           :search-input.sync="tag_typing"
           :loading="cancel !== null"
-          flat multiple chips deletable-chips hide-selected
+          flat
+          multiple
+          chips
+          deletable-chips
+          hide-selected
           auto-select-first
           label="标签"
           ref="ac"
@@ -28,18 +32,28 @@
       <v-card-actions>
         <v-btn
           color="primary"
-          @click="do_submit(); visible=false;"
+          @click="
+            do_submit();
+            visible = false;
+          "
         >
           确定
         </v-btn>
-        <v-btn @click="$emit('cancel'); visible=false;"> 取消 </v-btn>
+        <v-btn
+          @click="
+            $emit('cancel');
+            visible = false;
+          "
+        >
+          取消
+        </v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
 </template>
 
 <script>
-import api from "../api"
+import api from "../api";
 
 export default {
   name: "TaggingDialog",
@@ -50,9 +64,9 @@ export default {
       tag_new: [],
       tag_typing: "",
       visible: false,
-      batch: '',
-      batch_delim: '',
-      batch_prefix: '',
+      batch: "",
+      batch_delim: "",
+      batch_prefix: "",
     };
   },
   props: {
@@ -70,56 +84,73 @@ export default {
       val && this.search_tag(val);
     },
     tag_new() {
-      if (this.tag_typing) this.tag_typing = ''
-    }
+      if (this.tag_typing) this.tag_typing = "";
+    },
   },
-  mounted () {
-    Object.assign(this, api.load_config("tagging", {batch_delim: ', ', batch_prefix: '*'}))
+  mounted() {
+    Object.assign(
+      this,
+      api.load_config("tagging", { batch_delim: ", ", batch_prefix: "*" })
+    );
   },
   methods: {
     show(values) {
-      var sorted = [...values].sort()
-      this.visible = true
-      this.tag_new = sorted
-      this.tag_choices = sorted
-      this.batch = ''
+      var sorted = [...values].sort();
+      this.visible = true;
+      this.tag_new = sorted;
+      this.tag_choices = sorted;
+      this.batch = "";
     },
     search_tag(search) {
-      if (this.cancel) this.cancel.cancel()
-      if (search.length == 0 || search == '*' || search == '@') return
-      this.tag_choices = [...this.tag_new]
+      if (this.cancel) this.cancel.cancel();
+      if (search.length == 0 || search == "*" || search == "@") return;
+      this.tag_choices = [...this.tag_new];
       this.cancel = api.cancel_source();
-      search = api.escape_regex(search)
+      search = api.escape_regex(search);
       api
         .call(
-          "quicktask",
+          "term/keywords",
           {
-            query: `??match(keywords%${api.querify(search)});project(keywords=1);unwind($keywords);match(keywords%${api.querify(search)});group(id=$keywords,count=sum(1));limit(20)`,
-            mongocollection: ''
+            pattern: search,
+            regex: true,
           },
           this.cancel
         )
         .then((data) => {
-          this.cancel = null
-          this.tag_choices = this.tag_new.map(x => ({
-            text: x,
-            value: x
-          })).concat(data.result.map(x => ({
-            text: x._id + ' (' + x.count + ')',
-            value: x._id
-          })));
+          this.cancel = null;
+          this.tag_choices = this.tag_new
+            .map((x) => ({
+              text: x,
+              value: x,
+            }))
+            .concat(
+              data.result.map((x) => ({
+                text: x.term,
+                value: x.term,
+              }))
+            );
         })
         .catch((err) => {
-          this.cancel = null
+          this.cancel = null;
           console.log(err);
           this.tag_choices = [...this.tag_new];
         });
     },
     do_submit() {
-      if (this.batch) this.tag_new.push(... this.batch.split(this.batch_delim || ', ').map(x => x.trim()).filter(x => x).map(x => this.batch_prefix + x))
-      api.save_config("tagging", {batch_delim: this.batch_delim})
-      this.$emit('submit', this.tag_new.map(x => x.value || x) || [this.tag_typing])
-    }
+      if (this.batch)
+        this.tag_new.push(
+          ...this.batch
+            .split(this.batch_delim || ", ")
+            .map((x) => x.trim())
+            .filter((x) => x)
+            .map((x) => this.batch_prefix + x)
+        );
+      api.save_config("tagging", { batch_delim: this.batch_delim });
+      this.$emit(
+        "submit",
+        this.tag_new.map((x) => x.value || x) || [this.tag_typing]
+      );
+    },
   },
 };
 </script>

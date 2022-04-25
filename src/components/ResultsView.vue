@@ -312,7 +312,7 @@
       @toggle-selection="toggle_selection"
       @clear-selection="clear_selection"
       @delete="delete_items"
-      @rating="rating(1)"
+      @rating="rating(0.5)"
       @group="group"
       @tag="show_tagging_dialog"
       @merge="merge"
@@ -422,7 +422,7 @@ export default {
       for (
         let index = 0, i = 1;
         index < (this.total || this.value.length) && i <= 1000;
-        index += this.config.page_size, i++
+        index += +this.config.page_size, i++
       ) {
         p.push(i);
       }
@@ -431,10 +431,10 @@ export default {
     visible_data() {
       return this.value
         .slice(this.offset - this.page_range[0])
-        .slice(0, this.config.page_size);
+        .slice(0, +this.config.page_size);
     },
     offset() {
-      return (this.page - 1) * this.config.page_size;
+      return (this.page - 1) * (+this.config.page_size);
     },
     columns() {
       var cols = new Set();
@@ -495,7 +495,7 @@ export default {
         this.total = null;
         this.$emit("load", {
           offset: this.offset,
-          limit: this.config.page_size * 5,
+          limit: +this.config.page_size * 5,
           callback: (data) => {
             if (this.token > data.token) return;
             this.token = data.token;
@@ -576,7 +576,7 @@ export default {
         case "arrowup":
         case "arrowdown":
           if (this.selected_items().length)
-            this.rating(e.key != "ArrowDown" ? 1 : -1);
+            this.rating(e.key != "ArrowDown" ? 0.5 : -0.5);
           break;
         case "r":
           if (this.last_key == e.key && this.selected_paragraphs().length > 0) {
@@ -834,7 +834,7 @@ export default {
       if (typeof val === "number") {
         val = {
           inc: val,
-          least: val > 0 ? 1 : -1,
+          least: val > 0 ? 1 : 0,
         };
       }
       val.ids = (val.item ? [val.item] : this.selected_items()).map(
