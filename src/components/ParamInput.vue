@@ -81,14 +81,23 @@
 
     <div
       v-else-if="arg.type.startsWith('file')"
-      @drop.prevent="upload_file($event, arg.type.substr(5))"
+      @drop.prevent="drop_file"
       @dragover.prevent
-      class="file_drop"
+      @click="$refs.input_file.click()"
+      class="file-drop"
     >
+      {{ file_prompt }}
       <input
         type="file"
-        ref="file_inp"
-        @change="upload_file($event, arg.type.substr(5))"
+        @change="drop_file({ dataTransfer: { files: $event.target.files } })"
+        :accept="
+          arg.type
+            .substr(5)
+            .split(',')
+            .map((x) => `.${x}`)
+            .join(', ')
+        "
+        ref="input_file"
       />
     </div>
 
@@ -152,6 +161,7 @@ export default {
       prompt: "",
       code: "",
       choices: [],
+      file_prompt: "在此拖入文件",
       langs:
         "自动:auto|简体中文:chs|繁体中文:cht|英文:en|德文:de|法文:fr|俄文:ru|西班牙文:es|葡萄牙文:pt|日文:ja|韩文/朝鲜文:kr|越南文:vn",
     };
@@ -242,15 +252,24 @@ export default {
           break;
       }
     },
-    drop_file(e, atype) {
-      let types = atype.split(",");
-      let types_check = new RegExp("\\.(" + types.join("|") + ")$");
+    drop_file(e) {
+      let types = this.arg.type.substr(5).split(",");
+      let types_check = new RegExp("\\.(" + types.join("|") + ")$", "i");
       let droppedFiles = Array.from(e.dataTransfer.files).filter((x) =>
-        x.match(types_check)
+        x.name.match(types_check)
       );
-      if (!droppedFiles.length) return;
+      if (!droppedFiles.length) {
+        api.notify(`请上传如下类型的文件：${types.join(", ")}`);
+        return;
+      }
       let file = droppedFiles[0];
-      console.log(file); // TODO: set the file field and get ready to upload
+      var reader = new FileReader();
+      reader.onload = (e) => {
+        this.$emit("input", e.target.result);
+        this.file_prompt = file.name;
+      };
+      reader.onerror = (e) => console.log("Error : " + e.type);
+      reader.readAsDataURL(file);
     },
   },
   mounted() {
@@ -281,5 +300,14 @@ blockquote {
 /* optional class for removing the outline */
 .prism-editor__textarea:focus {
   outline: none;
+}
+
+.file-drop {
+  border: 1px dashed dodgerblue;
+  max-width: 200px;
+  padding: 20px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
 }
 </style>
