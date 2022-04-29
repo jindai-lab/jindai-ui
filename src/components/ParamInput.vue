@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-select
+    <v-autocomplete
       v-if="arg.type.indexOf('|') >= 0 || arg.type == 'LANG'"
       :label="arg.name"
       :value="
@@ -16,7 +16,7 @@
           .map((x) => ({ text: x[0], value: x[1] }))
       "
     >
-    </v-select>
+    </v-autocomplete>
 
     <v-autocomplete
       :label="arg.name"
@@ -25,7 +25,7 @@
       :value="value"
       @change="inputListeners.input"
       :items="choices"
-      :hint="(choices.filter(x => x.value == value)[0] || {}).hint"
+      :hint="(choices.filter((x) => x.value == value)[0] || {}).hint"
       persistent-hint
       item-value="value"
       item-text="text"
@@ -79,8 +79,17 @@
       :label="arg.name"
     ></v-textarea>
 
-    <div v-else-if="arg.type.startsWith('file')" @drop.prevent="upload_file($event, arg.type.substr(5))" @dragover.prevent class="file_drop">
-      <input type="file" ref="file_inp" @change="upload_file($event, arg.type.substr(5))">
+    <div
+      v-else-if="arg.type.startsWith('file')"
+      @drop.prevent="upload_file($event, arg.type.substr(5))"
+      @dragover.prevent
+      class="file_drop"
+    >
+      <input
+        type="file"
+        ref="file_inp"
+        @change="upload_file($event, arg.type.substr(5))"
+      />
     </div>
 
     <v-text-field
@@ -143,12 +152,13 @@ export default {
       prompt: "",
       code: "",
       choices: [],
-      langs: '自动:auto|简体中文:chs|繁体中文:cht|英文:en|德文:de|法文:fr|俄文:ru|西班牙文:es|葡萄牙文:pt|日文:ja|韩文/朝鲜文:kr|越南文:vn'
+      langs:
+        "自动:auto|简体中文:chs|繁体中文:cht|英文:en|德文:de|法文:fr|俄文:ru|西班牙文:es|葡萄牙文:pt|日文:ja|韩文/朝鲜文:kr|越南文:vn",
     };
   },
   watch: {
     arg() {
-      this.update_choices()
+      this.update_choices();
     },
   },
   methods: {
@@ -187,36 +197,65 @@ export default {
       this.code = val;
       this.$emit("input", val);
     },
-    update_choices() {      
+    update_choices() {
       switch (this.arg.type) {
         case "TASK":
         case "DATASET":
-          api.call(this.arg.type.toLowerCase() + "s").then((data) => (this.choices = data.result.map((x) => ({
-            text: x.name,
-            value: this.arg.type == 'TASK' ? x._id : x.name,
-          }))));
+          api.call(this.arg.type.toLowerCase() + "s").then(
+            (data) =>
+              (this.choices = data.result.map((x) => ({
+                text: x.name,
+                value: this.arg.type == "TASK" ? x._id : x.name,
+              })))
+          );
           break;
         case "PIPELINE":
-          api.call("help/pipelines").then(data => (this.choices = [].concat(...Object.values(data.result).map(x => Object.keys(x).map(k => ({
-            text: `${x[k].doc} ${k}`,
-            value: k,
-            hint: x[k].args.map(x=>`${x.name} (${x.type}${x.default !== null ? ' optional' : ''})`).join(', ')
-          }))))));
+          api.call("help/pipelines").then(
+            (data) =>
+              (this.choices = [].concat(
+                ...Object.values(data.result).map((x) =>
+                  Object.keys(x).map((k) => ({
+                    text: `${x[k].doc} ${k}`,
+                    value: k,
+                    hint: x[k].args
+                      .map(
+                        (x) =>
+                          `${x.name} (${x.type}${
+                            x.default !== null ? " optional" : ""
+                          })`
+                      )
+                      .join(", "),
+                  }))
+                )
+              ))
+          );
+          break;
+        case "LANG":
+          api.call("help/langs").then((data) => {
+            for (var pair of Object.entries(data.result)) {
+              let key = pair[0],
+                val = pair[1];
+              if (this.langs.indexOf(`:${key}`) >= 0) continue;
+              this.langs += `|${val}:${key}`;
+            }
+          });
           break;
       }
     },
     drop_file(e, atype) {
-      let types = atype.split(',')
-      let types_check = new RegExp('\\.(' + types.join('|') + ')$')
-      let droppedFiles = Array.from(e.dataTransfer.files).filter(x => x.match(types_check));
+      let types = atype.split(",");
+      let types_check = new RegExp("\\.(" + types.join("|") + ")$");
+      let droppedFiles = Array.from(e.dataTransfer.files).filter((x) =>
+        x.match(types_check)
+      );
       if (!droppedFiles.length) return;
       let file = droppedFiles[0];
       console.log(file); // TODO: set the file field and get ready to upload
-    }
+    },
   },
   mounted() {
     this.code = this.value;
-    this.update_choices()
+    this.update_choices();
   },
 };
 </script>
