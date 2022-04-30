@@ -1,6 +1,6 @@
 # jindai-ui
 
-Frontend for [Jindai](https://github.com/zhuth/jindai/).
+Frontend for [Jindai](https://github.com/jindai-lab/jindai/).
 
 ## Acknowledgment
 

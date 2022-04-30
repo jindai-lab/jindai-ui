@@ -3,9 +3,8 @@
     <v-navigation-drawer v-model="drawer" app v-if="!viewer">
       <v-list nav>
         <v-list-item link @click="$router.push('/')">
-          <v-list-item-title>查询</v-list-item-title>
+          <v-list-item-title>搜索</v-list-item-title>
         </v-list-item>
-
         <v-list-group>
           <template v-slot:activator>
             <v-list-item-title>任务</v-list-item-title>
@@ -62,6 +61,9 @@
           </v-list-item>
           <v-list-item link @click="$router.push('/users')" v-if="admin">
             <v-list-item-title>权限</v-list-item-title>
+          </v-list-item>
+          <v-list-item link @click="$router.push('/autotags')">
+            <v-list-item-title>自动标签</v-list-item-title>
           </v-list-item>
         </v-list-group>
       </v-list>

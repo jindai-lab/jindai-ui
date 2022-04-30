@@ -6,7 +6,7 @@
         <v-col>
           <v-text-field
             class="d-inline-block selector"
-            :style="{ width: 'calc(100% - 200px)', 'min-width': '200px' }"
+            :style="{ width: 'calc(100% - 120px)', 'min-width': '200px' }"
             dense
             v-model="q"
             @keyup.enter="search"
@@ -17,7 +17,7 @@
             v-model="sort"
             label="排序"
             dense
-            :style="{ width: '180px' }"
+            :style="{ width: '100px' }"
             :items="[
               { text: '默认排序', value: '' },
               { text: '从旧到新', value: 'pdate' },

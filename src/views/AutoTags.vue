@@ -1,11 +1,6 @@
 <template>
-  <v-card>
-    <v-card-title>
-      <v-btn class="close" icon @click="$emit('close')">
-        <v-icon>mdi-close</v-icon>
-      </v-btn>
-      Auto Tagging
-    </v-card-title>
+  <v-card flat>
+    <v-card-title> 自动标签 </v-card-title>
     <v-card-text>
       <v-data-iterator
         :items="auto_tags"
@@ -13,9 +8,10 @@
         :page.sync="page"
         :search="search"
         hide-default-footer
+        no-data-text="无可用数据"
       >
         <template v-slot:header>
-          <v-toolbar dark color="blue darken-3" class="mb-1">
+          <v-toolbar class="mb-1" flat>
             <v-text-field
               v-model="search"
               clearable
@@ -23,35 +19,39 @@
               solo-inverted
               hide-details
               prepend-inner-icon="mdi-magnify"
-              label="Search"
+              label="查找"
             ></v-text-field>
           </v-toolbar>
-          <v-toolbar>
+          <v-toolbar flat class="mb-5">
             <v-text-field
               v-model="new_tag.pattern"
-              label="Pattern"
+              label="匹配 URL 格式"
             ></v-text-field>
 
             <v-text-field
               v-model="new_tag.from_tag"
-              label="From Tag"
-              @input="$event && $event.startsWith('@') ? (new_tag.tag = $event.replace(/@\d*/, '*')):  ''"
+              class="new-tag-data"
+              label="匹配标签"
+              @input="
+                $event && $event.startsWith('@')
+                  ? (new_tag.tag = $event.replace(/@\d*/, '*'))
+                  : ''
+              "
             ></v-text-field>
 
-            <v-text-field v-model="new_tag.tag" label="Tag"></v-text-field>
+            <v-text-field
+              v-model="new_tag.tag"
+              label="标记为"
+              class="new-tag-data"
+            ></v-text-field>
 
-            <v-btn @click="auto_tags_create(new_tag)">
+            <v-btn @click="auto_tags_create(new_tag)" class="new-tag-data">
               <v-icon>mdi-plus</v-icon>
             </v-btn>
           </v-toolbar>
           <v-row>
             <v-col
-              v-for="(key, index) in [
-                'Pattern',
-                'From Tag',
-                'Tag',
-                'Operation',
-              ]"
+              v-for="(key, index) in ['匹配 URL', '匹配标签', '标记为', '操作']"
               :key="index"
               >{{ key }}</v-col
             >
@@ -61,10 +61,10 @@
         <template v-slot:default="props">
           <v-row v-for="item in props.items" :key="item._id" cols="12">
             <v-col
-              v-for="(key, index) in ['Pattern', 'From Tag', 'Tag']"
+              v-for="(key, index) in ['pattern', 'from_tag', 'tag']"
               :key="index"
             >
-              {{ item[key.toLowerCase().replace(/ /g, "_")] }}
+              {{ item[key] }}
             </v-col>
             <v-col>
               <v-btn
@@ -79,10 +79,9 @@
 
         <template v-slot:footer>
           <v-row class="mt-2" align="center" justify="center">
-            <span class="mr-4 grey--text">
-              Page {{ page }} of {{ numberOfPages }}
-            </span>
             <v-btn
+              small
+              dark
               fab
               color="blue darken-3"
               class="mr-1"
@@ -90,7 +89,12 @@
             >
               <v-icon>mdi-chevron-left</v-icon>
             </v-btn>
+            <span class="mr-4 ml-4 grey--text">
+              第 {{ page }} / {{ numberOfPages }} 页
+            </span>
             <v-btn
+              small
+              dark
               fab
               color="blue darken-3"
               class="ml-1"
@@ -150,7 +154,9 @@ export default {
         );
     },
     reload() {
-      api.call("plugins/autotags").then((data) => (this.auto_tags = data.result));
+      api
+        .call("plugins/autotags")
+        .then((data) => (this.auto_tags = data.result));
     },
     nextPage() {
       if (this.page + 1 <= this.numberOfPages) this.page += 1;
@@ -171,3 +177,9 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+.new-tag-data {
+  margin-left: 10px;
+}
+</style>

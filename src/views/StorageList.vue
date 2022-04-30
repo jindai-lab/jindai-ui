@@ -17,31 +17,39 @@
     </v-card-text>
     <v-sheet class="ma-5">
       <v-sheet>
-        <v-row v-for="f in files" :key="f.name">
-          <v-col class="name">
-            <v-btn icon :href="file_link(f)" v-if="f.type === 'file'">
-              <v-icon>mdi-download</v-icon>
-            </v-btn>
-            <v-btn icon v-else @click="enter(f.name)">
-              <v-icon v-if="f.type == 'folder'">mdi-folder-open</v-icon>
-              <v-icon v-else>mdi-arrow-left-circle</v-icon>
-            </v-btn>
+        <template v-for="f in files">
+          <v-row :key="f.name" v-if="f.name == '..' || !f.name.startsWith('.')">
+            <v-col class="name">
+              <v-btn icon :href="file_link(f)" v-if="f.type === 'file'">
+                <v-icon>mdi-download</v-icon>
+              </v-btn>
+              <v-btn icon v-else @click="enter(f.name)">
+                <v-icon v-if="f.type == 'folder'">mdi-folder-open</v-icon>
+                <v-icon v-else>mdi-arrow-left-circle</v-icon>
+              </v-btn>
 
-            {{ f.name == '..' ? '返回上一级' : f.name }}
+              {{ f.name == ".." ? "返回上一级" : f.name }}
 
-            <div class="description" v-if="f.type == 'file'">
-              大小: {{ (f.size / 1024 / 1024).toFixed(2) }} MB 创建于:
-              {{ (f.ctime * 1000) | dateSafe }} 修改于:
-              {{ (f.mtime * 1000) | dateSafe }}
-            </div>
-          </v-col>
-          <v-spacer></v-spacer>
-          <v-col class="opers">
-            <v-btn class="copy" @click="copy_file_path(f)" v-if="f.type !== 'back'">
-              <v-icon>mdi-content-copy</v-icon>
-            </v-btn>
-          </v-col>
-        </v-row>
+              <div class="description" v-if="f.type == 'file'">
+                大小: {{ (f.size / 1024 / 1024).toFixed(2) }} MB 创建于:
+                {{ (f.ctime * 1000) | dateSafe }} 修改于:
+                {{ (f.mtime * 1000) | dateSafe }}
+              </div>
+            </v-col>
+            <v-spacer></v-spacer>
+            <v-col class="opers">
+              <v-btn @click="copy_file_path(f)" v-if="f.type !== 'back'">
+                <v-icon>mdi-content-copy</v-icon>
+              </v-btn>
+              <v-btn
+                v-if="f.name.match(/^jindai\.plugins\..*\.zip$/)"
+                @click="install_plugin(f)"
+              >
+                <v-icon>mdi-cog-outline</v-icon>
+              </v-btn>
+            </v-col>
+          </v-row>
+        </template>
       </v-sheet>
     </v-sheet>
     <v-card-actions>
@@ -61,6 +69,7 @@ export default {
       files: [],
       selected_dir: "",
       progress: 0,
+      admin: false,
     };
   },
   methods: {
@@ -92,6 +101,11 @@ export default {
     },
     file_link(f) {
       return "/api/storage/" + f.fullpath.split("/").slice(1).join("/");
+    },
+    install_plugin(f) {
+      api.call("plugins", { url: f.fullpath }).then((data) => {
+        if (data.result) api.notify("安装成功");
+      });
     },
     update_files() {
       api.call("storage/" + this.selected_dir).then((data) => {
@@ -163,5 +177,9 @@ span.id::before {
 
 .description {
   font-size: 12px;
+}
+
+.opers > * {
+  margin-left: 10px;
 }
 </style>

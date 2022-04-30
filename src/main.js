@@ -50,6 +50,7 @@ import StorageList from "./views/StorageList.vue";
 import UserList from "./views/UserList.vue";
 import AccountSecurity from "./views/AccountSecurity.vue";
 import DbConsole from "./views/DbConsole.vue";
+import AutoTags from "./views/AutoTags.vue";
 
 // configure routes
 const routes = [{
@@ -112,6 +113,10 @@ const routes = [{
     {
         path: "/scheduler",
         component: TaskScheduler,
+    },
+    {
+        path: "/autotags",
+        component: AutoTags,
     },
 ];
 

@@ -1,8 +1,6 @@
 <template>
   <v-sheet v-if="total !== 0" ref="results" :class="config.view_mode">
     <div class="tools">
-      <v-btn text @click="dialogs.auto_tagging.visible = true">自动标签</v-btn>
-
       <v-text-field
         class="d-inline-block mr-5 selector"
         label="每页数量"
@@ -213,10 +211,6 @@
       </v-card>
     </v-dialog>
 
-    <v-dialog v-model="dialogs.auto_tagging.visible" fullscreen>
-      <auto-tags @close="dialogs.auto_tagging.visible = false"></auto-tags>
-    </v-dialog>
-
     <v-dialog v-model="dialogs.edit.visible">
       <v-card>
         <v-card-title
@@ -288,10 +282,6 @@
       </v-card>
     </v-dialog>
 
-    <v-dialog v-model="dialogs.auto_tagging.visible" fullscreen>
-      <auto-tags @close="dialogs.auto_tagging.visible = false"></auto-tags>
-    </v-dialog>
-
     <tagging-shortcuts-dialog
       v-model="dialogs.tagging_shortcuts.visible"
       :choices="dialogs.tagging_shortcuts.list"
@@ -336,7 +326,6 @@ import ContentView from "./ContentView.vue";
 import QuickActionButtons from "./QuickActionButtons";
 import TaggingDialog from "./TaggingDialog.vue";
 import TaggingShortcutsDialog from "./TaggingShortcutsDialog.vue";
-import AutoTags from "./AutoTags.vue";
 import api from "../api";
 export default {
   name: "ResultsView",
@@ -350,7 +339,6 @@ export default {
     QuickActionButtons,
     TaggingDialog,
     TaggingShortcutsDialog,
-    AutoTags,
   },
   data() {
     return {
@@ -389,9 +377,6 @@ export default {
         info: {
           visible: false,
           target: {},
-        },
-        auto_tagging: {
-          visible: false,
         },
         tagging_shortcuts: {
           visible: false,
@@ -434,7 +419,7 @@ export default {
         .slice(0, +this.config.page_size);
     },
     offset() {
-      return (this.page - 1) * (+this.config.page_size);
+      return (this.page - 1) * +this.config.page_size;
     },
     columns() {
       var cols = new Set();
