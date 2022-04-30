@@ -143,6 +143,7 @@ export default {
         return Object.assign({
                 headers: {
                     "X-Authentication-Token": _token,
+                    "X-Preferred-Language": "chs",
                 },
             },
             other || {}
