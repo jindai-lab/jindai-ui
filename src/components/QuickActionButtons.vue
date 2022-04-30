@@ -38,21 +38,29 @@
 
       <v-list>
         <v-list-item>
-          <v-list-item-title @click="update_interval">播放</v-list-item-title>
+          <v-list-item-title @click="update_interval">{{
+            $t("play")
+          }}</v-list-item-title>
         </v-list-item>
         <v-list-item>
-          <v-list-item-title @click="$emit('merge')">合并</v-list-item-title>
+          <v-list-item-title @click="$emit('merge')">{{
+            $t("merge")
+          }}</v-list-item-title>
         </v-list-item>
         <v-list-item>
-          <v-list-item-title @click="$emit('split')">分离</v-list-item-title>
+          <v-list-item-title @click="$emit('split')">{{
+            $t("separate")
+          }}</v-list-item-title>
         </v-list-item>
         <v-list-item>
-          <v-list-item-title @click="$emit('reset-storage')">重载</v-list-item-title>
+          <v-list-item-title @click="$emit('reset-storage')">{{
+            $t("reset-storage")
+          }}</v-list-item-title>
         </v-list-item>
         <v-list-item>
           <v-list-item-title @click="$emit('delete')">
-            删除 
-            <!-- <v-icon>mdi-delete</v-icon> -->
+            <v-icon>mdi-delete</v-icon>
+            {{ $t("delete") }}
           </v-list-item-title>
         </v-list-item>
       </v-list>
@@ -74,7 +82,7 @@ export default {
   },
   methods: {
     update_interval() {
-      var val = prompt("间隔时间:", this.playing_interval);
+      var val = prompt(this.$t("interval"), this.playing_interval);
       if (val && +val > 0) {
         this.$emit("playing-interval", +val);
         this.$emit("play");
@@ -89,7 +97,7 @@ export default {
   position: fixed;
   z-index: 300;
   bottom: 30px;
-  right: 30px;
+  right: 0px;
 }
 .fabs > * {
   margin: 5px;

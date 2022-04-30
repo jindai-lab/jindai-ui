@@ -1,7 +1,7 @@
 <template>
   <v-dialog v-model="show" width="unset">
     <v-card>
-      <v-card-title>快速标签</v-card-title>
+      <v-card-title>{{ $t("tagging") }}</v-card-title>
       <v-card-text style="height: 150px">
         <v-autocomplete
           autofocus
@@ -15,14 +15,14 @@
           flat
           hide-no-data
           hide-details
-          label="标签"
+          :label="$t('tag')"
           @keyup.enter="do_submit"
           @change="tag_typing = ''"
         ></v-autocomplete>
       </v-card-text>
       <v-card-actions>
-        <v-btn color="primary" @click="do_submit"> 确定 </v-btn>
-        <v-btn @click="$emit('input', false)"> 取消 </v-btn>
+        <v-btn color="primary" @click="do_submit"> {{ $t("ok") }} </v-btn>
+        <v-btn @click="$emit('input', false)"> {{ $t("cancel") }} </v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -84,26 +84,25 @@ export default {
     },
   },
   mounted() {
-    this.tag_choices = this.choices || []
+    this.tag_choices = this.choices || [];
   },
   methods: {
     search_tag(search) {
       if (!search) return;
-      var matched = this.choices.filter((x) =>
-        x.text.startsWith(search)
-      );
+      var matched = this.choices.filter((x) => x.text.startsWith(search));
       if (matched.length > 0) {
-        if (matched[0].text.startsWith(search + ' '))
+        if (matched[0].text.startsWith(search + " "))
           this.tag_new = Array.from(new Set(this.tag_new.concat(matched[0])));
-        if (matched.length > 1)
-          this.tag_typing = search;
-        else
-          this.tag_typing = '';
+        if (matched.length > 1) this.tag_typing = search;
+        else this.tag_typing = "";
       }
-      return matched
+      return matched;
     },
     do_submit() {
-      this.$emit("submit", this.tag_new.map(x => x.value).filter(x => x));
+      this.$emit(
+        "submit",
+        this.tag_new.map((x) => x.value).filter((x) => x)
+      );
       this.$emit("input", false);
     },
   },

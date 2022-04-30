@@ -161,9 +161,8 @@ export default {
       prompt: "",
       code: "",
       choices: [],
-      file_prompt: "在此拖入文件",
-      langs:
-        "自动:auto|简体中文:chs|繁体中文:cht|英文:en|德文:de|法文:fr|俄文:ru|西班牙文:es|葡萄牙文:pt|日文:ja|韩文/朝鲜文:kr|越南文:vn",
+      file_prompt: this.$t("drop-in-files"),
+      langs: this.$t("langs"),
     };
   },
   watch: {
@@ -178,7 +177,7 @@ export default {
           typeof this.arg.default === "undefined" ||
           this.arg.default === null
         ) {
-          this.prompt = "必填";
+          this.prompt = this.$t("required");
           return;
         }
         return null;
@@ -197,7 +196,7 @@ export default {
         default:
           return val;
       }
-      this.prompt = "请输入一个符合 " + this.arg.type + " 类型的值";
+      this.prompt = this.$t("match-type", {type: this.arg.type});
       return;
     },
     highlighter(code) {
@@ -259,7 +258,7 @@ export default {
         x.name.match(types_check)
       );
       if (!droppedFiles.length) {
-        api.notify(`请上传如下类型的文件：${types.join(", ")}`);
+        api.notify(this.$t("match-file-type", {type: types.join(", ")}));
         return;
       }
       let file = droppedFiles[0];

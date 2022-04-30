@@ -1,33 +1,31 @@
 <template>
   <v-card flat>
-    <v-card-title>任务
+    <v-card-title
+      >{{ $t("task") }}
       <v-spacer></v-spacer>
       <v-btn color="primary" @click="create_task()">
-        <v-icon>mdi-plus</v-icon> 新建
+        <v-icon>mdi-plus</v-icon> {{ $t("new-task") }}
       </v-btn>
     </v-card-title>
-      <v-card-text>
-        <v-row v-for="task in tasks" :key="task._id" class="ma-3">
-          <span class="name">{{ task.name }}</span>
-          <span class="opers">
-            <v-btn 
-              :to="`/tasks/${task._id}`"
-            >
-              <v-icon>mdi-file-edit-outline</v-icon>
-            </v-btn>
+    <v-card-text>
+      <v-row v-for="task in tasks" :key="task._id" class="ma-3">
+        <span class="name">{{ task.name }}</span>
+        <span class="opers">
+          <v-btn :to="`/tasks/${task._id}`">
+            <v-icon>mdi-file-edit-outline</v-icon>
+          </v-btn>
 
-            <v-btn @click="duplicate_task(task)" >
-              <v-icon>mdi-content-copy</v-icon>
-            </v-btn>
+          <v-btn @click="duplicate_task(task)">
+            <v-icon>mdi-content-copy</v-icon>
+          </v-btn>
 
-            <v-btn @click="enqueue_task(task)">
-              <v-icon>mdi-play</v-icon>
-            </v-btn>
-             </span
-          ><br />
-          <span class="id">{{ task._id }}</span>
-        </v-row>
-      </v-card-text>
+          <v-btn @click="enqueue_task(task)">
+            <v-icon>mdi-play</v-icon>
+          </v-btn> </span
+        ><br />
+        <span class="id">{{ task._id }}</span>
+      </v-row>
+    </v-card-text>
   </v-card>
 </template>
 
@@ -43,24 +41,26 @@ export default {
   methods: {
     create_task() {
       api
-        .put("tasks/", { name: "新建任务 " + new Date() })
+        .put("tasks/", { name: this.$t("new-task") + " " + new Date() })
         .then((data) => this.$router.push("/tasks/" + data.result));
     },
     duplicate_task(task) {
       var otask = Object.assign({}, task);
       otask._id = null;
-      otask.name += " 复制";
+      otask.name += " " + this.$t("copy");
       api
         .put("tasks/", otask)
         .then((data) => this.$router.push("/tasks/" + data.result));
     },
     delete_task(task) {
-      api.delete("tasks/" + task._id).then(() => this.tasks = this.tasks.filter((x) => x._id != task._id))
+      api
+        .delete("tasks/" + task._id)
+        .then(() => (this.tasks = this.tasks.filter((x) => x._id != task._id)));
     },
     enqueue_task(task) {
       api.put("queue/", { id: task._id }).then((data) => {
-        api.notify(data.result + " 已成功加入后台处理队列。");
-      })
+        api.notify(this.$t("task-enqueued", {task: data.result}));
+      });
     },
   },
   mounted() {

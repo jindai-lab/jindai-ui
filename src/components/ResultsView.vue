@@ -3,7 +3,7 @@
     <div class="tools">
       <v-text-field
         class="d-inline-block mr-5 selector"
-        label="每页数量"
+        :label="$t('page-size')"
         v-model="config.page_size"
         @change="_save_config"
         type="number"
@@ -35,24 +35,26 @@
       <v-checkbox
         flat
         v-model="config.contain"
-        label="全图显示"
+        :label="$t('image-full-size')"
         @change="_save_config"
       ></v-checkbox>
       <v-checkbox
         flat
         v-model="config.force_thumbnail"
-        label="缩略图"
+        :label="$t('image-thumbnail')"
         @change="_save_config"
       ></v-checkbox>
       <v-checkbox
         flat
         v-model="config.enhance"
-        label="增强图像"
+        :label="$t('image-enhance')"
         @change="_save_config"
       ></v-checkbox>
     </div>
     <!-- total results count -->
-    <div class="count" v-show="total !== null">共找到 {{ total }} 个结果。</div>
+    <div class="count" v-show="total !== null">
+      {{ $t("found-results", {total}) }}
+    </div>
     <!-- divider -->
     <v-divider class="mt-5 mb-5"></v-divider>
     <!-- show content -->
@@ -101,7 +103,7 @@
           />
           <div class="mt-10 operations">
             <v-btn @click="view_page(index)">
-              <v-icon>mdi-eye</v-icon> 查看
+              <v-icon>mdi-eye</v-icon> {{ $t("view") }}
             </v-btn>
             <v-btn
               :href="`/view/${r.mongocollection}/${
@@ -109,7 +111,7 @@
               }`"
               target="_blank"
             >
-              <v-icon>mdi-dock-window</v-icon> 浏览
+              <v-icon>mdi-dock-window</v-icon> {{ $t("browse") }}
             </v-btn>
             <v-btn
               @click="
@@ -118,7 +120,7 @@
               "
             >
               <v-icon>mdi-information</v-icon>
-              元数据
+              {{ $t("metadata") }}
             </v-btn>
             <v-btn
               @click="
@@ -127,7 +129,7 @@
               "
             >
               <v-icon>mdi-file-edit-outline</v-icon>
-              编辑
+              {{ $t("edit") }}
             </v-btn>
             <v-divider class="mt-5 mb-5"></v-divider>
           </div>
@@ -162,7 +164,7 @@
     <v-row class="mt-5">
       <v-pagination v-model="page" :length="pages.length"></v-pagination>
       <div>
-        <label> 页码</label>
+        <label> {{ $t("pagenum") }}</label>
         <v-text-field
           class="d-inline-block ml-1"
           style="max-width: 30px"
@@ -197,7 +199,7 @@
           >
             <v-icon>mdi-close</v-icon>
           </v-btn>
-          元数据</v-card-title
+          {{ $t("metadata") }}</v-card-title
         >
         <v-card-text>
           <v-row v-for="(v, k) in dialogs.info.target" :key="k">
@@ -214,7 +216,7 @@
     <v-dialog v-model="dialogs.edit.visible">
       <v-card>
         <v-card-title
-          >编辑语段 {{ dialogs.edit.target._id }}
+          >{{ $t("edit-paragraph") }} {{ dialogs.edit.target._id }}
           <v-spacer></v-spacer>
           <v-btn icon @click="dialogs.edit.visible = false"
             ><v-icon>mdi-close</v-icon></v-btn
@@ -255,8 +257,10 @@
           </v-list>
         </v-card-text>
         <v-card-actions>
-          <v-btn color="primary" @click="save()">保存</v-btn>
-          <v-btn @click="dialogs.edit.visible = false">取消</v-btn>
+          <v-btn color="primary" @click="save()">{{ $t("save") }}</v-btn>
+          <v-btn @click="dialogs.edit.visible = false">{{
+            $t("cancel")
+          }}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -264,7 +268,7 @@
     <v-dialog v-model="dialogs.embedded.visible">
       <v-card>
         <v-card-title>
-          查看 {{ querify(dialogs.embedded.target.source) }}
+          {{ $t("view") }} {{ querify(dialogs.embedded.target.source) }}
           <v-spacer></v-spacer>
           <v-btn icon @click="dialogs.embedded.visible = false"
             ><v-icon>mdi-close</v-icon></v-btn

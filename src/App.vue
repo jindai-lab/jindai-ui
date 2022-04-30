@@ -3,18 +3,18 @@
     <v-navigation-drawer v-model="drawer" app v-if="!viewer">
       <v-list nav>
         <v-list-item link @click="$router.push('/')">
-          <v-list-item-title>搜索</v-list-item-title>
+          <v-list-item-title>{{ $t("search") }}</v-list-item-title>
         </v-list-item>
         <v-list-group>
           <template v-slot:activator>
-            <v-list-item-title>任务</v-list-item-title>
+            <v-list-item-title>{{ $t("tasks") }}</v-list-item-title>
           </template>
           <v-list-item link @click="$router.push('/tasks')">
-            <v-list-item-title>全部</v-list-item-title>
+            <v-list-item-title>{{ $t("all") }}</v-list-item-title>
           </v-list-item>
           <v-list-item
             link
-            v-for="s in shortcuts || [{ _id: '', name: '快捷方式' }]"
+            v-for="s in shortcuts || [{ _id: '', name: $t('quick-task') }]"
             :key="s._id"
             @click="$router.push('/tasks/shortcut/' + s._id)"
           >
@@ -24,13 +24,13 @@
 
         <v-list-group>
           <template v-slot:activator>
-            <v-list-item-title>用户</v-list-item-title>
+            <v-list-item-title>{{ $t("user") }}</v-list-item-title>
           </template>
           <v-list-item link @click="$router.push('/security')">
-            <v-list-item-title>账户</v-list-item-title>
+            <v-list-item-title>{{ $t("account") }}</v-list-item-title>
           </v-list-item>
           <v-list-item link @click="$router.push('/history')">
-            <v-list-item-title>历史</v-list-item-title>
+            <v-list-item-title>{{ $t("history") }}</v-list-item-title>
           </v-list-item>
           <v-list-item
             link
@@ -39,33 +39,44 @@
               $router.push('/login');
             "
           >
-            <v-list-item-title>登出</v-list-item-title>
+            <v-list-item-title>{{ $t("log-out") }}</v-list-item-title>
           </v-list-item>
         </v-list-group>
 
         <v-list-group>
           <template v-slot:activator>
-            <v-list-item-title>管理</v-list-item-title>
+            <v-list-item-title>{{ $t("admin") }}</v-list-item-title>
           </template>
           <v-list-item link @click="$router.push('/scheduler')" v-if="admin">
-            <v-list-item-title>计划</v-list-item-title>
+            <v-list-item-title>{{ $t("schedule") }}</v-list-item-title>
           </v-list-item>
           <v-list-item link @click="$router.push('/storage')">
-            <v-list-item-title>文件</v-list-item-title>
+            <v-list-item-title>{{ $t("file-storage") }}</v-list-item-title>
           </v-list-item>
           <v-list-item link @click="$router.push('/datasets')" v-if="admin">
-            <v-list-item-title>数据集</v-list-item-title>
+            <v-list-item-title>{{ $t("dataset") }}</v-list-item-title>
           </v-list-item>
           <v-list-item link @click="$router.push('/dbconsole')" v-if="admin">
-            <v-list-item-title>控制台</v-list-item-title>
+            <v-list-item-title>{{ $t("console") }}</v-list-item-title>
           </v-list-item>
           <v-list-item link @click="$router.push('/users')" v-if="admin">
-            <v-list-item-title>权限</v-list-item-title>
+            <v-list-item-title>{{ $t("permissions") }}</v-list-item-title>
           </v-list-item>
           <v-list-item link @click="$router.push('/autotags')">
-            <v-list-item-title>自动标签</v-list-item-title>
+            <v-list-item-title>{{ $t("auto-tagging") }}</v-list-item-title>
           </v-list-item>
         </v-list-group>
+
+        <v-list-item>
+          <v-list-item-title><v-icon>mdi-web</v-icon></v-list-item-title>
+          <v-select
+            v-model="ui_language"
+            :items="[
+              { text: 'English', value: 'en' },
+              { text: '简体中文', value: 'chs' },
+            ]"
+          ></v-select>
+        </v-list-item>
       </v-list>
     </v-navigation-drawer>
 
@@ -101,7 +112,7 @@
             text
             class="ma-3"
             @click="console_outputs = []"
-            ><v-icon>mdi-delete</v-icon> 清除</v-btn
+            ><v-icon>mdi-delete</v-icon>{{ $t("clear") }}</v-btn
           >
           <div class="console">
             <div
@@ -138,6 +149,7 @@
 
 <script>
 import api from "./api";
+import { setup } from "./locales";
 import QueueView from "./components/QueueView.vue";
 
 export default {
@@ -162,6 +174,7 @@ export default {
       app_title: "Jindai",
       app_dark: false,
       copyright: "",
+      ui_language: "",
     };
   },
   watch: {
@@ -171,8 +184,12 @@ export default {
     app_title(val) {
       document.title = val;
     },
+    ui_language(val) {
+      setup(val);
+    },
   },
   created() {
+    this.ui_language = this.$i18n.locale;
     api.bus
       .$on("loading", (loading_num) => (this.loading = loading_num > 0))
       .$on("alert", (bundle) => {

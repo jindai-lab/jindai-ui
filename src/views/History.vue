@@ -1,6 +1,6 @@
 <template>
   <v-card flat>
-    <v-card-title>检索历史</v-card-title>
+    <v-card-title>{{ $t("history") }}</v-card-title>
     <v-card-text>
       <v-row v-for="h in history" :key="h._id">
         <v-col>{{ h.user }}</v-col>
@@ -41,7 +41,7 @@ export default {
               },
             ],
           ],
-          name: "搜索 " + h.queries[0],
+          name: this.$t("search") + " " + h.queries[0],
         })
         .then((data) => this.$router.push("/tasks/" + data.result))
         .catch(() => {});

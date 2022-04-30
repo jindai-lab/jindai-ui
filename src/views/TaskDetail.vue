@@ -1,102 +1,106 @@
 <template>
   <div>
-  <v-card flat>
-    <v-card-text>
-      <ParamInput v-model="task.name" :arg="{ name: '名称', type: '' }" />
-      <span>ID: {{ task._id }} 创建者: {{ task.creator }}</span>
-      <v-row>
-        <v-col>
-          <v-checkbox
-            class="d-inline-block"
-            label="共享"
-            v-model="task.shared"
-            :disabled="task.creator !== user"
-          ></v-checkbox>
-          <v-checkbox
-            class="d-inline-block ml-5"
-            label="忽略运行中间的错误"
-            v-model="task.resume_next"
-          ></v-checkbox>
-          <v-text-field
-            class="d-inline-block ml-5"
-            label="并行运行"
-            v-model="task.concurrent"
-            type="number"
-            :rules="[
-              (v) =>
-                (v >= 1 && v <= 10 && v == parseInt(v)) ||
-                '应为 1-10 之间的整数',
-            ]"
-            @input="(v) => (task.concurrent = parseInt(v))"
-          >
-          </v-text-field>
-        </v-col>
-      </v-row>
-      <v-row>
-        <v-col>
-          <v-btn color="primary" @click="enqueue">
-            <v-icon>mdi-play</v-icon> 后台执行
-          </v-btn></v-col
-        ></v-row
-      >
-      <v-divider class="mt-5 mb-5"></v-divider>
-      <div id="pipeline">
-        <h2>
-          处理流程
-          <v-btn @click="blockly = true" v-if="pipelines"
-            ><v-icon>mdi-layers</v-icon> 设计视图</v-btn
-          >
-        </h2>
-        <Pipeline
-          v-model="task.pipeline"
-          @shortcut="update_shortcut"
-          :map_id="'pipeline'"
-          @validation="update_valid('pipeline_main', $event)"
-          style="margin-left: 0 !important"
-        />
-      </div>
+    <v-card flat>
+      <v-card-text>
+        <ParamInput v-model="task.name" :arg="{ name: $t('name'), type: '' }" />
+        <span
+          >ID: {{ task._id }} {{ $t("created-by") }}: {{ task.creator }}</span
+        >
+        <v-row>
+          <v-col>
+            <v-checkbox
+              class="d-inline-block"
+              :label="$t('shared')"
+              v-model="task.shared"
+              :disabled="task.creator !== user"
+            ></v-checkbox>
+            <v-checkbox
+              class="d-inline-block ml-5"
+              :label="$t('resume-next')"
+              v-model="task.resume_next"
+            ></v-checkbox>
+            <v-text-field
+              class="d-inline-block ml-5"
+              :label="$t('concurrent')"
+              v-model="task.concurrent"
+              type="number"
+              :rules="[
+                (v) =>
+                  (v >= 1 && v <= 10 && v == parseInt(v)) || $t('number-1-10'),
+              ]"
+              @input="(v) => (task.concurrent = parseInt(v))"
+            >
+            </v-text-field>
+          </v-col>
+        </v-row>
+        <v-row>
+          <v-col>
+            <v-btn color="primary" @click="enqueue">
+              <v-icon>mdi-play</v-icon> {{ $t("run-background") }}
+            </v-btn></v-col
+          ></v-row
+        >
+        <v-divider class="mt-5 mb-5"></v-divider>
+        <div id="pipeline">
+          <h2>
+            {{ $t("pipeline") }}
+            <v-btn @click="blockly = true" v-if="pipelines"
+              ><v-icon>mdi-layers</v-icon> {{ $t("design-view") }}</v-btn
+            >
+          </h2>
+          <Pipeline
+            v-model="task.pipeline"
+            @shortcut="update_shortcut"
+            :map_id="'pipeline'"
+            @validation="update_valid('pipeline_main', $event)"
+            style="margin-left: 0 !important"
+          />
+        </div>
 
-      <div id="shortcut_map">
-        <h2>快捷参数</h2>
-        <div>
-          <div v-for="(v, k) in task.shortcut_map" :key="k">
-            <ParamInput
-              :arg="{ name: k, type: 'str', default: '\'\'' }"
-              v-model="task.shortcut_map[k]"
-            />
+        <div id="shortcut_map">
+          <h2>{{ $t("shortcut-params") }}</h2>
+          <div>
+            <div v-for="(v, k) in task.shortcut_map" :key="k">
+              <ParamInput
+                :arg="{ name: k, type: 'str', default: '\'\'' }"
+                v-model="task.shortcut_map[k]"
+              />
+            </div>
           </div>
         </div>
-      </div>
-    </v-card-text>
-    <v-card-actions>
-      <v-btn
-        @click="save().then(() => notify('保存成功'))"
-        class="ml-5"
-        color="primary"
-      >
-        <v-icon>mdi-check</v-icon> 保存
-      </v-btn>
-      <v-btn class="ml-3" color="error" @click="delete_task()">
-        <v-icon>mdi-delete</v-icon> 删除
-      </v-btn>
-      <v-btn class="ml-3" @click="show_code = !show_code">
-        <v-icon>mdi-code-braces</v-icon>
-      </v-btn>
-    </v-card-actions>
-    <v-row class="ma-10">
-      <v-textarea
-        v-show="show_code"
-        :value="querify(task)"
-        readonly
-      ></v-textarea>
-    </v-row>
-  </v-card>
+      </v-card-text>
+      <v-card-actions>
+        <v-btn
+          @click="save().then(() => notify($t('saved')))"
+          class="ml-5"
+          color="primary"
+        >
+          <v-icon>mdi-check</v-icon> {{ $t("save") }}
+        </v-btn>
+        <v-btn class="ml-3" color="error" @click="delete_task()">
+          <v-icon>mdi-delete</v-icon> {{ $t("delete") }}
+        </v-btn>
+        <v-btn class="ml-3" @click="show_code = !show_code">
+          <v-icon>mdi-code-braces</v-icon>
+        </v-btn>
+      </v-card-actions>
+      <v-row class="ma-10">
+        <v-textarea
+          v-show="show_code"
+          :value="querify(task)"
+          readonly
+        ></v-textarea>
+      </v-row>
+    </v-card>
     <!-- <v-dialog fullscreen persistent v-model="blockly"> -->
     <BlocklyComponent
       :json="task.pipeline"
       :pipelines="pipelines"
       :tasks="tasks"
-      @save="task.pipeline = $event; blockly = false"
+      @save="
+        task.pipeline = $event;
+        blockly = false;
+      "
       @cancel="blockly = false"
       v-show="blockly"
       v-if="pipelines"
@@ -139,7 +143,7 @@ export default {
     api.call("tasks/" + this.id).then((data) => {
       this.task = data.result;
     });
-    api.call("tasks/").then((data) => this.tasks = data.result);
+    api.call("tasks/").then((data) => (this.tasks = data.result));
     api.call("help/pipelines").then((data) => (this.pipelines = data.result));
   },
   computed: {
@@ -154,17 +158,17 @@ export default {
       if (!valid) this.valid.push(name);
     },
     delete_task() {
-      if (!confirm("确认要删除此任务吗？")) return;
+      if (!confirm(this.$t("confirm-delete"))) return;
       api.delete("tasks/" + this.task._id).then((data) => {
         if (data.result.ok) {
-          api.notify("删除成功");
+          api.notify(this.$t("deleted"));
           this.$router.push("/tasks").catch(() => {});
         }
       });
     },
     save() {
       if (this.valid.length > 0) {
-        alert("有错误的输入值，请检查");
+        alert(this.$t("invalid-input"));
         return;
       }
       for (var k in this.task.shortcut_map) {
@@ -187,7 +191,7 @@ export default {
     enqueue() {
       this.save().then((id) =>
         api.put("queue/", { id }).then((data) => {
-          this.notify(data.result + " 已成功加入后台处理队列。");
+          this.notify(this.$t("task-enqueued", {task: data.result}));
         })
       );
     },
@@ -197,11 +201,13 @@ export default {
       this.$forceUpdate();
     },
     querify() {
-      return this.task.pipeline.map(kv => {
-        var o = {}
-        o['$' + kv[0]] = kv[1]
-        return api.querify(o).replace(/^\(|\)$/g, '')
-      }).join(';\n')
+      return this.task.pipeline
+        .map((kv) => {
+          var o = {};
+          o["$" + kv[0]] = kv[1];
+          return api.querify(o).replace(/^\(|\)$/g, "");
+        })
+        .join(";\n");
     },
   },
 };

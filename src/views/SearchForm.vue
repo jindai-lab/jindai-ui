@@ -1,6 +1,6 @@
 <template>
   <v-card flat>
-    <v-card-title>搜索</v-card-title>
+    <v-card-title>{{ $t("search") }}</v-card-title>
     <v-card-text @drop.prevent="drop_json_file" @dragover.prevent>
       <v-row>
         <v-col>
@@ -10,20 +10,20 @@
             dense
             v-model="q"
             @keyup.enter="search"
-            label="搜索条件"
+            :label="$t('query')"
           ></v-text-field>
           <v-combobox
             class="d-inline-block ml-5 selector"
             v-model="sort"
-            label="排序"
+            :label="$t('sort')"
             dense
             :style="{ width: '100px' }"
             :items="[
-              { text: '默认排序', value: '' },
-              { text: '从旧到新', value: 'pdate' },
-              { text: '从新到旧', value: '-pdate' },
-              { text: '出处', value: 'source' },
-              { text: '随机', value: 'random' },
+              { text: $t('default'), value: '' },
+              { text: $t('pdate'), value: 'pdate' },
+              { text: $t('pdate-rev'), value: '-pdate' },
+              { text: $t('source'), value: 'source' },
+              { text: $t('random'), value: 'random' },
             ]"
           ></v-combobox>
         </v-col>
@@ -34,37 +34,37 @@
             :multiple="true"
             :options="datasets"
             v-model="selected_datasets"
-            placeholder="数据集"
+            :placeholder="$t('dataset')"
           />
         </v-col>
       </v-row>
       <v-row class="ml-0 mb-3">
-        <v-btn @click="search" color="primary">查询</v-btn>
+        <v-btn @click="search" color="primary">{{ $t("search") }}</v-btn>
         <span class="ml-5" style="line-height: 100%; vertical-align: middle">
-          分组
+          {{ $t("grouping") }}
           <v-combobox
             class="d-inline-block ml-1"
             style="width: 80px"
             dense
             flat
             :items="[
-              { text: '无', value: 'none' },
-              { text: '按组', value: 'group' },
-              { text: '按来源', value: 'source' },
-              { text: '按作者', value: 'author' },
+              { text: $t('none'), value: 'none' },
+              { text: $t('group'), value: 'group' },
+              { text: $t('source'), value: 'source' },
+              { text: $t('author'), value: 'author' },
             ]"
             v-model="groups"
           />
         </span>
         <v-spacer></v-spacer>
         <v-btn @click="export_query" class="exports">
-          <v-icon>mdi-clipboard-outline</v-icon> 导出为任务
+          <v-icon>mdi-clipboard-outline</v-icon> {{ $t("export-task") }}
         </v-btn>
         <v-btn @click="export_file('xlsx')" class="exports">
-          <v-icon>mdi-file-excel</v-icon> 导出 Excel
+          <v-icon>mdi-file-excel</v-icon> {{ $t("export-excel") }}
         </v-btn>
         <v-btn @click="export_file('json')" class="exports">
-          <v-icon>mdi-download</v-icon> 导出 JSON
+          <v-icon>mdi-download</v-icon> {{ $t("export-json") }}
         </v-btn>
       </v-row>
       <ResultsView
@@ -284,7 +284,7 @@ export default {
           this.$router.push("/tasks/" + data.result).catch(() => {});
       api
         .put("tasks/", {
-          name: "搜索 " + this.querystr,
+          name: this.$t("search") + " " + this.querystr,
           pipeline: [
             [
               "DBQueryDataSource",
@@ -301,10 +301,9 @@ export default {
     },
     export_file(fmt) {
       this.export_query(fmt, (data) => {
-        api.put("queue/", { id: data.result }).then(() =>
+        api.put("queue/", { id: data.result }).then((ret) =>
           api.notify({
-            title: "已加入到任务队列",
-            text: "请注意查看处理结果",
+            title: this.$t("task-enqueued", {task: ret.result}),
           })
         );
       });

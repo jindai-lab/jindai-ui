@@ -1,7 +1,7 @@
 <template>
   <v-sheet>
     <v-card flat>
-      <v-card-title>快捷任务 {{ task.name }}</v-card-title>
+      <v-card-title>{{ $t("quick-task") }} {{ task.name }}</v-card-title>
       <v-card-text>
         <v-list>
           <v-list-item v-for="(k, v) in task.shortcut_map" :key="k">
@@ -21,17 +21,19 @@
       <v-card-actions>
         <v-btn @click="quicktask" class="ml-4">
           <v-icon>mdi-fast-forward</v-icon>
-          立即执行
+          {{ $t("run-now") }}
         </v-btn>
-        <v-btn @click="enqueue"> <v-icon>mdi-play</v-icon> 队列执行 </v-btn>
+        <v-btn @click="enqueue">
+          <v-icon>mdi-play</v-icon> {{ $t("run-background") }}
+        </v-btn>
         <v-btn color="primary" @click="$router.push('/tasks/' + id)">
           <v-icon>mdi-file-edit-outline</v-icon>
-          编辑
+          {{ $t("edit") }}
         </v-btn>
       </v-card-actions>
     </v-card>
     <v-card flat>
-      <v-card-title>运行结果</v-card-title>
+      <v-card-title>{{ $t("results") }}</v-card-title>
       <v-card-text>
         <ResultsView @load="load_search" ref="results" :view_mode="view_mode" />
         {{ result_plain }}
@@ -165,7 +167,7 @@ export default {
       this.update_params();
 
       if (this.valid.length > 0) {
-        alert("有错误的输入值，请检查");
+        alert(this.$t("invalid-input"));
         return;
       }
       for (var k in this.task.shortcut_map) {
@@ -187,7 +189,7 @@ export default {
         })
         .then((id) =>
           api.put("queue/", { id }).then((data) => {
-            this.notify(data.result + " 已成功加入后台处理队列。");
+            this.notify(this.$t("task-enqueued", { task: data.result }));
           })
         );
     },

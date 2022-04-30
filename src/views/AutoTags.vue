@@ -1,6 +1,6 @@
 <template>
   <v-card flat>
-    <v-card-title> 自动标签 </v-card-title>
+    <v-card-title> {{ $t("auto-tagging") }} </v-card-title>
     <v-card-text>
       <v-data-iterator
         :items="auto_tags"
@@ -19,19 +19,19 @@
               solo-inverted
               hide-details
               prepend-inner-icon="mdi-magnify"
-              label="查找"
+              :label="$t('search')"
             ></v-text-field>
           </v-toolbar>
           <v-toolbar flat class="mb-5">
             <v-text-field
               v-model="new_tag.pattern"
-              label="匹配 URL 格式"
+              :label="$t('match-url-pattern')"
             ></v-text-field>
 
             <v-text-field
               v-model="new_tag.from_tag"
               class="new-tag-data"
-              label="匹配标签"
+              :label="$t('match-tag')"
               @input="
                 $event && $event.startsWith('@')
                   ? (new_tag.tag = $event.replace(/@\d*/, '*'))
@@ -41,7 +41,7 @@
 
             <v-text-field
               v-model="new_tag.tag"
-              label="标记为"
+              :label="$t('tag')"
               class="new-tag-data"
             ></v-text-field>
 
@@ -51,7 +51,12 @@
           </v-toolbar>
           <v-row>
             <v-col
-              v-for="(key, index) in ['匹配 URL', '匹配标签', '标记为', '操作']"
+              v-for="(key, index) in [
+                $t('match-url-pattern'),
+                $t('match-tag'),
+                $t('tag'),
+                $t('operations'),
+              ]"
               :key="index"
               >{{ key }}</v-col
             >
@@ -90,7 +95,7 @@
               <v-icon>mdi-chevron-left</v-icon>
             </v-btn>
             <span class="mr-4 ml-4 grey--text">
-              第 {{ page }} / {{ numberOfPages }} 页
+              {{ $t("pagination", { page, total: numberOfPages }) }}
             </span>
             <v-btn
               small

@@ -1,7 +1,7 @@
 <template>
   <v-dialog v-model="visible" width="unset">
     <v-card>
-      <v-card-title>标签</v-card-title>
+      <v-card-title>{{ $t("tagging") }}</v-card-title>
       <v-card-text style="height: 400px">
         <v-combobox
           autofocus
@@ -20,11 +20,19 @@
         ></v-combobox>
         <v-expansion-panels>
           <v-expansion-panel dense key="batched">
-            <v-expansion-panel-header>批量添加</v-expansion-panel-header>
+            <v-expansion-panel-header>{{
+              $t("tag-batch")
+            }}</v-expansion-panel-header>
             <v-expansion-panel-content>
-              <v-text-field v-model="batch" label="文本"></v-text-field>
-              <v-text-field v-model="batch_delim" label="分隔符"></v-text-field>
-              <v-text-field v-model="batch_prefix" label="前缀"></v-text-field>
+              <v-text-field v-model="batch" :label="$t('text')"></v-text-field>
+              <v-text-field
+                v-model="batch_delim"
+                :label="$t('delimiter')"
+              ></v-text-field>
+              <v-text-field
+                v-model="batch_prefix"
+                :label="$t('prefix')"
+              ></v-text-field>
             </v-expansion-panel-content>
           </v-expansion-panel>
         </v-expansion-panels>
@@ -37,7 +45,7 @@
             visible = false;
           "
         >
-          确定
+          {{ $t('ok') }}
         </v-btn>
         <v-btn
           @click="
@@ -45,7 +53,7 @@
             visible = false;
           "
         >
-          取消
+          {{ $t('cancel') }}
         </v-btn>
       </v-card-actions>
     </v-card>

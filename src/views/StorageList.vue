@@ -1,9 +1,9 @@
 <template>
   <v-card flat>
-    <v-card-title>文件</v-card-title>
+    <v-card-title>{{ $t("file-storage") }}</v-card-title>
     <v-card-text>
       <v-btn color="primary" @click="open_file_dialog()">
-        <v-icon>mdi-upload</v-icon> 上传文件
+        <v-icon>mdi-upload</v-icon> {{ $t("upload") }}
       </v-btn>
       <v-progress-linear v-show="progress > 0" v-bind="progress" />
       <input
@@ -28,11 +28,12 @@
                 <v-icon v-else>mdi-arrow-left-circle</v-icon>
               </v-btn>
 
-              {{ f.name == ".." ? "返回上一级" : f.name }}
+              {{ f.name == ".." ? $t("parent-dir") : f.name }}
 
               <div class="description" v-if="f.type == 'file'">
-                大小: {{ (f.size / 1024 / 1024).toFixed(2) }} MB 创建于:
-                {{ (f.ctime * 1000) | dateSafe }} 修改于:
+                {{ $t("size") }}: {{ (f.size / 1024 / 1024).toFixed(2) }} MB
+                {{ $t("created-at") }}: {{ (f.ctime * 1000) | dateSafe }}
+                {{ $t("modified-at") }}:
                 {{ (f.mtime * 1000) | dateSafe }}
               </div>
             </v-col>
@@ -104,7 +105,7 @@ export default {
     },
     install_plugin(f) {
       api.call("plugins", { url: f.fullpath }).then((data) => {
-        if (data.result) api.notify("安装成功");
+        if (data.result) api.notify(this.$t("installed"));
       });
     },
     update_files() {

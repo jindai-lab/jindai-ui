@@ -1,38 +1,39 @@
 <template>
   <v-card flat>
-    <v-card-title>账户设置</v-card-title>
+    <v-card-title>{{ $t("account") }}</v-card-title>
     <v-card-text>
       <v-text-field
         v-model="old_password"
         type="password"
-        label="原密码"
+        :label="$t('password-old')"
       ></v-text-field>
       <v-text-field
         v-model="password"
         type="password"
-        label="新密码"
+        :label="$t('password-new')"
       ></v-text-field>
       <v-text-field
         v-model="password2"
         type="password"
-        label="重复新密码"
+        :label="$t('password-repeated')"
       ></v-text-field>
       <v-sheet v-show="otp_secret" class="otp-info">
         <v-row>
           <div class="qrcode" ref="qrCodeUrl"></div>
           <div class="ml-5">
-            请使用 Authenticator 扫描上述二维码，或输入如下信息：{{ otp_secret }}<br>
-            本信息仅显示一次。
+            {{ $t("otp-prompt", { otp_secret }) }}
           </div>
         </v-row>
       </v-sheet>
     </v-card-text>
     <v-card-actions>
       <v-btn color="primary" class="ml-3" @click="update_password">
-        更新密码
+        {{ $t("password-update") }}
       </v-btn>
-      <v-btn @click="change_otp(true)" v-if="!otp">启用 OTP 登录</v-btn>
-      <v-btn @click="change_otp(false)" v-else>关闭 OTP 登录</v-btn>
+      <v-btn @click="change_otp(true)" v-if="!otp">{{
+        $t("otp-enable")
+      }}</v-btn>
+      <v-btn @click="change_otp(false)" v-else>{{ $t("otp-disable") }}</v-btn>
     </v-card-actions>
   </v-card>
 </template>
@@ -55,33 +56,31 @@ export default {
     };
   },
   mounted() {
-    api
-      .call("authenticate")
-      .then((data) => {
-        this.otp = data.result.otp_secret
-        this.username = data.result.username
-      });
+    api.call("authenticate").then((data) => {
+      this.otp = data.result.otp_secret;
+      this.username = data.result.username;
+    });
   },
   methods: {
     update_password() {
       if (this.password !== this.password2) {
-        api.notify({ text: "新密码需保持一致" });
+        api.notify({ text: this.$t("password-dismatch") });
       } else {
         api
           .call("account/", {
             old_password: this.old_password,
             password: this.password,
           })
-          .then(api.notify("更改成功"));
+          .then(api.notify(this.$t("updated")));
       }
     },
     change_otp(otp) {
       api.call("account/", { otp }).then((data) => {
-        api.notify("更改成功");
+        api.notify(this.$t("updated"));
         this.otp = otp;
         if (otp && data.result) {
           this.otp_secret = data.result;
-          this.create_qr_code()
+          this.create_qr_code();
         }
       });
     },

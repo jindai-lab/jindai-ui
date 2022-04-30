@@ -1,6 +1,6 @@
 <template>
   <v-card flat>
-    <v-card-title>数据集</v-card-title>
+    <v-card-title>{{ $t("datasets") }}</v-card-title>
     <v-card-text>
       <v-list two-line>
         <draggable v-model="datasets">
@@ -14,7 +14,10 @@
                     class="oper"
                     icon
                     @click="
-                      rename_collection(ds.name, prompt('更名为：', ds.name))
+                      rename_collection(
+                        ds.name,
+                        prompt($t('raname-to'), ds.name)
+                      )
                     "
                   >
                     <v-icon>mdi-form-textbox</v-icon>
@@ -47,7 +50,7 @@
         /></v-col>
       </v-row>
       <v-btn @click="save" color="primary">
-        <v-icon>mdi-check</v-icon> 保存
+        <v-icon>mdi-check</v-icon> {{ $t("save") }}
       </v-btn>
     </v-card-text></v-card
   >
@@ -87,11 +90,11 @@ export default {
       coll[field] = value;
       api
         .call("datasets", { dataset: coll })
-        .then(() => api.notify({ title: "更新成功" }));
+        .then(() => api.notify({ title: $t("updated") }));
     },
     save() {
       if (this.valid.length > 0) {
-        alert("请更正填写错误的项");
+        alert(this.$t("invalid-input"));
         return;
       }
       api
@@ -100,7 +103,7 @@ export default {
             Object.assign({}, x, { order_weight: i, sources: null })
           ),
         })
-        .then(() => api.notify({ title: "保存成功" }));
+        .then(() => api.notify({ title: $t("saved") }));
     },
     append_dataset() {
       if (!this.input_coll.name) return;
@@ -111,13 +114,13 @@ export default {
       if (from && to)
         api
           .call("datasets", { rename: { from, to } })
-          .then(() => api.notify({ title: "重命名成功" }))
+          .then(() => api.notify({ title: $t("renamed") }))
           .then(this.load_datasets);
     },
     refresh_sources(name) {
       api
         .call("datasets", { sources: { name } })
-        .then(() => api.notify({ title: "刷新完成" }));
+        .then(() => api.notify({ title: $t("refreshed") }));
     },
   },
 };

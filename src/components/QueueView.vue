@@ -1,64 +1,80 @@
 <template>
   <div>
-    <a link style="color: white; text-decoration: none" @click="show_finished = true">
-    <v-badge
-      :value="data.finished.length > 0"
-      :content="data.finished.length"
-      color="green"
+    <a
+      link
+      style="color: white; text-decoration: none"
+      @click="show_finished = true"
     >
-    处理结果
-    </v-badge>
-    <v-badge class="ml-5 mr-5"
-      :value="data.waiting.length > 0"
-      :content="data.waiting.length"
-    >
-    等待中
-    </v-badge>
-    <v-badge color="orange" :value="data.running.length > 0" :content="data.running.length">
-    正在运行      
-    </v-badge>
+      <v-badge
+        :value="data.finished.length > 0"
+        :content="data.finished.length"
+        color="green"
+      >
+        {{ $t("finished") }}
+      </v-badge>
+      <v-badge
+        class="ml-5 mr-5"
+        :value="data.waiting.length > 0"
+        :content="data.waiting.length"
+      >
+        {{ $t("waiting") }}
+      </v-badge>
+      <v-badge
+        color="orange"
+        :value="data.running.length > 0"
+        :content="data.running.length"
+      >
+        {{ $t("running") }}
+      </v-badge>
     </a>
     <v-dialog v-model="show_finished">
       <v-card>
-        <v-card-title>已完成的任务
+        <v-card-title
+          >{{ $t("finished-tasks") }}
           <v-spacer></v-spacer>
-          <v-btn icon @click="show_finished=false"><v-icon>mdi-close</v-icon></v-btn>
+          <v-btn icon @click="show_finished = false"
+            ><v-icon>mdi-close</v-icon></v-btn
+          >
         </v-card-title>
         <v-card-text v-if="data.finished.length > 0">
           <div v-for="task in data.finished" :key="task.id">
-                      <h4>{{ task.name }}</h4>
-          <span>{{ task.id.split("/")[0] }}</span>
-          运行于:
-          {{ new Date(task.last_run + ' UTC') | dateSafe }}<br />
-          <v-btn :href="download_link(task)" v-if="!task.isnull" target="_blank">
-            <v-icon>mdi-download</v-icon> 下载
-          </v-btn>
-          <v-btn
-            class="ml-3"
-            @click="view_result(task)"
-            v-if="task.viewable"
-          >
-            <v-icon>mdi-eye</v-icon> 查看
-          </v-btn>
-          <v-btn class="ml-3" @click="delete_result(task)">
-            <v-icon>mdi-delete</v-icon> 删除
-          </v-btn>
-          <v-divider class="mt-5"></v-divider>
+            <h4>{{ task.name }}</h4>
+            <span>{{ task.id.split("/")[0] }}</span>
+            {{ $t("run-at") }}: {{ new Date(task.last_run + " UTC") | dateSafe
+            }}<br />
+            <v-btn
+              :href="download_link(task)"
+              v-if="!task.isnull"
+              target="_blank"
+            >
+              <v-icon>mdi-download</v-icon>
+            </v-btn>
+            <v-btn class="ml-3" @click="view_result(task)" v-if="task.viewable">
+              <v-icon>mdi-eye</v-icon>
+            </v-btn>
+            <v-btn class="ml-3" @click="delete_result(task)">
+              <v-icon>mdi-delete</v-icon>
+            </v-btn>
+            <v-divider class="mt-5"></v-divider>
           </div>
         </v-card-text>
-        <v-card-text v-else>没有已完成的任务。</v-card-text>
-        <v-card-title>正在运行的任务</v-card-title>
+        <v-card-text v-else>{{ $t("no-available") }}</v-card-text>
+        <v-card-title>{{ $t("running-tasks") }}</v-card-title>
         <v-card-text>
           <div v-for="task in data.running" :key="task" class="mb-5">
             {{ task }}
-            <v-btn @click="delete_result({id: task})"><v-icon>mdi-stop</v-icon> 终止</v-btn>
+            <v-btn @click="delete_result({ id: task })"
+              ><v-icon>mdi-stop</v-icon></v-btn
+            >
           </div>
         </v-card-text>
-        <v-card-title>正在等待的任务</v-card-title>
+        <v-card-title>{{ $t("waiting-tasks") }}</v-card-title>
         <v-card-text>
           <div v-for="task in data.waiting" :key="task" class="mb-5">
             {{ task }}
-            <v-btn @click="delete_result({id: task})"><v-icon>mdi-delete</v-icon> 取消</v-btn>
+            <v-btn @click="delete_result({ id: task })"
+              ><v-icon>mdi-stop</v-icon></v-btn
+            >
           </div>
         </v-card-text>
       </v-card>
@@ -67,8 +83,7 @@
 </template>
 
 <script>
-
-import api from '../api'
+import api from "../api";
 
 export default {
   data() {
@@ -79,18 +94,18 @@ export default {
   props: ["data"],
   methods: {
     download_link(task) {
-      return '/api/queue/' + encodeURIComponent(task.id)
+      return "/api/queue/" + encodeURIComponent(task.id);
     },
     delete_result(task) {
-      var id = encodeURIComponent(task.id)
+      var id = encodeURIComponent(task.id);
       api.delete("queue/" + id).then(() => {
         api.notify({ title: "成功删除" });
-        this.$emit('updated', {})
+        this.$emit("updated", {});
       });
     },
     view_result(task) {
-      var id = encodeURIComponent(task.id)
-      this.$router.push("/results/" + id).catch(()=>{});
+      var id = encodeURIComponent(task.id);
+      this.$router.push("/results/" + id).catch(() => {});
       this.show_finished = false;
     },
   },

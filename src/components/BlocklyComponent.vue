@@ -3,8 +3,8 @@
     <div id="blocklyDiv" class="blocklyDiv" ref="blocklyDiv"></div>
     <xml ref="blocklyToolbox" style="display: none"></xml>
     <div class="options">
-      <v-btn color="primary" @click="save">保存</v-btn>
-      <v-btn class="ml-5" @click="$emit('cancel')">取消</v-btn>
+      <v-btn color="primary" @click="save">{{ $t("save") }}</v-btn>
+      <v-btn class="ml-5" @click="$emit('cancel')">{{ $t("cancel") }}</v-btn>
     </div>
   </div>
 </template>
@@ -178,18 +178,18 @@ export default {
       ];
 
       const constants = Object.entries({
-        文件来源: 'source__file',
-        网页来源: 'source__url',
-        文件页码: 'source__page',
-        页码: 'pagenum',
-        日期: 'pdate',
-        关键词和标签: 'keywords',
-        内容: 'content',
-        语言: 'lang',
-        数据集: 'dataset',
-        大纲: 'outline',
-        图像: 'images'
-      })
+        文件来源: "source__file",
+        网页来源: "source__url",
+        文件页码: "source__page",
+        页码: "pagenum",
+        日期: "pdate",
+        关键词和标签: "keywords",
+        内容: "content",
+        语言: "lang",
+        数据集: "dataset",
+        大纲: "outline",
+        图像: "images",
+      });
 
       toolbox.contents.push({
         kind: "category",
@@ -207,20 +207,20 @@ export default {
             kind: "block",
             type: "logic_boolean",
           },
-          ...constants.map(cst => {
+          ...constants.map((cst) => {
             var item = {
-                kind: "block",
-                type: `constant_${cst[1]}`,
-                name: cst[0],
-                message0: cst[0],
-                args0: [],
-                output: "String",
-                color: 160,
-              }
+              kind: "block",
+              type: `constant_${cst[1]}`,
+              name: cst[0],
+              message0: cst[0],
+              args0: [],
+              output: "String",
+              color: 160,
+            };
             Blockly.Blocks[item.type] = {
               init() {
                 this.jsonInit(item);
-              }
+              },
             };
             return { kind: "block", type: item.type };
           }),
@@ -303,33 +303,42 @@ export default {
       }
     },
     from_field_expr(block) {
-      var op = ''
+      var op = "";
       block.type = block.getAttribute("type");
-      switch(block.type) {
-        case 'math_number':
-        case 'text':
-        case 'text_multiline':
+      switch (block.type) {
+        case "math_number":
+        case "text":
+        case "text_multiline":
           return this.auto_parse(
-                block.getElementsByTagName("field")[0].innerHTML
-              );
-        case 'logic_compare':
-          op = block.querySelector('field[name="OP"]').textContent
-          return this.from_field_expr(block.querySelector('[name=A]')) + {
-            'EQ': '=',
-            'LT': '<',
-            'LE': '<=',
-            'GT': '>',
-            'GE': ">=",
-            'NE': '!='
-          }[op] + this.from_field_expr(block.querySelector('[name=B]'))
+            block.getElementsByTagName("field")[0].innerHTML
+          );
+        case "logic_compare":
+          op = block.querySelector('field[name="OP"]').textContent;
+          return (
+            this.from_field_expr(block.querySelector("[name=A]")) +
+            {
+              EQ: "=",
+              LT: "<",
+              LE: "<=",
+              GT: ">",
+              GE: ">=",
+              NE: "!=",
+            }[op] +
+            this.from_field_expr(block.querySelector("[name=B]"))
+          );
         default:
-          if (block.type.startsWith('constant_'))
-            return block.type.split('_', 2)[1].replace(/__/g, '.')
-          if (block.type.startsWith('function_'))
-            return block.type.split('_', 2)[1] + '(' + this.from_field_expr(block.type.querySelector('[name=VALUE]')) + ')'
-          break
+          if (block.type.startsWith("constant_"))
+            return block.type.split("_", 2)[1].replace(/__/g, ".");
+          if (block.type.startsWith("function_"))
+            return (
+              block.type.split("_", 2)[1] +
+              "(" +
+              this.from_field_expr(block.type.querySelector("[name=VALUE]")) +
+              ")"
+            );
+          break;
       }
-      return ''
+      return "";
     },
     from_xml(block) {
       var j = [];
@@ -347,7 +356,9 @@ export default {
               break;
             case "field":
             case "value":
-              obj.args[child.getAttribute("name")] = this.from_field_expr(child.children[0])
+              obj.args[child.getAttribute("name")] = this.from_field_expr(
+                child.children[0]
+              );
               break;
             case "statement":
               obj.args[child.getAttribute("name")] = this.from_xml(

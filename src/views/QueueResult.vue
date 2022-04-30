@@ -1,6 +1,6 @@
 <template>
   <v-card flat>
-    <v-card-title>任务结果 {{ id }}</v-card-title>
+    <v-card-title>{{ $t("task-result") }} {{ id }}</v-card-title>
     <v-card-text>
       <p v-if="prompt" v-html="prompt"></p>
       <ResultsView
@@ -9,7 +9,7 @@
         ref="results"
       />
       <iframe v-else-if="redirect" :src="redirect" />
-      <div v-else>结果为文件或其他类型，请直接下载</div>
+      <div v-else>{{ $t("task-file-result") }}</div>
     </v-card-text>
   </v-card>
 </template>

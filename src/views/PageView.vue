@@ -51,8 +51,8 @@
                 />
               </div>
               <div class="mt-5 meta" v-if="active_paragraph">
-                日期: {{ active_paragraph.pdate | dateSafe }}<br />
-                页码: {{ active_paragraph.pagenum }}
+                {{ $t("date") }}: {{ active_paragraph.pdate | dateSafe }}<br />
+                {{ $t("pagenum") }}: {{ active_paragraph.pagenum }}
                 <v-btn
                   icon
                   small
@@ -63,8 +63,8 @@
                   ><v-icon small>mdi-form-textbox</v-icon></v-btn
                 >
                 <br />
-                大纲: {{ active_paragraph.outline }}<br />
-                来源:
+                {{ $t("outline") }}: {{ active_paragraph.outline }}<br />
+                {{ $t("source") }}:
                 <a
                   :href="active_paragraph.source.url"
                   v-if="active_paragraph.source.url"
@@ -114,7 +114,7 @@
           <v-dialog v-model="pagenum_edit" width="unset">
             <v-card>
               <v-card-title
-                >编辑页码
+                >{{ $t("edit-pagenum") }}
                 <v-spacer></v-spacer>
                 <v-btn icon @click="pagenum_edit = false"
                   ><v-icon>mdi-close</v-icon></v-btn
@@ -123,20 +123,22 @@
               <v-card-text>
                 <v-sheet>
                   <ParamInput
-                    :arg="{ name: '页码', type: 'int' }"
+                    :arg="{ name: $t('pagenum'), type: 'int' }"
                     v-model="pagenum_editor.new_pagenum"
                   />
                   <ParamInput
                     :arg="{
-                      name: '页码',
-                      type: '修改全部页面:all|只修改当前页面:solo|只修改本页之后的页面:after',
+                      name: $t('modify-mode'),
+                      type: $t('pagenum-modes'),
                     }"
                     v-model="pagenum_editor.sequential"
                   />
                 </v-sheet>
               </v-card-text>
               <v-card-actions>
-                <v-btn color="primary" @click="save_pagenum">确定</v-btn>
+                <v-btn color="primary" @click="save_pagenum">{{
+                  $t("ok")
+                }}</v-btn>
               </v-card-actions>
             </v-card>
           </v-dialog>
