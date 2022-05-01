@@ -44,7 +44,7 @@
         <div id="pipeline">
           <h2>
             {{ $t("pipeline") }}
-            <v-btn @click="blockly = true" v-if="pipelines"
+            <v-btn @click="blockly = true" class="ml-5" v-if="pipelines"
               ><v-icon>mdi-layers</v-icon> {{ $t("design-view") }}</v-btn
             >
           </h2>

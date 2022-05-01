@@ -188,6 +188,7 @@ export default {
     },
     ui_language(val) {
       setup(val);
+      api.locale = val;
     },
   },
   created() {

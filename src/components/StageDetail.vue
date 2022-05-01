@@ -16,25 +16,27 @@
         <div v-if="arg.type !== 'pipeline'">
           <v-row>
             <v-col>
-              {{ arg.description.replace("%1", arg.name)
-              }}<ParamInput
-                :arg="arg"
-                v-model="value[1][arg.name]"
-                @validation="update_valid('stage_' + arg.name, $event)"
-              />
-            </v-col>
-            <v-col cols="1">
-              <v-btn
-                @click="
-                  update_shortcut(
-                    map_id + '.' + arg.name,
-                    arg.description || arg.name
-                  )
-                "
-                icon
-              >
-                <v-icon>mdi-asterisk</v-icon>
-              </v-btn>
+              <div class="stage-input">
+                {{ arg.description.replace("%1", arg.name)
+                }}<ParamInput
+                  :arg="arg"
+                  v-model="value[1][arg.name]"
+                  @validation="update_valid('stage_' + arg.name, $event)"
+                />
+              </div>
+              <div class="asterisk">
+                <v-btn
+                  @click="
+                    update_shortcut(
+                      map_id + '.' + arg.name,
+                      arg.description || arg.name
+                    )
+                  "
+                  icon
+                >
+                  <v-icon>mdi-asterisk</v-icon>
+                </v-btn>
+              </div>
             </v-col>
           </v-row>
         </div>
@@ -108,3 +110,15 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+.stage-input {
+  width: calc(100% - 60px);
+  display: inline-block;
+}
+.asterisk {
+  width: 50px;
+  margin-left: 10px;
+  display: inline-block;
+}
+</style>
