@@ -71,10 +71,12 @@
           <v-list-item-title><v-icon>mdi-web</v-icon></v-list-item-title>
           <v-select
             v-model="ui_language"
-            :items="[
-              { text: 'English', value: 'en' },
-              { text: '简体中文', value: 'chs' },
-            ]"
+            :items="
+              Object.entries($i18n.messages).map((pair) => ({
+                value: pair[0],
+                text: pair[1]._lang,
+              }))
+            "
           ></v-select>
         </v-list-item>
       </v-list>

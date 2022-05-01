@@ -80,9 +80,9 @@ export default {
     },
   },
   mounted() {
-    api.call("help/pipelines").then((data) => {
-      for (var k in data.result) {
-        Object.assign(this.stages, data.result[k]);
+    api.help_pipelines().then((data) => {
+      for (var k in data) {
+        Object.assign(this.stages, data[k]);
       }
       api.call("tasks/" + this.id).then((data) => {
         this.task = data.result;

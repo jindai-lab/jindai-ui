@@ -187,6 +187,30 @@ export default {
         return x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     },
 
+    help_pipelines() {
+        if (!this._pipelines)
+            return this.call("help/pipelines").then((data) => {
+                this._pipelines = data.result;
+                return data.result;
+            });
+        else
+            return new Promise((accept, reject) => {
+                accept(this._pipelines);
+            });
+    },
+
+    help_langs() {
+        if (!this._langs)
+            return this.call("help/langs").then((data) => {
+                this._langs = data.result;
+                return data.result;
+            });
+        else
+            return new Promise((accept, reject) => {
+                accept(this._langs);
+            });
+    },
+
     querify(obj) {
         function _debracket(x) {
             if (x.match(/^\(.*\)$/)) {

@@ -196,7 +196,7 @@ export default {
         default:
           return val;
       }
-      this.prompt = this.$t("match-type", {type: this.arg.type});
+      this.prompt = this.$t("match-type", { type: this.arg.type });
       return;
     },
     highlighter(code) {
@@ -219,10 +219,10 @@ export default {
           );
           break;
         case "PIPELINE":
-          api.call("help/pipelines").then(
+          api.help_langs.then(
             (data) =>
               (this.choices = [].concat(
-                ...Object.values(data.result).map((x) =>
+                ...Object.values(data).map((x) =>
                   Object.keys(x).map((k) => ({
                     text: `${x[k].doc} ${k}`,
                     value: k,
@@ -240,8 +240,8 @@ export default {
           );
           break;
         case "LANG":
-          api.call("help/langs").then((data) => {
-            for (var pair of Object.entries(data.result)) {
+          api.help_langs().then((data) => {
+            for (var pair of Object.entries(data)) {
               let key = pair[0],
                 val = pair[1];
               if (this.langs.indexOf(`:${key}`) >= 0) continue;
@@ -258,7 +258,7 @@ export default {
         x.name.match(types_check)
       );
       if (!droppedFiles.length) {
-        api.notify(this.$t("match-file-type", {type: types.join(", ")}));
+        api.notify(this.$t("match-file-type", { type: types.join(", ") }));
         return;
       }
       let file = droppedFiles[0];

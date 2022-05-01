@@ -88,8 +88,8 @@ export default {
     }
   },
   mounted () {
-    api.call("help/pipelines").then((data) => {
-      this.stages = data.result;
+    api.help_pipelines().then((data) => {
+      this.stages = data;
     });
     if (!Array.isArray(this.value))
         this.$emit("input", []);

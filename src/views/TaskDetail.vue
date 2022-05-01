@@ -144,7 +144,7 @@ export default {
       this.task = data.result;
     });
     api.call("tasks/").then((data) => (this.tasks = data.result));
-    api.call("help/pipelines").then((data) => (this.pipelines = data.result));
+    api.help_pipelines().then((data) => (this.pipelines = data));
   },
   computed: {
     user() {
@@ -191,7 +191,7 @@ export default {
     enqueue() {
       this.save().then((id) =>
         api.put("queue/", { id }).then((data) => {
-          this.notify(this.$t("task-enqueued", {task: data.result}));
+          this.notify(this.$t("task-enqueued", { task: data.result }));
         })
       );
     },
