@@ -90,7 +90,7 @@ export default {
       coll[field] = value;
       api
         .call("datasets", { dataset: coll })
-        .then(() => api.notify({ title: $t("updated") }));
+        .then(() => api.notify({ title: this.$t("updated") }));
     },
     save() {
       if (this.valid.length > 0) {
@@ -103,7 +103,7 @@ export default {
             Object.assign({}, x, { order_weight: i, sources: null })
           ),
         })
-        .then(() => api.notify({ title: $t("saved") }));
+        .then(() => api.notify({ title: this.$t("saved") }));
     },
     append_dataset() {
       if (!this.input_coll.name) return;
@@ -114,13 +114,13 @@ export default {
       if (from && to)
         api
           .call("datasets", { rename: { from, to } })
-          .then(() => api.notify({ title: $t("renamed") }))
+          .then(() => api.notify({ title: this.$t("renamed") }))
           .then(this.load_datasets);
     },
     refresh_sources(name) {
       api
         .call("datasets", { sources: { name } })
-        .then(() => api.notify({ title: $t("refreshed") }));
+        .then(() => api.notify({ title: this.$t("refreshed") }));
     },
   },
 };

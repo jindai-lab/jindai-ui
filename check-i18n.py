@@ -14,10 +14,11 @@ def load_json(json_src):
 
 def grep_text(vue_src):
     src = open(vue_src).read()
-    for i in re.findall(r'\$t\((.*?)\)', src):
-        name, args = i, ''
-        if ',' in name:
-            name, args = name.split(',', 1)
+    for i in re.findall(r'\$t\(([\'\"].*?[\'\"])([,\)])', src):
+        name, args = i
+        if args == ')':
+            args = ''
+        print(vue_src, name, args != '')
         yield name[1:-1], args
 
 

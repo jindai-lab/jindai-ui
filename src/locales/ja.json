@@ -30,7 +30,7 @@
     "image-full-size": "画像全体を表示する",
     "image-thumbnail": "サムネイル",
     "installed": "正常にインストールされました。",
-    "interval": "インターバル数（ミリ秒",
+    "playing-interval": "インターバル数（ミリ秒）",
     "invalid-input": "入力値が無効です。",
     "match-file-type": "ファイルは、以下のいずれかのタイプである必要があります。",
     "match-type": "入力値は",
@@ -141,5 +141,6 @@
     "task-result": "タスクの結果",
     "task-file-result": "課題の結果は、ファイルとしてダウンロードできます。",
     "_lang": "日本語",
-    "langs": "Auto:auto"
+    "langs": "Auto:auto",
+    "preferences": "設定"
 }

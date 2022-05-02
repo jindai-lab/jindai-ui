@@ -31,7 +31,7 @@
     "image-full-size": "显示全图",
     "image-thumbnail": "缩略图",
     "installed": "已成功安装。",
-    "interval": "间隔毫秒数",
+    "playing-interval": "播放间隔毫秒数",
     "invalid-input": "无效的输入值。",
     "langs": "自动:auto|简体中文:chs|繁体中文:cht|英文:en|德文:de|法文:fr|俄文:ru|西班牙文:es|葡萄牙文:pt|日文:ja|韩文/朝鲜文:kr|越南文:vn",
     "match-file-type": "文件应为下列类型之一: %{type}",
@@ -141,5 +141,6 @@
     "edit-pagenum": "编辑页码",
     "modify-mode": "修改模式",
     "task-result": "任务结果",
-    "task-file-result": "任务结果为文件，请下载。"
+    "task-file-result": "任务结果为文件，请下载。",
+    "preferences": "设置"
 }

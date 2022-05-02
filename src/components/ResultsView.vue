@@ -1,23 +1,11 @@
 <template>
   <v-sheet v-if="total !== 0" ref="results" :class="config.view_mode">
     <div class="tools">
-      <v-text-field
-        class="d-inline-block mr-5 selector"
-        :label="$t('page-size')"
-        v-model="config.page_size"
-        @change="_save_config"
-        type="number"
-        dense
-        :style="{ width: '50px' }"
-        >50</v-text-field
-      >
-
       <v-btn-toggle
         mandatory
         class="view-mode-toggler"
         dense
         v-model="config.view_mode"
-        @change="_save_config"
       >
         <v-btn value="list">
           <v-icon>mdi-view-list</v-icon>
@@ -30,30 +18,9 @@
         </v-btn>
       </v-btn-toggle>
     </div>
-    <!-- gallery toolbar -->
-    <div v-if="config.view_mode == 'gallery'" class="gallery-toolbar">
-      <v-checkbox
-        flat
-        v-model="config.contain"
-        :label="$t('image-full-size')"
-        @change="_save_config"
-      ></v-checkbox>
-      <v-checkbox
-        flat
-        v-model="config.force_thumbnail"
-        :label="$t('image-thumbnail')"
-        @change="_save_config"
-      ></v-checkbox>
-      <v-checkbox
-        flat
-        v-model="config.enhance"
-        :label="$t('image-enhance')"
-        @change="_save_config"
-      ></v-checkbox>
-    </div>
     <!-- total results count -->
     <div class="count" v-show="total !== null">
-      {{ $t("found-results", {total}) }}
+      {{ $t("found-results", { total }) }}
     </div>
     <!-- divider -->
     <v-divider class="mt-5 mb-5"></v-divider>
@@ -93,7 +60,7 @@
             @dblclick="view_page(index)"
             :contain="config.contain"
             :height="200"
-            :src="get_item_image(r.images[0])"
+            :src="get_paragraph_image(r)"
           ></v-img>
           <ContentView
             :view_mode="config.view_mode"
@@ -167,9 +134,21 @@
         <label> {{ $t("pagenum") }}</label>
         <v-text-field
           class="d-inline-block ml-1"
-          style="max-width: 30px"
+          style="max-width: 40px"
+          type="number"
+          dense
           @change="page = parseInt($event) || page"
         ></v-text-field>
+      </div>
+      <div>
+        <label>{{ $t("page-size") }}</label>
+        <v-select
+          :items="[20, 50, 100, 200]"
+          dense
+          class="d-inline-block ml-1"
+          style="max-width: 50px"
+          v-model="config.page_size"
+        ></v-select>
       </div>
     </v-row>
     <!-- dialogs -->
@@ -312,10 +291,6 @@
       @merge="merge"
       @split="split"
       @play="playing"
-      @playing-interval="
-        config.playing_interval = +$event;
-        _save_config();
-      "
       :playing_interval="config.playing_interval"
       @reset-storage="reset_storage"
     />
@@ -352,16 +327,15 @@ export default {
       token: null,
       page_range: [0, 0],
       plugin_pages: [],
-      // local config
-      config: {
-        fit: "both",
-        contain: false,
-        enhance: false,
-        force_thumbnail: false,
-        playing_interval: 1000,
-        view_mode: "list",
-        page_size: 50,
-      },
+      config: new Proxy(api.config, {
+        get(target, name) {
+          return target[name];
+        },
+        set: (target, name, val) => {
+          target[name] = val;
+          this.$forceUpdate();
+        },
+      }),
       // dialog bools
       dialogs: {
         embedded: {
@@ -411,7 +385,7 @@ export default {
       for (
         let index = 0, i = 1;
         index < (this.total || this.value.length) && i <= 1000;
-        index += +this.config.page_size, i++
+        index += api.config.page_size, i++
       ) {
         p.push(i);
       }
@@ -420,10 +394,10 @@ export default {
     visible_data() {
       return this.value
         .slice(this.offset - this.page_range[0])
-        .slice(0, +this.config.page_size);
+        .slice(0, api.config.page_size);
     },
     offset() {
-      return (this.page - 1) * +this.config.page_size;
+      return (this.page - 1) * api.config.page_size;
     },
     columns() {
       var cols = new Set();
@@ -434,7 +408,6 @@ export default {
     },
   },
   mounted() {
-    this.config = api.load_config("results", this.config);
     this.start();
 
     api.call("plugins/shortcuts").then((data) => {
@@ -484,7 +457,7 @@ export default {
         this.total = null;
         this.$emit("load", {
           offset: this.offset,
-          limit: +this.config.page_size * 5,
+          limit: api.config.page_size * 5,
           callback: (data) => {
             if (this.token > data.token) return;
             this.token = data.token;
@@ -519,10 +492,9 @@ export default {
       this.clear_selection();
     },
     playing() {
-      if (this.config.view_mode != "gallery") return;
+      if (api.config.view_mode != "gallery") return;
       this.view_page(0);
-      this.$refs.page_view.playing(this.config.playing_interval);
-      this._save_config();
+      this.$refs.page_view.playing(api.config.playing_interval);
     },
     _keyup_handler(e) {
       if (e.target.tagName == "INPUT" || e.target.tagName == "TEXTAREA") return;
@@ -661,9 +633,6 @@ export default {
     _show_dialog(dialog) {
       this.drawer = false;
       this.dialogs[dialog] = true;
-    },
-    _save_config() {
-      api.save_config("results", this.config);
     },
     fav(r) {
       api.fav(r);
@@ -830,7 +799,7 @@ export default {
         (x) => x._id
       );
       if (val.item) delete val.item;
-      if (this.config.view_mode == "gallery") {
+      if (api.config.view_mode == "gallery") {
         api.call("imageitem/rating", val).then((data) => {
           data = data.result || {};
           this.clear_selection(s);
@@ -891,8 +860,8 @@ export default {
         })
         .then(() => this.clear_selection(s));
     },
-    get_item_image(i) {
-      return api.get_item_image(i);
+    get_paragraph_image(i) {
+      return api.get_paragraph_image(i);
     },
   },
 };
@@ -927,15 +896,6 @@ export default {
   display: none;
 }
 
-.gallery-toolbar > * {
-  margin: 5px;
-}
-
-.gallery-toolbar {
-  display: flex;
-  clear: both;
-}
-
 .wrapper-container {
   clear: both;
   margin: 0;
@@ -965,6 +925,7 @@ export default {
 .tools {
   padding-right: 12px;
   padding-bottom: 12px;
+  text-align: right;
 }
 
 .view-mode-toggler {

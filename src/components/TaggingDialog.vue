@@ -45,7 +45,7 @@
             visible = false;
           "
         >
-          {{ $t('ok') }}
+          {{ $t("ok") }}
         </v-btn>
         <v-btn
           @click="
@@ -53,7 +53,7 @@
             visible = false;
           "
         >
-          {{ $t('cancel') }}
+          {{ $t("cancel") }}
         </v-btn>
       </v-card-actions>
     </v-card>
@@ -96,10 +96,7 @@ export default {
     },
   },
   mounted() {
-    Object.assign(
-      this,
-      api.load_config("tagging", { batch_delim: ", ", batch_prefix: "*" })
-    );
+    Object.assign(this, api.config.tagging);
   },
   methods: {
     show(values) {
@@ -153,7 +150,10 @@ export default {
             .filter((x) => x)
             .map((x) => this.batch_prefix + x)
         );
-      api.save_config("tagging", { batch_delim: this.batch_delim });
+      api.config.tagging = {
+        batch_delim: this.batch_delim,
+        batch_prefix: this.batch_prefix,
+      };
       this.$emit(
         "submit",
         this.tag_new.map((x) => x.value || x) || [this.tag_typing]

@@ -56,7 +56,7 @@
                 @input="$emit('rating', { item: item, val: $event })"
               ></v-rating>
               <span class="grey--text text--lighten-2">
-                ({{ item.rating.toFixed(1) }})
+                ({{ item.rating ? item.rating.toFixed(1) : "" }})
               </span>
             </div>
             <div>
@@ -111,7 +111,6 @@ export default {
   props: ["paragraph", "item"],
   data() {
     return {
-      fit: "both",
       plugin_filters: [],
       browsing_page: 2,
     };
@@ -125,12 +124,6 @@ export default {
     api
       .call("plugins/filters")
       .then((data) => (this.plugin_filters = data.result));
-  },
-  mounted() {
-    var config = api.load_config("browse", {
-      fit: "both",
-    });
-    this.fit = config.fit;
   },
   computed: {
     browsing_video() {
@@ -190,7 +183,7 @@ export default {
       });
     },
     get_item_image(item) {
-      return api.get_item_image(item, this.config);
+      return api.get_item_image(item);
     },
     get_item_video(item) {
       return api.get_item_video(item);
@@ -209,7 +202,7 @@ export default {
         offsetY = 0,
         rr = imgr < 1 != scrr < 1;
 
-      if (this.fit == "both" && rr) {
+      if (api.config.fit == "both" && rr) {
         mode = 1 / imgr >= scrr ? "fit-height" : "fit-width";
         switch (mode) {
           case "fit-width":
@@ -227,7 +220,7 @@ export default {
         }
         transform = "rotate(90deg)";
       } else {
-        switch (this.fit) {
+        switch (api.config.fit) {
           case "both":
           case "maximize":
             mode = imgr >= scrr ? "fit-height" : "fit-width";
@@ -260,9 +253,8 @@ export default {
     },
     toggle_fits() {
       const fits = ["both", "visible", "maximize"];
-      this.fit = fits[(fits.indexOf(this.fit) + 1) % fits.length];
+      api.config.fit = fits[(fits.indexOf(api.config.fit) + 1) % fits.length];
       this.fit_image({ target: this.$refs.browsing_image });
-      api.save_config("browse", { fit: this.fit });
       this.$forceUpdate();
     },
     browse_next() {

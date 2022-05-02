@@ -102,7 +102,7 @@ export default {
     };
   },
   mounted() {
-    let config = api.load_config("main");
+    let config = api.config;
     if (config.page_size) this.page_size = +config.page_size;
     if (config.sort) this.sort = config.sort;
 
@@ -159,15 +159,7 @@ export default {
 
       return req;
     },
-    _save_config() {
-      api.save_config("main", {
-        page_size: this.page_size,
-        sort: this.sort == "random" ? "" : this.sort,
-        selected_datasets: this.selected_datasets,
-      });
-    },
     search(pagenum_preserve) {
-      this._save_config();
       this.external_json = null;
 
       if (this.selected_datasets.length == 0)
@@ -223,6 +215,8 @@ export default {
         groups:
           typeof this.groups === "object" ? this.groups.value : this.groups,
       };
+
+      if (params.sort !== "random") api.config.sort = params.sort;
 
       api.call("search", params, this.cancel_source).then((data) => {
         if (!data) {
@@ -303,7 +297,7 @@ export default {
       this.export_query(fmt, (data) => {
         api.put("queue/", { id: data.result }).then((ret) =>
           api.notify({
-            title: this.$t("task-enqueued", {task: ret.result}),
+            title: this.$t("task-enqueued", { task: ret.result }),
           })
         );
       });

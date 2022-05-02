@@ -69,22 +69,27 @@
         >{{ paragraph.source.url }}</a
       >
       {{ text }}
-      <a
-        v-for="tag in tags"
-        :key="`${paragraph._id}-${Math.random()}-${tag}`"
-        :href="
-          '/?q=' +
-          encodeURIComponent(
-            tag.match(/^[@*]/)
-              ? quote(tag)
-              : quote(tag) +
-                  (paragraph.author ? ',author=' + quote(paragraph.author) : '')
-          )
-        "
-        :class="['tag', 'chip', tag_class(tag)]"
-        target="_blank"
-        >{{ tag }}</a
-      >
+      <template v-for="tag in tags">
+        <a
+          v-if="tag != '...'"
+          :key="`${paragraph._id}-${Math.random()}-${tag}`"
+          :href="
+            '/?q=' +
+            encodeURIComponent(
+              tag.match(/^[@*]/)
+                ? quote(tag)
+                : quote(tag) +
+                    (paragraph.author
+                      ? ',author=' + quote(paragraph.author)
+                      : '')
+            )
+          "
+          :class="['tag', 'chip', tag_class(tag)]"
+          target="_blank"
+          >{{ tag }}</a
+        >
+        <span class="tag" :key="tag" v-else>...</span>
+      </template>
     </div>
   </div>
 </template>
@@ -113,7 +118,9 @@ export default {
       return api.favored(this.paragraph);
     },
     tags() {
-      return [...this.paragraph.keywords].sort().slice(0, 20);
+      var sorted = [...this.paragraph.keywords].filter((x) => x).sort();
+      if (sorted.length > 20) sorted = [...sorted.slice(0, 20), "..."];
+      return sorted;
     },
     text() {
       return this.paragraph.content || "";

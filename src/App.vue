@@ -26,11 +26,16 @@
           <template v-slot:activator>
             <v-list-item-title>{{ $t("user") }}</v-list-item-title>
           </template>
-          <v-list-item link @click="$router.push('/security')">
-            <v-list-item-title>{{ $t("account") }}</v-list-item-title>
-          </v-list-item>
-          <v-list-item link @click="$router.push('/history')">
-            <v-list-item-title>{{ $t("history") }}</v-list-item-title>
+          <v-list-item
+            v-for="item in [
+              ['preferences', 'preferences'],
+              ['history', 'history'],
+            ]"
+            :key="item[0]"
+            link
+            @click="$router.push(`/${item[1]}`)"
+          >
+            <v-list-item-title>{{ $t(item[0]) }}</v-list-item-title>
           </v-list-item>
           <v-list-item
             link
@@ -47,38 +52,23 @@
           <template v-slot:activator>
             <v-list-item-title>{{ $t("admin") }}</v-list-item-title>
           </template>
-          <v-list-item link @click="$router.push('/scheduler')" v-if="admin">
-            <v-list-item-title>{{ $t("schedule") }}</v-list-item-title>
-          </v-list-item>
-          <v-list-item link @click="$router.push('/storage')">
-            <v-list-item-title>{{ $t("file-storage") }}</v-list-item-title>
-          </v-list-item>
-          <v-list-item link @click="$router.push('/datasets')" v-if="admin">
-            <v-list-item-title>{{ $t("dataset") }}</v-list-item-title>
-          </v-list-item>
-          <v-list-item link @click="$router.push('/dbconsole')" v-if="admin">
-            <v-list-item-title>{{ $t("console") }}</v-list-item-title>
-          </v-list-item>
-          <v-list-item link @click="$router.push('/users')" v-if="admin">
-            <v-list-item-title>{{ $t("permissions") }}</v-list-item-title>
-          </v-list-item>
-          <v-list-item link @click="$router.push('/autotags')">
-            <v-list-item-title>{{ $t("auto-tagging") }}</v-list-item-title>
+
+          <v-list-item
+            v-for="item in [
+              ['schedule', 'scheduler'],
+              ['file-storage', 'storage'],
+              ['dataset', 'datasets'],
+              ['console', 'dbconsole'],
+              ['permissions', 'users'],
+              ['auto-tagging', 'autotags'],
+            ]"
+            :key="item[0]"
+            link
+            @click="$router.push(`/${item[1]}`)"
+          >
+            <v-list-item-title>{{ $t(item[0]) }}</v-list-item-title>
           </v-list-item>
         </v-list-group>
-
-        <v-list-item>
-          <v-list-item-title><v-icon>mdi-web</v-icon></v-list-item-title>
-          <v-select
-            v-model="ui_language"
-            :items="
-              Object.entries($i18n.messages).map((pair) => ({
-                value: pair[0],
-                text: pair[1]._lang,
-              }))
-            "
-          ></v-select>
-        </v-list-item>
       </v-list>
     </v-navigation-drawer>
 
@@ -151,7 +141,6 @@
 
 <script>
 import api from "./api";
-import { setup } from "./locales";
 import QueueView from "./components/QueueView.vue";
 
 export default {
@@ -176,7 +165,6 @@ export default {
       app_title: "Jindai",
       app_dark: false,
       copyright: "",
-      ui_language: "",
     };
   },
   watch: {
@@ -186,13 +174,8 @@ export default {
     app_title(val) {
       document.title = val;
     },
-    ui_language(val) {
-      setup(val);
-      api.locale = val;
-    },
   },
   created() {
-    this.ui_language = this.$i18n.locale;
     api.bus
       .$on("loading", (loading_num) => (this.loading = loading_num > 0))
       .$on("alert", (bundle) => {

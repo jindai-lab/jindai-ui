@@ -11,7 +11,7 @@
         no-data-text="无可用数据"
       >
         <template v-slot:header>
-          <v-toolbar class="mb-1" flat>
+          <v-toolbar flat>
             <v-text-field
               v-model="search"
               clearable
@@ -185,6 +185,6 @@ export default {
 
 <style scoped>
 .new-tag-data {
-  margin-left: 10px;
+  margin-left: 2vw;
 }
 </style>

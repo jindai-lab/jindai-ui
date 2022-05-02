@@ -206,12 +206,28 @@ export default {
       else return Object.assign({}, this.paragraphs[this.paragraph_index]);
     },
     active_item() {
-      return (this.active_paragraph.images || [])[this.item_index];
+      return (this.active_paragraph_images || [])[this.item_index];
     },
     shown_paragraphs() {
       return this.view_mode !== "file"
         ? [this.active_paragraph]
         : this.fetched_paragraphs;
+    },
+    active_paragraph_images() {
+      if (
+        this.active_paragraph &&
+        this.active_paragraph.images &&
+        this.active_paragraph.images.length
+      )
+        return this.active_paragraph.images;
+      if (
+        this.active_paragraph &&
+        this.active_paragraph.source &&
+        this.active_paragraph.source.file &&
+        this.active_paragraph.source.file.endsWith(".pdf")
+      )
+        return [this.active_paragraph];
+      return [];
     },
   },
   beforeDestroy() {
@@ -365,12 +381,12 @@ export default {
         ) {
           this.paragraph_index += inc;
           if (this.item_index < 0)
-            this.item_index = this.active_paragraph.images.length - 1;
+            this.item_index = this.active_paragraph_images.length - 1;
           else this.item_index = 0;
           if (
             this.view_mode == "gallery" &&
-            (!this.active_paragraph.images ||
-              this.active_paragraph.images.length == 0)
+            (!this.active_paragraph_images ||
+              this.active_paragraph_images.length == 0)
           )
             this._event_handler(direction);
         } else {
@@ -388,9 +404,9 @@ export default {
         case "gallery":
           // previous item
           if (
-            this.active_paragraph.images &&
+            this.active_paragraph_images &&
             this.item_index + inc >= 0 &&
-            this.item_index + inc < this.active_paragraph.images.length
+            this.item_index + inc < this.active_paragraph_images.length
           ) {
             this.item_index += inc;
             break;

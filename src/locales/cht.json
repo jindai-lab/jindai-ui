@@ -31,7 +31,7 @@
     "image-full-size": "顯示全圖",
     "image-thumbnail": "縮略圖",
     "installed": "已成功安裝。",
-    "interval": "間隔毫秒數",
+    "playing-interval": "播放間隔毫秒數",
     "invalid-input": "無效的輸入值。",
     "langs": "自動:auto|簡體中文:chs|繁體中文:cht|英文:en|德文:de|法文:fr|俄文:ru|西班牙文:es|葡萄牙文:pt|日文:ja|韓文/朝鮮文:kr|越南文:vn",
     "match-file-type": "文件應爲下列類型之一: %{type}",
@@ -141,5 +141,6 @@
     "edit-pagenum": "編輯頁碼",
     "modify-mode": "修改模式",
     "task-result": "任務結果",
-    "task-file-result": "任務結果爲文件，請下載。"
+    "task-file-result": "任務結果爲文件，請下載。",
+    "preferences": "設置"
 }

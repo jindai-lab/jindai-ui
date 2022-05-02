@@ -38,7 +38,7 @@
     "image-full-size": "Full Size",
     "image-thumbnail": "Thumbnails",
     "installed": "Installed.",
-    "interval": "Interval (ms)",
+    "playing-interval": "Playing interval (ms)",
     "invalid-input": "Invalid Input value.",
     "langs": "Auto:auto",
     "log-out": "Log Out",
@@ -141,5 +141,6 @@
     "modify-mode": "Modify Mode",
     "pagenum-modes": "All:all|Current Page Only:solo|Pages Following Only:after",
     "task-result": "Task Result",
-    "task-file-result": "Task Result is a file, please download it."
+    "task-file-result": "Task Result is a file, please download it.",
+    "preferences": "Preferences"
 }

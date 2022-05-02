@@ -38,7 +38,7 @@
 
       <v-list>
         <v-list-item>
-          <v-list-item-title @click="update_interval">{{
+          <v-list-item-title @click="$emit('play')">{{
             $t("play")
           }}</v-list-item-title>
         </v-list-item>
@@ -78,15 +78,6 @@ export default {
     },
     playing_interval: {
       default: 1000,
-    },
-  },
-  methods: {
-    update_interval() {
-      var val = prompt(this.$t("interval"), this.playing_interval);
-      if (val && +val > 0) {
-        this.$emit("playing-interval", +val);
-        this.$emit("play");
-      }
     },
   },
 };
