@@ -142,5 +142,7 @@
     "task-file-result": "課題の結果は、ファイルとしてダウンロードできます。",
     "_lang": "日本語",
     "langs": "Auto:auto",
-    "preferences": "設定"
+    "preferences": "設定",
+    "send-task": "タスクに送る",
+    "send-to": "... に"
 }

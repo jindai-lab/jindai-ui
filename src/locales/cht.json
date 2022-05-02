@@ -79,7 +79,7 @@
     "saved": "已保存。",
     "schedule": "計劃任務",
     "search": "搜索",
-    "separate": "分離",
+    "split": "分離",
     "shared": "共享",
     "shortcut-params": "快速任務參數",
     "size": "大小",
@@ -142,5 +142,7 @@
     "modify-mode": "修改模式",
     "task-result": "任務結果",
     "task-file-result": "任務結果爲文件，請下載。",
-    "preferences": "設置"
+    "preferences": "設置",
+    "send-task": "发送到任務",
+    "send-to": "发送到"
 }

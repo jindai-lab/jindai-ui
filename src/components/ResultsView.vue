@@ -98,6 +98,29 @@
               <v-icon>mdi-file-edit-outline</v-icon>
               {{ $t("edit") }}
             </v-btn>
+            <v-menu offset-y>
+              <template v-slot:activator="{ on, attrs }">
+                <v-btn class="d-inline-block" v-on="on" v-bind="attrs">
+                  <v-icon>mdi-send</v-icon>
+                  {{ $t("send-task") }}
+                </v-btn>
+              </template>
+              <v-list>
+                <v-list-item
+                  class="pointer"
+                  v-for="(item, index) in dialogs.send_task.quicktasks"
+                  :key="index"
+                >
+                  <v-list-item-title
+                    @click="
+                      set_selection([r]);
+                      send_task(item.value);
+                    "
+                    >{{ item.text }}</v-list-item-title
+                  >
+                </v-list-item>
+              </v-list>
+            </v-menu>
             <v-divider class="mt-5 mb-5"></v-divider>
           </div>
         </div>
@@ -265,6 +288,43 @@
       </v-card>
     </v-dialog>
 
+    <v-dialog v-model="dialogs.send_task.visible">
+      <v-card>
+        <v-card-title>
+          {{ $t("send-task") }}
+          <v-spacer></v-spacer>
+          <v-btn icon @click="dialogs.send_task.visible = false"
+            ><v-icon>mdi-close</v-icon></v-btn
+          >
+        </v-card-title>
+        <v-card-text class="mt-5">
+          <v-row>
+            <v-col>
+              <v-autocomplete
+                dense
+                :label="$t('send-to')"
+                :items="dialogs.send_task.quicktasks"
+                v-model="dialogs.send_task.pipeline"
+              ></v-autocomplete>
+              <v-btn
+                color="primary"
+                dense
+                @click="$refs.quicktask_results.start(1)"
+                ><v-icon>mdi-fast-forward</v-icon> {{ $t("run-now") }}</v-btn
+              >
+            </v-col>
+          </v-row>
+          <v-sheet>
+            <ResultsView
+              @load="quicktask"
+              ref="quicktask_results"
+              :total="dialogs.send_task.results_count"
+            />
+          </v-sheet>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+
     <tagging-shortcuts-dialog
       v-model="dialogs.tagging_shortcuts.visible"
       :choices="dialogs.tagging_shortcuts.list"
@@ -290,6 +350,7 @@
       @tag="show_tagging_dialog"
       @merge="merge"
       @split="split"
+      @task="send_task"
       @play="playing"
       :playing_interval="config.playing_interval"
       @reset-storage="reset_storage"
@@ -356,6 +417,12 @@ export default {
           visible: false,
           target: {},
         },
+        send_task: {
+          visible: false,
+          quicktasks: [],
+          pipeline: [],
+          results_count: null,
+        },
         tagging_shortcuts: {
           visible: false,
           list: [],
@@ -418,6 +485,14 @@ export default {
           value: data[k],
         });
     });
+
+    api.call("tasks/shortcuts").then(
+      (data) =>
+        (this.dialogs.send_task.quicktasks = data.result.map((task) => ({
+          text: task.name,
+          value: task.pipeline,
+        })))
+    );
   },
   created() {
     window.addEventListener("keyup", this._keyup_handler);
@@ -624,7 +699,40 @@ export default {
         )
         .then(() => {
           this.dialogs.edit.target = null;
-          api.notify({ title: "保存成功" });
+          api.notify({ title: $t("saved") });
+        });
+    },
+    send_task(target) {
+      this.dialogs.send_task.visible = true;
+      if (target) {
+        this.dialogs.send_task.pipeline = target;
+        this.$refs.quicktask_results.start(1);
+      }
+    },
+    quicktask(e) {
+      api
+        .call("quicktask", {
+          pipeline: [
+            [
+              "JSONDataSource",
+              {
+                content: JSON.stringify(
+                  this.selected_paragraphs().map((x) =>
+                    Object.assign({}, x, { matched_content: null })
+                  )
+                ),
+              },
+            ],
+            ...this.dialogs.send_task.pipeline.slice(1),
+          ],
+        })
+        .then((data) => {
+          e.callback({
+            result: data.result,
+            offset: 0,
+            total: data.result.length,
+            token: new Date().getTime(),
+          });
         });
     },
     _open_window(url) {
@@ -697,6 +805,12 @@ export default {
         else this.selection.splice(this.selection.indexOf(it), 1);
       }
 
+      this.selection_count = this.selection.length;
+    },
+    set_selection(sel) {
+      this.clear_selection();
+      sel.forEach((x) => (x.selected = true));
+      this.selection = sel;
       this.selection_count = this.selection.length;
     },
     toggle_selection() {

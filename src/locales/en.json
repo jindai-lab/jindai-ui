@@ -142,5 +142,8 @@
     "pagenum-modes": "All:all|Current Page Only:solo|Pages Following Only:after",
     "task-result": "Task Result",
     "task-file-result": "Task Result is a file, please download it.",
-    "preferences": "Preferences"
+    "preferences": "Preferences",
+    "split": "Split",
+    "send-task": "Send to Task",
+    "send-to": "Send to"
 }

@@ -79,7 +79,6 @@
     "saved": "已保存。",
     "schedule": "计划任务",
     "search": "搜索",
-    "separate": "分离",
     "shared": "共享",
     "shortcut-params": "快速任务参数",
     "size": "大小",
@@ -142,5 +141,8 @@
     "modify-mode": "修改模式",
     "task-result": "任务结果",
     "task-file-result": "任务结果为文件，请下载。",
-    "preferences": "设置"
+    "preferences": "设置",
+    "split": "分离",
+    "send-task": "发送到任务",
+    "send-to": "发送到"
 }

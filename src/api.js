@@ -26,6 +26,7 @@ function LocalConfig() {
             batch_delim: ", ",
             batch_prefix: "*",
         },
+        sort: "_id",
     };
 
     function _save_config(target) {

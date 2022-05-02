@@ -29,32 +29,20 @@
       <v-icon>mdi-group</v-icon>
     </v-btn>
 
-    <v-menu>
+    <v-menu top>
       <template v-slot:activator="{ on, attrs }">
         <v-btn fab small v-bind="attrs" v-on="on">
           <v-icon>mdi-dots-horizontal</v-icon>
         </v-btn>
       </template>
 
-      <v-list>
-        <v-list-item>
-          <v-list-item-title @click="$emit('play')">{{
-            $t("play")
-          }}</v-list-item-title>
-        </v-list-item>
-        <v-list-item>
-          <v-list-item-title @click="$emit('merge')">{{
-            $t("merge")
-          }}</v-list-item-title>
-        </v-list-item>
-        <v-list-item>
-          <v-list-item-title @click="$emit('split')">{{
-            $t("separate")
-          }}</v-list-item-title>
-        </v-list-item>
-        <v-list-item>
-          <v-list-item-title @click="$emit('reset-storage')">{{
-            $t("reset-storage")
+      <v-list class="pointer">
+        <v-list-item
+          v-for="item in ['play', 'merge', 'split', 'reset-storage', 'task']"
+          :key="item"
+        >
+          <v-list-item-title @click="$emit(item)">{{
+            $t(item)
           }}</v-list-item-title>
         </v-list-item>
         <v-list-item>
@@ -87,8 +75,8 @@ export default {
 .fabs {
   position: fixed;
   z-index: 300;
-  bottom: 30px;
-  right: 0px;
+  bottom: 50px;
+  right: 10px;
 }
 .fabs > * {
   margin: 5px;

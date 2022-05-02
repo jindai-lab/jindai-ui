@@ -204,4 +204,8 @@ p:hover .fav-button,
 .theme--dark .gallery-description .force-text {
   color: rgba(255, 255, 255, 0.6);
 }
+
+.paragraph > p {
+  font-family: Georgia, "Times New Roman", Times, serif;
+}
 </style>

@@ -281,4 +281,8 @@ em {
   white-space: nowrap;
   vertical-align: middle;
 }
+
+.pointer {
+  cursor: pointer;
+}
 </style>
