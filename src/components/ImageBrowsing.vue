@@ -44,7 +44,7 @@
         </v-col>
         <v-col cols="10" class="item-description" v-if="item">
           <v-row class="mt-3 mb-3">
-            <div class="mr-3">
+            <div class="mr-3" v-if="typeof item.rating == 'number'">
               <v-rating
                 style="display: inline-block"
                 v-model="item.rating"
@@ -55,8 +55,8 @@
                 size="18"
                 @input="$emit('rating', { item: item, val: $event })"
               ></v-rating>
-              <span class="grey--text text--lighten-2">
-                ({{ item.rating ? item.rating.toFixed(1) : "" }})
+              <span class="grey--text text--lighten-2"
+                >({{ item.rating.toFixed(1) }})
               </span>
             </div>
             <div>
