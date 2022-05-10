@@ -122,7 +122,7 @@
     "datasets": "データセット",
     "renamed": "リネームが成功しました。",
     "refreshed": "リフレッシュしています。",
-    "match-url-pattern": "URLパターンに一致する",
+    "match-cond": "條件",
     "match-tag": "マッチングタグ",
     "operations": "アクション",
     "pagination": "第 %{page} / %{total} 页",

@@ -24,21 +24,9 @@
           </v-toolbar>
           <v-toolbar flat class="mb-5">
             <v-text-field
-              v-model="new_tag.pattern"
-              :label="$t('match-url-pattern')"
+              v-model="new_tag.cond"
+              :label="$t('match-cond')"
             ></v-text-field>
-
-            <v-text-field
-              v-model="new_tag.from_tag"
-              class="new-tag-data"
-              :label="$t('match-tag')"
-              @input="
-                $event && $event.startsWith('@')
-                  ? (new_tag.tag = $event.replace(/@\d*/, '*'))
-                  : ''
-              "
-            ></v-text-field>
-
             <v-text-field
               v-model="new_tag.tag"
               :label="$t('tag')"
@@ -52,8 +40,7 @@
           <v-row>
             <v-col
               v-for="(key, index) in [
-                $t('match-url-pattern'),
-                $t('match-tag'),
+                $t('match-cond'),
                 $t('tag'),
                 $t('operations'),
               ]"
@@ -65,10 +52,7 @@
 
         <template v-slot:default="props">
           <v-row v-for="item in props.items" :key="item._id" cols="12">
-            <v-col
-              v-for="(key, index) in ['pattern', 'from_tag', 'tag']"
-              :key="index"
-            >
+            <v-col v-for="(key, index) in ['cond', 'tag']" :key="index">
               {{ item[key] }}
             </v-col>
             <v-col>
@@ -125,8 +109,7 @@ export default {
     search: "",
     new_tag: {
       tag: "",
-      from_tag: "",
-      pattern: "",
+      cond: "",
     },
   }),
   computed: {
@@ -142,8 +125,7 @@ export default {
       api.put("plugins/autotags", this.new_tag).then((data) => {
         if (!data.exception) {
           this.new_tag.tag = "";
-          this.new_tag.from_tag = "";
-          this.new_tag.pattern = "";
+          this.new_tag.cond = "";
           this.reload();
         }
       });
@@ -173,7 +155,7 @@ export default {
       if (!search) return items;
       return items.filter(
         (x) =>
-          [x.pattern, x.tag, x.from_tag]
+          [x.cond, x.tag]
             .join(" ")
             .toLowerCase()
             .indexOf(search.toLowerCase()) >= 0

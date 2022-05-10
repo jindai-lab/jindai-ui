@@ -38,14 +38,25 @@
               @change="update_selection(r, null, index)"
             ></v-checkbox>
             数据集:
-            <a :href="`/?q=dataset=${quote(r.dataset)}`" target="_blank">{{
-              r.dataset
-            }}</a>
+            <a
+              :href="
+                querystring_stringify({
+                  q: `dataset=${quote(r.dataset)}`,
+                  selected_datasets: [r.dataset],
+                })
+              "
+              target="_blank"
+              >{{ r.dataset }}</a
+            >
             大纲: {{ r.outline }} 来源:
             <a
-              :href="`/?q=dataset=${quote(r.dataset)},source.file=${quote(
-                r.source.file
-              )}`"
+              :href="
+                querystring_stringify({
+                  q: `dataset=${quote(r.dataset)},source.file=${quote(
+                    r.source.file
+                  )}`,
+                })
+              "
               target="_blank"
               >{{ r.source.file }}</a
             >
@@ -632,19 +643,19 @@ export default {
                 this._open_window(_album.source.url);
                 break;
               case "c":
-                this._open_window(
-                  `/?q=author%3D${this.quote(
-                    _album.author ||
-                      _album.keywords.filter((x) => x.startsWith("@"))[0] ||
-                      ""
-                  )}`
-                );
+                this._open_window({
+                  q: `author=${
+                    api.quote(_album.author) ||
+                    _album.keywords.filter((x) => x.startsWith("@"))[0] ||
+                    ""
+                  }`,
+                });
                 break;
               case "z":
                 this._open_window(
                   e.shiftKey
-                    ? `/?q=id%3D${_album._id}=>expand()`
-                    : `/?q=source.url%25%27${api
+                    ? `?q=id%3D${_album._id}=>expand()`
+                    : `?q=source.url%25%27${api
                         .escape_regex(_album.source.url)
                         .replace(/\/\d+\//, "/.*/")}'`
                 );
@@ -675,14 +686,15 @@ export default {
             (x) => x.shortcut == e.key
           );
           if (pages.length) {
-            this._open_window(
-              `?archive=true&q=author%3D${
+            this._open_window({
+              archive: true,
+              q: `author=${
                 this.quote(this.selected_paragraphs()[0].author) || ""
               };plugin('${this.format(pages[0].format, {
                 imageitem: this.selected_items()[0],
                 paragraph: this.selected_paragraphs()[0],
-              })}')`
-            );
+              })}')`,
+            });
           }
           break;
       }
@@ -736,6 +748,8 @@ export default {
         });
     },
     _open_window(url) {
+      if (typeof url === 'object')
+        url = api.querystring_stringify(url)
       window.open(url);
     },
     _show_dialog(dialog) {
@@ -748,9 +762,7 @@ export default {
     favored(r) {
       return api.favored(r);
     },
-    quote(x) {
-      return encodeURIComponent(api.quote(x));
-    },
+    quote: api.quote,
     selected_paragraphs() {
       if (this.dialogs.paragraph.visible) {
         return this.visible_data.filter(
@@ -977,6 +989,7 @@ export default {
     get_paragraph_image(i) {
       return api.get_paragraph_image(i);
     },
+    querystring_stringify: api.querystring_stringify,
   },
 };
 </script>
