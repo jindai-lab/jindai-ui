@@ -1,7 +1,7 @@
 <template>
   <div>
     <v-autocomplete
-      v-if="arg.type.indexOf('|') >= 0 || arg.type == 'LANG'"
+      v-if="type_choices"
       :label="arg.name"
       :value="
         value === null || typeof value === 'undefined' ? arg.default : value
@@ -9,12 +9,7 @@
       v-bind="$attrs"
       v-on="inputListeners"
       @change="inputListeners.input"
-      :items="
-        (arg.type == 'LANG' ? langs : arg.type)
-          .split('|')
-          .map((x) => (x.includes(':') ? x.split(':') : [x, x]))
-          .map((x) => ({ text: x[0], value: x[1] }))
-      "
+      :items="type_choices"
     >
     </v-autocomplete>
 
@@ -154,6 +149,34 @@ export default {
       return Object.assign({}, this.$listeners, {
         input: input_func(vm),
       });
+    },
+    type_choices() {
+      function _expand_choices(x) {
+        return x
+          .split("|")
+          .map((x) => (x.includes(":") ? x.split(":") : [x, x]))
+          .map((x) => ({ text: x[0], value: x[1] }));
+      }
+
+      switch (this.arg.type) {
+        case "LANG":
+          return _expand_choices(this.langs);
+        default:
+          if (this.arg.type.includes("|")) {
+            return _expand_choices(this.arg.type);
+          }
+          var doc_choose = (this.arg.description || "").match(
+            /@choose\((.*?)\)/
+          );
+          if (doc_choose) {
+            this.arg.description = this.arg.description.replace(
+              /@choose\(.*?\)/,
+              ""
+            );
+            return _expand_choices(doc_choose[1]);
+          }
+          return false;
+      }
     },
   },
   data() {

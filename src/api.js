@@ -151,9 +151,13 @@ export default {
         if (resp.data.__exception__) {
           if (resp.data.__exception__.match("Forbidden.")) {
             localStorage.token = "";
+            resp.data.__exception__ = "forbidden";
             if (!location.href.endsWith("/login")) location.href = "/login";
           }
-          throw new DataError("forbidden", resp.data.tracestack.join("\n"));
+          throw new DataError(
+            resp.data.__exception__,
+            resp.data.tracestack.join("\n")
+          );
         } else {
           return resp.data;
         }
