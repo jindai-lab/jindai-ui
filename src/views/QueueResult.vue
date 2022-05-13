@@ -47,9 +47,13 @@ export default {
             e.limit
         )
         .then((data) => {
-          if (data.redirect) {
-            this.redirect = data.redirect;
+          if (data.__redirect__) {
+            this.redirect = data.__redirect__;
             this.total = null;
+          } else if (typeof data.__exception__ !== "undefined") {
+            this.prompt = `<h4>${
+              data.__exception__
+            }</h4><pre>${data.tracestack.join("\n")}</pre>`;
           } else if (data.result) {
             this.total = data.result.total;
             e.callback({
@@ -57,10 +61,6 @@ export default {
               result: data.result.results,
               token,
             });
-          } else if (typeof data.exception !== "undefined") {
-            this.prompt = `<h4>${
-              data.exception
-            }</h4><pre>${data.tracestack.join("\n")}</pre>`;
           }
         })
         .catch((ex) => {

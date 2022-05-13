@@ -123,7 +123,7 @@ export default {
   methods: {
     auto_tags_create() {
       api.put("plugins/autotags", this.new_tag).then((data) => {
-        if (!data.exception) {
+        if (!data.__exception__) {
           this.new_tag.tag = "";
           this.new_tag.cond = "";
           this.reload();

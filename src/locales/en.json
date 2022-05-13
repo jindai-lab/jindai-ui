@@ -144,5 +144,6 @@
     "preferences": "Preferences",
     "split": "Split",
     "send-task": "Send to Task",
-    "send-to": "Send to"
+    "send-to": "Send to",
+    "backend-disconnected": "Backend Disconnected."
 }

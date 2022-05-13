@@ -286,7 +286,7 @@ export default {
             var valueblock = document.createElement("block");
             valueblock.setAttribute(
               "type",
-              argvalue.includes("\n") ? "text_multiline" : "text"
+              (argvalue || "").includes("\n") ? "text_multiline" : "text"
             );
             var valueblockfield = document.createElement("field");
             valueblockfield.setAttribute("name", "TEXT");

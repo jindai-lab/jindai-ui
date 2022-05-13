@@ -37,7 +37,7 @@
               class="d-inline-block"
               @change="update_selection(r, null, index)"
             ></v-checkbox>
-            数据集:
+            {{ $t("dataset") }}:
             <a
               :href="
                 querystring_stringify({
@@ -48,25 +48,27 @@
               target="_blank"
               >{{ r.dataset }}</a
             >
-            大纲: {{ r.outline }} 来源:
+            {{ $t("outline") }}: {{ r.outline }} {{ $t("source") }}:
             <a
               :href="
                 querystring_stringify({
                   q: `dataset=${quote(r.dataset)},source.file=${quote(
                     r.source.file
                   )}`,
+                  selected_datasets: [r.dataset],
                 })
               "
               target="_blank"
               >{{ r.source.file }}</a
             >
-            <a :href="r.source.url" target="_blank">{{ r.source.url }}</a> 页码:
-            {{ r.pagenum }} 日期: {{ r.pdate | dateSafe }}
+            <a :href="r.source.url" target="_blank">{{ r.source.url }}</a>
+            {{ $t("pagenum") }}: {{ r.pagenum }} {{ $t("date") }}:
+            {{ r.pdate | dateSafe }}
             <v-divider class="mt-5"></v-divider>
           </div>
           <v-img
             v-if="config.view_mode == 'gallery'"
-            :class="r.selected ? 'selected' : ''"
+            :class="{ selected: r.selected }"
             @click="update_selection(r, $event, index)"
             @dblclick="view_page(index)"
             :contain="config.contain"
@@ -221,7 +223,7 @@
           </v-row>
         </v-card-text>
         <v-card-actions>
-          <v-btn @click="dialogs.info.visible = false"> OK </v-btn>
+          <v-btn @click="dialogs.info.visible = false"> {{ $t("ok") }} </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -748,8 +750,7 @@ export default {
         });
     },
     _open_window(url) {
-      if (typeof url === 'object')
-        url = api.querystring_stringify(url)
+      if (typeof url === "object") url = api.querystring_stringify(url);
       window.open(url);
     },
     _show_dialog(dialog) {

@@ -148,16 +148,12 @@ export default {
           _stack.pop();
           this.bus.$emit("loading", _stack.length);
         }
-        if (resp.data.exception) {
-          if (resp.data.exception.match("Forbidden.")) {
+        if (resp.data.__exception__) {
+          if (resp.data.__exception__.match("Forbidden.")) {
             localStorage.token = "";
-            resp.data.exception = "登录失效，请重新登录。";
             if (!location.href.endsWith("/login")) location.href = "/login";
           }
-          throw new DataError(
-            resp.data.exception,
-            resp.data.tracestack.join("\n")
-          );
+          throw new DataError("forbidden", resp.data.tracestack.join("\n"));
         } else {
           return resp.data;
         }
@@ -168,10 +164,10 @@ export default {
           this.bus.$emit("loading", _stack.length);
         }
         if (typeof ex.message === "string" && ex.message.match("code 502"))
-          ex = "后台连接失败，请重试。";
+          ex = "backend-disconnected";
         else if (ex.toString() !== "Cancel") {
           this.notify({
-            title: "错误",
+            title: "Error",
             text: ex,
             type: "warn",
           });

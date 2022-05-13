@@ -143,5 +143,7 @@
     "preferences": "设置",
     "split": "分离",
     "send-task": "发送到任务",
-    "send-to": "发送到"
+    "send-to": "发送到",
+    "backend-disconnected": "后台连接错误，请稍后再试",
+    "forbidden": "没有访问权限，请重新登录"
 }

@@ -143,5 +143,7 @@
     "task-file-result": "任務結果爲文件，請下載。",
     "preferences": "設置",
     "send-task": "发送到任務",
-    "send-to": "发送到"
+    "send-to": "发送到",
+    "backend-disconnected": "後臺連接錯誤，請稍後再試",
+    "forbidden": "沒有訪問權限，請重新登錄"
 }

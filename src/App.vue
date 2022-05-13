@@ -186,7 +186,10 @@ export default {
           .filter((x) => x.visible)
           .concat([
             {
-              text: message,
+              text:
+                typeof this.$i18n.messages.chs[message] !== "undefined"
+                  ? this.$t(message)
+                  : message,
               visible: true,
             },
           ]);
