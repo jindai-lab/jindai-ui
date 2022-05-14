@@ -53,7 +53,7 @@ export default {
           } else if (typeof data.__exception__ !== "undefined") {
             this.prompt = `<h4>${
               data.__exception__
-            }</h4><pre>${data.tracestack.join("\n")}</pre>`;
+            }</h4><pre>${data.__tracestack__.join("\n")}</pre>`;
           } else if (data.result) {
             this.total = data.result.total;
             e.callback({

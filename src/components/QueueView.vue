@@ -44,12 +44,16 @@
             }}<br />
             <v-btn
               :href="download_link(task)"
-              v-if="!task.isnull"
+              v-if="downloadable(task)"
               target="_blank"
             >
               <v-icon>mdi-download</v-icon>
             </v-btn>
-            <v-btn class="ml-3" @click="view_result(task)" v-if="task.viewable">
+            <v-btn
+              class="ml-3"
+              @click="view_result(task)"
+              v-if="viewable(task)"
+            >
               <v-icon>mdi-eye</v-icon>
             </v-btn>
             <v-btn class="ml-3" @click="delete_result(task)">
@@ -107,6 +111,25 @@ export default {
       var id = encodeURIComponent(task.id);
       this.$router.push("/results/" + id).catch(() => {});
       this.show_finished = false;
+    },
+    downloadable(task) {
+      switch (task.type) {
+        case "list":
+        case "dict":
+          return true;
+        default:
+          return false;
+      }
+    },
+    viewable(task) {
+      switch (task.type) {
+        case "list":
+        case "redirect":
+        case "exception":
+          return true;
+        default:
+          return false;
+      }
     },
   },
 };

@@ -120,6 +120,7 @@
           <div class="language mr-5">
             <v-select
               dense
+              flat
               prepend-icon="mdi-web"
               v-model="ui_language"
               :items="
@@ -223,9 +224,6 @@ export default {
         if (this.logs[key]) delete this.logs[key];
       });
     this.$on("logined", () => {
-      if (!this.viewer) {
-        this.queue_event();
-      }
       api
         .logined()
         .then((data) => (this.admin = data.result.roles.indexOf("admin") >= 0))
@@ -233,6 +231,9 @@ export default {
           api
             .call("tasks/shortcuts")
             .then((data) => (this.shortcuts = data.result));
+          if (!this.viewer) {
+            this.queue_event();
+          }
         })
         .catch(() => (localStorage.token = ""));
     });

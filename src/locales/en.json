@@ -145,5 +145,6 @@
     "split": "Split",
     "send-task": "Send to Task",
     "send-to": "Send to",
-    "backend-disconnected": "Backend Disconnected."
+    "backend-disconnected": "Backend Disconnected.",
+    "unmatched-credentials": "Unmatched credentials."
 }
