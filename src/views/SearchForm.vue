@@ -230,12 +230,15 @@ export default {
                 .filter((x) => x)
                 .join("|") +
               ")",
-            "ig"
+            "gi"
           );
-          this.results = data.result.results.map((x) => {
-            x.matched_content = (x.content || "").replace(reg, "<em>$1</em>");
-            return x;
-          });
+          this.results = data.result.results;
+          if (reg != "/()/gi") {
+            this.results = this.results.map((x) => {
+              x.matched_content = (x.content || "").replace(reg, "<em>$1</em>");
+              return x;
+            });
+          }
         }
         this.querystr = api.querify(data.result.query).replace(/^\(|\)$/g, "");
         e.callback({

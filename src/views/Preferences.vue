@@ -39,20 +39,6 @@
       <v-sheet class="mt-5">
         <v-row>
           <v-col>
-            <v-select
-              prepend-icon="mdi-web"
-              v-model="ui_language"
-              :items="
-                Object.entries($i18n.messages).map((pair) => ({
-                  value: pair[0],
-                  text: pair[1]._lang,
-                }))
-              "
-            ></v-select>
-          </v-col>
-        </v-row>
-        <v-row>
-          <v-col>
             <v-checkbox
               flat
               v-model="config.contain"
@@ -93,7 +79,6 @@
 <script>
 import api from "../api";
 import QRCode from "qrcodejs2";
-import { setup } from "../locales";
 
 export default {
   name: "Preferences",
@@ -106,17 +91,7 @@ export default {
       otp_secret: "",
       username: "",
       config: api.config,
-      ui_language: "",
     };
-  },
-  watch: {
-    ui_language(val) {
-      setup(val);
-      api.locale = val;
-    },
-  },
-  created() {
-    this.ui_language = this.$i18n.locale;
   },
   mounted() {
     api.call("authenticate").then((data) => {

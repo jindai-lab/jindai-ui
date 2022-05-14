@@ -117,8 +117,26 @@
         </v-card>
 
         <v-footer id="footer">
-          Powered by Jindai &copy; 2018-{{ new Date().getFullYear() }} zhuth
-          &amp; contributors
+          <div class="language mr-5">
+            <v-select
+              dense
+              prepend-icon="mdi-web"
+              v-model="ui_language"
+              :items="
+                Object.entries($i18n.messages).map((pair) => ({
+                  value: pair[0],
+                  text: pair[1]._lang,
+                }))
+              "
+              :style="{
+                width: '150px',
+              }"
+            ></v-select>
+          </div>
+          <div class="powered-by">
+            Powered by Jindai &copy; 2018-{{ new Date().getFullYear() }} zhuth
+            &amp; contributors
+          </div>
           <div v-html="copyright"></div>
         </v-footer>
       </template>
@@ -142,6 +160,7 @@
 <script>
 import api from "./api";
 import QueueView from "./components/QueueView.vue";
+import { setup } from "./locales";
 
 export default {
   name: "app",
@@ -165,6 +184,7 @@ export default {
       app_title: "Jindai",
       app_dark: false,
       copyright: "",
+      ui_language: "",
     };
   },
   watch: {
@@ -174,8 +194,13 @@ export default {
     app_title(val) {
       document.title = val;
     },
+    ui_language(val) {
+      setup(val);
+      api.locale = val;
+    },
   },
   created() {
+    this.ui_language = this.$i18n.locale;
     api.bus
       .$on("loading", (loading_num) => (this.loading = loading_num > 0))
       .$on("alert", (bundle) => {
