@@ -40,6 +40,7 @@
             {{ $t("dataset") }}:
             <a
               :href="
+                '/' +
                 querystring_stringify({
                   q: `dataset=${quote(r.dataset)}`,
                   selected_datasets: [r.dataset],
@@ -51,6 +52,7 @@
             {{ $t("outline") }}: {{ r.outline }} {{ $t("source") }}:
             <a
               :href="
+                '/' +
                 querystring_stringify({
                   q: `dataset=${quote(r.dataset)},source.file=${quote(
                     r.source.file
@@ -750,7 +752,7 @@ export default {
         });
     },
     _open_window(url) {
-      if (typeof url === "object") url = api.querystring_stringify(url);
+      if (typeof url === "object") url = "/" + api.querystring_stringify(url);
       window.open(url);
     },
     _show_dialog(dialog) {

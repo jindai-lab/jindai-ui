@@ -121,6 +121,7 @@
             <v-select
               dense
               flat
+              single-line
               prepend-icon="mdi-web"
               v-model="ui_language"
               :items="
