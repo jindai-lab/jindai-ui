@@ -51,6 +51,7 @@ import UserList from "./views/UserList.vue";
 import Preferences from "./views/Preferences.vue";
 import DbConsole from "./views/DbConsole.vue";
 import AutoTags from "./views/AutoTags.vue";
+import QueryFormTest from "./views/QueryFormTest.vue";
 
 // configure routes
 const routes = [{
@@ -117,6 +118,10 @@ const routes = [{
     {
         path: "/autotags",
         component: AutoTags,
+    },
+    {
+        path: "/querytest",
+        component: QueryFormTest,
     },
 ];
 

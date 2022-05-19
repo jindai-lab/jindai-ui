@@ -61,9 +61,7 @@
         >
       </span>
       <a
-        :href="
-          '?archive=0&q=source.url%25`' + (paragraph.source.url || '') + '`'
-        "
+        :href="'/?q=source.url%3D`' + (paragraph.source.url || '') + '`'"
         class="force-text break-anywhere"
         target="_blank"
         >{{ paragraph.source.url }}</a

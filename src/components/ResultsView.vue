@@ -658,8 +658,8 @@ export default {
               case "z":
                 this._open_window(
                   e.shiftKey
-                    ? `?q=id%3D${_album._id}=>expand()`
-                    : `?q=source.url%25%27${api
+                    ? `/?q=id%3D${_album._id}=>expand()`
+                    : `/?q=source.url%25%27${api
                         .escape_regex(_album.source.url)
                         .replace(/\/\d+\//, "/.*/")}'`
                 );
@@ -695,7 +695,7 @@ export default {
               q: `author=${
                 this.quote(this.selected_paragraphs()[0].author) || ""
               };plugin('${this.format(pages[0].format, {
-                imageitem: this.selected_items()[0],
+                mediaitem: this.selected_items()[0],
                 paragraph: this.selected_paragraphs()[0],
               })}')`,
             });
@@ -904,7 +904,7 @@ export default {
       });
 
       api
-        .call("imageitem/delete", {
+        .call("mediaitem/delete", {
           album_items,
         })
         .then(() => {
@@ -929,7 +929,7 @@ export default {
       );
       if (val.item) delete val.item;
       if (api.config.view_mode == "gallery") {
-        api.call("imageitem/rating", val).then((data) => {
+        api.call("mediaitem/rating", val).then((data) => {
           data = data.result || {};
           this.clear_selection(s);
           s.forEach((p) =>
@@ -984,7 +984,7 @@ export default {
     reset_storage() {
       var s = this.selected_paragraphs();
       api
-        .call("imageitem/reset_storage", {
+        .call("mediaitem/reset_storage", {
           ids: this.selected_items().map((x) => x._id),
         })
         .then(() => this.clear_selection(s));

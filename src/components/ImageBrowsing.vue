@@ -69,7 +69,7 @@
                 :href="`?q=author%3D${quote(paragraph.author)};plugin('${format(
                   filter.format,
                   {
-                    imageitem: item,
+                    mediaitem: item,
                     paragraph: paragraph,
                   }
                 )}')&archive=true`"
@@ -127,13 +127,7 @@ export default {
   },
   computed: {
     browsing_video() {
-      return (
-        this.item &&
-        this.item.source &&
-        (this.item.source.url || this.item.source.file || "")
-          .split(".")
-          .pop() == "mp4"
-      );
+      return this.item && this.item.item_type == "video";
     },
   },
   methods: {

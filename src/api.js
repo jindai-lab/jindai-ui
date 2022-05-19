@@ -557,9 +557,8 @@ export default {
         if (!item || !item.source || (!item.source.url && !item.source.file))
             return _prompt_no_image;
 
-        var ext = (item.source.url || item.source.file).split(".").pop(),
-            args = "";
-        if (ext === "mp4") {
+        var args = "";
+        if (item && item.item_type == "video") {
             if (item.thumbnail)
                 return `/api/image?file=blocks.h5&block_id=${item.thumbnail}`;
             return _prompt_video;
