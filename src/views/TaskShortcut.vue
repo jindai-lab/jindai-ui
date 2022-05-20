@@ -200,17 +200,22 @@ export default {
     },
     get_map_arg(v) {
       v = v.split(".");
-      var arg = {};
-      arg = this.stages[this.task.pipeline[+v[1]][0]].args.filter(
-        (x) => x.name == v[2]
-      )[0];
+      var arg = {},
+        target = this.task.pipeline;
+      for (var seg of v.slice(1, -1)) {
+        target = seg.match(/^\d+$/) ? target[+seg] : target[1][seg];
+      }
+      var argname = v.pop();
+      arg = this.stages[target[0]].args.filter((x) => x.name == argname)[0];
       return arg;
     },
     get_map_val(v) {
       v = v.split(".");
-      var arg = null;
-      arg = this.task.pipeline[+v[1]][1][v[2]];
-      return arg;
+      var target = this.task.pipeline;
+      for (var seg of v.slice(1)) {
+        target = seg.match(/^\d+$/) ? target[+seg][1] : target[seg];
+      }
+      return target;
     },
     load_search(e) {
       var token = new Date().getTime() + Math.random();
