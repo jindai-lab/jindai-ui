@@ -55,11 +55,10 @@
 
           <v-list-item
             v-for="item in [
-              ['schedule', 'scheduler'],
               ['file-storage', 'storage'],
               ['dataset', 'datasets'],
               ['console', 'dbconsole'],
-              ['permissions', 'users'],
+              ['system-admin', 'admin'],
               ['auto-tagging', 'autotags'],
             ]"
             :key="item[0]"

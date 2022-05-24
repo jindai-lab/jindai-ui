@@ -39,6 +39,45 @@
       @change="inputListeners.input"
     ></v-combobox>
 
+    <div v-else-if="arg.type == 'object'">
+      <v-row v-for="(r, i) in keys" :key="r.name">
+        <v-col
+          ><v-text-field
+            v-model="r.name"
+            @input="update_object_value"
+          ></v-text-field
+        ></v-col>
+        <v-col
+          ><v-select
+            :items="['str', 'int', 'float', 'bool']"
+            v-model="r.type"
+            @input="update_object_value"
+          ></v-select
+        ></v-col>
+        <v-col
+          ><ParamInput
+            :arg="r"
+            v-model="object_value[r.name]"
+            @input="update_object_value"
+        /></v-col>
+        <v-col
+          ><v-btn
+            icon
+            @click="
+              keys.splice(i, 1);
+              update_object_value();
+            "
+            ><v-icon>mdi-minus</v-icon></v-btn
+          ></v-col
+        >
+      </v-row>
+      <v-row>
+        <v-btn icon @click="keys.push({ name: '', type: 'str' })"
+          ><v-icon>mdi-plus</v-icon></v-btn
+        >
+      </v-row>
+    </div>
+
     <div v-else-if="arg.type == 'bool'">
       <v-simple-checkbox
         :value="value"
@@ -137,6 +176,7 @@ import "prismjs/components/prism-clike";
 import "prismjs/themes/prism-tomorrow.css"; // import syntax highlighting styles
 
 export default {
+  name: "ParamInput",
   inheritAttrs: false,
   props: ["value", "arg"],
   events: ["validation"],
@@ -186,6 +226,8 @@ export default {
       choices: [],
       file_prompt: this.$t("drop-in-files"),
       langs: this.$t("langs"),
+      object_value: {},
+      keys: [],
     };
   },
   watch: {
@@ -224,6 +266,14 @@ export default {
     },
     highlighter(code) {
       return highlight(code, languages.clike); // languages.<insert language> to return html with markup
+    },
+    update_object_value() {
+      if (this.arg.type !== "object") return;
+      var val = {};
+      for (var k of this.keys) {
+        val[k.name] = this.object_value[k.name];
+      }
+      this.$emit("input", val);
     },
     refresh(val) {
       this.code = val;
@@ -272,6 +322,8 @@ export default {
             }
           });
           break;
+        case "object":
+          this.keys = this.arg.keys || [];
       }
     },
     drop_file(e) {

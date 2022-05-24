@@ -40,14 +40,13 @@ import SearchForm from "./views/SearchForm.vue";
 import TaskDetail from "./views/TaskDetail.vue";
 import TaskShortcut from "./views/TaskShortcut.vue";
 import TaskList from "./views/TaskList.vue";
-import TaskScheduler from "./views/TaskScheduler.vue";
 import PageView from "./views/PageView.vue";
 import DatasetList from "./views/DatasetList.vue";
 import History from "./views/History.vue";
 import Login from "./views/Login.vue";
 import QueueResult from "./views/QueueResult.vue";
 import StorageList from "./views/StorageList.vue";
-import UserList from "./views/UserList.vue";
+import SystemAdmin from "./views/SystemAdmin.vue";
 import Preferences from "./views/Preferences.vue";
 import DbConsole from "./views/DbConsole.vue";
 import AutoTags from "./views/AutoTags.vue";
@@ -100,8 +99,8 @@ const routes = [{
         component: StorageList,
     },
     {
-        path: "/users",
-        component: UserList,
+        path: "/admin",
+        component: SystemAdmin,
     },
     {
         path: "/preferences",
@@ -110,10 +109,6 @@ const routes = [{
     {
         path: "/dbconsole",
         component: DbConsole,
-    },
-    {
-        path: "/scheduler",
-        component: TaskScheduler,
     },
     {
         path: "/autotags",
