@@ -8,7 +8,6 @@
         :page.sync="page"
         :search="search"
         hide-default-footer
-        no-data-text="无可用数据"
       >
         <template v-slot:header>
           <v-toolbar flat>
@@ -16,7 +15,6 @@
               v-model="search"
               clearable
               flat
-              solo-inverted
               hide-details
               prepend-inner-icon="mdi-magnify"
               :label="$t('search')"

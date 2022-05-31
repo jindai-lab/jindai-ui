@@ -2,9 +2,6 @@
   <v-card flat>
     <v-card-title>{{ $t("file-storage") }}</v-card-title>
     <v-card-text>
-      <v-btn color="primary" @click="open_file_dialog()">
-        <v-icon>mdi-upload</v-icon> {{ $t("upload") }}
-      </v-btn>
       <v-progress-linear v-show="progress > 0" v-bind="progress" />
       <input
         type="file"
@@ -14,43 +11,111 @@
         hidden
         multiple
       />
+      <v-row>
+        <v-col>
+          <v-btn color="primary" @click="open_file_dialog()">
+            <v-icon>mdi-upload</v-icon> {{ $t("upload") }}
+          </v-btn>
+          <span class="name ml-5">{{ selected_dir }}</span>
+        </v-col>
+      </v-row>
     </v-card-text>
     <v-sheet class="ma-5">
+      <v-toolbar flat>
+        <v-text-field
+          v-model="search"
+          clearable
+          flat
+          hide-details
+          prepend-inner-icon="mdi-magnify"
+          :label="$t('search')"
+          @keyup.enter="search_file"
+          :clear-icon-cb="update_files"
+        ></v-text-field>
+      </v-toolbar>
       <v-sheet>
-        <template v-for="f in files">
-          <v-row :key="f.name" v-if="f.name == '..' || !f.name.startsWith('.')">
-            <v-col class="name">
-              <v-btn icon :href="file_link(f)" v-if="f.type === 'file'">
-                <v-icon>mdi-download</v-icon>
-              </v-btn>
-              <v-btn icon v-else @click="enter(f.name)">
-                <v-icon v-if="f.type == 'folder'">mdi-folder-open</v-icon>
-                <v-icon v-else>mdi-arrow-left-circle</v-icon>
-              </v-btn>
-
-              {{ f.name == ".." ? $t("parent-dir") : f.name }}
-
-              <div class="description" v-if="f.type == 'file'">
-                {{ $t("size") }}: {{ (f.size / 1024 / 1024).toFixed(2) }} MB
-                {{ $t("created-at") }}: {{ (f.ctime * 1000) | dateSafe }}
-                {{ $t("modified-at") }}:
-                {{ (f.mtime * 1000) | dateSafe }}
-              </div>
-            </v-col>
-            <v-spacer></v-spacer>
-            <v-col class="opers">
-              <v-btn @click="copy_file_path(f)" v-if="f.type !== 'back'">
-                <v-icon>mdi-content-copy</v-icon>
-              </v-btn>
-              <v-btn
-                v-if="f.name.match(/^jindai\.plugins\..*\.zip$/)"
-                @click="install_plugin(f)"
+        <v-data-iterator
+          :items="files"
+          :items-per-page="20"
+          :page.sync="page"
+          hide-default-footer
+        >
+          <template v-slot:default="props">
+            <template v-for="f in props.items">
+              <v-row
+                :key="f.fullpath"
+                v-if="f.name == '..' || !f.name.startsWith('.')"
               >
-                <v-icon>mdi-cog-outline</v-icon>
+                <v-col class="name">
+                  <v-btn icon :href="file_link(f)" v-if="f.type === 'file'">
+                    <v-icon>mdi-download</v-icon>
+                  </v-btn>
+                  <v-btn icon v-else @click="enter(f.name)">
+                    <v-icon v-if="f.type == 'folder'">mdi-folder-open</v-icon>
+                    <v-icon v-else>mdi-arrow-left-circle</v-icon>
+                  </v-btn>
+
+                  {{ f.name == ".." ? $t("parent-dir") : f.name }}
+
+                  <div class="description" v-if="f.type == 'file'">
+                    {{ $t("size") }}: {{ (f.size / 1024 / 1024).toFixed(2) }} MB
+                    {{ $t("created-at") }}: {{ (f.ctime * 1000) | dateSafe }}
+                    {{ $t("modified-at") }}:
+                    {{ (f.mtime * 1000) | dateSafe }}
+                  </div>
+                </v-col>
+                <v-spacer></v-spacer>
+                <v-col class="opers">
+                  <v-btn
+                    @click="copy_file_path(f)"
+                    v-if="f.type !== 'back'"
+                    icon
+                  >
+                    <v-icon>mdi-content-copy</v-icon>
+                  </v-btn>
+                  <v-btn
+                    v-if="f.name.match(/^jindai\.plugins\..*\.zip$/)"
+                    @click="install_plugin(f)"
+                    icon
+                  >
+                    <v-icon>mdi-cog-outline</v-icon>
+                  </v-btn>
+                  <v-btn v-if="f.type !== 'back'" icon @click="rename_file(f)">
+                    <v-icon>mdi-form-textbox</v-icon>
+                  </v-btn>
+                </v-col>
+              </v-row>
+            </template>
+          </template>
+
+          <template v-slot:footer>
+            <v-row class="mt-2" align="center" justify="center">
+              <v-btn
+                small
+                dark
+                fab
+                color="blue darken-3"
+                class="mr-1"
+                @click="() => page > 1 && --page"
+              >
+                <v-icon>mdi-chevron-left</v-icon>
               </v-btn>
-            </v-col>
-          </v-row>
-        </template>
+              <span class="mr-4 ml-4 grey--text">
+                {{ $t("pagination", { page, total: total_pages }) }}
+              </span>
+              <v-btn
+                small
+                dark
+                fab
+                color="blue darken-3"
+                class="ml-1"
+                @click="() => page < total_pages && ++page"
+              >
+                <v-icon>mdi-chevron-right</v-icon>
+              </v-btn>
+            </v-row>
+          </template>
+        </v-data-iterator>
       </v-sheet>
     </v-sheet>
     <v-card-actions>
@@ -71,7 +136,14 @@ export default {
       selected_dir: "",
       progress: 0,
       admin: false,
+      search: "",
+      page: 1,
     };
+  },
+  computed: {
+    total_pages() {
+      return Math.ceil(this.files.length / 20);
+    },
   },
   methods: {
     open_file_dialog() {
@@ -100,6 +172,17 @@ export default {
             this.files.splice(this.selected_dir != "" ? 1 : 0, 0, r);
         });
     },
+    search_file() {
+      if (this.search) {
+        api
+          .call(`storage/${this.selected_dir}`, { search: this.search })
+          .then((data) => {
+            this.files = data.result;
+          });
+      } else {
+        this.update_files();
+      }
+    },
     file_link(f) {
       return "/api/storage/" + f.fullpath.split("/").slice(1).join("/");
     },
@@ -107,6 +190,16 @@ export default {
       api.call("plugins", { url: f.fullpath }).then((data) => {
         if (data.result) api.notify(this.$t("installed"));
       });
+    },
+    rename_file(f) {
+      var new_name = prompt(this.$t("raname-to"), f.name);
+      if (!new_name) return;
+      api.call(
+        "storage/move",
+        { source: f.fullpath, destination: new_name }.then(() =>
+          this.update_files()
+        )
+      );
     },
     update_files() {
       api.call("storage/" + this.selected_dir).then((data) => {

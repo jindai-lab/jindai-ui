@@ -715,7 +715,7 @@ export default {
         )
         .then(() => {
           this.dialogs.edit.target = null;
-          api.notify({ title: $t("saved") });
+          api.notify({ title: this.$t("saved") });
         });
     },
     send_task(target) {

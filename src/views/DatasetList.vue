@@ -14,10 +14,7 @@
                     class="oper"
                     icon
                     @click="
-                      rename_collection(
-                        ds.name,
-                        prompt($t('raname-to'), ds.name)
-                      )
+                      rename_collection(ds, prompt($t('raname-to'), ds.name))
                     "
                   >
                     <v-icon>mdi-form-textbox</v-icon>
@@ -89,7 +86,7 @@ export default {
       var coll = { _id: id };
       coll[field] = value;
       api
-        .call("datasets", { dataset: coll })
+        .call("datasets/edit", coll)
         .then(() => api.notify({ title: this.$t("updated") }));
     },
     save() {
@@ -98,28 +95,31 @@ export default {
         return;
       }
       api
-        .call("datasets", {
-          datasets: this.datasets.map((x, i) =>
+        .call(
+          "datasets/batch",
+          this.datasets.map((x, i) =>
             Object.assign({}, x, { order_weight: i, sources: null })
-          ),
-        })
+          )
+        )
         .then(() => api.notify({ title: this.$t("saved") }));
     },
     append_dataset() {
       if (!this.input_coll.name) return;
-      this.datasets.push(this.input_coll);
-      this.input_coll = {};
+      api.call("datasets/edit", this.input_coll).then(() => {
+        this.load_datasets();
+        this.input_coll = {};
+      });
     },
-    rename_collection(from, to) {
-      if (from && to)
+    rename_collection(coll, to) {
+      if (coll && to)
         api
-          .call("datasets", { rename: { from, to } })
+          .call("datasets/rename", { _id: coll._id, to })
           .then(() => api.notify({ title: this.$t("renamed") }))
           .then(this.load_datasets);
     },
-    refresh_sources(name) {
+    refresh_sources(coll) {
       api
-        .call("datasets", { sources: { name } })
+        .call("datasets/sources", { _id: coll.id })
         .then(() => api.notify({ title: this.$t("refreshed") }));
     },
   },

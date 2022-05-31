@@ -517,23 +517,23 @@ export default {
                     parent_obj = cand;
                 }
 
-                parent_obj.children = parent_obj.children.concat(
-                    x.sources
-                    .filter((y) => y)
-                    .sort()
-                    .filter((y) => !y.match(/[^/]\d+\.pdf$/))
-                    .map((y) => {
-                        bundles[x.name + "//" + y] = {
-                            name: x.name,
-                            mongocollection: x.mongocollection,
-                            source: y,
-                        };
-                        return {
-                            id: x.name + "//" + y,
-                            label: y.match(/(.*\/)?(.*)/)[2],
-                        };
-                    })
-                );
+                // parent_obj.children = parent_obj.children.concat(
+                //     x.sources
+                //     .filter((y) => y)
+                //     .sort()
+                //     .filter((y) => !y.match(/[^/]\d+\.pdf$/))
+                //     .map((y) => {
+                //         bundles[x.name + "//" + y] = {
+                //             name: x.name,
+                //             mongocollection: x.mongocollection,
+                //             source: y,
+                //         };
+                //         return {
+                //             id: x.name + "//" + y,
+                //             label: y.match(/(.*\/)?(.*)/)[2],
+                //         };
+                //     })
+                // );
             }
 
             return {
