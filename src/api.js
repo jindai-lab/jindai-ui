@@ -192,6 +192,18 @@ export default {
         );
     },
 
+    upload(file, data, progress_handler) {
+        return this._catch_and_then(
+            axios.put(
+              this.apiBase + "storage/" + file,
+              data,
+              this._axios_config({
+                onUploadProgress: progress_handler
+              })
+            )
+          )
+    },
+
     auth(username, password, otp, remember) {
         if (typeof otp == "string") otp = otp.substr(0, 6);
         return new Promise((resolve, reject) => {

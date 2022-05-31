@@ -101,7 +101,7 @@
                 <v-icon>mdi-chevron-left</v-icon>
               </v-btn>
               <span class="mr-4 ml-4 grey--text">
-                {{ $t("pagination", { page, total: total_pages }) }}
+                {{ $t("pagination", { page, total: pages_count }) }}
               </span>
               <v-btn
                 small
@@ -109,7 +109,7 @@
                 fab
                 color="blue darken-3"
                 class="ml-1"
-                @click="() => page < total_pages && ++page"
+                @click="() => page < pages_count && ++page"
               >
                 <v-icon>mdi-chevron-right</v-icon>
               </v-btn>
@@ -141,7 +141,7 @@ export default {
     };
   },
   computed: {
-    total_pages() {
+    pages_count() {
       return Math.ceil(this.files.length / 20);
     },
   },
@@ -150,22 +150,17 @@ export default {
       document.getElementById("file").click();
     },
     upload_file(e) {
-      let formData = new FormData();
+      let data = new FormData();
       for (var i = 0; i < e.target.files.length; ++i)
-        formData.append("file" + i, e.target.files[i]);
+        data.append("file" + i, e.target.files[i]);
 
-      api
-        ._catch_and_then(
-          axios.put(
-            api.apiBase + "storage/" + this.selected_dir,
-            formData,
-            api._config({
-              onUploadProgress: (e) => {
-                this.progress = ((e.loaded * 100) / e.total) | 0;
-              },
-            })
-          )
-        )
+      api.upload(
+        this.selected_dir,
+        data,
+        (e) => {
+          this.progress = (e.loaded * 100 / e.total) | 0;
+        }
+      )
         .then((data) => {
           this.progress = 0;
           for (var r of data.result)

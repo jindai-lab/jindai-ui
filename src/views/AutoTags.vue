@@ -72,12 +72,12 @@
               fab
               color="blue darken-3"
               class="mr-1"
-              @click="formerPage"
+              @click="prev_page"
             >
               <v-icon>mdi-chevron-left</v-icon>
             </v-btn>
             <span class="mr-4 ml-4 grey--text">
-              {{ $t("pagination", { page, total: numberOfPages }) }}
+              {{ $t("pagination", { page, total: pages_count }) }}
             </span>
             <v-btn
               small
@@ -85,7 +85,7 @@
               fab
               color="blue darken-3"
               class="ml-1"
-              @click="nextPage"
+              @click="next_page"
             >
               <v-icon>mdi-chevron-right</v-icon>
             </v-btn>
@@ -111,7 +111,7 @@ export default {
     },
   }),
   computed: {
-    numberOfPages() {
+    pages_count() {
       return Math.ceil(this.auto_tags.length / 20);
     },
   },
@@ -143,11 +143,11 @@ export default {
         .call("plugins/autotags")
         .then((data) => (this.auto_tags = data.result));
     },
-    nextPage() {
-      if (this.page + 1 <= this.numberOfPages) this.page += 1;
+    next_page() {
+      if (this.page + 1 <= this.pages_count) this.page++;
     },
-    formerPage() {
-      if (this.page - 1 >= 1) this.page -= 1;
+    prev_page() {
+      if (this.page - 1 >= 1) this.page--;
     },
     do_search(items, search) {
       if (!search) return items;
