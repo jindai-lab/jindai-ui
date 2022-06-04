@@ -403,6 +403,7 @@ export default {
       token: null,
       page_range: [0, 0],
       plugin_pages: [],
+      sticky: [],
       config: new Proxy(api.config, {
         get(target, name) {
           return target[name];
@@ -474,9 +475,12 @@ export default {
       return p;
     },
     visible_data() {
-      return this.value
-        .slice(this.offset - this.page_range[0])
-        .slice(0, api.config.page_size);
+      return [
+        ...this.sticky,
+        ...this.value
+          .slice(this.offset - this.page_range[0])
+          .slice(0, api.config.page_size),
+      ];
     },
     offset() {
       return (this.page - 1) * api.config.page_size;
@@ -555,9 +559,22 @@ export default {
             if (typeof data.result !== "undefined") {
               this.selection = [];
               this.page_range = [data.offset, data.offset + data.result.length];
-              this.value = data.result.map((x) =>
+              var items = data.result.map((x) =>
                 Object.assign(x, { selected: false })
               );
+              var has_sticky = items.filter((x) => x.spacer).length > 0;
+              if (has_sticky) {
+                var sticky_flag = true;
+                this.sticky = [];
+                this.value = [];
+                for (var item of items) {
+                  (sticky_flag ? this.sticky : this.value).push(item);
+                  if (item.spacer) sticky_flag = false;
+                }
+              } else {
+                this.sticky = [];
+                this.value = items;
+              }
 
               if (typeof cb == "function") cb();
             }

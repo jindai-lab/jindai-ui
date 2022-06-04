@@ -90,7 +90,11 @@
               >
             </div>
           </v-row>
-          <ContentView :paragraph="paragraph" view_mode="gallery-description" />
+          <ContentView
+            class="browsing-content"
+            :paragraph="paragraph"
+            view_mode="gallery-description"
+          />
         </v-col>
       </v-row>
     </div>
@@ -292,5 +296,10 @@ export default {
   border: hidden;
   background: none;
   box-shadow: none !important;
+}
+
+.browsing-content {
+  max-height: 30vh;
+  overflow-y: hidden;
 }
 </style>
