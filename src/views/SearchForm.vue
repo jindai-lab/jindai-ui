@@ -281,12 +281,13 @@ export default {
           this.$router.push("/tasks/" + data.result).catch(() => {});
       api
         .put("tasks/", {
-          name: this.$t("search") + " " + this.querystr,
+          name: this.$t("search") + " " + this.q,
           pipeline: [
             [
               "DBQueryDataSource",
               {
-                query: this.querystr,
+                query: this.q,
+                req: this.req,
                 mongocollections: this.selected_mongocollections,
               },
             ],

@@ -116,6 +116,7 @@ export default {
       switch (task.type) {
         case "list":
         case "dict":
+        case "file":
           return true;
         default:
           return false;

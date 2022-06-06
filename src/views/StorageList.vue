@@ -126,7 +126,6 @@
 
 <script>
 import api from "../api";
-import axios from "axios";
 
 export default {
   name: "StorageList",
@@ -154,13 +153,10 @@ export default {
       for (var i = 0; i < e.target.files.length; ++i)
         data.append("file" + i, e.target.files[i]);
 
-      api.upload(
-        this.selected_dir,
-        data,
-        (e) => {
-          this.progress = (e.loaded * 100 / e.total) | 0;
-        }
-      )
+      api
+        .upload(this.selected_dir, data, (e) => {
+          this.progress = ((e.loaded * 100) / e.total) | 0;
+        })
         .then((data) => {
           this.progress = 0;
           for (var r of data.result)
