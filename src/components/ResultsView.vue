@@ -1014,6 +1014,13 @@ export default {
 };
 </script>
 
+<style>
+.page .paragraph p,
+.list .paragraph p {
+  max-width: 960px;
+}
+</style>
+
 <style scoped>
 .v-btn {
   margin-right: 12px;
