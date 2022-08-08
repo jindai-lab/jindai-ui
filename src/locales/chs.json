@@ -147,5 +147,6 @@
     "backend-disconnected": "后台连接错误，请稍后再试",
     "forbidden": "没有访问权限，请重新登录",
     "unmatched-credentials": "登录信息有误，请检查",
-    "system-admin": "系统管理"
+    "system-admin": "系统管理",
+    "folio-mode": "对开模式"
 }

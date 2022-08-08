@@ -147,5 +147,6 @@
     "send-to": "Send to",
     "backend-disconnected": "Backend Disconnected.",
     "unmatched-credentials": "Unmatched credentials.",
-    "system-admin": "System"
+    "system-admin": "System",
+    "folio-mode": "Folio mode"
 }

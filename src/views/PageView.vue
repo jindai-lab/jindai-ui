@@ -133,6 +133,10 @@
                     }"
                     v-model="pagenum_editor.sequential"
                   />
+                  <ParamInput
+                    :arg="{ name: $t('folio-mode'), type: 'bool' }"
+                    v-model="pagenum_editor.folio"
+                  />
                 </v-sheet>
               </v-card-text>
               <v-card-actions>
@@ -171,6 +175,7 @@ export default {
       pagenum_editor: {
         new_pagenum: 0,
         sequential: "all",
+        folio: false,
       },
       fetched_paragraphs: [],
       mongocollection: "paragraph",

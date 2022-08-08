@@ -148,5 +148,6 @@
     "backend-disconnected": "サーバー接続エラー、後でもう一度やり直してください",
     "forbidden": "アクセスできません。もう一度ログインしてください",
     "unmatched-credentials": "ユーザー名またはパスワードが間違っています",
-    "system-admin": "システム設定"
+    "system-admin": "システム設定",
+    "folio-mode": "フォリオ"
 }

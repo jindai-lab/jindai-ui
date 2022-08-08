@@ -177,6 +177,7 @@ export default {
         waiting: 0,
         running: [],
       },
+      queue_source: null,
       logs: {},
       admin: false,
       shortcuts: [],
@@ -262,8 +263,9 @@ export default {
     },
     queue_event() {
       api.queue().then((queue) => this.update_queue(queue));
-      var source = new EventSource("/api/queue/events");
-      source.onmessage = (event) => {
+      if (this.queue_source) return;
+      this.queue_source = new EventSource("/api/queue/events");
+      this.queue_source.onmessage = (event) => {
         var data = JSON.parse(event.data);
         if (data.log) {
           this.console_outputs.splice(0, 0, data.log);
@@ -271,7 +273,10 @@ export default {
             this.console_outputs.splice(50, this.console_outputs.length - 50);
         } else this.update_queue(data);
       };
-      source.onerror = () => setTimeout(() => this.queue_event(), 5000);
+      this.queue_source.onerror = () => {
+        this.queue_source = null;
+        setTimeout(() => this.queue_event(), 5000);
+      };
     },
   },
   sse: {
