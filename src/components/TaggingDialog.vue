@@ -86,6 +86,10 @@ export default {
       type: Array,
       default: () => [],
     },
+    scope: {
+      type: String,
+      default: ""
+    }
   },
   watch: {
     tag_typing(val) {
@@ -105,6 +109,13 @@ export default {
       this.tag_new = sorted;
       this.tag_choices = sorted;
       this.batch = "";
+      if (this.scope) {
+        api.call("term/keywords", {
+          scope: this.scope
+        }).then(data=> {
+          this.tag_choices = [...sorted, ... data.result]
+        })
+      }
     },
     search_tag(search) {
       if (this.cancel) this.cancel.cancel();

@@ -26,6 +26,7 @@ function LocalConfig() {
             batch_delim: ", ",
             batch_prefix: "*",
         },
+        groups: "none",
         sort: "id",
     };
 
@@ -39,7 +40,14 @@ function LocalConfig() {
 
     let handler = {
         get(target, name) {
-            return target[name] || "";
+            var val = target[name] || "";
+            switch (typeof defaults[name]) {
+                case "number":
+                    return +val;
+                case "boolean":
+                    return val === true;
+            }
+            return val;
         },
         set(target, name, val) {
             switch (typeof defaults[name]) {
@@ -158,6 +166,7 @@ export default {
                 }
             })
             .catch((ex) => {
+                console.log(ex)
                 if (_stack.length > 0) {
                     _stack.pop();
                     this.bus.$emit("loading", _stack.length);
@@ -183,11 +192,11 @@ export default {
     _axios_config(other) {
         if (!this.locale) this.locale = i18n.locale;
         return Object.assign({
-                headers: {
-                    "X-Authentication-Token": _token,
-                    "X-Preferred-Language": this.locale,
-                },
+            headers: {
+                "X-Authentication-Token": _token,
+                "X-Preferred-Language": this.locale,
             },
+        },
             other || {}
         );
     },
@@ -195,13 +204,13 @@ export default {
     upload(file, data, progress_handler) {
         return this._catch_and_then(
             axios.put(
-              this.apiBase + "storage/" + file,
-              data,
-              this._axios_config({
-                onUploadProgress: progress_handler
-              })
+                this.apiBase + "storage/" + file,
+                data,
+                this._axios_config({
+                    onUploadProgress: progress_handler
+                })
             )
-          )
+        )
     },
 
     auth(username, password, otp, remember) {
@@ -218,10 +227,10 @@ export default {
                         "token",
                         _token,
                         remember ?
-                        {
-                            expires: 30,
-                        } :
-                        undefined
+                            {
+                                expires: 30,
+                            } :
+                            undefined
                     );
                     resolve(data);
                 } else {
@@ -329,7 +338,7 @@ export default {
                     default:
                         if (key.startsWith("$"))
                             s +=
-                            "," + key.substr(1) + "(" + _debracket(this.querify(val)) + ")";
+                                "," + key.substr(1) + "(" + _debracket(this.querify(val)) + ")";
                         else {
                             s += "," + key;
                             val = this.querify(val);
@@ -369,10 +378,10 @@ export default {
                     params,
                     this._axios_config(
                         cancel ?
-                        {
-                            cancelToken: cancel.token,
-                        } :
-                        {}
+                            {
+                                cancelToken: cancel.token,
+                            } :
+                            {}
                     )
                 )
             );
@@ -382,10 +391,10 @@ export default {
                     apiBase + name,
                     this._axios_config(
                         cancel ?
-                        {
-                            cancelToken: cancel.token,
-                        } :
-                        {}
+                            {
+                                cancelToken: cancel.token,
+                            } :
+                            {}
                     )
                 )
             );
@@ -429,7 +438,7 @@ export default {
     queue() {
         return this.call("queue/")
             .then((data) => data.result)
-            .catch(() => {});
+            .catch(() => { });
     },
 
     fav(r) {
@@ -528,24 +537,6 @@ export default {
                     }
                     parent_obj = cand;
                 }
-
-                // parent_obj.children = parent_obj.children.concat(
-                //     x.sources
-                //     .filter((y) => y)
-                //     .sort()
-                //     .filter((y) => !y.match(/[^/]\d+\.pdf$/))
-                //     .map((y) => {
-                //         bundles[x.name + "//" + y] = {
-                //             name: x.name,
-                //             mongocollection: x.mongocollection,
-                //             source: y,
-                //         };
-                //         return {
-                //             id: x.name + "//" + y,
-                //             label: y.match(/(.*\/)?(.*)/)[2],
-                //         };
-                //     })
-                // );
             }
 
             return {
@@ -603,6 +594,18 @@ export default {
             return this.get_item_image(paragraph);
 
         return _prompt_no_image;
+    },
+
+    scope(paragraph) {
+        if (paragraph.author)
+            return 'author=' + JSON.stringify(paragraph.author);
+        if (Array.isArray(paragraph.keywords)) {
+            var ats = paragraph.keywords.filter(x => x.startsWith('@'))
+            if (ats.length) return JSON.stringify(ats[0])
+            var groups = paragraph.keywords.filter(x => x.startsWith('*'))
+            if (groups.length) return JSON.stringify(groups[0])
+        }
+        return 'id=' + paragraph._id;
     },
 
     config: LocalConfig(),

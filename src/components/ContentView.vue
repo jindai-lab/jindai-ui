@@ -49,7 +49,7 @@
           ><a
             class="counter secondary--text chip"
             target="_blank"
-            :href="paragraph.group || `/?q=id%3DObjectId(${paragraph._id})`"
+            :href="paragraph.group_url || `/?q=id%3DObjectId(${paragraph._id})`"
             >{{ paragraph.count || paragraph.images.length }}</a
           ></span
         >
@@ -66,22 +66,18 @@
         target="_blank"
         >{{ paragraph.source.url }}</a
       >
-      {{ text }}
+      <p class="content"> {{ text }} </p>
       <template v-for="tag in tags">
         <a
           v-if="tag != '...'"
           :key="`${paragraph._id}-${Math.random()}-${tag}`"
-          :href="
-            '/?q=' +
-            encodeURIComponent(
+          :href="'/?' + querystring_stringify({
+            groups: tag.match(/^\*/) ? 'none' : (tag.match(/^@/) ? 'group' : ''),
+            q: 
               tag.match(/^[@*]/)
                 ? quote(tag)
-                : quote(tag) +
-                    (paragraph.author
-                      ? ',author=' + quote(paragraph.author)
-                      : '')
-            )
-          "
+                : quote(tag) + ',' + scope(paragraph)
+          })"
           :class="['tag', 'chip', tag_class(tag)]"
           target="_blank"
           >{{ tag }}</a
@@ -144,6 +140,8 @@ export default {
         ? "t_author"
         : "t_" + tag;
     },
+    querystring_stringify: api.querystring_stringify,
+    scope: api.scope
   },
 };
 </script>
@@ -158,6 +156,12 @@ p:hover .fav-button,
 }
 .gallery-description a {
   margin-right: 5px;
+}
+
+.gallery-description .content {
+  max-height: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .gallery-description a.tag.t_author,

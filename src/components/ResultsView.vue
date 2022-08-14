@@ -27,8 +27,8 @@
     <!-- show content -->
     <div class="wrapper-container" v-if="columns.includes('content')">
       <template v-for="(r, index) in visible_data">
-        <div class="spacer" v-if="r.spacer" :key="index"></div>
-        <div class="paragraph" v-else :key="index">
+        <div class="spacer" v-if="r.spacer" :key="'spacer' + index"></div>
+        <div class="paragraph" :data-id="r._id" v-else :key="index">
           <div class="meta">
             <v-checkbox
               v-model="r.selected"
@@ -74,7 +74,7 @@
             @click="update_selection(r, $event, index)"
             @dblclick="view_page(index)"
             :contain="config.contain"
-            :height="200"
+            :height="240"
             :src="get_paragraph_image(r)"
           ></v-img>
           <ContentView
@@ -352,6 +352,7 @@
     <tagging-dialog
       ref="tagging_dialog"
       :choices="dialogs.tagging.choices"
+      :scope="scope(selected_paragraphs())"
       @submit="tag($event, false)"
     ></tagging-dialog>
 
@@ -408,7 +409,7 @@ export default {
         get(target, name) {
           return target[name];
         },
-        set: (target, name, val) => {
+        set(target, name, val) {
           target[name] = val;
           this.$forceUpdate();
         },
@@ -461,13 +462,21 @@ export default {
     page(val) {
       this.turn_page(val);
     },
+    'dialogs.paragraph.visible': function (val) {
+      if (!val && this.$refs.page_view.active_paragraph) {
+        var ele = document.querySelector(`[data-id="${this.$refs.page_view.active_paragraph._id}"]`)
+        window.scrollTo(0, ele.offsetTop)
+      }
+    }
   },
   computed: {
     pages() {
       var p = [];
+      var total = (this.total || this.value.length);
+      if (this.total == -1) total = 1000 * 200;
       for (
         let index = 0, i = 1;
-        index < (this.total || this.value.length) && i <= 1000;
+        index < total && i <= 1000;
         index += api.config.page_size, i++
       ) {
         p.push(i);
@@ -664,6 +673,7 @@ export default {
                 this._open_window(_album.source.url);
                 break;
               case "c":
+                if (e.ctrlKey) return;
                 this._open_window({
                   q: `author=${
                     api.quote(_album.author) ||
@@ -674,7 +684,7 @@ export default {
                 break;
               case "z":
                 this._open_window(
-                  e.shiftKey
+                  !e.shiftKey
                     ? `/?q=id%3D${_album._id}=>expand()`
                     : `/?q=source.url%25%27${api
                         .escape_regex(_album.source.url)
@@ -975,7 +985,7 @@ export default {
           s.forEach(
             (p) =>
               (p.keywords = p.keywords
-                .filter((x) => !x.startsWith("*0") && x !== data.result)
+                .filter((x) => !x.startsWith("*") && x !== data.result)
                 .concat(data.result ? [data.result] : []))
           );
         });
@@ -1010,6 +1020,7 @@ export default {
       return api.get_paragraph_image(i);
     },
     querystring_stringify: api.querystring_stringify,
+    scope: api.scope
   },
 };
 </script>
@@ -1064,8 +1075,8 @@ export default {
 
 .gallery .wrapper-container .paragraph {
   padding: 5px;
-  min-width: 250px;
-  width: 25%;
+  width: 250px;
+  
 }
 
 .spacer {

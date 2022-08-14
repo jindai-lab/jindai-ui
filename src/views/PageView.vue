@@ -341,6 +341,7 @@ export default {
     },
     _event_handler(direction) {
       if (document.getSelection().toString() || !this.value) return;
+
       if (typeof direction !== "string") {
         // key stroke
         const e = direction;
@@ -348,6 +349,7 @@ export default {
           return;
         if (this.playing_timer) clearInterval(this.playing_timer);
         direction = e.key.toLowerCase();
+        if (e.shiftKey) direction += 'shift';
       }
 
       var inc = 0;
@@ -359,6 +361,12 @@ export default {
         case "left":
         case "arrowright":
           inc = 1;
+          break;
+        case "arrowleftshift":
+          inc = -this.item_index - 1;
+          break;
+        case "arrowrightshift":
+          inc = this.active_paragraph_images.length - this.item_index;
           break;
         case "continue":
           inc = this.last_inc;
@@ -376,7 +384,7 @@ export default {
       }
 
       if (inc == 0) return;
-      this.last_inc = inc;
+      this.last_inc = Math.sign(inc);
 
       const _paragraph = (inc) => {
         // paragraph
@@ -417,6 +425,7 @@ export default {
             break;
           } else {
             this.item_index = inc > 0 ? 0 : -1;
+            inc = Math.sign(inc)
           }
           _paragraph(inc);
           break;

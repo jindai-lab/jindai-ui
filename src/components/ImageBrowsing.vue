@@ -66,13 +66,14 @@
                 icon
                 dense
                 :data-keybind="filter.keybind"
-                :href="`?q=author%3D${quote(paragraph.author)};plugin('${format(
+                :href="'/?' + querystring_stringify({
+                  q: scope(paragraph) + `;plugin('${format(
                   filter.format,
                   {
                     mediaitem: item,
                     paragraph: paragraph,
-                  }
-                )}')&archive=true`"
+                  })}')`
+                })"
                 class="t_func sim"
                 target="_blank"
                 ><v-icon>{{ filter.icon }}</v-icon></v-btn
@@ -263,6 +264,8 @@ export default {
       this.$emit("browse", "arrowleft");
       this.browsing_page = 2;
     },
+    querystring_stringify: api.querystring_stringify,
+    scope: api.scope
   },
 };
 </script>

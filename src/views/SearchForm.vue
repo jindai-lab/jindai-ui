@@ -103,8 +103,9 @@ export default {
   },
   mounted() {
     let config = api.config;
-    if (config.page_size) this.page_size = +config.page_size;
+    if (config.page_size) this.page_size = config.page_size;
     if (config.sort) this.sort = config.sort;
+    if (config.groups) this.groups = config.groups;
 
     const search_params = api.querystring_parse(location.search);
     for (var k of ["q", "sort", "groups"])
@@ -217,6 +218,7 @@ export default {
       };
 
       if (params.sort !== "random") api.config.sort = params.sort;
+      api.config.groups = params.groups
 
       api.call("search", params, this.cancel_source).then((data) => {
         if (!data) {

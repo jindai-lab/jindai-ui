@@ -60,6 +60,7 @@
               >
                 <v-icon>mdi-delete</v-icon>
               </v-btn>
+              <v-btn class="ml-5" @click="auto_tags_apply(item._id)"><v-icon>mdi-check</v-icon></v-btn>
             </v-col>
           </v-row>
         </template>
@@ -120,6 +121,7 @@ export default {
   },
   methods: {
     auto_tags_create() {
+      if (this.new_tag.tag == '*') this.new_tag.tag = this.new_tag.cond.replace('@', '*')
       api.put("plugins/autotags", this.new_tag).then((data) => {
         if (!data.__exception__) {
           this.new_tag.tag = "";
@@ -137,6 +139,10 @@ export default {
               (x) => !ids.includes(x._id)
             ))
         );
+    },
+    auto_tags_apply(id) {
+      api.call("plugins/autotags", {apply: id})
+      .then(()=>(api.notify(this.$t('success'))))
     },
     reload() {
       api

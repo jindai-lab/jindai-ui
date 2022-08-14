@@ -187,6 +187,7 @@ export default {
               return this._items_from_array("parameters", [["id", "group-by"]]);
           }
       }
+      return [];
     },
     next() {
       switch (this.selected.type) {

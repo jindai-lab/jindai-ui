@@ -209,10 +209,6 @@ export default {
             /@choose\((.*?)\)/
           );
           if (doc_choose) {
-            this.arg.description = this.arg.description.replace(
-              /@choose\(.*?\)/,
-              ""
-            );
             return _expand_choices(doc_choose[1]);
           }
           return false;
