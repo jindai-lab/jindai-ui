@@ -148,5 +148,8 @@
     "backend-disconnected": "Backend Disconnected.",
     "unmatched-credentials": "Unmatched credentials.",
     "system-admin": "System",
-    "folio-mode": "Folio mode"
+    "folio-mode": "Folio mode",
+    "brackets": "Brackets",
+    "expert-mode": "Expert mode",
+    "success": "Success"
 }

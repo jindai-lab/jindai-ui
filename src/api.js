@@ -28,6 +28,8 @@ function LocalConfig() {
         },
         groups: "none",
         sort: "id",
+        expert: false,
+        multiple_image_domains: true
     };
 
     function _save_config(target) {
@@ -554,7 +556,32 @@ export default {
         return s;
     },
 
-    get_item_image(item) {
+    get_image_url(src) {
+        const host_name_regex = /^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9-]*[A-Za-z0-9])$/;
+
+        var host = '', path = ''
+        if (src.file == 'blocks.h5' && src.block_id)
+            path = `/images/hdf5/${src.block_id}`
+        else
+            path = `/images/object/${Buffer.from(JSON.stringify(src)).toString('base64')}`;
+        
+        const simpleHash = str => {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                const char = str.charCodeAt(i);
+                hash = (hash << 5) - hash + char;
+                hash &= hash; // Convert to 32bit integer
+            }
+            return new Uint32Array([hash])[0].toString(36);
+            };
+            
+        if (this.config.multiple_image_domains && location.hostname.match(host_name_regex))
+            host = '//img-' + simpleHash(path) + '.' + location.host;
+        
+        return host + path;
+    },
+
+    get_item_image(item, disable_args) {
         let config = this.config;
 
         if (!item || !item.source || (!item.source.url && !item.source.file))
@@ -563,14 +590,18 @@ export default {
         var args = "";
         if (item && item.item_type == "video") {
             if (item.thumbnail)
-                return `/api/image?file=blocks.h5&block_id=${item.thumbnail}`;
+                return this.get_image_url({file: 'blocks.h5', block_id: item.thumbnail});
             return _prompt_video;
         }
-        if (config.force_thumbnail) args += "&w=1280";
-        if (config.enhance) args += "&enhance=1";
+        
+        if (!disable_args) {
+            if (config.force_thumbnail) args += "&w=1280";
+            if (config.enhance) args += "&enhance=1";
+        }
+
         if (item.source.file) {
             if (item.source.file == "blocks.h5") item.source.block_id = item._id;
-            return `/api/image${this.querystring_stringify(item.source)}${args}`;
+            return this.get_image_url(item.source) + args;
         }
         return item.source.url;
     },
@@ -578,7 +609,7 @@ export default {
     get_item_video(item) {
         if (item.source.file) {
             if (item.source.file == "blocks.h5") item.source.block_id = item._id;
-            return `/api/image${this.querystring_stringify(item.source)}`;
+            return this.get_image_url(item.source);
         }
         return item.source.url;
     },

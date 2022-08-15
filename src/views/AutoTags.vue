@@ -121,7 +121,8 @@ export default {
   },
   methods: {
     auto_tags_create() {
-      if (this.new_tag.tag == '*') this.new_tag.tag = this.new_tag.cond.replace('@', '*')
+      if (this.new_tag.tag == '*' || !this.new_tag.tag) this.new_tag.tag = this.new_tag.cond.replace('@', '*')
+      if (this.new_tag.tag == this.new_tag.cond) return
       api.put("plugins/autotags", this.new_tag).then((data) => {
         if (!data.__exception__) {
           this.new_tag.tag = "";

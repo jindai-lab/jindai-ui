@@ -45,6 +45,14 @@
               :label="$t('image-full-size')"
             ></v-checkbox> </v-col
         ></v-row>
+        <v-row>
+          <v-col>
+            <v-checkbox
+              flat
+              v-model="config.expert"
+              :label="$t('expert-mode')"
+            ></v-checkbox> </v-col
+        ></v-row>
         <v-row
           ><v-col>
             <v-checkbox

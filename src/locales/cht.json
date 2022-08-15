@@ -148,5 +148,8 @@
     "forbidden": "沒有訪問權限，請重新登錄",
     "unmatched-credentials": "登录信息有误，请检查",
     "system-admin": "系統設置",
-    "folio-mode": "對開模式"
+    "folio-mode": "對開模式",
+    "brackets": "括號",
+    "expert-mode": "專家模式",
+    "success": "成功"
 }

@@ -2,77 +2,83 @@
   <v-card flat>
     <v-card-title>{{ $t("search") }}</v-card-title>
     <v-card-text @drop.prevent="drop_json_file" @dragover.prevent>
-      <v-row>
-        <v-col>
-          <v-text-field
-            class="d-inline-block selector"
-            :style="{ width: 'calc(100% - 120px)', 'min-width': '200px' }"
-            dense
-            v-model="q"
-            @keyup.enter="search"
-            :label="$t('query')"
-          ></v-text-field>
-          <v-combobox
-            class="d-inline-block ml-5 selector"
-            v-model="sort"
-            :label="$t('sort')"
-            dense
-            :style="{ width: '100px' }"
-            :items="[
-              { text: $t('default'), value: '' },
-              { text: $t('pdate'), value: 'pdate' },
-              { text: $t('pdate-rev'), value: '-pdate' },
-              { text: $t('source'), value: 'source' },
-              { text: $t('random'), value: 'random' },
-            ]"
-          ></v-combobox>
-        </v-col>
-      </v-row>
-      <v-row style="margin-top: -24px">
-        <v-col>
-          <treeselect
-            :multiple="true"
-            :options="datasets"
-            v-model="selected_datasets"
-            :placeholder="$t('dataset')"
-          />
-        </v-col>
-      </v-row>
-      <v-row class="ml-0 mb-3">
-        <v-btn @click="search" color="primary">{{ $t("search") }}</v-btn>
-        <span class="ml-5" style="line-height: 100%; vertical-align: middle">
-          {{ $t("grouping") }}
-          <v-combobox
-            class="d-inline-block ml-1"
-            style="width: 80px"
-            dense
-            flat
-            :items="[
-              { text: $t('none'), value: 'none' },
-              { text: $t('group'), value: 'group' },
-              { text: $t('source'), value: 'source' },
-              { text: $t('author'), value: 'author' },
-            ]"
-            v-model="groups"
-          />
-        </span>
-        <v-spacer></v-spacer>
-        <v-btn @click="export_query" class="exports">
-          <v-icon>mdi-clipboard-outline</v-icon> {{ $t("export-task") }}
-        </v-btn>
-        <v-btn @click="export_file('xlsx')" class="exports">
-          <v-icon>mdi-file-excel</v-icon> {{ $t("export-excel") }}
-        </v-btn>
-        <v-btn @click="export_file('json')" class="exports">
-          <v-icon>mdi-download</v-icon> {{ $t("export-json") }}
-        </v-btn>
-      </v-row>
-      <ResultsView
-        class="mt-5"
-        :page_size="page_size"
-        @load="load_search"
-        ref="results"
-      />
+      <form autocapitalize="off" autocorrect="off" spellcheck="false">
+        <v-row>
+          <v-col v-if="expert">
+            <ParamInput :arg="{name: $t('query'), type: 'QUERY'}" v-model="q"
+              @keyup.ctrl.enter="search"
+              ref="search_code"
+              class="mb-5"></ParamInput>
+          </v-col>
+          <v-col v-else>
+            <v-text-field
+              class="d-inline-block selector"
+              :style="{ width: 'calc(100% - 120px)', 'min-width': '200px' }"
+              dense
+              v-model="q"
+              @keyup.enter="search"
+              :label="$t('query')"
+            ></v-text-field>
+            <v-combobox
+              class="d-inline-block ml-5 selector"
+              v-model="sort"
+              :label="$t('sort')"
+              dense
+              :style="{ width: '100px' }"
+              :items="[
+                { text: $t('default'), value: '' },
+                { text: $t('pdate'), value: 'pdate' },
+                { text: $t('pdate-rev'), value: '-pdate' },
+                { text: $t('source'), value: 'source' },
+                { text: $t('random'), value: 'random' },
+              ]"
+            ></v-combobox>
+          </v-col>
+        </v-row>
+        <v-row style="margin-top: -24px">
+          <v-col>
+            <treeselect
+              :multiple="true"
+              :options="datasets"
+              v-model="selected_datasets"
+              :placeholder="$t('dataset')"
+            />
+          </v-col>
+        </v-row>
+        <v-row class="ml-0 mb-3">
+          <v-btn @click="search" color="primary">{{ $t("search") }}</v-btn>
+          <span class="ml-5" style="line-height: 100%; vertical-align: middle">
+            {{ $t("grouping") }}
+            <v-combobox
+              class="d-inline-block ml-1"
+              style="width: 80px"
+              dense
+              flat
+              :items="[
+                { text: $t('none'), value: 'none' },
+                { text: $t('group'), value: 'group' },
+                { text: $t('source'), value: 'source' },
+                { text: $t('author'), value: 'author' },
+              ]"
+              v-model="groups"
+            />
+          </span>
+          <v-spacer></v-spacer>
+          <v-btn @click="export_query" class="exports">
+            <v-icon>mdi-clipboard-outline</v-icon>
+            {{ $t("export-task") }}
+          </v-btn>
+          <v-btn @click="export_file('xlsx')" class="exports">
+            <v-icon>mdi-file-excel</v-icon>
+            {{ $t("export-excel") }}
+          </v-btn>
+          <v-btn @click="export_file('json')" class="exports">
+            <v-icon>mdi-download</v-icon>
+            {{ $t("export-json") }}
+          </v-btn>
+        </v-row>
+      </form>
+      <ResultsView class="mt-5" :page_size="page_size" @load="load_search" ref="results" />
     </v-card-text>
   </v-card>
 </template>
@@ -80,10 +86,11 @@
 <script>
 import api from "../api";
 import ResultsView from "../components/ResultsView";
+import ParamInput from "../components/ParamInput.vue";
 
 export default {
   name: "SearchForm",
-  components: { ResultsView },
+  components: { ResultsView, ParamInput },
   data() {
     return {
       datasets: [],
@@ -99,6 +106,7 @@ export default {
       external_json: null,
       page_size: 50,
       cancel_source: api.cancel_source(),
+      expert: api.config.expert
     };
   },
   mounted() {
@@ -110,6 +118,7 @@ export default {
     const search_params = api.querystring_parse(location.search);
     for (var k of ["q", "sort", "groups"])
       if (search_params[k]) this[k] = search_params[k];
+    if (api.config.expert) this.$refs.search_code.refresh(this.q);
 
     api.get_datasets_hierarchy().then((data) => {
       this.datasets = data.hierarchy;
@@ -122,14 +131,14 @@ export default {
   methods: {
     datasets_req() {
       var selected = this.selected_datasets.map(
-          (sid) => this.selection_bundles[sid]
-        ),
+        (sid) => this.selection_bundles[sid]
+      ),
         req = "";
 
       if (selected.length > 0) {
         var datasets = selected
-            .filter((x) => !x.source)
-            .map((x) => api.escape_regex(x.name)),
+          .filter((x) => !x.source)
+          .map((x) => api.escape_regex(x.name)),
           sourcefiles = selected
             .filter((x) => x.source)
             .map((x) => ({
@@ -190,12 +199,12 @@ export default {
 
       if (this.external_json) {
         e.callback({
-          result: this.external_json.result.results.slice(
+          result: this.external_json.slice(
             e.offset,
             e.offset + e.limit
           ),
           offset: e.offset,
-          total: this.external_json.result.total,
+          total: this.external_json.length,
           token,
         });
         return;
@@ -209,7 +218,7 @@ export default {
       var params = {
         q: this.q,
         req: this.req,
-        sort: typeof this.sort === "object" ? this.sort.value : this.sort,
+        sort: this.expert ? '' : (typeof this.sort === "object" ? this.sort.value : this.sort),
         mongocollections: this.selected_mongocollections,
         offset: e.offset,
         limit: e.limit,
@@ -228,10 +237,10 @@ export default {
         if (data.result.query) {
           var reg = new RegExp(
             "(" +
-              this.keyword_patterns(data.result.query)
-                .filter((x) => x)
-                .join("|") +
-              ")",
+            this.keyword_patterns(data.result.query)
+              .filter((x) => x)
+              .join("|") +
+            ")",
             "gi"
           );
           this.results = data.result.results;
@@ -280,10 +289,10 @@ export default {
     export_query(format, callback) {
       if (typeof callback !== "function")
         callback = (data) =>
-          this.$router.push("/tasks/" + data.result).catch(() => {});
+          this.$router.push("/tasks/" + data.result).catch(() => { });
       api
         .put("tasks/", {
-          name: this.$t("search") + " " + this.q,
+          name: this.$t("search") + " " + new Date().toLocaleString().replace(/[^\d]/g, ''),
           pipeline: [
             [
               "DBQueryDataSource",

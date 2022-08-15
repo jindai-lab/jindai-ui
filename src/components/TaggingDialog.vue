@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="visible" width="unset">
+  <v-dialog v-model="visible" width="75%">
     <v-card>
       <v-card-title>{{ $t("tagging") }}</v-card-title>
       <v-card-text style="height: 400px">

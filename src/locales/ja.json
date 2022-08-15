@@ -149,5 +149,8 @@
     "forbidden": "アクセスできません。もう一度ログインしてください",
     "unmatched-credentials": "ユーザー名またはパスワードが間違っています",
     "system-admin": "システム設定",
-    "folio-mode": "フォリオ"
+    "folio-mode": "フォリオ",
+    "brackets": "括弧を使う",
+    "expert-mode": "専門家用",
+    "success": "完了"
 }

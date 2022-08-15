@@ -323,7 +323,7 @@ export default {
           ? { file: this.file, page: this.page }
           : this.active_paragraph.source;
       if (src && src.file && typeof src.page !== "undefined") {
-        var image_url = `/api/image${api.querystring_stringify(src)}`;
+        var image_url = api.get_image_url(src);
         var image_element = new Image();
         image_element.src = image_url;
         image_element.onload = () => {
