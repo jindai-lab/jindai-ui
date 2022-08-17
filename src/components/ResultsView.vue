@@ -25,7 +25,7 @@
     <!-- divider -->
     <v-divider class="mt-5 mb-5"></v-divider>
     <!-- show content -->
-    <div class="wrapper-container" v-if="columns.includes('content')">
+    <div class="wrapper-container" ref="all_items" v-if="columns.includes('content')">
       <template v-for="(r, index) in visible_data">
         <div class="spacer" v-if="r.spacer" :key="'spacer' + index"></div>
         <div class="paragraph" :data-id="r._id" v-else :key="index">
@@ -197,6 +197,7 @@
       :paragraphs="visible_data"
       :view_mode="config.view_mode"
       :start_index="dialogs.paragraph.start_index"
+      :plugin_pages="plugin_pages"
       @next="turn_page(page + 1)"
       @prev="turn_page(page - 1)"
       @browse="browsing = $event"
@@ -354,6 +355,7 @@
       :choices="dialogs.tagging.choices"
       :scope="scope(selected_paragraphs())"
       @submit="tag($event, false)"
+      @author="set_author"
     ></tagging-dialog>
 
     <QuickActionButtons
@@ -521,6 +523,10 @@ export default {
           value: task.pipeline,
         })))
     );
+
+    api
+      .call("plugins/filters")
+      .then((data) => (this.plugin_pages = data.result));
   },
   created() {
     window.addEventListener("keyup", this._keyup_handler);
@@ -566,11 +572,18 @@ export default {
             this.token = data.token;
 
             if (typeof data.result !== "undefined") {
+
+              if (Array.isArray(data.result) && !data.result.length) {
+                if (this.page > 1) this.page = 1;
+                return
+              }
+
               this.selection = [];
               this.page_range = [data.offset, data.offset + data.result.length];
               var items = data.result.map((x) =>
                 Object.assign(x, { selected: false })
               );
+
               var has_sticky = items.filter((x) => x.spacer).length > 0;
               if (has_sticky) {
                 var sticky_flag = true;
@@ -584,6 +597,18 @@ export default {
                 this.sticky = [];
                 this.value = items;
               }
+
+              // preload images for every item
+              items.map((x) => {
+                if (x.images) {
+                  [... x.images.slice(0, 5), ... x.images.slice(-1)].map((i) => {
+                    if (i.item_type == 'image') {
+                      let image = new Image()
+                      image.src = api.get_item_image(i)
+                    }
+                  })
+                }
+              })
 
               if (typeof cb == "function") cb();
             }
@@ -614,6 +639,12 @@ export default {
     },
     _keyup_handler(e) {
       if (e.target.tagName == "INPUT" || e.target.tagName == "TEXTAREA") return;
+      
+      var selection_inc = 0, ele;
+      var selection_line_number;
+      if(this.$refs.all_items && document.querySelector('.paragraph'))
+        selection_line_number = parseInt( this.$refs.all_items.clientWidth / document.querySelector('.paragraph').clientWidth)
+          
       switch (e.key.toLowerCase()) {
         case "arrowleft":
           if (!this.dialogs.paragraph.visible) this.turn_page(this.page - 1);
@@ -638,6 +669,8 @@ export default {
           this.tag([`noted:${new Date().toISOString()}`]);
           break;
         case "d":
+        case "-":
+        case "delete":
           if (this.last_key == e.key && this.selected_paragraphs().length > 0) {
             this.delete_items();
             this.last_key = null;
@@ -680,12 +713,13 @@ export default {
                     _album.keywords.filter((x) => x.startsWith("@"))[0] ||
                     ""
                   }`,
+                  groups: 'none'
                 });
                 break;
               case "z":
                 this._open_window(
                   !e.shiftKey
-                    ? `/?q=id%3D${_album._id}=>expand()`
+                    ? `/?q=id%3D${_album._id}=>expand()&groups=none`
                     : `/?q=source.url%25%27${api
                         .escape_regex(_album.source.url)
                         .replace(/\/\d+\//, "/.*/")}'`
@@ -697,6 +731,39 @@ export default {
                 break;
             }
           }
+          break;
+        case "h":
+        case "j":
+        case "k":
+        case "l":
+        case ";":
+          // move selection in vim favor
+          switch (e.key.toLowerCase()) {
+            case "h":
+              selection_inc = -1;
+              break
+            case "j":
+              selection_inc = selection_line_number;
+              break
+            case "k":
+              selection_inc = -selection_line_number;
+              break
+            case "l":
+              selection_inc = 1;
+              break;
+            case ";":
+              selection_inc = 0;
+              break;
+          }
+          if (this.select_index < 0) selection_inc = 0;
+          else selection_inc = Math.min(Math.max(0, this.select_index + selection_inc), this.visible_data.length);
+          if (!e.ctrlKey && !e.shiftKey) {
+            this.clear_selection();
+          }
+          this.update_selection(this.visible_data[selection_inc], e, selection_inc);
+          ele = document.querySelector(`[data-id="${this.visible_data[selection_inc]._id}"]`);
+          window.scrollTo(0, ele.offsetTop - ele.clientHeight)
+          this.select_index = selection_inc;
           break;
         case "0":
         case "1":
@@ -714,14 +781,12 @@ export default {
           break;
         default:
           var pages = Object.values(this.plugin_pages).filter(
-            (x) => x.shortcut == e.key
+            (x) => x.keybind == e.key
           );
           if (pages.length) {
             this._open_window({
               archive: true,
-              q: `author=${
-                this.quote(this.selected_paragraphs()[0].author) || ""
-              };plugin('${this.format(pages[0].format, {
+              q: `${this.scope(this.selected_paragraphs()[0])};plugin('${this.format(pages[0].format, {
                 mediaitem: this.selected_items()[0],
                 paragraph: this.selected_paragraphs()[0],
               })}')`,
@@ -751,6 +816,17 @@ export default {
         this.dialogs.send_task.pipeline = target;
         this.$refs.quicktask_results.start(1);
       }
+    },
+    format(str, bundle) {
+      function _replace(_, i) {
+        var b = bundle;
+        for (var k of i.split(".")) b = b[k] || "";
+        return b;
+      }
+      return (
+        (typeof str == "string" && str.replace(/\{([\w\d._]+)\}/g, _replace)) ||
+        ""
+      );
     },
     quicktask(e) {
       api
@@ -875,6 +951,25 @@ export default {
         );
         this.$refs.tagging_dialog.show(Array.from(existing_tags));
       }
+    },
+    set_author(author) {
+      var s = this.selected_paragraphs();
+      if (!s || !s.length) return;
+      api
+        .call(
+          `collections/${s[0].mongocollection || "paragraph"}/batch`,
+          {
+            ids: this.selected_ids(),
+            author,
+            $push: {keywords: author}
+          }
+        )
+        .then((data) => {
+          this.clear_selection(s);
+          s.forEach((p) => {
+            data.result[p._id] && (p.author = data.result[p._id].author);
+          });
+        });
     },
     tag(e, append = true) {
       var s = this.selected_paragraphs();

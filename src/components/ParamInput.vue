@@ -98,6 +98,7 @@
         @input="$emit('input', code)"
         :highlight="highlighter"
         line-numbers
+        @keyup.ctrl.enter="$emit('submit')"
       />
     </div>
 

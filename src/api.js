@@ -9,13 +9,14 @@ const _prompt_video = require("../public/assets/video.png");
 const apiBase = "/api/";
 const _stack = [];
 var _token = localStorage.token || "";
-Cookies.set("token", _token);
+Cookies.set("token", _token, { domain: '.' + location.hostname });
 
 function LocalConfig() {
     // Local Config Object
 
     let defaults = {
         fit: "both",
+        drawer: true,
         contain: false,
         enhance: false,
         force_thumbnail: false,
@@ -556,15 +557,9 @@ export default {
         return s;
     },
 
-    get_image_url(src) {
+    _generate_domain(path, prefix) {
         const host_name_regex = /^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9-]*[A-Za-z0-9])$/;
 
-        var host = '', path = ''
-        if (src.file == 'blocks.h5' && src.block_id)
-            path = `/images/hdf5/${src.block_id}`
-        else
-            path = `/images/object/${Buffer.from(JSON.stringify(src)).toString('base64')}`;
-        
         const simpleHash = str => {
             let hash = 0;
             for (let i = 0; i < str.length; i++) {
@@ -574,11 +569,28 @@ export default {
             }
             return new Uint32Array([hash])[0].toString(36);
             };
-            
+
         if (this.config.multiple_image_domains && location.hostname.match(host_name_regex))
-            host = '//img-' + simpleHash(path) + '.' + location.host;
+            return `//${prefix}-` + simpleHash(path) + '.' + location.host;
         
-        return host + path;
+        return ''
+    },
+
+    get_image_url(src) {
+        var path = ''
+        if (src.file == 'blocks.h5' && src.block_id) {
+            let ext = (src.url || src.orig_path || '').split('.').pop()
+            path = `/images/hdf5/${src.block_id}/image.${ext.length <= 4 ? ext : 'data'}`
+        } else if (src.file && !src.page)
+            path = `/images/file/${src.file}`
+        else if (src.file.match(/\.pdf$/) && src.page)
+            path = `/images/file/${src.file}__hash/pdf/${src.page}`
+        else if (src.url)
+            path = src.url
+        else
+            path = `/images/object/${Buffer.from(JSON.stringify(src)).toString('base64')}`;
+        
+        return this._generate_domain(path, 'img') + path;
     },
 
     get_item_image(item, disable_args) {
@@ -590,13 +602,13 @@ export default {
         var args = "";
         if (item && item.item_type == "video") {
             if (item.thumbnail)
-                return this.get_image_url({file: 'blocks.h5', block_id: item.thumbnail});
+                return this.get_image_url({file: 'blocks.h5', block_id: item.thumbnail, url: '.jpg'});
             return _prompt_video;
         }
         
         if (!disable_args) {
-            if (config.force_thumbnail) args += "&w=1280";
-            if (config.enhance) args += "&enhance=1";
+            if (config.force_thumbnail) args += "__hash/thumbnail/1280";
+            // if (config.enhance) args += "&enhance=1";
         }
 
         if (item.source.file) {

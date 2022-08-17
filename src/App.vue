@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <v-navigation-drawer v-model="drawer" app v-if="!viewer">
+    <v-navigation-drawer v-model="drawer" app v-if="!viewer" disable-resize-watcher>
       <v-list nav>
         <v-list-item link @click="$router.push('/')">
           <v-list-item-title>{{ $t("search") }}</v-list-item-title>
@@ -187,6 +187,7 @@ export default {
       app_dark: false,
       copyright: "",
       ui_language: "",
+      queue_timeout_flag: 0,
     };
   },
   watch: {
@@ -200,6 +201,9 @@ export default {
       setup(val);
       api.locale = val;
     },
+    drawer(val) {
+      api.config.drawer = val;
+    }
   },
   created() {
     this.ui_language = this.$i18n.locale;
@@ -219,7 +223,8 @@ export default {
                   : message,
               visible: true,
             },
-          ]);
+          ])
+          .slice(0, 5);
       })
       .$on("finish", (key) => {
         if (this.logs[key]) delete this.logs[key];
@@ -244,6 +249,14 @@ export default {
       Object.assign(this, data.result);
     });
     this.$emit("logined");
+    window.onblur = () => {
+      this.queue_source.close()
+      this.queue_source = null
+    }
+    window.onfocus = () => {
+      this.queue_event()
+    }
+    this.drawer = api.config.drawer;
   },
   computed: {
     viewer() {
@@ -272,10 +285,6 @@ export default {
           if (this.console_outputs.length > 100)
             this.console_outputs.splice(50, this.console_outputs.length - 50);
         } else this.update_queue(data);
-      };
-      this.queue_source.onerror = () => {
-        this.queue_source = null;
-        setTimeout(() => this.queue_event(), 5000);
       };
     },
   },

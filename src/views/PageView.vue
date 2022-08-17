@@ -91,6 +91,7 @@
             <ImageBrowsing
               :paragraph="active_paragraph"
               :item="active_item"
+              :plugin_pages="plugin_pages"
               v-if="value"
               @info="$emit('info', $event)"
               @browse="_event_handler"
@@ -186,6 +187,7 @@ export default {
       playing_timer: 0,
       playing_interval: 1000,
       last_inc: 1,
+      last_wheel: new Date()
     };
   },
   props: {
@@ -201,6 +203,9 @@ export default {
     value: {
       default: true,
     },
+    plugin_pages: {
+      default: []
+    }
   },
   computed: {
     window_height() {
@@ -276,7 +281,10 @@ export default {
   methods: {
     _wheel_handler(e) {
       if (this.view_mode !== "gallery") return;
-      this._event_handler(e.deltaY > 0 ? "arrowright" : "arrowleft");
+      if (new Date() - this.last_wheel > 100) {
+        this._event_handler(e.deltaY > 0 ? "arrowright" : "arrowleft");
+        this.last_wheel = new Date();
+      }
       e.preventDefault();
     },
     update_pdfpage() {

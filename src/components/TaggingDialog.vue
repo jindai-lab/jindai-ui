@@ -1,8 +1,8 @@
 <template>
-  <v-dialog v-model="visible" width="75%">
+  <v-dialog v-model="visible" content-class="dialog-limit">
     <v-card>
       <v-card-title>{{ $t("tagging") }}</v-card-title>
-      <v-card-text style="height: 400px">
+      <v-card-text>
         <v-combobox
           autofocus
           v-model="tag_new"
@@ -17,6 +17,9 @@
           auto-select-first
           label="标签"
           ref="ac"
+          :filter="match_pattern"
+          @keyup.enter="() => (++enter_hit == 2 ? do_submit() : null)"
+          max-height="180"
         ></v-combobox>
         <v-expansion-panels>
           <v-expansion-panel dense key="batched">
@@ -35,9 +38,18 @@
               ></v-text-field>
             </v-expansion-panel-content>
           </v-expansion-panel>
+          <v-expansion-panel dense key="author">
+            <v-expansion-panel-header>{{
+              $t("author")
+            }}</v-expansion-panel-header>
+            <v-expansion-panel-content>
+              <v-combobox v-model="author" :label="$t('text')" :items="author_candidates"></v-combobox>
+            </v-expansion-panel-content>
+          </v-expansion-panel>
         </v-expansion-panels>
       </v-card-text>
       <v-card-actions>
+        <div style="margin-top: 250px">        
         <v-btn
           color="primary"
           @click="
@@ -54,7 +66,7 @@
           "
         >
           {{ $t("cancel") }}
-        </v-btn>
+        </v-btn></div>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -75,6 +87,8 @@ export default {
       batch: "",
       batch_delim: "",
       batch_prefix: "",
+      enter_hit: 0,
+      author: ""
     };
   },
   props: {
@@ -99,6 +113,11 @@ export default {
       if (this.tag_typing) this.tag_typing = "";
     },
   },
+  computed: {
+    author_candidates() {
+      return this.tag_new.filter(x => !(x.value || x).startsWith('*')).sort()
+    }
+  },
   mounted() {
     Object.assign(this, api.config.tagging);
   },
@@ -117,17 +136,26 @@ export default {
         })
       }
     },
+    escape_search(search) {
+      if (search.match(/^[@*]/))
+        search = '\\' + search[0] + '.*' + api.escape_regex(search.substr(1));
+      else
+        search = api.escape_regex(search);
+      return search
+    },
+    match_pattern(item, query, item_text) {
+      return item_text.match(new RegExp(this.escape_search(query), "i"))
+    },
     search_tag(search) {
       if (this.cancel) this.cancel.cancel();
       if (search.length == 0 || search == "*" || search == "@") return;
       this.tag_choices = [...this.tag_new];
       this.cancel = api.cancel_source();
-      search = api.escape_regex(search);
       api
         .call(
           "term/keywords",
           {
-            pattern: search,
+            pattern: this.escape_search(search),
             regex: true,
           },
           this.cancel
@@ -153,6 +181,11 @@ export default {
         });
     },
     do_submit() {
+      this.enter_hit = 0;
+      if (this.author) {
+        this.$emit("author", this.author)
+        this.author = ''
+      }
       if (this.batch)
         this.tag_new.push(
           ...this.batch
@@ -173,3 +206,19 @@ export default {
   },
 };
 </script>
+
+<style scope>
+.dialog-limit {
+  max-width: 800px !important;
+  width: 75% !important;
+  margin: auto;
+}
+.v-select__selections {
+  overflow-x: hidden;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.v-chip {
+  overflow: initial;
+}
+</style>

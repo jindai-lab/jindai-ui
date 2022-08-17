@@ -41,10 +41,10 @@ $forceUpdate();
           <a
             class="counter secondary--text chip"
             target="_blank"
-            :href="paragraph.group_url || `/?q=id%3DObjectId(${paragraph._id})`"
+            :href="(paragraph.group_url || `/?q=id%3DObjectId(${paragraph._id})`) + '=>expand()&groups=none'"
           >{{ paragraph.count || paragraph.images.length }}</a>
         </span>
-        <a :href="paragraph.source.url" target="_blank" class="orig no-underline">🌍</a>
+        <v-btn :href="paragraph.source.url" target="_blank" class="orig no-underline" icon><v-icon>mdi-web</v-icon></v-btn>
       </span>
       <a
         :href="'/?q=source.url%3D`' + (paragraph.source.url || '') + '`'"
@@ -56,7 +56,7 @@ $forceUpdate();
         <a
           v-if="tag != '...'"
           :key="`${paragraph._id}-${Math.random()}-${tag}`"
-          :href="'/?' + querystring_stringify({
+          :href="'/' + querystring_stringify({
             groups: tag.match(/^\*/) ? 'none' : (tag.match(/^@/) ? 'group' : ''),
             q:
               tag.match(/^[@*]/)
@@ -127,7 +127,8 @@ export default {
         ? "t_group"
         : tag == this.paragraph.author
           ? "t_author"
-          : "t_" + tag;
+          : tag != 'author' && tag != 'group'?
+            "t_" + tag : '';
     },
     querystring_stringify: api.querystring_stringify,
     scope: api.scope

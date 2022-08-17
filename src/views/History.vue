@@ -8,10 +8,10 @@
         <v-col cols="6" v-text="h.queries.join('\n')"></v-col>
         <v-col>
           <v-btn icon @click="export_query(h)">
-            <v-icon>mdi-share</v-icon>
+            <v-icon>mdi-file-export</v-icon>
           </v-btn>
           <v-btn icon @click="replay(h)">
-            <v-icon>mdi-replay</v-icon>
+            <v-icon>mdi-eye</v-icon>
           </v-btn>
         </v-col>
       </v-row>

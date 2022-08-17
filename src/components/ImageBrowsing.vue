@@ -61,12 +61,11 @@
             </div>
             <div>
               <v-btn
-                v-for="(filter, page_name) in plugin_filters"
+                v-for="(filter, page_name) in plugin_pages"
                 :key="page_name"
                 icon
                 dense
-                :data-keybind="filter.keybind"
-                :href="'/?' + querystring_stringify({
+                :href="'/' + querystring_stringify({
                   q: scope(paragraph) + `;plugin('${format(
                   filter.format,
                   {
@@ -85,9 +84,6 @@
                 target="_blank"
                 data-keybind="i"
                 ><v-icon>mdi-information</v-icon></v-btn
-              >
-              <v-btn icon dense @click="google" data-keybind="m"
-                ><v-icon>mdi-google</v-icon></v-btn
               >
             </div>
           </v-row>
@@ -113,10 +109,9 @@ export default {
     ContentView,
     VideoPlayer,
   },
-  props: ["paragraph", "item"],
+  props: ["paragraph", "item", "plugin_pages"],
   data() {
     return {
-      plugin_filters: [],
       browsing_page: 2,
     };
   },
@@ -124,11 +119,6 @@ export default {
     item(val) {
       if (!val || !val.source) this.$emit("browse", "continue");
     },
-  },
-  created() {
-    api
-      .call("plugins/filters")
-      .then((data) => (this.plugin_filters = data.result));
   },
   computed: {
     browsing_video() {
@@ -149,37 +139,6 @@ export default {
         (typeof str == "string" && str.replace(/\{([\w\d._]+)\}/g, _replace)) ||
         ""
       );
-    },
-    google() {
-      var image = this.$refs.browsing_image;
-      function getDataUri(image, callback) {
-        var canvas = document.createElement("canvas");
-        canvas.width = (image.naturalWidth * 300) / image.naturalHeight;
-        canvas.height = 300;
-        canvas
-          .getContext("2d")
-          .drawImage(image, 0, 0, canvas.width, canvas.height);
-        callback(
-          canvas
-            .toDataURL("image/jpeg")
-            .replace(/^data:image\/(png|jpeg);base64,/, "")
-        );
-      }
-
-      getDataUri(image, function (dataUrl) {
-        dataUrl = dataUrl.replace(/\//g, "_").replace(/\+/g, "-");
-        var html =
-          `<html>
-          <head><title>Search by Image (by Google)</title></head>
-          <body><form id="f" method="POST" action="https://www.google.com/searchbyimage/upload" enctype="multipart/form-data">
-            <input type="hidden" name="image_content" value="${dataUrl}">
-            <input type="hidden" name="filename" value=""><input type="hidden" name="image_url" value=""><input type="hidden" name="sbisrc" value="cr_1_5_2">
-            <input type="hidden" name="width" value="${image.naturalWidth}"><input type="hidden" name="height" value="${image.naturalHeight}">
-          </form><script>document.getElementById("f").submit();</scr` +
-          `ipt></body></html>`;
-        var win = window.open();
-        win.document.write(html);
-      });
     },
     get_item_image(item) {
       return api.get_item_image(item);

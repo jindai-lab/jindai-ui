@@ -4,16 +4,13 @@
     <v-card-text @drop.prevent="drop_json_file" @dragover.prevent>
       <form autocapitalize="off" autocorrect="off" spellcheck="false">
         <v-row>
-          <v-col v-if="expert">
-            <ParamInput :arg="{name: $t('query'), type: 'QUERY'}" v-model="q"
-              @keyup.ctrl.enter="search"
+          <v-col>
+            <ParamInput :arg="{name: $t('query'), type: 'QUERY'}" v-model="q" v-if="expert"
               ref="search_code"
-              class="mb-5"></ParamInput>
-          </v-col>
-          <v-col v-else>
-            <v-text-field
-              class="d-inline-block selector"
-              :style="{ width: 'calc(100% - 120px)', 'min-width': '200px' }"
+              @submit="search"
+              class="mb-5 d-inline-block cond-width"></ParamInput>
+            <v-text-field v-else
+              class="d-inline-block selector cond-width"
               dense
               v-model="q"
               @keyup.enter="search"
@@ -211,14 +208,19 @@ export default {
       }
       if (!this.q && !this.req) return;
 
+      if (this.q.startsWith('file:')) {
+        this.load_remote_file(this.q.substring(5).trim())
+        return
+      }
+
       if (this.cancel_source) this.cancel_source.cancel();
 
       this.cancel_source = api.cancel_source();
 
       var params = {
-        q: this.q,
+        q: (this.expert ? '? ' : '') + this.q,
         req: this.req,
-        sort: this.expert ? '' : (typeof this.sort === "object" ? this.sort.value : this.sort),
+        sort: typeof this.sort === "object" ? this.sort.value : this.sort,
         mongocollections: this.selected_mongocollections,
         offset: e.offset,
         limit: e.limit,
@@ -330,6 +332,12 @@ export default {
       };
       reader.readAsText(file);
     },
+    load_remote_file(path) {
+      api.call('image?file=' + path).then((data) => {
+        this.external_json = data
+        this.$refs.results.start()
+    })
+    }
   },
 };
 </script>
@@ -352,5 +360,10 @@ export default {
 
 .exports {
   margin-right: 12px;
+}
+
+.cond-width {
+  width: calc(100% - 120px);
+  min-width: 200px;
 }
 </style>
