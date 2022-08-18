@@ -581,10 +581,11 @@ export default {
         if (src.file == 'blocks.h5' && src.block_id) {
             let ext = (src.url || src.orig_path || '').split('.').pop()
             path = `/images/hdf5/${src.block_id}/image.${ext.length <= 4 ? ext : 'data'}`
-        } else if (src.file && !src.page)
-            path = `/images/file/${src.file}`
-        else if (src.file.match(/\.pdf$/) && src.page)
+        }
+        else if (src.file.match(/\.pdf$/) && typeof(src.page) !== 'undefined')
             path = `/images/file/${src.file}__hash/pdf/${src.page}`
+        else if (src.file)
+            path = `/images/file/${src.file}`
         else if (src.url)
             path = src.url
         else

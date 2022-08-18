@@ -112,7 +112,8 @@ export default {
     if (config.sort) this.sort = config.sort;
     if (config.groups) this.groups = config.groups;
 
-    const search_params = api.querystring_parse(location.search);
+    let search_params = api.querystring_parse(location.search);
+    if (config.expert && search_params.q && search_params.q.startsWith('? ')) search_params.q = search_params.q.replace(/^\? /, '')
     for (var k of ["q", "sort", "groups"])
       if (search_params[k]) this[k] = search_params[k];
     if (api.config.expert) this.$refs.search_code.refresh(this.q);
