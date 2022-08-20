@@ -54,7 +54,6 @@
           color="primary"
           @click="
             do_submit();
-            visible = false;
           "
         >
           {{ $t("ok") }}
@@ -202,6 +201,7 @@ export default {
         "submit",
         this.tag_new.map((x) => x.value || x) || [this.tag_typing]
       );
+      this.visible = false;
     },
   },
 };

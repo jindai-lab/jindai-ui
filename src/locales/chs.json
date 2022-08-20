@@ -151,5 +151,6 @@
     "folio-mode": "对开模式",
     "brackets": "括号",
     "expert-mode": "专家模式",
-    "success": "成功"
+    "success": "成功",
+    "latest-imported": "最近导入"
 }

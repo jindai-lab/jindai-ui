@@ -23,10 +23,11 @@
               dense
               :style="{ width: '100px' }"
               :items="[
-                { text: $t('default'), value: '' },
+                { text: $t('default'), value: 'id' },
                 { text: $t('pdate'), value: 'pdate' },
                 { text: $t('pdate-rev'), value: '-pdate' },
                 { text: $t('source'), value: 'source' },
+                { text: $t('latest-imported'), value: '-id' },
                 { text: $t('random'), value: 'random' },
               ]"
             ></v-combobox>
