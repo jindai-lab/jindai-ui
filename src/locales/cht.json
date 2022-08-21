@@ -152,5 +152,7 @@
     "brackets": "括號",
     "expert-mode": "專家模式",
     "success": "成功",
-    "latest-imported": "最近導入"
+    "latest-imported": "最近導入",
+    "new-folder": "新資料夾",
+    "folder-name": "資料夾名"
 }

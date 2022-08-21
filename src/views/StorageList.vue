@@ -16,6 +16,9 @@
           <v-btn color="primary" @click="open_file_dialog()">
             <v-icon>mdi-upload</v-icon> {{ $t("upload") }}
           </v-btn>
+          <v-btn color="primary" class="ml-5" @click="new_folder()">
+            <v-icon>mdi-plus</v-icon> {{ $t("new-folder") }}
+          </v-btn>
           <span class="name ml-5">{{ selected_dir }}</span>
         </v-col>
       </v-row>
@@ -147,6 +150,13 @@ export default {
   methods: {
     open_file_dialog() {
       document.getElementById("file").click();
+    },
+    new_folder() {
+      var folder = prompt(this.$t("folder-name"))
+      if (!folder) return
+      api.call(`storage/${this.selected_dir}`, {mkdir: folder}).then(() => {
+        this.update_files()
+      })
     },
     upload_file(e) {
       let data = new FormData();

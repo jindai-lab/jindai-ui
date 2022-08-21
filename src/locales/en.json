@@ -152,5 +152,7 @@
     "brackets": "Brackets",
     "expert-mode": "Expert mode",
     "success": "Success",
-    "latest-imported": "Latest Imported"
+    "latest-imported": "Latest Imported",
+    "new-folder": "New Folder",
+    "folder-name": "Folder Name"
 }

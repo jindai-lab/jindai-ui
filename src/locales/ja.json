@@ -153,5 +153,7 @@
     "brackets": "括弧を使う",
     "expert-mode": "専門家用",
     "success": "完了",
-    "latest-imported": "最新の輸入"
+    "latest-imported": "最新の輸入",
+    "new-folder": "新しいフォルダ",
+    "folder-name": "フォルダ名"
 }
