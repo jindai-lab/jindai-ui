@@ -42,8 +42,9 @@
               :href="
                 '/' +
                 querystring_stringify({
-                  q: `dataset=${quote(r.dataset)}`,
+                  q: current_q,
                   selected_datasets: [r.dataset],
+                  groups: 'none'
                 })
               "
               target="_blank"
@@ -54,10 +55,11 @@
               :href="
                 '/' +
                 querystring_stringify({
-                  q: `dataset=${quote(r.dataset)},source.file=${quote(
+                  q: `(${current_q}),source.file=${quote(
                     r.source.file
                   )}`,
                   selected_datasets: [r.dataset],
+                  groups: none,
                 })
               "
               target="_blank"
@@ -472,6 +474,9 @@ export default {
     }
   },
   computed: {
+    current_q() {
+      return api.querystring_parse(location.search).q || '';
+    },
     pages() {
       var p = [];
       var total = (this.total || this.value.length);
