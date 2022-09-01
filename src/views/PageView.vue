@@ -1,5 +1,5 @@
 <template>
-  <v-dialog :value="value" fullscreen persistent class="white-bg">
+  <v-dialog :value="value" :fullscreen="view_mode == 'file' || view_mode == 'gallery'" persistent class="white-bg">
     <v-card
       flat
       v-touch="{
@@ -98,7 +98,7 @@
             />
           </div>
 
-          <!-- edit dialogs -->
+          <!-- fullscreen image view -->
           <v-dialog v-model="show_modal" fullscreen>
             <v-btn
               fab
@@ -480,7 +480,7 @@ export default {
 }
 
 .close {
-  position: fixed;
+  position: absolute;
   z-index: 400;
   right: 30px;
   top: 30px;

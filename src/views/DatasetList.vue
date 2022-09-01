@@ -20,7 +20,7 @@
                     <v-icon>mdi-form-textbox</v-icon>
                   </v-btn>
 
-                  <v-btn class="oper" icon @click="refresh_sources(ds.name)">
+                  <v-btn class="oper" icon @click="refresh_sources(ds)">
                     <v-icon>mdi-sync</v-icon>
                   </v-btn>
                 </v-list-item-title>
@@ -119,7 +119,7 @@ export default {
     },
     refresh_sources(coll) {
       api
-        .call("datasets/sources", { _id: coll.id })
+        .call("datasets/sources", { _id: coll._id })
         .then(() => api.notify({ title: this.$t("refreshed") }));
     },
   },

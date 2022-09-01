@@ -42,7 +42,7 @@
               :href="
                 '/' +
                 querystring_stringify({
-                  q: current_q,
+                  q: current_q(),
                   selected_datasets: [r.dataset],
                   groups: 'none'
                 })
@@ -55,11 +55,11 @@
               :href="
                 '/' +
                 querystring_stringify({
-                  q: `(${current_q}),source.file=${quote(
+                  q: `(${current_q()}),source.file=${quote(
                     r.source.file
                   )}`,
                   selected_datasets: [r.dataset],
-                  groups: none,
+                  groups: 'none',
                 })
               "
               target="_blank"
@@ -474,9 +474,6 @@ export default {
     }
   },
   computed: {
-    current_q() {
-      return api.querystring_parse(location.search).q || '';
-    },
     pages() {
       var p = [];
       var total = (this.total || this.value.length);
@@ -544,6 +541,9 @@ export default {
       return (
         this.page_range[0] <= this.offset && this.page_range[1] > this.offset
       );
+    },
+    current_q() {
+      return api.querystring_parse(location.search).q || '';
     },
     start(page) {
       this.page_range = [0, 0];
