@@ -32,6 +32,9 @@
         <v-card-title
           >{{ $t("finished-tasks") }}
           <v-spacer></v-spacer>
+          <v-btn icon @click="clear_not_viewable">
+            <v-icon>mdi-delete</v-icon>
+          </v-btn>
           <v-btn icon @click="show_finished = false"
             ><v-icon>mdi-close</v-icon></v-btn
           >
@@ -106,6 +109,14 @@ export default {
         api.notify({ title: "成功删除" });
         this.$emit("updated", {});
       });
+    },
+    clear_not_viewable() {
+      for (var task of this.data.finished) {
+        var id = encodeURIComponent(task.id);
+        api.delete("queue/" + id).then(() => {
+          this.$emit("updated", {});
+        });
+      }
     },
     view_result(task) {
       var id = encodeURIComponent(task.id);
