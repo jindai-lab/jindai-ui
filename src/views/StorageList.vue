@@ -217,7 +217,7 @@ export default {
       });
     },
     copy_file_path(f) {
-      const text = f.fullpath.substr(1);
+      const text = f.fullpath;
       const testingCodeToCopy = document.querySelector("#testing-code");
       testingCodeToCopy.setAttribute("type", "text");
       testingCodeToCopy.setAttribute("value", text);
