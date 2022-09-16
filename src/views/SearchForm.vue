@@ -166,6 +166,9 @@ export default {
           ")";
       }
 
+      if (api.config.view_mode == "gallery") {
+        req += (req ? ',' : '') + 'images!=[]'
+      }
       return req;
     },
     search(pagenum_preserve) {

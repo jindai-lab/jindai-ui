@@ -18,6 +18,7 @@
           label="标签"
           ref="ac"
           :filter="match_pattern"
+          @keyup="(e) => (e.key != 'Enter' && (enter_hit = 0))"
           @keyup.enter="() => (++enter_hit == 2 ? do_submit() : null)"
           max-height="180"
         ></v-combobox>

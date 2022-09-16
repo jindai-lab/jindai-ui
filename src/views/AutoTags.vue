@@ -121,8 +121,14 @@ export default {
   },
   methods: {
     auto_tags_create() {
-      if (this.new_tag.tag == '*' || !this.new_tag.tag) this.new_tag.tag = this.new_tag.cond.replace('@', '*')
-      if (this.new_tag.tag == this.new_tag.cond) return
+      if (this.new_tag.cond.startsWith('@@')) {
+        this.new_tag.cond = 'author=' + this.new_tag.cond.substr(1)
+      }
+      if (!this.new_tag.tag) {
+        var m = (this.new_tag.cond.match(/@([_\w]+)/) || ['', ''])[1]
+        if (m) this.new_tag.tag = '*' + m
+      }
+      if (this.new_tag.tag == this.new_tag.cond || !this.new_tag.tag) return
       api.put("plugins/autotags", this.new_tag).then((data) => {
         if (!data.__exception__) {
           this.new_tag.tag = "";
