@@ -27,6 +27,9 @@ function LocalConfig() {
             batch_delim: ", ",
             batch_prefix: "*",
         },
+        dbconsole: {
+            mongocollection: 'paragraph'
+        },
         groups: "none",
         sort: "id",
         expert: false,

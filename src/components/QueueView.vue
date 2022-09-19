@@ -40,11 +40,10 @@
           >
         </v-card-title>
         <v-card-text v-if="data.finished.length > 0">
-          <div v-for="task in data.finished" :key="task.id">
+          <div v-for="task in data.finished" :key="task.key">
             <h4>{{ task.name }}</h4>
-            <span>{{ task.id.split("/")[0] }}</span>
-            {{ $t("run-at") }}: {{ new Date(task.last_run + " UTC") | dateSafe
-            }}<br />
+            <span>{{ task.key }}</span>
+            {{ $t("run-at") }}: {{ task.queued_at }}<br />
             <v-btn
               :href="download_link(task)"
               v-if="downloadable(task)"
@@ -68,18 +67,20 @@
         <v-card-text v-else>{{ $t("no-available") }}</v-card-text>
         <v-card-title>{{ $t("running-tasks") }}</v-card-title>
         <v-card-text>
-          <div v-for="task in data.running" :key="task" class="mb-5">
-            {{ task }}
-            <v-btn @click="delete_result({ id: task })"
+          <div v-for="task in data.running" :key="task.key" class="mb-5">
+            <span>{{ task.key }}</span>
+            {{ $t("run-at") }}: {{ task.queued_at }}<br />
+            <v-btn @click="delete_result(task)"
               ><v-icon>mdi-stop</v-icon></v-btn
             >
           </div>
         </v-card-text>
         <v-card-title>{{ $t("waiting-tasks") }}</v-card-title>
         <v-card-text>
-          <div v-for="task in data.waiting" :key="task" class="mb-5">
-            {{ task }}
-            <v-btn @click="delete_result({ id: task })"
+          <div v-for="task in data.waiting" :key="task.key" class="mb-5">
+            <span>{{ task.key }}</span>
+            {{ $t("run-at") }}: {{ task.queued_at }}<br />
+            <v-btn @click="delete_result(task)"
               ><v-icon>mdi-stop</v-icon></v-btn
             >
           </div>
@@ -101,10 +102,10 @@ export default {
   props: ["data"],
   methods: {
     download_link(task) {
-      return "/api/queue/" + encodeURIComponent(task.id);
+      return "/api/queue/" + encodeURIComponent(task.key);
     },
     delete_result(task) {
-      var id = encodeURIComponent(task.id);
+      var id = encodeURIComponent(task.key);
       api.delete("queue/" + id).then(() => {
         api.notify({ title: "成功删除" });
         this.$emit("updated", {});
@@ -112,19 +113,19 @@ export default {
     },
     clear_not_viewable() {
       for (var task of this.data.finished) {
-        var id = encodeURIComponent(task.id);
+        var id = encodeURIComponent(task.key);
         api.delete("queue/" + id).then(() => {
           this.$emit("updated", {});
         });
       }
     },
     view_result(task) {
-      var id = encodeURIComponent(task.id);
+      var id = encodeURIComponent(task.key);
       this.$router.push("/results/" + id).catch(() => {});
       this.show_finished = false;
     },
     downloadable(task) {
-      switch (task.type) {
+      switch (task.result_type) {
         case "list":
         case "dict":
         case "file":
@@ -134,7 +135,7 @@ export default {
       }
     },
     viewable(task) {
-      switch (task.type) {
+      switch (task.result_type) {
         case "list":
         case "redirect":
         case "exception":

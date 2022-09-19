@@ -271,14 +271,19 @@ export default {
       api.log_out();
     },
     update_queue(queue) {
-      if (!queue || !queue.running) return;
-      this.queue = queue;
+      if (!queue) return;
+      this.queue = {
+                'finished': queue.filter(x => x.status == 'stopped'),
+                'running': queue.filter(x => x.status == 'running'),
+                'waiting': queue.filter(x => x.status == 'pending'),
+            }
     },
     queue_event() {
       api.queue().then((queue) => this.update_queue(queue));
       if (this.queue_source) return;
       this.queue_source = new EventSource("/api/queue/events");
       this.queue_source.onmessage = (event) => {
+        console.log(event)
         var data = JSON.parse(event.data);
         if (data.log) {
           this.console_outputs.splice(0, 0, data.log);

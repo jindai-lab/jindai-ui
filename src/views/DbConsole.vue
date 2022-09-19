@@ -8,24 +8,25 @@
         label="Mongo Collection"
         :items="mongocollections"
         v-model="command.mongocollection"
-        @change="previewed = false"
+        @change="previewed = command.operation == 'count'"
       ></v-select>
       <ParamInput
         ref="editor"
         :arg="{ name: 'Query', type: 'QUERY' }"
         v-model="command.query"
-        @input="previewed = false"
+        @input="previewed = command.operation == 'count'"
       />
       <ParamInput
         :arg="{ name: 'Operation', type: 'update_many|delete_many|count' }"
         v-model="command.operation"
-        @input="previewed = false"
+        @input="previewed = command.operation == 'count'"
       />
       <ParamInput
         ref="editor"
         :arg="{ name: 'Parameters', type: 'QUERY' }"
         v-model="command.operation_params"
-        @input="previewed = false"
+        @input="previewed = command.operation == 'count'"
+        v-show="command.operation != 'count'"
       />
     </v-card-text>
     <v-card-actions>
@@ -47,7 +48,7 @@ export default {
   components: { ParamInput },
   data() {
     return {
-      mongocollections: ["paragraph"],
+      mongocollections: [api.config.dbconsole.mongocollection || "paragraph"],
       command: {
         mongocollection: "paragraph",
         query: "",
@@ -60,9 +61,15 @@ export default {
     };
   },
   methods: {
+    get_command() {
+      return Object.assign({}, this.command, {
+        operation_params:
+          this.command.operation == "count" ? "" : this.command.operation_params,
+      });
+    },
     preview() {
       this.command.preview = true;
-      api.call("admin/db", this.command).then((data) => {
+      api.call("admin/db", this.get_command()).then((data) => {
         data = data.result;
         this.preview_text =
           'MongoCollection("' +
@@ -79,7 +86,8 @@ export default {
     },
     execute() {
       this.command.preview = false;
-      api.call("admin/db", this.command).then((data) => {
+      api.config.dbconsole.mongocollection = this.command.mongocollection;
+      api.call("admin/db", this.get_command()).then((data) => {
         this.preview_text += "\n\n" + JSON.stringify(data.result, "", 2);
       });
     },
