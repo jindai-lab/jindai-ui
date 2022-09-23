@@ -342,6 +342,7 @@ export default {
       }
     },
     playing(interval) {
+      if (this.view_mode !== 'gallery') return
       if (interval) this.playing_interval = interval;
       this.playing_timer = setInterval(() => {
         this._event_handler("arrowright");

@@ -50,7 +50,7 @@ export default {
     return {
       mongocollections: [api.config.dbconsole.mongocollection || "paragraph"],
       command: {
-        mongocollection: "paragraph",
+        mongocollection: api.config.dbconsole.mongocollection || "paragraph",
         query: "",
         operation: "count",
         operation_params: "",
@@ -86,7 +86,7 @@ export default {
     },
     execute() {
       this.command.preview = false;
-      api.config.dbconsole.mongocollection = this.command.mongocollection;
+      api.config.dbconsole = {mongocollection : this.command.mongocollection};
       api.call("admin/db", this.get_command()).then((data) => {
         this.preview_text += "\n\n" + JSON.stringify(data.result, "", 2);
       });

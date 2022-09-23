@@ -6,6 +6,7 @@
         class="view-mode-toggler"
         dense
         v-model="config.view_mode"
+        @change="update_view_mode"
       >
         <v-btn value="list">
           <v-icon>mdi-view-list</v-icon>
@@ -80,6 +81,7 @@
             :src="get_paragraph_image(r)"
           ></v-img>
           <ContentView
+            :key="r._id"
             :view_mode="config.view_mode"
             :paragraph="r"
             :item_width="200"
@@ -627,6 +629,9 @@ export default {
         if (typeof cb == "function") cb();
       }
     },
+    update_view_mode() {
+      this.start()
+    },
     show_embedded(r, col) {
       var source = Object.assign({}, r);
       delete source[col];
@@ -924,7 +929,7 @@ export default {
       this.select_index = index;
       for (var it of s) {
         if (e) it.selected = !it.selected;
-        if (it.selected) this.selection.push(it);
+        if (it._id && it.selected) this.selection.push(it);
         else this.selection.splice(this.selection.indexOf(it), 1);
       }
 
@@ -938,7 +943,7 @@ export default {
     },
     toggle_selection() {
       this.visible_data.forEach((x) => (x.selected = !x.selected));
-      this.selection = this.visible_data.filter((x) => x.selected);
+      this.selection = this.visible_data.filter((x) => x._id && x.selected);
       this.selection_count = this.selection.length;
     },
     clear_selection(s) {
@@ -1008,8 +1013,8 @@ export default {
           });
         });
     },
-    delete_items() {
-      var s = this.selected_paragraphs();
+    select_paragraph_item_objects(s) {
+
       var album_items = {},
         visible_album_items = {};
 
@@ -1030,14 +1035,22 @@ export default {
         );
       });
 
+      return {
+        album_items, visible_album_items
+      }
+
+    },
+    delete_items() {
+      var s = this.selected_paragraphs();
+      var objs = this.select_paragraph_item_objects(s);
       api
         .call("mediaitem/delete", {
-          album_items,
+          album_items: objs.album_items,
         })
         .then(() => {
           s.forEach((x) => {
             x.images = x.images.filter(
-              (i) => !visible_album_items[x._id].includes(i._id)
+              (i) => !objs.visible_album_items[x._id].includes(i._id)
             );
           });
           this.clear_selection(s);
@@ -1048,7 +1061,7 @@ export default {
       if (typeof val === "number") {
         val = {
           inc: val,
-          least: val > 0 ? 1 : 0,
+          least: val > 0 ? 1 : -1,
         };
       }
       val.ids = (val.item ? [val.item] : this.selected_items()).map(
@@ -1075,11 +1088,16 @@ export default {
     group(del) {
       var s = this.selected_paragraphs();
       if (!s || !s.length) return;
-      api
-        .call(`collections/${s[0].mongocollection || "paragraph"}/group`, {
+      var bundle = {
           ids: this.selected_ids(),
           ungroup: del,
-        })
+        }
+      if (!del && s.length == this.visible_data.length && s.map(x => x.keywords.filter(x => x.match(/^\*[^0]/))).reduce((p, c) => p.concat(c)).length == 0) {
+        var cond = this.current_q().replace(/[()"`'%^@\\]/g, '').split(/[,|]/)[0]
+        bundle.group = (prompt(this.$t('group'), cond) || '').replace(/^\*/, '')
+      }
+      api
+        .call(`collections/${s[0].mongocollection || "paragraph"}/group`, bundle)
         .then((data) => {
           this.clear_selection(s);
           s.forEach(
@@ -1092,19 +1110,21 @@ export default {
     },
     merge() {
       var s = this.selected_paragraphs();
+      var objs = this.select_paragraph_item_objects(s);
       if (!s || !s.length) return;
       api
         .call(`collections/${s[0].mongocollection || "paragraph"}/merge`, {
-          ids: this.selected_ids(),
+          paragraphs: objs.album_items,
         })
         .then(() => this.clear_selection(s));
     },
     split() {
       var s = this.selected_paragraphs();
+      var objs = this.select_paragraph_item_objects(s);
       if (!s || !s.length) return;
       api
         .call(`collections/${s[0].mongocollection || "paragraph"}/split`, {
-          ids: this.selected_ids(),
+          paragraphs: objs.album_items,
         })
         .then(() => this.clear_selection(s));
     },
