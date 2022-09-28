@@ -557,7 +557,22 @@ export default {
     },
     querify: api.querify,
     turn_page(p, cb) {
-      if (p == 0) return;
+      if (p === 0) return;
+      
+      function _preload(items) {
+      // preload images for every item
+        items.map((x) => {
+          if (x.images) {
+            [... x.images.slice(0, 5), ... x.images.slice(-1)].map((i) => {
+              if (i.item_type == 'image') {
+                let image = new Image()
+                image.src = api.get_item_image(i)
+              }
+            })
+          }
+        })
+      }
+      
       history.pushState(
         "",
         "",
@@ -605,18 +620,7 @@ export default {
                 this.value = items;
               }
 
-              // preload images for every item
-              items.map((x) => {
-                if (x.images) {
-                  [... x.images.slice(0, 5), ... x.images.slice(-1)].map((i) => {
-                    if (i.item_type == 'image') {
-                      let image = new Image()
-                      image.src = api.get_item_image(i)
-                    }
-                  })
-                }
-              })
-
+              _preload(this.visible_data)
               if (typeof cb == "function") cb();
             }
 
@@ -626,6 +630,7 @@ export default {
           },
         });
       } else {
+        _preload(this.visible_data)
         if (typeof cb == "function") cb();
       }
     },

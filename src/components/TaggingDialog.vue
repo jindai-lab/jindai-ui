@@ -128,6 +128,7 @@ export default {
       this.tag_new = sorted;
       this.tag_choices = sorted;
       this.batch = "";
+      this.author = "";
       if (this.scope) {
         api.call("term/keywords", {
           scope: this.scope
