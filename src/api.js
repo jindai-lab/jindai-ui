@@ -581,9 +581,10 @@ export default {
 
     get_image_url(src) {
         var path = ''
-        if (src.file == 'blocks.h5' && src.block_id) {
+        if (src.file.indexOf('://') >= 0 && src.block_id) {
             let ext = (src.url || src.orig_path || '').split('.').pop()
-            path = `/images/hdf5/${src.block_id}/image.${ext.length <= 4 ? ext : 'data'}`
+            let segs = src.file.split('://')
+            path = `/images/${segs[0]}/${segs[1].replace('$', src.block_id) || src.block_id}/image.${ext.length <= 4 ? ext : 'data'}`
         }
         else if (src.file.match(/\.pdf$/) && typeof(src.page) !== 'undefined')
             path = `/images/file/${src.file}__hash/pdf/${src.page}`
@@ -606,7 +607,7 @@ export default {
         var args = "";
         if (item && item.item_type == "video") {
             if (item.thumbnail)
-                return this.get_image_url({file: 'blocks.h5', block_id: item.thumbnail, url: '.jpg'});
+                return this.get_image_url({file: item.thumbnail, url: '.jpg'});
             return _prompt_video;
         }
         
@@ -616,7 +617,7 @@ export default {
         }
 
         if (item.source.file) {
-            if (item.source.file == "blocks.h5") item.source.block_id = item._id;
+            if (item.source.file.indexOf('://') >= 0) item.source.block_id = item._id;
             return this.get_image_url(item.source) + args;
         }
         return item.source.url;
@@ -624,7 +625,7 @@ export default {
 
     get_item_video(item) {
         if (item.source.file) {
-            if (item.source.file == "blocks.h5") item.source.block_id = item._id;
+            if (item.source.file.indexOf('://') >= 0) item.source.block_id = item._id;
             return this.get_image_url(item.source);
         }
         return item.source.url;
