@@ -155,5 +155,7 @@
     "success": "完了",
     "latest-imported": "最新の輸入",
     "new-folder": "新しいフォルダ",
-    "folder-name": "フォルダ名"
+    "folder-name": "フォルダ名",
+    "display-name": "表示名",
+    "mongocollection": "データベースコレクション"
 }

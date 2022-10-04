@@ -154,5 +154,7 @@
     "success": "成功",
     "latest-imported": "最近導入",
     "new-folder": "新資料夾",
-    "folder-name": "資料夾名"
+    "folder-name": "資料夾名",
+    "display-name": "顯示名",
+    "mongocollection": "資料庫集合名"
 }

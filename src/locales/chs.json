@@ -154,5 +154,7 @@
     "success": "成功",
     "latest-imported": "最近导入",
     "new-folder": "新建文件夹",
-    "folder-name": "文件夹名称"
+    "folder-name": "文件夹名称",
+    "display-name": "显示名称",
+    "mongocollection": "数据库集合名"
 }

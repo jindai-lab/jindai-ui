@@ -8,8 +8,8 @@
             <v-list-item :key="ds._id">
               <v-list-item-content>
                 <v-list-item-title>
-                  {{ ds.name }}
-
+                  {{ ds.display_name || ds.name }}
+                  <span v-if="ds.display_name">({{ ds.name }})</span>
                   <v-btn
                     class="oper"
                     icon
@@ -37,12 +37,17 @@
         </v-col>
         <v-col>
           <ParamInput
-            :arg="{ name: '名称', type: '', default: '' }"
+            :arg="{ name: $t('name'), type: '', default: '' }"
             v-model="input_coll.name"
         /></v-col>
         <v-col>
           <ParamInput
-            :arg="{ name: '数据库', type: '', default: '' }"
+            :arg="{ name: $t('display-name'), type: '', default: '' }"
+            v-model="input_coll.display_name"
+        /></v-col>
+        <v-col>
+          <ParamInput
+            :arg="{ name: $t('mongocollection'), type: '', default: '' }"
             v-model="input_coll.mongocollection"
         /></v-col>
       </v-row>

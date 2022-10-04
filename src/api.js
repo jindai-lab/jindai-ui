@@ -518,7 +518,7 @@ export default {
             };
 
             data = data.map((x) => {
-                x.segments = x.name.split("--");
+                x.segments = (x.display_name || x.name).split("--");
                 x.level = x.segments.length;
                 return x;
             });
@@ -537,6 +537,7 @@ export default {
                         };
                         bundles[cand.id] = {
                             name: segs,
+                            dataset_name: x.name,
                             mongocollection: x.mongocollection,
                         };
                         parent_obj.children.push(cand);
@@ -581,7 +582,7 @@ export default {
 
     get_image_url(src) {
         var path = ''
-        if (src.file.indexOf('://') >= 0 && src.block_id) {
+        if (src.file.indexOf('://') >= 0) {
             let ext = (src.url || src.orig_path || '').split('.').pop()
             let segs = src.file.split('://')
             path = `/images/${segs[0]}/${segs[1].replace('$', src.block_id) || src.block_id}/image.${ext.length <= 4 ? ext : 'data'}`

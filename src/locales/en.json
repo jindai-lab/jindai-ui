@@ -154,5 +154,7 @@
     "success": "Success",
     "latest-imported": "Latest Imported",
     "new-folder": "New Folder",
-    "folder-name": "Folder Name"
+    "folder-name": "Folder Name",
+    "display-name": "Display Name",
+    "mongocollection": "MongoDB Collection Name"
 }

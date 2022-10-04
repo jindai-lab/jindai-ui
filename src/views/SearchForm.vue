@@ -137,12 +137,12 @@ export default {
       if (selected.length > 0) {
         var datasets = selected
           .filter((x) => !x.source)
-          .map((x) => api.escape_regex(x.name)),
+          .map((x) => api.escape_regex(x.dataset_name)),
           sourcefiles = selected
             .filter((x) => x.source)
             .map((x) => ({
               file: x.source.split(":", 2).pop(),
-              dataset: x.name,
+              dataset: x.dataset_name,
             })),
           req_datasets = "",
           req_sourcefiles = "";
@@ -151,7 +151,7 @@ export default {
         );
 
         if (datasets.length > 0) {
-          req_datasets = "dataset%`^" + datasets.join("|^") + "`";
+          req_datasets = "dataset%`^" + datasets.map(x => x == '' ? '$' : api.escape_regex(x)).join("|^") + "`";
         }
         if (sourcefiles.length > 0) {
           req_sourcefiles = sourcefiles
