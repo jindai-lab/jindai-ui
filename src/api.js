@@ -28,7 +28,8 @@ function LocalConfig() {
             batch_prefix: "*",
         },
         dbconsole: {
-            mongocollection: 'paragraph'
+            mongocollection: 'paragraph',
+            history: []
         },
         groups: "none",
         sort: "id",
@@ -70,7 +71,7 @@ function LocalConfig() {
         },
     };
 
-    return new Proxy(Object.assign({}, defaults, _load_config()), handler);
+    return new Proxy(Object.assign({save() {_save_config(this)}}, defaults, _load_config()), handler);
 }
 
 export default {

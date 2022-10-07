@@ -11,7 +11,6 @@
         @change="previewed = command.operation == 'count'"
       ></v-select>
       <ParamInput
-        ref="editor"
         :arg="{ name: 'Query', type: 'QUERY' }"
         v-model="command.query"
         @input="previewed = command.operation == 'count'"
@@ -22,7 +21,6 @@
         @input="previewed = command.operation == 'count'"
       />
       <ParamInput
-        ref="editor"
         :arg="{ name: 'Parameters', type: 'QUERY' }"
         v-model="command.operation_params"
         @input="previewed = command.operation == 'count'"
@@ -35,6 +33,13 @@
     </v-card-actions>
     <v-card-text>
       <pre>{{ preview_text }}</pre>
+    </v-card-text>
+    <v-card-text>
+      {{ $t('history') }}
+      <v-row v-for="(h, index) in config.dbconsole.history" :key="index">
+        <v-col>{{ stringify_command(h) }}</v-col>
+        <v-col><v-button icon @click="replay(h)"><v-icon>mdi-replay</v-icon></v-button></v-col>
+      </v-row>
     </v-card-text>
   </v-card>
 </template>
@@ -58,6 +63,7 @@ export default {
       },
       previewed: false,
       preview_text: "",
+      config: api.config
     };
   },
   methods: {
@@ -67,30 +73,40 @@ export default {
           this.command.operation == "count" ? "" : this.command.operation_params,
       });
     },
+    stringify_command(data) {
+      return 'MongoCollection("' +
+        data.mongocollection +
+        '").query(' +
+        JSON.stringify(data.query, "", 2) +
+        ")." +
+        data.operation +
+        "(" +
+        JSON.stringify(data.operation_params, "", 2) +
+        ")";
+    },
     preview() {
       this.command.preview = true;
       api.call("admin/db", this.get_command()).then((data) => {
         data = data.result;
-        this.preview_text =
-          'MongoCollection("' +
-          data.mongocollection +
-          '").query(' +
-          JSON.stringify(data.query, "", 2) +
-          ")." +
-          data.operation +
-          "(" +
-          JSON.stringify(data.operation_params, "", 2) +
-          ")";
+        this.preview_text = this.stringify_command(data)
         this.previewed = true;
       });
     },
     execute() {
       this.command.preview = false;
-      api.config.dbconsole = {mongocollection : this.command.mongocollection};
+      api.config.dbconsole.mongocollection = this.command.mongocollection;
+      if (!api.config.dbconsole.history) api.config.dbconsole.history = []
+      api.config.dbconsole.history.splice(0, 0, Object.assign({}, this.command));
+      if (api.config.dbconsole.history.length > 10) api.config.dbconsole.history = api.config.dbconsole.history.slice(0, 10)
+      api.config.save();
       api.call("admin/db", this.get_command()).then((data) => {
         this.preview_text += "\n\n" + JSON.stringify(data.result, "", 2);
       });
     },
+    replay(h) {
+      this.command = Object.assign({}, h);
+      this.execute();
+    }
   },
   mounted() {
     api
