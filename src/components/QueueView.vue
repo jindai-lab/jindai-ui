@@ -3,7 +3,7 @@
     <a
       link
       style="color: white; text-decoration: none"
-      @click="show_finished = true"
+      @click="show_detail = true"
     >
       <v-badge
         :value="data.finished.length > 0"
@@ -27,7 +27,7 @@
         {{ $t("running") }}
       </v-badge>
     </a>
-    <v-dialog v-model="show_finished">
+    <v-dialog v-model="show_detail" width="80%">
       <v-card>
         <v-card-title
           >{{ $t("finished-tasks") }}
@@ -35,7 +35,7 @@
           <v-btn icon @click="clear_not_viewable">
             <v-icon>mdi-delete</v-icon>
           </v-btn>
-          <v-btn icon @click="show_finished = false"
+          <v-btn icon @click="show_detail = false"
             ><v-icon>mdi-close</v-icon></v-btn
           >
         </v-card-title>
@@ -96,7 +96,7 @@ import api from "../api";
 export default {
   data() {
     return {
-      show_finished: false,
+      show_detail: false,
     };
   },
   props: ["data"],
@@ -122,7 +122,7 @@ export default {
     view_result(task) {
       var id = encodeURIComponent(task.key);
       this.$router.push("/results/" + id).catch(() => {});
-      this.show_finished = false;
+      this.show_detail = false;
     },
     downloadable(task) {
       switch (task.result_type) {
