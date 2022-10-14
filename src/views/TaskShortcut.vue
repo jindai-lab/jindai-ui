@@ -80,6 +80,7 @@ export default {
     },
   },
   mounted() {
+    var params = api.querystring_parse(location.search.substring(1))
     api.help_pipelines().then((data) => {
       for (var k in data) {
         Object.assign(this.stages, data[k]);
@@ -87,7 +88,7 @@ export default {
       api.call("tasks/" + this.id).then((data) => {
         this.task = data.result;
         for (var k in this.task.shortcut_map) {
-          this.shortcut_params[k] = this.get_map_val(k);
+          this.shortcut_params[k] = typeof(params[k]) === 'undefined' ? this.get_map_val(k) : params[k];
         }
       });
     });
