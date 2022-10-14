@@ -184,7 +184,7 @@ export default {
             mode = imgr >= scrr ? "fit-height" : "fit-width";
             break;
           default:
-            mode = scrr > 1 ? "fit-height" : "fit-width";
+            mode = imgr <= scrr ? "fit-height" : "fit-width";
         }
         switch (mode) {
           case "fit-width":

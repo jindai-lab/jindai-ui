@@ -1014,7 +1014,7 @@ export default {
         .then((data) => {
           this.clear_selection(s);
           s.forEach((p) => {
-            data.result[p._id] && (p.keywords = data.result[p._id].keywords);
+            data.result[p._id] && (Object.assign(p, data.result[p._id], {images: p.images}));
           });
         });
     },
