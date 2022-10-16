@@ -1,151 +1,105 @@
 <template>
   <div>
-    <v-autocomplete
-      v-if="type_choices"
-      :label="arg.name"
-      :value="
-        value === null || typeof value === 'undefined' ? arg.default : value
-      "
-      v-bind="$attrs"
-      v-on="inputListeners"
-      @change="inputListeners.input"
-      :items="type_choices"
-    >
+    <v-autocomplete v-if="type_choices" :label="arg.name" :value="
+      value === null || typeof value === 'undefined' ? arg.default : value
+    " v-bind="$attrs" v-on="inputListeners" @change="inputListeners.input" :items="type_choices">
     </v-autocomplete>
 
-    <v-autocomplete
-      :label="arg.name"
-      v-bind="$attrs"
-      v-on="inputListeners"
-      :value="value"
-      @change="inputListeners.input"
-      :items="choices"
-      :hint="(choices.filter((x) => x.value == value)[0] || {}).hint"
-      persistent-hint
-      item-value="value"
-      item-text="text"
-      v-else-if="arg.type == 'TASK' || arg.type == 'PIPELINE'"
-    ></v-autocomplete>
+    <v-autocomplete :label="arg.name" v-bind="$attrs" v-on="inputListeners" :value="value"
+      @change="inputListeners.input" :items="choices" :hint="(choices.filter((x) => x.value == value)[0] || {}).hint"
+      persistent-hint item-value="value" item-text="text" v-else-if="arg.type == 'TASK' || arg.type == 'PIPELINE'">
+    </v-autocomplete>
 
-    <v-combobox
-      v-else-if="arg.type == 'DATASET'"
-      :items="choices"
-      :label="arg.name"
-      v-bind="$attrs"
-      v-on="inputListeners"
-      :value="value"
-      item-value="value"
-      item-text="text"
-      @change="inputListeners.input"
-    ></v-combobox>
+    <v-combobox v-else-if="arg.type == 'DATASET'" :items="choices" :label="arg.name" v-bind="$attrs"
+      v-on="inputListeners" :value="value" item-value="value" item-text="text" @change="inputListeners.input">
+    </v-combobox>
 
     <div v-else-if="arg.type == 'object'">
       <v-row v-for="(r, i) in keys" :key="r.name">
-        <v-col
-          ><v-text-field
-            v-model="r.name"
-            @input="update_object_value"
-          ></v-text-field
-        ></v-col>
-        <v-col
-          ><v-select
-            :items="['str', 'int', 'float', 'bool']"
-            v-model="r.type"
-            @input="update_object_value"
-          ></v-select
-        ></v-col>
-        <v-col
-          ><ParamInput
-            :arg="r"
-            v-model="object_value[r.name]"
-            @input="update_object_value"
-        /></v-col>
-        <v-col
-          ><v-btn
-            icon
-            @click="
-              keys.splice(i, 1);
-              update_object_value();
-            "
-            ><v-icon>mdi-minus</v-icon></v-btn
-          ></v-col
-        >
+        <v-col>
+          <v-text-field v-model="r.name" @input="update_object_value"></v-text-field>
+        </v-col>
+        <v-col>
+          <v-select :items="['str', 'int', 'float', 'bool']" v-model="r.type" @input="update_object_value"></v-select>
+        </v-col>
+        <v-col>
+          <ParamInput :arg="r" v-model="object_value[r.name]" @input="update_object_value" />
+        </v-col>
+        <v-col>
+          <v-btn icon @click="
+            keys.splice(i, 1);
+            update_object_value();
+          ">
+            <v-icon>mdi-minus</v-icon>
+          </v-btn>
+        </v-col>
       </v-row>
       <v-row>
-        <v-btn icon @click="keys.push({ name: '', type: 'str' })"
-          ><v-icon>mdi-plus</v-icon></v-btn
-        >
+        <v-btn icon @click="keys.push({ name: '', type: 'str' })">
+          <v-icon>mdi-plus</v-icon>
+        </v-btn>
       </v-row>
     </div>
 
     <div v-else-if="arg.type == 'bool'">
-      <v-simple-checkbox
-        :value="value"
-        class="d-inline-block"
-        ref="checkbox"
-        v-bind="$attrs"
-        v-on="inputListeners"
-      >
-      </v-simple-checkbox
-      ><label @click="() => $refs.checkbox.click()">{{ arg.name }}</label>
+      <v-simple-checkbox :value="value" class="d-inline-block" ref="checkbox" v-bind="$attrs" v-on="inputListeners">
+      </v-simple-checkbox><label @click="() => $refs.checkbox.click()">{{ arg.name }}</label>
     </div>
 
     <div v-else-if="arg.type == 'QUERY'">
       <label>{{ arg.name }}</label>
-      <prism-editor
-        class="my-editor match-braces"
-        v-model="code"
-        @input="$emit('input', code)"
-        :highlight="highlighter"
-        line-numbers
-        @keyup.ctrl.enter="$emit('submit')"
-      />
+      <prism-editor class="my-editor match-braces" v-model="code" @input="$emit('input', code)" :highlight="highlighter"
+        line-numbers @keyup.ctrl.enter="$emit('submit')" />
     </div>
 
-    <v-textarea
-      v-else-if="arg.type == 'str' || arg.type == 'string'"
-      :value="value"
-      v-bind="$attrs"
-      v-on="inputListeners"
-      :hint="arg.default"
-      :required="!arg.default"
-      :rows="(value || '').includes('\n') ? 4 : 1"
-      cols="40"
-      :label="arg.name"
-    ></v-textarea>
+    <v-data-table v-else-if="arg.type == 'LINES'" :headers="[
+      { text: 'Actions', align: 'end', value: 'actions', sortable: false, width: '1%' },
+      { text: '', align: 'start', sortable: false, value: 'text' }
+    ]" :items="lines" :items-per-page="-1" hide-default-header hide-default-footer>
+      <template v-slot:item.actions="{ item }">
+        <v-icon small class="mr-2" @click="edit_line(item.index)">
+          mdi-pencil
+        </v-icon>
+        <v-icon small @click="delete_line(item.index)">
+          mdi-delete
+        </v-icon>
+        <v-icon small @click="move_line(item.index, -1)" v-if="item.index > 0">
+          mdi-arrow-up
+        </v-icon>
+        <v-icon small @click="move_line(item.index, 1)" v-if="item.index < lines.length - 1">
+          mdi-arrow-down
+        </v-icon>
+      </template>
+      <template v-slot:body.append>
+        <tr>
+          <td></td>
+          <td>
+            <v-text-field type="text" label="" v-model="new_line" ref="new_line_input" @keyup.enter="append_line()"
+              @blur="append_line()"></v-text-field>
+          </td>
+          <td colspan="4"></td>
+        </tr>
+      </template>
+    </v-data-table>
 
-    <div
-      v-else-if="arg.type.startsWith('file')"
-      @drop.prevent="drop_file"
-      @dragover.prevent
-      @click="$refs.input_file.click()"
-      class="file-drop"
-    >
+    <v-textarea v-else-if="arg.type == 'str' || arg.type == 'string'" :value="value" v-bind="$attrs"
+      v-on="inputListeners" :hint="arg.default" :required="!arg.default" :rows="(value || '').includes('\n') ? 4 : 1"
+      cols="40" :label="arg.name"></v-textarea>
+
+    <div v-else-if="arg.type.startsWith('file')" @drop.prevent="drop_file" @dragover.prevent
+      @click="$refs.input_file.click()" class="file-drop">
       {{ file_prompt }}
-      <input
-        type="file"
-        @change="drop_file({ dataTransfer: { files: $event.target.files } })"
-        :accept="
-          arg.type
-            .substr(5)
-            .split(',')
-            .map((x) => `.${x}`)
-            .join(', ')
-        "
-        ref="input_file"
-      />
+      <input type="file" @change="drop_file({ dataTransfer: { files: $event.target.files } })" :accept="
+        arg.type
+          .substr(5)
+          .split(',')
+          .map((x) => `.${x}`)
+          .join(', ')
+      " ref="input_file" />
     </div>
 
-    <v-text-field
-      v-else
-      type="text"
-      :value="value"
-      v-bind="$attrs"
-      v-on="inputListeners"
-      :placeholder="arg.default"
-      :required="!arg.default"
-      :label="arg.name"
-    >
+    <v-text-field v-else type="text" :value="value" v-bind="$attrs" v-on="inputListeners" :placeholder="arg.default"
+      :required="!arg.default" :label="arg.name">
     </v-text-field>
 
     {{ prompt }}
@@ -215,6 +169,9 @@ export default {
           return false;
       }
     },
+    lines() {
+      return (this.value || '').split('\n').filter(x => x.length).map((x, i) => ({ text: x, index: i }))
+    }
   },
   data() {
     return {
@@ -225,6 +182,7 @@ export default {
       langs: this.$t("langs"),
       object_value: {},
       keys: [],
+      new_line: '',
     };
   },
   watch: {
@@ -282,31 +240,30 @@ export default {
         case "DATASET":
           api.call(this.arg.type.toLowerCase() + "s").then(
             (data) =>
-              (this.choices = data.result.map((x) => ({
-                text: x.name,
-                value: this.arg.type == "TASK" ? x._id : x.name,
-              })))
+            (this.choices = data.result.map((x) => ({
+              text: x.display_name || x.name,
+              value: this.arg.type == "TASK" ? x._id : x.name,
+            })))
           );
           break;
         case "PIPELINE":
           api.help_langs.then(
             (data) =>
-              (this.choices = [].concat(
-                ...Object.values(data).map((x) =>
-                  Object.keys(x).map((k) => ({
-                    text: `${x[k].doc} ${k}`,
-                    value: k,
-                    hint: x[k].args
-                      .map(
-                        (x) =>
-                          `${x.name} (${x.type}${
-                            x.default !== null ? " optional" : ""
-                          })`
-                      )
-                      .join(", "),
-                  }))
-                )
-              ))
+            (this.choices = [].concat(
+              ...Object.values(data).map((x) =>
+                Object.keys(x).map((k) => ({
+                  text: `${x[k].doc} ${k}`,
+                  value: k,
+                  hint: x[k].args
+                    .map(
+                      (x) =>
+                        `${x.name} (${x.type}${x.default !== null ? " optional" : ""
+                        })`
+                    )
+                    .join(", "),
+                }))
+              )
+            ))
           );
           break;
         case "LANG":
@@ -342,6 +299,34 @@ export default {
       reader.onerror = (e) => console.log("Error : " + e.type);
       reader.readAsDataURL(file);
     },
+    move_line(item_id, inc) {
+      var lines = this.lines.map(x => x.text);
+      var deleted = lines.splice(item_id, 1);
+      switch(inc) {
+        case -1:
+          lines.splice(item_id - 1, 0, deleted)
+          break
+        case 1:
+          lines.splice(item_id + 1, 0, deleted)
+          break;
+        default:
+          break;  
+      }
+      this.$emit('input', lines.join('\n'))
+      return deleted[0];
+    },
+    delete_line(item_id) {
+      return this.move_line(item_id, 0)
+    },
+    append_line() {
+      if (this.new_line)
+        this.$emit('input', (this.value || '') + '\n' + this.new_line);
+      this.new_line = '';
+    },
+    edit_line(item_id) {
+      this.new_line = this.delete_line(item_id);
+      this.$refs.new_line_input.focus()
+    }
   },
   mounted() {
     this.code = this.value;

@@ -102,7 +102,7 @@ export default {
     notify(title) {
       api.notify({ title });
     },
-    update_params() {
+    apply_params() {
       for (var k in this.shortcut_params) {
         const v = this.shortcut_params[k];
         const mapped_to = k.split(".");
@@ -114,7 +114,7 @@ export default {
       }
     },
     quicktask() {
-      this.update_params();
+      this.apply_params();
       this.result_plain = "";
       api
         .call("quicktask", {
@@ -165,7 +165,7 @@ export default {
         });
     },
     enqueue() {
-      this.update_params();
+      this.apply_params();
 
       if (this.valid.length > 0) {
         alert(this.$t("invalid-input"));

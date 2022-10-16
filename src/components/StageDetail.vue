@@ -85,7 +85,11 @@ export default {
   computed: {
     stage_doc() {
       for (var x in this.stages)
-        if (this.stages[x][this.value[0]]) return this.stages[x][this.value[0]];
+        if (this.stages[x][this.value[0]]) {
+          var res = Object.assign({}, this.stages[x][this.value[0]]);
+          res.args = [... res.args, {name: 'disabled', type: 'bool', default: false, description: this.$t('disabled')}]
+          return res;
+        }
       return {};
     },
     stage_options() {
