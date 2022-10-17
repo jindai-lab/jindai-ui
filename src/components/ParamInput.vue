@@ -53,9 +53,9 @@
     </div>
 
     <v-data-table v-else-if="arg.type == 'LINES'" :headers="[
-      { text: 'Actions', align: 'end', value: 'actions', sortable: false, width: '1%' },
+      { text: 'Actions', align: 'end', value: 'actions', sortable: false },
       { text: '', align: 'start', sortable: false, value: 'text' }
-    ]" :items="lines" :items-per-page="-1" hide-default-header hide-default-footer>
+    ]" class="lines-editor" :items="lines" :items-per-page="-1" hide-default-header hide-default-footer>
       <template v-slot:item.actions="{ item }">
         <v-icon small class="mr-2" @click="edit_line(item.index)">
           mdi-pencil
@@ -320,7 +320,7 @@ export default {
     },
     append_line() {
       if (this.new_line)
-        this.$emit('input', (this.value || '') + '\n' + this.new_line);
+        this.$emit('input', ((this.value || '') + '\n' + this.new_line).trim());
       this.new_line = '';
     },
     edit_line(item_id) {
@@ -365,5 +365,9 @@ blockquote {
   text-overflow: ellipsis;
   white-space: nowrap;
   overflow: hidden;
+}
+
+.lines-editor td:nth-child(1) {
+  width: 50px;
 }
 </style>

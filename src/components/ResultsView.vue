@@ -1108,7 +1108,7 @@ export default {
           s.forEach(
             (p) =>
               (p.keywords = p.keywords
-                .filter((x) => !x.startsWith("*") && x !== data.result)
+                .filter((x) => !x.match(del ? /^\*/ : /^\*0/) && x !== data.result)
                 .concat(data.result ? [data.result] : []))
           );
         });

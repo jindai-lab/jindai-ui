@@ -3,31 +3,17 @@
     <p v-html="content" v-if="is_html"></p>
     <p v-else>
       {{ content }}
-      <v-btn
-        class="fav-button"
-        :color="favored ? 'orange' : ''"
-        :dark="favored"
-        icon
-        small
-        @click="
-  fav();
-$forceUpdate();
-        "
-      >
+      <v-btn class="fav-button" :color="favored ? 'orange' : ''" :dark="favored" icon small @click="
+        fav(); $forceUpdate();
+      ">
         <v-icon small>mdi-star</v-icon>
       </v-btn>
     </p>
     <div v-if="paragraph.images && paragraph.images.length">
       <v-row float>
-        <v-card
-          v-for="item in first_item_only
-          ? paragraph.images.slice(0, 1)
-          : paragraph.images"
-          :key="item._id"
-          :width="item_width"
-          style="overflow: hidden"
-          class="ma-5"
-        >
+        <v-card v-for="item in first_item_only
+        ? paragraph.images.slice(0, 1)
+        : paragraph.images" :key="item._id" :width="item_width" style="overflow: hidden" class="ma-5">
           <v-img :contain="contain" :height="item_height" :src="get_item_image(item)"></v-img>
         </v-card>
       </v-row>
@@ -38,35 +24,25 @@ $forceUpdate();
       <span class="nums">
         <span class="datetime">{{ paragraph.pdate | dateSafe }}</span>
         <span class="count">
-          <a
-            class="counter secondary--text chip"
-            target="_blank"
-            :href="(paragraph.group_url || `/?q=id%3DObjectId(${paragraph._id})`) + '=>expand()&groups=none'"
-          >{{ paragraph.count || paragraph.images.length }}</a>
+          <a class="counter secondary--text chip" target="_blank"
+            :href="`/?q=(${get_group(paragraph)})=>expand()&groups=none`">{{
+            paragraph.count || paragraph.images.length }}</a>
         </span>
-        <v-btn :href="paragraph.source.url" target="_blank" class="orig no-underline" icon><v-icon>mdi-web</v-icon></v-btn>
+        <v-btn :href="paragraph.source.url" target="_blank" class="orig no-underline" icon>
+          <v-icon>mdi-web</v-icon>
+        </v-btn>
       </span>
-      <a
-        :href="'/?q=source.url%3D`' + (paragraph.source.url || '') + '`'"
-        class="force-text break-anywhere"
-        target="_blank"
-      >{{ paragraph.source.url }}</a>
+      <a :href="'/?q=source.url%3D`' + (paragraph.source.url || '') + '`'" class="force-text break-anywhere"
+        target="_blank">{{ paragraph.source.url }}</a>
       <p class="content">{{ text }}</p>
       <template v-for="tag in tags">
-        <a
-          v-if="tag != '...'"
-          :alt="tag"
-          :key="`${paragraph._id}-${Math.random()}-${tag}`"
-          :href="'/' + querystring_stringify({
-            groups: tag.match(/^\*/) ? 'none' : (tag.match(/^@/) ? 'group' : ''),
-            q:
-              tag.match(/^[@*]/)
-                ? quote(tag)
-                : quote(tag) + ',' + scope(paragraph)
-          })"
-          :class="['tag', 'chip', tag_class(tag)]"
-          target="_blank"
-        >{{ tag }}</a>
+        <a v-if="tag != '...'" :alt="tag" :key="`${paragraph._id}-${Math.random()}-${tag}`" :href="'/' + querystring_stringify({
+          groups: tag.match(/^\*/) ? 'none' : (tag.match(/^@/) ? 'group' : ''),
+          q:
+            tag.match(/^[@*]/)
+              ? quote(tag)
+              : quote(tag) + ',' + scope(paragraph)
+        })" :class="['tag', 'chip', tag_class(tag)]" target="_blank">{{ tag }}</a>
         <v-btn icon v-else :key="tag" @click="show_all_tags = true">
           <v-icon>mdi-more</v-icon>
         </v-btn>
@@ -117,6 +93,9 @@ export default {
     get_item_image(i) {
       return api.get_item_image(i);
     },
+    get_group(para) {
+      return encodeURIComponent(api.get_group(para))
+    },
     fav() {
       api.fav(this.paragraph);
     },
@@ -128,7 +107,7 @@ export default {
         ? "t_group"
         : tag == this.paragraph.author
           ? "t_author"
-          : tag != 'author' && tag != 'group'?
+          : tag != 'author' && tag != 'group' ?
             "t_" + tag : '';
     },
     querystring_stringify: api.querystring_stringify,
@@ -141,10 +120,12 @@ export default {
 .fav-button {
   opacity: 0;
 }
+
 p:hover .fav-button,
 .fav-button.orange--text {
   opacity: 1;
 }
+
 .gallery-description a {
   margin-right: 5px;
 }
@@ -184,7 +165,7 @@ p:hover .fav-button,
   vertical-align: middle;
 }
 
-.gallery-description span.nums > * {
+.gallery-description span.nums>* {
   margin-right: 5px;
 }
 
@@ -198,7 +179,7 @@ p:hover .fav-button,
   color: rgba(255, 255, 255, 0.6);
 }
 
-.paragraph > p {
+.paragraph>p {
   font-family: Georgia, "Times New Roman", Times, serif;
 }
 </style>

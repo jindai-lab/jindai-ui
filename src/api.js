@@ -658,5 +658,21 @@ export default {
         return 'id=' + paragraph._id;
     },
 
+    guess_group(cond) {
+        var m = (cond.match(/@([_\w]+)/) || ['', ''])[1]
+        if (m) return '*' + m
+        return ''
+    },
+
+    get_group(paragraph) {
+        if (paragraph.gid) {
+            return paragraph.gid;
+        }
+        if (paragraph.group_id) {
+            return `${paragraph.group_field}=${JSON.stringify(paragraph.group_id)}`;
+        }
+        return `id=${paragraph._id}`
+    },
+
     config: LocalConfig(),
 };
