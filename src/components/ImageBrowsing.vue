@@ -61,7 +61,7 @@
             </div>
             <div>
               <v-btn
-                v-for="(filter, page_name) in plugin_pages"
+                v-for="(filter, page_name) in plugin_pages.filter(x => x.format)"
                 :key="page_name"
                 icon
                 dense
