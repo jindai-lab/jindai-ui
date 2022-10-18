@@ -17,11 +17,11 @@
                       rename_collection(ds, prompt($t('raname-to'), ds.name))
                     "
                   >
-                    <v-icon>mdi-form-textbox</v-icon>
+                    <v-icon>mdi-textbox</v-icon>
                   </v-btn>
 
                   <v-btn class="oper" icon @click="refresh_sources(ds)">
-                    <v-icon>mdi-sync</v-icon>
+                    <v-icon>mdi-refresh</v-icon>
                   </v-btn>
                 </v-list-item-title>
               </v-list-item-content>

@@ -18,7 +18,7 @@ Vue.config.ignoredElements = [
 import VueRouter from "vue-router";
 Vue.use(VueRouter);
 
-Vue.filter("dateSafe", function(value) {
+Vue.filter("dateSafe", function (value) {
     if (!value) return "";
     if (
         (typeof value === "number" && value < 10000) ||
@@ -45,6 +45,7 @@ import DatasetList from "./views/DatasetList.vue";
 import History from "./views/History.vue";
 import Login from "./views/Login.vue";
 import QueueResult from "./views/QueueResult.vue";
+import QueueLog from "./views/QueueLog.vue";
 import StorageList from "./views/StorageList.vue";
 import SystemAdmin from "./views/SystemAdmin.vue";
 import Preferences from "./views/Preferences.vue";
@@ -54,70 +55,75 @@ import QueryFormTest from "./views/QueryFormTest.vue";
 
 // configure routes
 const routes = [{
-        path: "*",
-        component: SearchForm,
-    },
-    {
-        path: "/login",
-        component: Login,
-        name: "Login",
-    },
-    {
-        path: "/view/:path(.*)",
-        component: PageView,
-        name: "PageView",
-    },
-    {
-        path: "/tasks/shortcut/:id",
-        component: TaskShortcut,
-        props: true,
-    },
-    {
-        path: "/tasks/:id",
-        component: TaskDetail,
-        props: true,
-    },
-    {
-        path: "/tasks",
-        component: TaskList,
-    },
-    {
-        path: "/datasets",
-        component: DatasetList,
-    },
-    {
-        path: "/history",
-        component: History,
-    },
-    {
-        path: "/results/:id(.*)",
-        component: QueueResult,
-        props: true,
-    },
-    {
-        path: "/storage",
-        component: StorageList,
-    },
-    {
-        path: "/admin",
-        component: SystemAdmin,
-    },
-    {
-        path: "/preferences",
-        component: Preferences,
-    },
-    {
-        path: "/dbconsole",
-        component: DbConsole,
-    },
-    {
-        path: "/autotags",
-        component: AutoTags,
-    },
-    {
-        path: "/querytest",
-        component: QueryFormTest,
-    },
+    path: "*",
+    component: SearchForm,
+},
+{
+    path: "/login",
+    component: Login,
+    name: "Login",
+},
+{
+    path: "/view/:path(.*)",
+    component: PageView,
+    name: "PageView",
+},
+{
+    path: "/tasks/shortcut/:id",
+    component: TaskShortcut,
+    props: true,
+},
+{
+    path: "/tasks/:id",
+    component: TaskDetail,
+    props: true,
+},
+{
+    path: "/tasks",
+    component: TaskList,
+},
+{
+    path: "/datasets",
+    component: DatasetList,
+},
+{
+    path: "/history",
+    component: History,
+},
+{
+    path: "/results/:id(.*)",
+    component: QueueResult,
+    props: true,
+},
+{
+    path: "/logs/:id(.*)",
+    component: QueueLog,
+    props: true,
+},
+{
+    path: "/storage",
+    component: StorageList,
+},
+{
+    path: "/admin",
+    component: SystemAdmin,
+},
+{
+    path: "/preferences",
+    component: Preferences,
+},
+{
+    path: "/dbconsole",
+    component: DbConsole,
+},
+{
+    path: "/autotags",
+    component: AutoTags,
+},
+{
+    path: "/querytest",
+    component: QueryFormTest,
+},
 ];
 
 const router = new VueRouter({

@@ -1098,7 +1098,7 @@ export default {
           ungroup: del,
         }
       if (!del && s.length == this.visible_data.length && s.map(x => x.keywords.filter(x => x.match(/^\*[^0]/))).reduce((p, c) => p.concat(c)).length == 0) {
-        var cond = this.current_q().replace(/[()"`'%^@\\]/g, '').split(/[,|]/)[0]
+        var cond = api.guess_group(this.current_q())
         bundle.group = (prompt(this.$t('group'), cond) || '').replace(/^\*/, '')
       }
       api

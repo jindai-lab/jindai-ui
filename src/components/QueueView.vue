@@ -61,6 +61,9 @@
             <v-btn class="ml-3" @click="delete_result(task)">
               <v-icon>mdi-delete</v-icon>
             </v-btn>
+            <v-btn class="ml-3" @click="view_log(task)">
+              <v-icon>mdi-comment-outline</v-icon>
+            </v-btn>
             <v-divider class="mt-5"></v-divider>
           </div>
         </v-card-text>
@@ -144,6 +147,11 @@ export default {
           return false;
       }
     },
+    view_log(task) {
+      var id = encodeURIComponent(task.key);
+      this.$router.push("/logs/" + id).catch(() => {});
+      this.show_detail = false;
+    }
   },
 };
 </script>
