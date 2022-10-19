@@ -272,7 +272,7 @@ export default {
           Object.assign({ count: true }, params, this.cancel_source)
         )
         .then((data) => {
-          if (data.result) e.callback({ token, total: data.result });
+          if (typeof data.result !== 'undefined') e.callback({ token, total: data.result });
         });
     },
     keyword_patterns(query) {
@@ -280,7 +280,7 @@ export default {
         return query
           .map((x) => this.keyword_patterns(x))
           .reduce((prev, curr) => (prev = prev.concat(curr)), []);
-      if (["string", "number", "boolean"].includes(typeof query)) return [];
+      if (["string", "number", "boolean"].includes(typeof query) || query === null) return [];
       return Object.entries(query)
         .map((kvpair) => {
           let key = kvpair[0],

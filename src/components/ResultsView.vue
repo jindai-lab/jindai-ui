@@ -1,13 +1,7 @@
 <template>
-  <v-sheet v-if="total !== 0" ref="results" :class="config.view_mode">
+  <v-sheet ref="results" :class="config.view_mode">
     <div class="tools">
-      <v-btn-toggle
-        mandatory
-        class="view-mode-toggler"
-        dense
-        v-model="config.view_mode"
-        @change="update_view_mode"
-      >
+      <v-btn-toggle mandatory class="view-mode-toggler" dense v-model="config.view_mode" @change="update_view_mode">
         <v-btn value="list">
           <v-icon>mdi-view-list</v-icon>
         </v-btn>
@@ -31,89 +25,57 @@
         <div class="spacer" v-if="r.spacer" :key="'spacer' + index"></div>
         <div class="paragraph" :data-id="r._id" v-else :key="index">
           <div class="meta">
-            <v-checkbox
-              v-model="r.selected"
-              dense
-              hide-details
-              class="d-inline-block"
-              @change="update_selection(r, null, index)"
-            ></v-checkbox>
+            <v-checkbox v-model="r.selected" dense hide-details class="d-inline-block"
+              @change="update_selection(r, null, index)"></v-checkbox>
             {{ $t("dataset") }}:
-            <a
-              :href="
-                '/' +
-                querystring_stringify({
-                  q: current_q(),
-                  selected_datasets: [r.dataset],
-                  groups: 'none'
-                })
-              "
-              target="_blank"
-              >{{ r.dataset }}</a
-            >
+            <a :href="
+              '/' +
+              querystring_stringify({
+                q: current_q(),
+                selected_datasets: [r.dataset],
+                groups: 'none'
+              })
+            " target="_blank">{{ r.dataset }}</a>
             {{ $t("outline") }}: {{ r.outline }} {{ $t("source") }}:
-            <a
-              :href="
-                '/' +
-                querystring_stringify({
-                  q: `(${current_q()}),source.file=${quote(
-                    r.source.file
-                  )}`,
-                  selected_datasets: [r.dataset],
-                  groups: 'none',
-                })
-              "
-              target="_blank"
-              >{{ r.source.file }}</a
-            >
+            <a :href="
+              '/' +
+              querystring_stringify({
+                q: `(${current_q()}),source.file=${quote(
+                  r.source.file
+                )}`,
+                selected_datasets: [r.dataset],
+                groups: 'none',
+              })
+            " target="_blank">{{ r.source.file }}</a>
             <a :href="r.source.url" target="_blank">{{ r.source.url }}</a>
             {{ $t("pagenum") }}: {{ r.pagenum }} {{ $t("date") }}:
             {{ r.pdate | dateSafe }}
             <v-divider class="mt-5"></v-divider>
           </div>
-          <v-img
-            v-if="config.view_mode == 'gallery'"
-            :class="{ selected: r.selected }"
-            @click="update_selection(r, $event, index)"
-            @dblclick="view_page(index)"
-            :contain="config.contain"
-            :height="240"
-            :src="get_paragraph_image(r)"
-          ></v-img>
-          <ContentView
-            :key="r._id"
-            :view_mode="config.view_mode"
-            :paragraph="r"
-            :item_width="200"
-            :item_height="200"
-          />
+          <v-img v-if="config.view_mode == 'gallery'" :class="{ selected: r.selected }"
+            @click="update_selection(r, $event, index)" @dblclick="view_page(index)" :contain="config.contain"
+            :height="240" :src="get_paragraph_image(r)"></v-img>
+          <ContentView :key="r._id" :view_mode="config.view_mode" :paragraph="r" :item_width="200" :item_height="200" />
           <div class="mt-10 operations">
             <v-btn @click="view_page(index)">
               <v-icon>mdi-eye</v-icon> {{ $t("view") }}
             </v-btn>
-            <v-btn
-              :href="`/view/${r.mongocollection}/${
-                r.source.file ? r.source.file + '/' + r.source.page : r._id
-              }`"
-              target="_blank"
-            >
+            <v-btn :href="`/view/${r.mongocollection}/${
+              r.source.file ? r.source.file + '/' + r.source.page : r._id
+            }`" target="_blank">
               <v-icon>mdi-dock-window</v-icon> {{ $t("browse") }}
             </v-btn>
-            <v-btn
-              @click="
-                dialogs.info.target = r;
-                dialogs.info.visible = true;
-              "
-            >
+            <v-btn @click="
+              dialogs.info.target = r;
+              dialogs.info.visible = true;
+            ">
               <v-icon>mdi-information</v-icon>
               {{ $t("metadata") }}
             </v-btn>
-            <v-btn
-              @click="
-                dialogs.edit.target = r;
-                dialogs.edit.visible = true;
-              "
-            >
+            <v-btn @click="
+              dialogs.edit.target = r;
+              dialogs.edit.visible = true;
+            ">
               <v-icon>mdi-file-edit-outline</v-icon>
               {{ $t("edit") }}
             </v-btn>
@@ -125,18 +87,11 @@
                 </v-btn>
               </template>
               <v-list>
-                <v-list-item
-                  class="pointer"
-                  v-for="(item, index) in dialogs.send_task.quicktasks"
-                  :key="index"
-                >
-                  <v-list-item-title
-                    @click="
-                      set_selection([r]);
-                      send_task(item.value);
-                    "
-                    >{{ item.text }}</v-list-item-title
-                  >
+                <v-list-item class="pointer" v-for="(item, index) in dialogs.send_task.quicktasks" :key="index">
+                  <v-list-item-title @click="
+                    set_selection([r]);
+                    send_task(item.value);
+                  ">{{ item.text }}</v-list-item-title>
                 </v-list-item>
               </v-list>
             </v-menu>
@@ -174,60 +129,38 @@
       <v-pagination v-model="page" :length="pages.length"></v-pagination>
       <div>
         <label> {{ $t("pagenum") }}</label>
-        <v-text-field
-          class="d-inline-block ml-1"
-          style="max-width: 40px"
-          type="number"
-          dense
-          @change="page = parseInt($event) || page"
-        ></v-text-field>
+        <v-text-field class="d-inline-block ml-1" style="max-width: 40px" type="number" dense
+          @change="page = parseInt($event) || page"></v-text-field>
       </div>
       <div>
         <label>{{ $t("page-size") }}</label>
-        <v-select
-          :items="[20, 50, 100, 200]"
-          dense
-          class="d-inline-block ml-1"
-          style="max-width: 50px"
-          v-model="config.page_size"
-        ></v-select>
+        <v-select :items="[20, 50, 100, 200]" dense class="d-inline-block ml-1" style="max-width: 60px"
+          v-model="config.page_size"></v-select>
       </div>
     </v-row>
     <!-- dialogs -->
-    <PageView
-      v-model="dialogs.paragraph.visible"
-      class="page-view"
-      ref="page_view"
-      :paragraphs="visible_data"
-      :view_mode="config.view_mode"
-      :start_index="dialogs.paragraph.start_index"
-      :plugin_pages="plugin_pages"
-      @next="turn_page(page + 1)"
-      @prev="turn_page(page - 1)"
-      @browse="browsing = $event"
-      @info="
+    <PageView v-model="dialogs.paragraph.visible" class="page-view" ref="page_view" :paragraphs="visible_data"
+      :view_mode="config.view_mode" :start_index="dialogs.paragraph.start_index" :plugin_pages="plugin_pages"
+      @next="turn_page(page + 1)" @prev="turn_page(page - 1)" @browse="browsing = $event" @info="
         dialogs.info.visible = true;
         dialogs.info.target = $event;
-      "
-      @rating="rating"
-    />
+      " @rating="rating" />
     <v-dialog v-model="dialogs.info.visible">
       <v-card>
         <v-card-title>
-          <v-btn
-            icon
-            @click="dialogs.info.visible = false"
-            style="margin-right: 12px"
-          >
+          <v-btn icon @click="dialogs.info.visible = false" style="margin-right: 12px">
             <v-icon>mdi-close</v-icon>
           </v-btn>
-          {{ $t("metadata") }}</v-card-title
-        >
+          {{ $t("metadata") }}
+        </v-card-title>
         <v-card-text>
-          <v-row v-for="(v, k) in dialogs.info.target" :key="k">
-            <v-col cols="4">{{ k }}</v-col>
-            <v-col cols="8">{{ v }}</v-col>
-          </v-row>
+          <v-data-table
+            :items="Object.entries(dialogs.info.target || {}).map((v) => ({value: typeof v[1] !== 'object' ? v[1] : JSON.stringify(v[1], null, 2), key: v[0]}))"
+            :headers="[
+              {value: 'key'},
+              {value: 'value'}
+            ]" hide-default-header>
+          </v-data-table>
         </v-card-text>
         <v-card-actions>
           <v-btn @click="dialogs.info.visible = false"> {{ $t("ok") }} </v-btn>
@@ -237,41 +170,32 @@
 
     <v-dialog v-model="dialogs.edit.visible">
       <v-card>
-        <v-card-title
-          >{{ $t("edit-paragraph") }} {{ dialogs.edit.target._id }}
+        <v-card-title>{{ $t("edit-paragraph") }} {{ dialogs.edit.target._id }}
           <v-spacer></v-spacer>
-          <v-btn icon @click="dialogs.edit.visible = false"
-            ><v-icon>mdi-close</v-icon></v-btn
-          ></v-card-title
-        >
+          <v-btn icon @click="dialogs.edit.visible = false">
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+        </v-card-title>
         <v-card-text>
           <v-list>
             <v-list-item v-for="(field, key) in dialogs.edit.target" :key="key">
               <v-list-item-content>
-                <ParamInput
-                  v-model="dialogs.edit.target[key]"
-                  :arg="{ type: typeof field, name: key, default: '\'\'' }"
+                <ParamInput v-model="dialogs.edit.target[key]" :arg="{ type: typeof field, name: key, default: '\'\'' }"
                   v-if="
                     !(
                       ['_id', 'matched_content'].includes(key) ||
                       typeof field == 'object'
                     )
-                  "
-                />
+                  " />
               </v-list-item-content>
             </v-list-item>
             <v-list-item>
               <v-list-item-content>
-                <ParamInput
-                  v-model="dialogs.edit.new_field"
-                  :arg="{ type: 'string', name: '新字段', default: '' }"
-                />
-                <v-btn
-                  @click="
-                    dialogs.edit.target[dialogs.edit.new_field] = '';
-                    $forceUpdate();
-                  "
-                >
+                <ParamInput v-model="dialogs.edit.new_field" :arg="{ type: 'string', name: '新字段', default: '' }" />
+                <v-btn @click="
+                  dialogs.edit.target[dialogs.edit.new_field] = '';
+                  $forceUpdate();
+                ">
                   <v-icon>mdi-plus</v-icon>
                 </v-btn>
               </v-list-item-content>
@@ -281,7 +205,7 @@
         <v-card-actions>
           <v-btn color="primary" @click="save()">{{ $t("save") }}</v-btn>
           <v-btn @click="dialogs.edit.visible = false">{{
-            $t("cancel")
+          $t("cancel")
           }}</v-btn>
         </v-card-actions>
       </v-card>
@@ -292,18 +216,15 @@
         <v-card-title>
           {{ $t("view") }} {{ querify(dialogs.embedded.target.source) }}
           <v-spacer></v-spacer>
-          <v-btn icon @click="dialogs.embedded.visible = false"
-            ><v-icon>mdi-close</v-icon></v-btn
-          >
+          <v-btn icon @click="dialogs.embedded.visible = false">
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
         </v-card-title>
         <v-card-text>
-          <ResultsView
-            @load="
-              (a) =>
-                a.callback({ offset: 0, result: dialogs.embedded.target.arr })
-            "
-            :total="(dialogs.embedded.target.arr || []).length"
-          />
+          <ResultsView @load="
+            (a) =>
+              a.callback({ offset: 0, result: dialogs.embedded.target.arr })
+          " :total="(dialogs.embedded.target.arr || []).length" />
         </v-card-text>
       </v-card>
     </v-dialog>
@@ -313,72 +234,39 @@
         <v-card-title>
           {{ $t("send-task") }}
           <v-spacer></v-spacer>
-          <v-btn icon @click="dialogs.send_task.visible = false"
-            ><v-icon>mdi-close</v-icon></v-btn
-          >
+          <v-btn icon @click="dialogs.send_task.visible = false">
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
         </v-card-title>
         <v-card-text class="mt-5">
           <v-row>
             <v-col>
-              <v-autocomplete
-                dense
-                :label="$t('send-to')"
-                :items="dialogs.send_task.quicktasks"
-                v-model="dialogs.send_task.pipeline"
-              ></v-autocomplete>
-              <v-btn
-                color="primary"
-                dense
-                @click="$refs.quicktask_results.start(1)"
-                ><v-icon>mdi-fast-forward</v-icon> {{ $t("run-now") }}</v-btn
-              >
+              <v-autocomplete dense :label="$t('send-to')" :items="dialogs.send_task.quicktasks"
+                v-model="dialogs.send_task.pipeline"></v-autocomplete>
+              <v-btn color="primary" dense @click="$refs.quicktask_results.start(1)">
+                <v-icon>mdi-fast-forward</v-icon> {{ $t("run-now") }}
+              </v-btn>
             </v-col>
           </v-row>
           <v-sheet>
-            <ResultsView
-              @load="quicktask"
-              ref="quicktask_results"
-              :total="dialogs.send_task.results_count"
-            />
+            <ResultsView @load="quicktask" ref="quicktask_results" :total="dialogs.send_task.results_count" />
           </v-sheet>
         </v-card-text>
       </v-card>
     </v-dialog>
 
-    <tagging-shortcuts-dialog
-      v-model="dialogs.tagging_shortcuts.visible"
-      :choices="dialogs.tagging_shortcuts.list"
-      :initial="dialogs.tagging_shortcuts.initial"
-      :multiple="false"
-      :match_initials="true"
-      @submit="tag($event, true)"
-    ></tagging-shortcuts-dialog>
+    <tagging-shortcuts-dialog v-model="dialogs.tagging_shortcuts.visible" :choices="dialogs.tagging_shortcuts.list"
+      :initial="dialogs.tagging_shortcuts.initial" :multiple="false" :match_initials="true" @submit="tag($event, true)">
+    </tagging-shortcuts-dialog>
 
-    <tagging-dialog
-      ref="tagging_dialog"
-      :choices="dialogs.tagging.choices"
-      :scope="scope(selected_paragraphs())"
-      @submit="tag($event, false)"
-      @author="set_author"
-    ></tagging-dialog>
+    <tagging-dialog ref="tagging_dialog" :choices="dialogs.tagging.choices" :scope="scope(selected_paragraphs())"
+      @submit="tag($event, false)" @author="set_author"></tagging-dialog>
 
-    <QuickActionButtons
-      :selection_count="selection_count"
-      @toggle-selection="toggle_selection"
-      @clear-selection="clear_selection"
-      @delete="delete_items"
-      @rating="rating(0.5)"
-      @group="group"
-      @tag="show_tagging_dialog"
-      @merge="merge"
-      @split="split"
-      @task="send_task"
-      @play="playing"
-      :playing_interval="config.playing_interval"
-      @reset-storage="reset_storage"
-    />
+    <QuickActionButtons :selection_count="selection_count" @toggle-selection="toggle_selection"
+      @clear-selection="clear_selection" @delete="delete_items" @rating="rating(0.5)" @group="group"
+      @tag="show_tagging_dialog" @merge="merge" @split="split" @task="send_task" @play="playing"
+      :playing_interval="config.playing_interval" @reset-storage="reset_storage" />
   </v-sheet>
-  <v-sheet v-else ref="results">未找到匹配的结果。</v-sheet>
 </template>
 
 <script>
@@ -522,10 +410,10 @@ export default {
 
     api.call("tasks/shortcuts").then(
       (data) =>
-        (this.dialogs.send_task.quicktasks = data.result.map((task) => ({
-          text: task.name,
-          value: task.pipeline,
-        })))
+      (this.dialogs.send_task.quicktasks = data.result.map((task) => ({
+        text: task.name,
+        value: task.pipeline,
+      })))
     );
 
     api
@@ -550,20 +438,26 @@ export default {
     start(page) {
       this.page_range = [0, 0];
       let params = api.querystring_parse(location.search);
-      if (!page)
+      if (!page) {
         if (params.page) page = params.page | 0;
         else page = 1;
+      } else {
+        this.page_range = [0, 0];
+        this.value = [];
+        this.sticky = [];
+        this.total = null;
+      }
       this.turn_page(page);
     },
     querify: api.querify,
     turn_page(p, cb) {
       if (p === 0) return;
-      
+
       function _preload(items) {
-      // preload images for every item
+        // preload images for every item
         items.map((x) => {
           if (x.images) {
-            [... x.images.slice(0, 5), ... x.images.slice(-1)].map((i) => {
+            [...x.images.slice(0, 5), ...x.images.slice(-1)].map((i) => {
               if (i.item_type == 'image') {
                 let image = new Image()
                 image.src = api.get_item_image(i)
@@ -572,7 +466,7 @@ export default {
           }
         })
       }
-      
+
       history.pushState(
         "",
         "",
@@ -654,12 +548,12 @@ export default {
     },
     _keyup_handler(e) {
       if (e.target.tagName == "INPUT" || e.target.tagName == "TEXTAREA") return;
-      
+
       var selection_inc = 0, ele;
       var selection_line_number;
-      if(this.$refs.all_items && document.querySelector('.paragraph'))
-        selection_line_number = parseInt( this.$refs.all_items.clientWidth / document.querySelector('.paragraph').clientWidth)
-          
+      if (this.$refs.all_items && document.querySelector('.paragraph'))
+        selection_line_number = parseInt(this.$refs.all_items.clientWidth / document.querySelector('.paragraph').clientWidth)
+
       switch (e.key.toLowerCase()) {
         case "arrowleft":
           if (!this.dialogs.paragraph.visible) this.turn_page(this.page - 1);
@@ -723,11 +617,10 @@ export default {
               case "c":
                 if (e.ctrlKey) return;
                 this._open_window({
-                  q: `author=${
-                    api.quote(_album.author) ||
+                  q: `author=${api.quote(_album.author) ||
                     _album.keywords.filter((x) => x.startsWith("@"))[0] ||
                     ""
-                  }`,
+                    }`,
                   groups: 'none'
                 });
                 break;
@@ -736,8 +629,8 @@ export default {
                   !e.shiftKey
                     ? `/?q=id%3D${_album._id}=>expand()&groups=none`
                     : `/?q=source.url%25%27${api
-                        .escape_regex(_album.source.url)
-                        .replace(/\/\d+\//, "/.*/")}'`
+                      .escape_regex(_album.source.url)
+                      .replace(/\/\d+\//, "/.*/")}'`
                 );
                 break;
               case "i":
@@ -815,8 +708,7 @@ export default {
     save() {
       api
         .call(
-          `collections/${
-            this.dialogs.edit.target.mongocollection || "paragraph"
+          `collections/${this.dialogs.edit.target.mongocollection || "paragraph"
           }/${this.dialogs.edit.target._id}`,
           this.dialogs.edit.target
         )
@@ -976,7 +868,7 @@ export default {
           {
             ids: this.selected_ids(),
             author,
-            $push: {keywords: author}
+            $push: { keywords: author }
           }
         )
         .then((data) => {
@@ -1014,7 +906,7 @@ export default {
         .then((data) => {
           this.clear_selection(s);
           s.forEach((p) => {
-            data.result[p._id] && (Object.assign(p, data.result[p._id], {images: p.images}));
+            data.result[p._id] && (Object.assign(p, data.result[p._id], { images: p.images }));
           });
         });
     },
@@ -1094,9 +986,9 @@ export default {
       var s = this.selected_paragraphs();
       if (!s || !s.length) return;
       var bundle = {
-          ids: this.selected_ids(),
-          ungroup: del,
-        }
+        ids: this.selected_ids(),
+        ungroup: del,
+      }
       if (!del && s.length == this.visible_data.length && s.map(x => x.keywords.filter(x => x.match(/^\*[^0]/))).reduce((p, c) => p.concat(c)).length == 0) {
         var cond = api.guess_group(this.current_q())
         bundle.group = (prompt(this.$t('group'), cond) || '').replace(/^\*/, '')
@@ -1107,9 +999,9 @@ export default {
           this.clear_selection(s);
           s.forEach(
             (p) =>
-              (p.keywords = p.keywords
-                .filter((x) => !x.match(del ? /^\*/ : /^\*0/) && x !== data.result)
-                .concat(data.result ? [data.result] : []))
+            (p.keywords = p.keywords
+              .filter((x) => !x.match(del ? /^\*/ : /^\*0/) && x !== data.result)
+              .concat(data.result ? [data.result] : []))
           );
         });
     },
@@ -1161,16 +1053,19 @@ export default {
 .v-btn {
   margin-right: 12px;
 }
+
 .page-view {
   overflow-y: auto;
   max-height: 100%;
 }
+
 .v-dialog .v-card__title .v-btn {
   margin-right: 50px;
   position: fixed;
   z-index: 200;
   right: 20px;
 }
+
 .meta a {
   text-decoration: none;
 }
@@ -1201,14 +1096,14 @@ export default {
 .gallery .wrapper-container .paragraph {
   padding: 5px;
   width: 250px;
-  
+
 }
 
 .spacer {
   margin-right: 100%;
 }
 
-.tools > .v-btn {
+.tools>.v-btn {
   margin-right: 12px;
 }
 
@@ -1222,7 +1117,7 @@ export default {
   vertical-align: middle;
 }
 
-.view-mode-toggler > * {
+.view-mode-toggler>* {
   margin: 0;
 }
 

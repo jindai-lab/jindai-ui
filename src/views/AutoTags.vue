@@ -2,97 +2,35 @@
   <v-card flat>
     <v-card-title> {{ $t("auto-tagging") }} </v-card-title>
     <v-card-text>
-      <v-data-iterator
-        :items="auto_tags"
-        :items-per-page="20"
-        :page.sync="page"
-        :search="search"
-        hide-default-footer
-      >
-        <template v-slot:header>
+      <v-data-table :items="auto_tags" :items-per-page="20" :page.sync="page" :search="search" :headers="[
+        {text: $t('match-cond'), value: 'cond'},
+        {text: $t('tag'), value: 'tag'},
+        {text: $t('operations'), value: 'operations'},
+      ]">
+        <template v-slot:top>
           <v-toolbar flat>
-            <v-text-field
-              v-model="search"
-              clearable
-              flat
-              hide-details
-              prepend-inner-icon="mdi-magnify"
-              :label="$t('search')"
-            ></v-text-field>
+            <v-text-field v-model="search" clearable flat hide-details prepend-inner-icon="mdi-magnify"
+              :label="$t('search')"></v-text-field>
           </v-toolbar>
           <v-toolbar flat class="mb-5">
-            <v-text-field
-              v-model="new_tag.cond"
-              :label="$t('match-cond')"
-            ></v-text-field>
-            <v-text-field
-              v-model="new_tag.tag"
-              :label="$t('tag')"
-              class="new-tag-data"
-            ></v-text-field>
+            <v-text-field v-model="new_tag.cond" :label="$t('match-cond')"></v-text-field>
+            <v-text-field v-model="new_tag.tag" :label="$t('tag')" class="new-tag-data"></v-text-field>
 
             <v-btn @click="auto_tags_create(new_tag)" class="new-tag-data">
               <v-icon>mdi-plus</v-icon>
             </v-btn>
           </v-toolbar>
-          <v-row>
-            <v-col
-              v-for="(key, index) in [
-                $t('match-cond'),
-                $t('tag'),
-                $t('operations'),
-              ]"
-              :key="index"
-              >{{ key }}</v-col
-            >
-          </v-row>
         </template>
 
-        <template v-slot:default="props">
-          <v-row v-for="item in props.items" :key="item._id" cols="12">
-            <v-col v-for="(key, index) in ['cond', 'tag']" :key="index">
-              {{ item[key] }}
-            </v-col>
-            <v-col>
-              <v-btn
-                @click="auto_tags_delete([item._id])"
-                :alt="`Delete ${item._id}`"
-              >
-                <v-icon>mdi-delete</v-icon>
-              </v-btn>
-              <v-btn class="ml-5" @click="auto_tags_apply(item._id)"><v-icon>mdi-check</v-icon></v-btn>
-            </v-col>
-          </v-row>
+        <template v-slot:item.operations="{ item }">
+          <v-btn @click="auto_tags_delete([item._id])" :alt="`Delete ${item._id}`">
+            <v-icon>mdi-delete</v-icon>
+          </v-btn>
+          <v-btn class="ml-5" @click="auto_tags_apply(item._id)">
+            <v-icon>mdi-check</v-icon>
+          </v-btn>
         </template>
-
-        <template v-slot:footer>
-          <v-row class="mt-2" align="center" justify="center">
-            <v-btn
-              small
-              dark
-              fab
-              color="blue darken-3"
-              class="mr-1"
-              @click="prev_page"
-            >
-              <v-icon>mdi-chevron-left</v-icon>
-            </v-btn>
-            <span class="mr-4 ml-4 grey--text">
-              {{ $t("pagination", { page, total: pages_count }) }}
-            </span>
-            <v-btn
-              small
-              dark
-              fab
-              color="blue darken-3"
-              class="ml-1"
-              @click="next_page"
-            >
-              <v-icon>mdi-chevron-right</v-icon>
-            </v-btn>
-          </v-row>
-        </template>
-      </v-data-iterator>
+      </v-data-table>
     </v-card-text>
   </v-card>
 </template>
@@ -141,14 +79,14 @@ export default {
         .call("plugins/autotags", { ids, delete: true })
         .then(
           () =>
-            (this.auto_tags = this.auto_tags.filter(
-              (x) => !ids.includes(x._id)
-            ))
+          (this.auto_tags = this.auto_tags.filter(
+            (x) => !ids.includes(x._id)
+          ))
         );
     },
     auto_tags_apply(id) {
-      api.call("plugins/autotags", {apply: id})
-      .then(()=>(api.notify(this.$t('success'))))
+      api.call("plugins/autotags", { apply: id })
+        .then(() => (api.notify(this.$t('success'))))
     },
     reload() {
       api

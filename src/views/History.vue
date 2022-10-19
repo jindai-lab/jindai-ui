@@ -2,19 +2,20 @@
   <v-card flat>
     <v-card-title>{{ $t("history") }}</v-card-title>
     <v-card-text>
-      <v-row v-for="h in history" :key="h._id">
-        <v-col>{{ h.user }}</v-col>
-        <v-col>{{ h.created_at }}</v-col>
-        <v-col cols="6" v-text="h.queries.join('\n')"></v-col>
-        <v-col>
-          <v-btn icon @click="export_query(h)">
+      <v-data-table :items="history.map(x => Object.assign(x, {queries: x.queries.join('\n')}))" :headers="[
+        {text: $t('user'), value: 'user'},
+        {text: $t('created-at'), value: 'created_at'},
+        {text: $t('query'), value: 'queries'},
+        {text: $t('operations'), value: 'actions'},
+      ]"><template v-slot:item.actions="{item}">
+          <v-btn icon @click="export_query(item)">
             <v-icon>mdi-file-export</v-icon>
           </v-btn>
-          <v-btn icon @click="replay(h)">
+          <v-btn icon @click="replay(item)">
             <v-icon>mdi-eye</v-icon>
           </v-btn>
-        </v-col>
-      </v-row>
+        </template>
+      </v-data-table>
     </v-card-text>
   </v-card>
 </template>
@@ -44,14 +45,14 @@ export default {
           name: this.$t("search") + " " + h.queries[0],
         })
         .then((data) => this.$router.push("/tasks/" + data.result))
-        .catch(() => {});
+        .catch(() => { });
     },
     replay(h) {
       this.$router.push(
         "search?q=" +
-          encodeURIComponent(h.queries[0]) +
-          "&req=" +
-          encodeURIComponent(h.queries[1])
+        encodeURIComponent(h.queries[0]) +
+        "&req=" +
+        encodeURIComponent(h.queries[1])
       );
     },
   },

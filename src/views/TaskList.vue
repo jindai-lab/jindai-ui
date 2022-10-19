@@ -8,23 +8,29 @@
       </v-btn>
     </v-card-title>
     <v-card-text>
-      <v-row v-for="task in tasks" :key="task._id" class="ma-3">
-        <span class="name">{{ task.name }}</span>
-        <span class="opers">
-          <v-btn :to="`/tasks/${task._id}`">
+      <v-data-table
+      :items="tasks"
+      :headers="[
+        {text: $t('name'), value: 'name'},
+        {text: $t('operations'), value: 'actions'},
+        {text: $t('run-at'), value: 'last_run'},
+        {text: 'ID', value: '_id'},
+      ]"
+      >
+        <template v-slot:item.actions="{item}">
+          <v-btn :to="`/tasks/${item._id}`">
             <v-icon>mdi-file-edit-outline</v-icon>
           </v-btn>
 
-          <v-btn @click="duplicate_task(task)">
+          <v-btn @click="duplicate_task(item)" class="ml-3">
             <v-icon>mdi-content-copy</v-icon>
           </v-btn>
 
-          <v-btn @click="enqueue_task(task)">
+          <v-btn @click="enqueue_task(item)" class="ml-3">
             <v-icon>mdi-play</v-icon>
-          </v-btn> </span
-        ><br />
-        <span class="id">{{ task._id }}</span>
-      </v-row>
+          </v-btn><br/>
+        </template>
+      </v-data-table>
     </v-card-text>
   </v-card>
 </template>

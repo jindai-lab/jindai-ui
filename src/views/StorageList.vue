@@ -3,14 +3,7 @@
     <v-card-title>{{ $t("file-storage") }}</v-card-title>
     <v-card-text>
       <v-progress-linear v-show="progress > 0" v-bind="progress" />
-      <input
-        type="file"
-        value=""
-        id="file"
-        @change="upload_file"
-        hidden
-        multiple
-      />
+      <input type="file" value="" id="file" @change="upload_file" hidden multiple />
       <v-row>
         <v-col>
           <v-btn color="primary" @click="open_file_dialog()">
@@ -25,100 +18,43 @@
     </v-card-text>
     <v-sheet class="ma-5">
       <v-toolbar flat>
-        <v-text-field
-          v-model="search"
-          clearable
-          flat
-          hide-details
-          prepend-inner-icon="mdi-magnify"
-          :label="$t('search')"
-          @keyup.enter="search_file"
-          :clear-icon-cb="update_files"
-        ></v-text-field>
+        <v-text-field v-model="search" clearable flat hide-details prepend-inner-icon="mdi-magnify"
+          :label="$t('search')" @keyup.enter="search_file" :clear-icon-cb="update_files"></v-text-field>
       </v-toolbar>
       <v-sheet>
-        <v-data-iterator
-          :items="files"
-          :items-per-page="20"
-          :page.sync="page"
-          hide-default-footer
-        >
-          <template v-slot:default="props">
-            <template v-for="f in props.items">
-              <v-row
-                :key="f.fullpath"
-                v-if="f.name == '..' || !f.name.startsWith('.')"
-              >
-                <v-col class="name">
-                  <v-btn icon :href="file_link(f)" v-if="f.type === 'file'">
-                    <v-icon>mdi-download</v-icon>
-                  </v-btn>
-                  <v-btn icon v-else @click="enter(f.name)">
-                    <v-icon v-if="f.type == 'folder'">mdi-folder-open</v-icon>
-                    <v-icon v-else>mdi-arrow-left-circle</v-icon>
-                  </v-btn>
-
-                  {{ f.name == ".." ? $t("parent-dir") : f.name }}
-
-                  <div class="description" v-if="f.type == 'file'">
-                    {{ $t("size") }}: {{ (f.size / 1024 / 1024).toFixed(2) }} MB
-                    {{ $t("created-at") }}: {{ (f.ctime * 1000) | dateSafe }}
-                    {{ $t("modified-at") }}:
-                    {{ (f.mtime * 1000) | dateSafe }}
-                  </div>
-                </v-col>
-                <v-spacer></v-spacer>
-                <v-col class="opers">
-                  <v-btn
-                    @click="copy_file_path(f)"
-                    v-if="f.type !== 'back'"
-                    icon
-                  >
-                    <v-icon>mdi-content-copy</v-icon>
-                  </v-btn>
-                  <v-btn
-                    v-if="f.name.match(/^jindai\.plugins\..*\.zip$/)"
-                    @click="install_plugin(f)"
-                    icon
-                  >
-                    <v-icon>mdi-cog-outline</v-icon>
-                  </v-btn>
-                  <v-btn v-if="f.type !== 'back'" icon @click="rename_file(f)">
-                    <v-icon>mdi-form-textbox</v-icon>
-                  </v-btn>
-                </v-col>
-              </v-row>
-            </template>
+        <v-data-table :items="files.filter(x => x.name == '..' || !x.name.startsWith('.'))" :items-per-page="20"
+          :page.sync="page" :headers="[
+            {text: $t('name'), value: 'name'},
+            {text: $t('operations'), value: 'actions'},
+          ]">
+          <template v-slot:item.name="{item}">
+            <v-btn icon :href="file_link(item)" v-if="item.type === 'file'">
+              <v-icon>mdi-download</v-icon>
+            </v-btn>
+            <v-btn icon v-else @click="enter(item.name)">
+              <v-icon v-if="item.type == 'folder'">mdi-folder-open</v-icon>
+              <v-icon v-else>mdi-arrow-left-circle</v-icon>
+            </v-btn>
+            {{ item.name == ".." ? $t("parent-dir") : item.name }}
+            <div class="description" v-if="item.type == 'file'">
+              {{ $t("size") }}: {{ (item.size / 1024 / 1024).toFixed(2) }} MB
+              {{ $t("created-at") }}: {{ (item.ctime * 1000) | dateSafe }}
+              {{ $t("modified-at") }}:
+              {{ (item.mtime * 1000) | dateSafe }}
+            </div>
           </template>
-
-          <template v-slot:footer>
-            <v-row class="mt-2" align="center" justify="center">
-              <v-btn
-                small
-                dark
-                fab
-                color="blue darken-3"
-                class="mr-1"
-                @click="() => page > 1 && --page"
-              >
-                <v-icon>mdi-chevron-left</v-icon>
-              </v-btn>
-              <span class="mr-4 ml-4 grey--text">
-                {{ $t("pagination", { page, total: pages_count }) }}
-              </span>
-              <v-btn
-                small
-                dark
-                fab
-                color="blue darken-3"
-                class="ml-1"
-                @click="() => page < pages_count && ++page"
-              >
-                <v-icon>mdi-chevron-right</v-icon>
-              </v-btn>
-            </v-row>
+          <template v-slot:item.actions="{item}">
+            <v-btn @click="copy_file_path(f)" v-if="item.type !== 'back'" icon>
+              <v-icon>mdi-content-copy</v-icon>
+            </v-btn>
+            <v-btn v-if="item.name.match(/^jindai\.plugins\..*\.zip$/)" @click="install_plugin(item)" icon>
+              <v-icon>mdi-cog-outline</v-icon>
+            </v-btn>
+            <v-btn v-if="item.type !== 'back'" icon @click="rename_file(item)">
+              <v-icon>mdi-textbox</v-icon>
+            </v-btn>
           </template>
-        </v-data-iterator>
+        </v-data-table>
       </v-sheet>
     </v-sheet>
     <v-card-actions>
@@ -154,7 +90,7 @@ export default {
     new_folder() {
       var folder = prompt(this.$t("folder-name"))
       if (!folder) return
-      api.call(`storage/${this.selected_dir}`, {mkdir: folder}).then(() => {
+      api.call(`storage/${this.selected_dir}`, { mkdir: folder }).then(() => {
         this.update_files()
       })
     },
@@ -274,7 +210,7 @@ span.id::before {
   font-size: 12px;
 }
 
-.opers > * {
+.opers>* {
   margin-left: 10px;
 }
 </style>
