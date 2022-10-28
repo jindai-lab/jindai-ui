@@ -121,7 +121,7 @@ export default {
       }
     },
     file_link(f) {
-      return "/api/storage/" + f.fullpath.split("/").slice(1).join("/");
+      return "/api/storage/" + f.fullpath.trimLeft('/');
     },
     install_plugin(f) {
       api.call("plugins", { url: f.fullpath }).then((data) => {
