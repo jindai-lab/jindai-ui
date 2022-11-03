@@ -77,7 +77,7 @@ function LocalConfig() {
 export default {
     stack: _stack,
 
-    locale: "chs",
+    locale: "zhs",
 
     bus: new Vue(),
 

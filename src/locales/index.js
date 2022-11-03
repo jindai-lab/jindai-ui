@@ -3,12 +3,12 @@ import VueI18n from "vue-i18n";
 
 Vue.use(VueI18n);
 
-const DEFAULT_LANG = "chs";
+const DEFAULT_LANG = "zhs";
 const LOCALE_KEY = "localeLanguage";
 
 const locales = {
-    chs: require("./zhs.json"),
-    cht: require("./zht.json"),
+    zhs: require("./zhs.json"),
+    zht: require("./zht.json"),
     en: require("./en.json"),
     ja: require("./ja.json"),
 };
