@@ -8,7 +8,7 @@ const LOCALE_KEY = "localeLanguage";
 
 const locales = {
     chs: require("./chs.json"),
-    cht: require("./cht.json"),
+    cht: require("./zht.json"),
     en: require("./en.json"),
     ja: require("./ja.json"),
 };
