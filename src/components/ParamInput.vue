@@ -55,7 +55,8 @@
     <v-data-table v-else-if="arg.type == 'LINES'" :headers="[
       { text: 'Actions', align: 'end', value: 'actions', sortable: false },
       { text: '', align: 'start', sortable: false, value: 'text' }
-    ]" class="lines-editor" :items="lines" :items-per-page="-1" hide-default-header hide-default-footer>
+    ]" class="lines-editor" :items="lines" :items-per-page="-1" hide-default-header hide-default-footer
+      @dblclick:row="edit_line($event.item.index)">
       <template v-slot:item.actions="{ item }">
         <v-icon small class="mr-2" @click="edit_line(item.index)">
           mdi-pencil

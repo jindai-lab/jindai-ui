@@ -200,7 +200,7 @@ export default {
     ui_language(val) {
       setup(val);
       api.locale = val;
-      this.$vuetify.lang.current = {'chs': 'zhHans', 'cht': 'zhHant'}[val] || val;
+      this.$vuetify.lang.current = {'zhs': 'zhHans', 'zht': 'zhHant'}[val] || val;
     },
     drawer(val) {
       api.config.drawer = val;
@@ -219,7 +219,7 @@ export default {
           .concat([
             {
               text:
-                typeof this.$i18n.messages.chs[message] !== "undefined"
+                typeof this.$i18n.messages.zhs[message] !== "undefined"
                   ? this.$t(message)
                   : message,
               visible: true,

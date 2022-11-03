@@ -27,15 +27,15 @@ locales = {
 }
 
 
-CHS_KEY = 'src/locales/chs.json'
-CHT_KEY = 'src/locales/cht.json'
+ZHS_KEY = 'src/locales/zhs.json'
+ZHT_KEY = 'src/locales/zht.json'
 
-if CHT_KEY not in locales:
-    locales[CHT_KEY] = {}
+if ZHT_KEY not in locales:
+    locales[ZHT_KEY] = {}
 
-for k in locales[CHS_KEY]:
-    if k not in locales[CHT_KEY]:
-        locales[CHT_KEY][k] = s2t(locales[CHS_KEY][k])
+for k in locales[ZHS_KEY]:
+    if k not in locales[ZHT_KEY]:
+        locales[ZHT_KEY][k] = s2t(locales[ZHS_KEY][k])
 
 
 for pwd, dirs, files in os.walk('src'):
