@@ -187,7 +187,7 @@ export default {
       app_dark: false,
       copyright: "",
       ui_language: "",
-      queue_timeout_flag: 0,
+      queue_timeout_flag: 0
     };
   },
   watch: {

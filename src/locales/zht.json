@@ -33,7 +33,7 @@
     "installed": "已成功安裝。",
     "playing-interval": "播放間隔毫秒數",
     "invalid-input": "無效的輸入值。",
-    "langs": "自動:auto|簡體中文:chs|繁體中文:cht|英文:en|德文:de|法文:fr|俄文:ru|西班牙文:es|葡萄牙文:pt|日文:ja|韓文/朝鮮文:kr|越南文:vn",
+    "langs": "自動:auto|簡體中文:zhs|繁體中文:zht|英文:en|德文:de|法文:fr|俄文:ru|西班牙文:es|葡萄牙文:pt|日文:ja|韓文/朝鮮文:kr|越南文:vn",
     "match-file-type": "文件應爲下列類型之一: %{type}",
     "match-type": "輸入值應爲 %{type} 類型",
     "metadata": "元數據",

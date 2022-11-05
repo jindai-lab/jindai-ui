@@ -56,7 +56,7 @@
       { text: 'Actions', align: 'end', value: 'actions', sortable: false },
       { text: '', align: 'start', sortable: false, value: 'text' }
     ]" class="lines-editor" :items="lines" :items-per-page="-1" hide-default-header hide-default-footer
-      @dblclick:row="edit_line($event.item.index)">
+      @dblclick:row="edit_line">
       <template v-slot:item.actions="{ item }">
         <v-icon small class="mr-2" @click="edit_line(item.index)">
           mdi-pencil
@@ -78,7 +78,6 @@
             <v-text-field type="text" label="" v-model="new_line" ref="new_line_input" @keyup.enter="append_line()"
               @blur="append_line()"></v-text-field>
           </td>
-          <td colspan="4"></td>
         </tr>
       </template>
     </v-data-table>
@@ -324,7 +323,9 @@ export default {
         this.$emit('input', ((this.value || '') + '\n' + this.new_line).trim());
       this.new_line = '';
     },
-    edit_line(item_id) {
+    edit_line(item_id, row) {
+      if (typeof(row) == "object")
+        item_id = row.item.index;
       this.new_line = this.delete_line(item_id);
       this.$refs.new_line_input.focus()
     }

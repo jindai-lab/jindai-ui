@@ -17,6 +17,9 @@
         {text: 'ID', value: '_id'},
       ]"
       >
+        <template v-slot:item.last_run="{ item }">
+          <span>{{ new Date(item.last_run).toLocaleString() }}</span>
+        </template>
         <template v-slot:item.actions="{item}">
           <v-btn :to="`/tasks/${item._id}`">
             <v-icon>mdi-file-edit-outline</v-icon>
