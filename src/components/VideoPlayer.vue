@@ -115,10 +115,13 @@ export default {
       if (!this.playing) return
       switch(e.key) {
         case ",":
-          this.vp.currentTime -= 15
-          break
+        case "<":
+        case ">":
         case ".":
-          this.vp.currentTime += 15
+          var delta = 15
+          if (e.shiftKey) delta = this.vp.duration / 8
+          if (e.key == ',' || e.key == '<') delta = -delta
+          this.vp.currentTime += delta
           break
         case "/":
           this.vp.currentTime = this.vp.duration / 2
@@ -131,6 +134,9 @@ export default {
           break;
         case "m":
           this.vp.muted = !this.vp.muted;
+          break;
+        case " ":
+          this.toggle_play();
           break;
       }
     },

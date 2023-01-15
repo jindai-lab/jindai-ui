@@ -14,7 +14,16 @@
       ref="videoPlayer"
       v-if="browsing_video"
     />
-    <div style="width: 100%; text-align: center" @click="toggle_fits" v-else>
+    <div
+      style="width: 100%; text-align: center"
+      @click="toggle_fits"
+      @mousedown="change_offsets_start"
+      @mousemove="change_offsets_between"
+      @mouseup="change_offsets_end"
+      @mousewheel="change_scale"
+      draggable="true"
+      v-else
+    >
       <div
         :style="{
           height: '100vh',
@@ -28,6 +37,8 @@
           alt="Browsing Image"
           ref="browsing_image"
           @load="fit_image"
+          @drag="$event.preventDefault()"
+          draggable="true"
         />
       </div>
     </div>
@@ -61,18 +72,23 @@
             </div>
             <div>
               <v-btn
-                v-for="(filter, page_name) in plugin_pages.filter(x => x.format)"
+                v-for="(filter, page_name) in plugin_pages.filter(
+                  (x) => x.format
+                )"
                 :key="page_name"
                 icon
                 dense
-                :href="'/' + querystring_stringify({
-                  q: scope(paragraph) + `;plugin('${format(
-                  filter.format,
-                  {
-                    mediaitem: item,
-                    paragraph: paragraph,
-                  })}')`
-                })"
+                :href="
+                  '/' +
+                  querystring_stringify({
+                    q:
+                      scope(paragraph) +
+                      `;plugin('${format(filter.format, {
+                        mediaitem: item,
+                        paragraph: paragraph,
+                      })}')`,
+                  })
+                "
                 class="t_func sim"
                 target="_blank"
                 ><v-icon>{{ filter.icon }}</v-icon></v-btn
@@ -113,6 +129,16 @@ export default {
   data() {
     return {
       browsing_page: 2,
+      scale: 1,
+      offset_x: 0,
+      offset_y: 0,
+      mouse_drag: {
+        x: 0,
+        y: 0,
+        offset_x: 0,
+        offset_y: 0,
+        active: false,
+      },
     };
   },
   watch: {
@@ -147,7 +173,7 @@ export default {
       return api.get_item_video(item);
     },
     fit_image(e) {
-      const img = e.target,
+      const img = e.img || e.target,
         wh = window.innerHeight,
         ww = window.innerWidth,
         imgr = img.naturalWidth / img.naturalHeight;
@@ -198,6 +224,10 @@ export default {
         }
         transform = `translate(${(ww - nw) / 2}px, ${(wh - nh) / 2}px)`;
       }
+      offsetX += this.offset_x;
+      offsetY += this.offset_y;
+      nh *= this.scale;
+      nw *= this.scale;
       Object.assign(img.style, {
         height: nh + "px",
         width: nw + "px",
@@ -210,10 +240,75 @@ export default {
       });
     },
     toggle_fits() {
-      const fits = ["both", "visible", "maximize"];
-      api.config.fit = fits[(fits.indexOf(api.config.fit) + 1) % fits.length];
+      if (this.mouse_drag.active == null) {
+        this.mouse_drag.active = false
+        return
+      }
+      if (this.offset_x || this.offset_y || this.scale != 1) {
+        this.offset_x = 0;
+        this.offset_y = 0;
+        this.scale = 1;
+      } else {
+        const fits = ["both", "visible", "maximize"];
+        api.config.fit = fits[(fits.indexOf(api.config.fit) + 1) % fits.length];
+      }
       this.fit_image({ target: this.$refs.browsing_image });
       this.$forceUpdate();
+    },
+    change_offsets_start(e) {
+      if (e.ctrlKey || e.altKey || e.metaKey) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.mouse_drag.x = e.pageX;
+        this.mouse_drag.y = e.pageY;
+        this.mouse_drag.offset_x = this.offset_x;
+        this.mouse_drag.offset_y = this.offset_y;
+        this.mouse_drag.active = true;
+      }
+    },
+    change_offsets_between(e) {
+      if (!this.mouse_drag.active) return;
+      e.preventDefault();
+      e.stopPropagation();
+      var delta = {
+        x: e.pageX - this.mouse_drag.x + this.mouse_drag.offset_x,
+        y: e.pageY - this.mouse_drag.y + this.mouse_drag.offset_y,
+      };
+      this.offset_x = delta.x;
+      this.offset_y = delta.y;
+      e.img = this.$refs.browsing_image;
+      this.fit_image(e);
+    },
+    change_offsets_end(e) {
+      if (this.mouse_drag.active) {
+        this.mouse_drag.active = null
+        e.preventDefault()
+        e.stopPropagation()
+      }
+    },
+    change_scale(e) {
+      console.log(e);
+      if (e.ctrlKey || e.metaKey || e.altKey) {
+        e.preventDefault();
+        e.stopPropagation();
+        var delta = 0;
+        if (e.deltaY > 0) {
+          // down
+          delta = 0.2;
+        } else {
+          delta = -0.2;
+        }
+        this.scale += delta;
+        this.offset_x -= e.clientX - window.innerWidth / 2;
+        this.offset_y -= e.clientY - window.innerHeight / 2;
+        if (this.scale < 0.2) {
+          this.scale = 1;
+          this.offset_x = 0;
+          this.offset_y = 0;
+        }
+        e.img = this.$refs.browsing_image;
+        this.fit_image(e);
+      }
     },
     browse_next() {
       this.$emit("browse", "arrowright");
@@ -224,7 +319,7 @@ export default {
       this.browsing_page = 2;
     },
     querystring_stringify: api.querystring_stringify,
-    scope: api.scope
+    scope: api.scope,
   },
 };
 </script>
