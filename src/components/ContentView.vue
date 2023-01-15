@@ -38,6 +38,7 @@
       <template v-for="tag in tags">
         <a v-if="tag != '...'" :alt="tag" :key="`${paragraph._id}-${Math.random()}-${tag}`" :href="'/' + querystring_stringify({
           groups: tag.match(/^\*/) ? 'none' : (tag.match(/^@/) ? 'group' : ''),
+          sort: '-pdate',
           q:
             tag.match(/^[@*]/)
               ? quote(tag)

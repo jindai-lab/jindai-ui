@@ -151,7 +151,7 @@ export default {
         );
 
         if (datasets.length > 0) {
-          req_datasets = "dataset%`^" + datasets.map(x => x == '' ? '$' : api.escape_regex(x)).join("|^") + "`";
+          req_datasets = "dataset%`^" + datasets.map(x => x == '' ? '$' : x).join("|^") + "`";
         }
         if (sourcefiles.length > 0) {
           req_sourcefiles = sourcefiles

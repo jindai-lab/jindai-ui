@@ -34,11 +34,7 @@
         @change="playbackRate = vp.playbackRate = +$event.target.value"
         :value="vp.playbackRate"
       >
-        <option :value="0.5">0.5x</option>
-        <option :value="1">1.0x</option>
-        <option :value="2">2.0x</option>
-        <option :value="4">4.0x</option>
-        <option :value="8">8.0x</option>
+        <option :value="rate" v-for="rate in playRates" :key="rate">{{ rate }}x</option>
       </select>
       <span ref="duration"></span>
       <v-slider
@@ -68,6 +64,7 @@ export default {
       vp: {},
       currentTime: 0,
       playbackRate: 1,
+      playRates: [0.5, 1, 2, 3, 4, 8]
     };
   },
   methods: {
@@ -126,6 +123,15 @@ export default {
         case "/":
           this.vp.currentTime = this.vp.duration / 2
           break
+        case "]":
+          this.vp.playbackRate = this.vp.playbackRate[this.playRates.indexOf(this.vp.playbackRate) + 1] || this.vp.playbackRate;
+          break
+        case "[":
+          this.vp.playbackRate = this.vp.playbackRate[this.playRates.indexOf(this.vp.playbackRate) - 1] || this.vp.playbackRate;
+          break;
+        case "m":
+          this.vp.muted = !this.vp.muted;
+          break;
       }
     },
   },

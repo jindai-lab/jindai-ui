@@ -95,6 +95,7 @@
               v-if="value"
               @info="$emit('info', $event)"
               @browse="_event_handler"
+              @rating="$emit('rating', $event)"
             />
           </div>
 

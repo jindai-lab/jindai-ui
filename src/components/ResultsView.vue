@@ -40,7 +40,7 @@
             <a :href="
               '/' +
               querystring_stringify({
-                q: `(${current_q()}),source.file=${quote(
+                q: `auto(${JSON.stringify(current_q())}),source.file=${quote(
                   r.source.file
                 )}`,
                 selected_datasets: [r.dataset],
@@ -621,13 +621,14 @@ export default {
                     _album.keywords.filter((x) => x.startsWith("@"))[0] ||
                     ""
                     }`,
-                  groups: 'none'
+                  groups: 'none',
+                  sort: '-pdate'
                 });
                 break;
               case "z":
                 this._open_window(
                   !e.shiftKey
-                    ? `/?q=id%3D${_album._id}=>expand()&groups=none`
+                    ? `/?q=${_album.gid || ('id%3D' + _album._id)}=>expand()&groups=none`
                     : `/?q=source.url%25%27${api
                       .escape_regex(_album.source.url)
                       .replace(/\/\d+\//, "/.*/")}'`

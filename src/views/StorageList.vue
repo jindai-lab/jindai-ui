@@ -44,7 +44,7 @@
             </div>
           </template>
           <template v-slot:item.actions="{item}">
-            <v-btn @click="copy_file_path(f)" v-if="item.type !== 'back'" icon>
+            <v-btn @click="copy_file_path(item)" v-if="item.type !== 'back'" icon>
               <v-icon>mdi-content-copy</v-icon>
             </v-btn>
             <v-btn v-if="item.name.match(/^jindai\.plugins\..*\.zip$/)" @click="install_plugin(item)" icon>
@@ -153,7 +153,7 @@ export default {
       });
     },
     copy_file_path(f) {
-      const text = f.fullpath;
+      const text = 'file://' + f.fullpath;
       const testingCodeToCopy = document.querySelector("#testing-code");
       testingCodeToCopy.setAttribute("type", "text");
       testingCodeToCopy.setAttribute("value", text);
