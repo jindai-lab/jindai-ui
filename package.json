@@ -64,5 +64,9 @@
         "> 1%",
         "last 2 versions",
         "not dead"
+    ],
+    "pre-commit": [
+        "build",
+        "dist ../jindai/ui"
     ]
 }
