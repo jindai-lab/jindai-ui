@@ -629,9 +629,9 @@ export default {
                 this._open_window(
                   !e.shiftKey
                     ? `/?q=${_album.gid || ('id%3Do"' + _album._id + '"')}=>expand()&groups=none`
-                    : `/?q=source.url%25%27${api
+                    : `/?q=source.url%25%60${api
                       .escape_regex(_album.source.url)
-                      .replace(/\/\d+\//, "/.*/")}'`
+                      .replace(/\/\d+\//, "/.*/")}%60`
                 );
                 break;
               case "i":

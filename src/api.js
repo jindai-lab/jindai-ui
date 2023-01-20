@@ -655,7 +655,9 @@ export default {
             var groups = paragraph.keywords.filter(x => x.startsWith('#'))
             if (groups.length) return JSON.stringify(groups[0])
         }
-        return 'id=o"' + paragraph._id + '"';
+        if (paragraph._id)
+            return 'id=o"' + paragraph._id + '"';
+        return '';
     },
 
     guess_group(cond) {
