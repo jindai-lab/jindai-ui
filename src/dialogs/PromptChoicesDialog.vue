@@ -83,7 +83,7 @@ export default {
   },
   mounted() {
     this.typing = this.initial
-    this.new_value = this.value
+    this.new_value = this.value.sort()
     if (Array.isArray(this.choices)) this.candidates = this.choices;
   },
   computed: {

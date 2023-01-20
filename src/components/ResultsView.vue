@@ -949,21 +949,21 @@ export default {
         ungroup: del,
       };
 
-      function _call() {
+      function _call(ctx) {
         api
           .call(
             `collections/${s[0].mongocollection || "paragraph"}/group`,
             bundle
           )
           .then((data) => {
-            this.clear_selection(s);
+            ctx.clear_selection(s);
             s.forEach(
               (p) =>
                 (p.keywords = p.keywords
                   .filter(
-                    (x) => !x.match(del ? /^#/ : /^#0/) && x !== data.result
+                    (x) => !x.match(del ? /^#/ : /^#0/) && !data.result.includes(x)
                   )
-                  .concat(data.result ? [data.result] : []))
+                  .concat(data.result))
             );
           });
       }
@@ -974,18 +974,18 @@ export default {
           .map((x) => x.keywords.filter((x) => x.match(/^#[^0]/)))
           .reduce((p, c) => p.concat(c)).length == 0
       ) {
-        var choices = api.guess_group(this.current_q());
+        var choices = [...api.guess_groups(this.current_q()), ... api.guess_groups(s)];
         api.dialogs
           .prompt({
             title: this.$t("group"),
             choices,
           })
           .then((group) => {
-            bundle.group = (group || "").replace(/^#/, "");
-            _call();
+            bundle.group = (group || []).map(x => x.replace(/^#/, ""));
+            _call(this);
           });
       } else {
-        _call();
+        _call(this);
       }
     },
     merge() {

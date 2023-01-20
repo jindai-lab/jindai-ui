@@ -49,8 +49,8 @@ export default {
         return this._create_dialog(BatchTagsDialog, options)
     },
 
-    info(options) {return this._create_dialog(InfoDialog, options)},
-    send_task(options) {return this._create_dialog(SendTaskDialog, options)},
-    embedded(options) {return this._create_dialog(EmbeddedDialog, options)},
-    edit(options) {return this._create_dialog(EditDialog, options)},
+    info(options) { return this._create_dialog(InfoDialog, options) },
+    send_task(options) { return this._create_dialog(SendTaskDialog, options) },
+    embedded(options) { return this._create_dialog(EmbeddedDialog, options) },
+    edit(options) { return this._create_dialog(EditDialog, options) },
 }

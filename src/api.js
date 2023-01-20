@@ -661,16 +661,16 @@ export default {
         return '';
     },
 
-    guess_group(cond) {
+    guess_groups(cond) {
         if (Array.isArray(cond)) {
             var words = null;
             for (var paragraph of cond) {
-                if (!words) words = paragraph.keywords;
-                else words = words.filter(paragraph.keywords.includes)
+                if (!words) words = Array.from(paragraph.keywords);
+                else words = words.filter(x => paragraph.keywords.includes(x))
             }
             return words
         } else {
-            return cond.match(/([_\w]+)/g) || []
+            return cond.match(/([_\w\u4e00-\u9fa5]+)/g) || []
         }        
     },
 
