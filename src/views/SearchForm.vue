@@ -174,7 +174,7 @@ export default {
     search(pagenum_preserve) {
       this.external_json = null;
 
-      if (this.selected_datasets.length == 0)
+      if (!this.selected_datasets || this.selected_datasets.length == 0)
         this.selected_datasets = this.datasets.map((s) => s.id);
 
       this.req = this.datasets_req();

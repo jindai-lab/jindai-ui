@@ -153,7 +153,7 @@ export default {
   },
   methods: {
     quote(x) {
-      return encodeURIComponent(api.quote(x));
+      return api.quote(x);
     },
     format(str, bundle) {
       function _replace(_, i) {

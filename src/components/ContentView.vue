@@ -99,7 +99,7 @@ export default {
       return api.get_item_image(i);
     },
     get_group(para) {
-      return encodeURIComponent(api.get_group(para))
+      return api.get_group(para)
     },
     fav() {
       api.fav(this.paragraph);
