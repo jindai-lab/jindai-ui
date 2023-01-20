@@ -127,10 +127,10 @@ export default {
           this.vp.currentTime = this.vp.duration / 2
           break
         case "]":
-          this.vp.playbackRate = this.vp.playbackRate[this.playRates.indexOf(this.vp.playbackRate) + 1] || this.vp.playbackRate;
+          this.vp.playbackRate = this.playRates[this.playRates.indexOf(this.vp.playbackRate) + 1] || this.vp.playbackRate;
           break
         case "[":
-          this.vp.playbackRate = this.vp.playbackRate[this.playRates.indexOf(this.vp.playbackRate) - 1] || this.vp.playbackRate;
+          this.vp.playbackRate = this.playRates[this.playRates.indexOf(this.vp.playbackRate) - 1] || this.vp.playbackRate;
           break;
         case "m":
           this.vp.muted = !this.vp.muted;

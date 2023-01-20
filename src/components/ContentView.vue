@@ -37,7 +37,7 @@
       <p class="content">{{ text }}</p>
       <template v-for="tag in tags">
         <a v-if="tag != '...'" :alt="tag" :key="`${paragraph._id}-${Math.random()}-${tag}`" :href="'/' + querystring_stringify({
-          groups: tag.match(/^\*/) ? 'none' : (tag.match(/^@/) ? 'group' : ''),
+          groups: tag.match(/^#/) ? 'none' : (tag.match(/^@/) ? 'group' : ''),
           sort: '-pdate',
           q:
             tag.match(/^[@*]/)
@@ -104,7 +104,7 @@ export default {
       return JSON.stringify("" + x);
     },
     tag_class(tag) {
-      return tag.startsWith("*")
+      return tag.startsWith("#")
         ? "t_group"
         : tag == this.paragraph.author
           ? "t_author"

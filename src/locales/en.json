@@ -156,5 +156,8 @@
     "new-folder": "New Folder",
     "folder-name": "Folder Name",
     "display-name": "Display Name",
-    "mongocollection": "MongoDB Collection Name"
+    "mongocollection": "MongoDB Collection Name",
+    "shortcuts": "Shortcuts",
+    "expression": "Expression",
+    "disabled": "Disabled"
 }

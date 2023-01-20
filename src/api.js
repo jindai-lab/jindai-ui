@@ -652,7 +652,7 @@ export default {
         if (Array.isArray(paragraph.keywords)) {
             var ats = paragraph.keywords.filter(x => x.startsWith('@'))
             if (ats.length) return JSON.stringify(ats[0])
-            var groups = paragraph.keywords.filter(x => x.startsWith('*'))
+            var groups = paragraph.keywords.filter(x => x.startsWith('#'))
             if (groups.length) return JSON.stringify(groups[0])
         }
         return 'id=' + paragraph._id;
@@ -661,7 +661,7 @@ export default {
     guess_group(cond) {
         var m = (cond.match(/@([_\w]+)/) || ['', ''])[1]
         m = m.replace(/^0/, '')
-        if (m) return '*' + m
+        if (m) return '#' + m
         return ''
     },
 

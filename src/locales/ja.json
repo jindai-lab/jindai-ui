@@ -157,5 +157,8 @@
     "new-folder": "新しいフォルダ",
     "folder-name": "フォルダ名",
     "display-name": "表示名",
-    "mongocollection": "データベースコレクション"
+    "mongocollection": "データベースコレクション",
+    "shortcuts": "ショートカット",
+    "expression": "表現",
+    "disabled": "無効にする"
 }

@@ -156,5 +156,8 @@
     "new-folder": "新資料夾",
     "folder-name": "資料夾名",
     "display-name": "顯示名",
-    "mongocollection": "資料庫集合名"
+    "mongocollection": "資料庫集合名",
+    "shortcuts": "快捷方式",
+    "expression": "表達式",
+    "disabled": "禁用"
 }

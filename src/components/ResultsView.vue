@@ -990,9 +990,9 @@ export default {
         ids: this.selected_ids(),
         ungroup: del,
       }
-      if (!del && s.length == this.visible_data.length && s.map(x => x.keywords.filter(x => x.match(/^\*[^0]/))).reduce((p, c) => p.concat(c)).length == 0) {
+      if (!del && s.length == this.visible_data.length && s.map(x => x.keywords.filter(x => x.match(/^#[^0]/))).reduce((p, c) => p.concat(c)).length == 0) {
         var cond = api.guess_group(this.current_q())
-        bundle.group = (prompt(this.$t('group'), cond) || '').replace(/^\*/, '')
+        bundle.group = (prompt(this.$t('group'), cond) || '').replace(/^#/, '')
       }
       api
         .call(`collections/${s[0].mongocollection || "paragraph"}/group`, bundle)
@@ -1001,7 +1001,7 @@ export default {
           s.forEach(
             (p) =>
             (p.keywords = p.keywords
-              .filter((x) => !x.match(del ? /^\*/ : /^\*0/) && x !== data.result)
+              .filter((x) => !x.match(del ? /^#/ : /^#0/) && x !== data.result)
               .concat(data.result ? [data.result] : []))
           );
         });

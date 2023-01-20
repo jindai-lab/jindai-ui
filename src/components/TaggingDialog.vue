@@ -115,7 +115,7 @@ export default {
   },
   computed: {
     author_candidates() {
-      return this.tag_new.filter(x => !(x.value || x).startsWith('*')).sort()
+      return this.tag_new.filter(x => !(x.value || x).startsWith('#')).sort()
     }
   },
   mounted() {
