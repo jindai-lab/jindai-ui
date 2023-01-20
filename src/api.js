@@ -655,7 +655,7 @@ export default {
             var groups = paragraph.keywords.filter(x => x.startsWith('#'))
             if (groups.length) return JSON.stringify(groups[0])
         }
-        return 'id=' + paragraph._id;
+        return 'id=o"' + paragraph._id + '"';
     },
 
     guess_group(cond) {
@@ -672,7 +672,7 @@ export default {
         if (paragraph.group_id) {
             return `${paragraph.group_field}=${JSON.stringify(paragraph.group_id)}`;
         }
-        return `id=${paragraph._id}`
+        return `id=o"${paragraph._id}"`
     },
 
     config: LocalConfig(),

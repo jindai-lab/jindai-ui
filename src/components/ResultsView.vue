@@ -401,10 +401,10 @@ export default {
 
     api.call("plugins/shortcuts").then((data) => {
       data = data.result;
-      for (var k in data)
+      for (var k of data)
         this.dialogs.tagging_shortcuts.list.push({
-          text: `${k} ${data[k]}`,
-          value: data[k],
+          text: `${k.name} ${k.expr}`,
+          value: k.expr,
         });
     });
 
@@ -628,7 +628,7 @@ export default {
               case "z":
                 this._open_window(
                   !e.shiftKey
-                    ? `/?q=${_album.gid || ('id%3D' + _album._id)}=>expand()&groups=none`
+                    ? `/?q=${_album.gid || ('id%3Do"' + _album._id + '"')}=>expand()&groups=none`
                     : `/?q=source.url%25%27${api
                       .escape_regex(_album.source.url)
                       .replace(/\/\d+\//, "/.*/")}'`

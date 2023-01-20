@@ -60,6 +60,7 @@
               ['console', 'dbconsole'],
               ['system-admin', 'admin'],
               ['auto-tagging', 'autotags'],
+              ['shortcuts', 'shortcuts']
             ]"
             :key="item[0]"
             link

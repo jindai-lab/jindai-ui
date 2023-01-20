@@ -35,6 +35,8 @@
                                   v-model="item[header.value]"
                                   :arg="{type: item.name.startsWith(':') ? 'QUERY' : 'str'}"
                                   :label="$t('edit')"
+                                  :key="item.name"
+                                  @submit="submit(item)"
                                 ></ParamInput>
                               </template>
                             </v-edit-dialog>
