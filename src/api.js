@@ -2,6 +2,7 @@ import axios from "axios";
 import Vue from "vue";
 import Cookies from "js-cookie";
 import i18n from "./locales/";
+import dialogs from "./dialogs/"
 
 const _prompt_no_image = require("../public/assets/no-image.png");
 const _prompt_video = require("../public/assets/video.png");
@@ -661,10 +662,16 @@ export default {
     },
 
     guess_group(cond) {
-        var m = (cond.match(/@([_\w]+)/) || ['', ''])[1]
-        m = m.replace(/^0/, '')
-        if (m) return '#' + m
-        return ''
+        if (Array.isArray(cond)) {
+            var words = null;
+            for (var paragraph of cond) {
+                if (!words) words = paragraph.keywords;
+                else words = words.filter(paragraph.keywords.includes)
+            }
+            return words
+        } else {
+            return cond.match(/([_\w]+)/g) || []
+        }        
     },
 
     get_group(paragraph) {
@@ -678,4 +685,6 @@ export default {
     },
 
     config: LocalConfig(),
+
+    dialogs
 };

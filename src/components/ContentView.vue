@@ -25,14 +25,18 @@
         <span class="datetime">{{ paragraph.pdate | dateSafe }}</span>
         <span class="count">
           <a class="counter secondary--text chip" target="_blank"
-            :href="`/?q=(${get_group(paragraph)})=>expand()&groups=none`">{{
+            :href="'/' + querystring_stringify({
+          groups:'none',
+          q: `(${get_group(paragraph)})`
+        })">{{
             paragraph.count || paragraph.images.length }}</a>
         </span>
         <v-btn :href="paragraph.source.url" target="_blank" class="orig no-underline" icon>
           <v-icon>mdi-web</v-icon>
         </v-btn>
       </span>
-      <a :href="'/?q=source.url%3D`' + (paragraph.source.url || '') + '`'" class="force-text break-anywhere"
+      <a :href="'/' + querystring_stringify({
+        q: `source=\`${paragraph.source.url || ''}\``})" class="force-text break-anywhere"
         target="_blank">{{ paragraph.source.url }}</a>
       <p class="content">{{ text }}</p>
       <template v-for="tag in tags">
@@ -40,7 +44,7 @@
           groups: tag.match(/^#/) ? 'none' : (tag.match(/^@/) ? 'group' : ''),
           sort: '-pdate',
           q:
-            tag.match(/^[@*]/)
+            tag.match(/^[@#]/)
               ? quote(tag)
               : quote(tag) + ',' + scope(paragraph)
         })" :class="['tag', 'chip', tag_class(tag)]" target="_blank">{{ tag }}</a>

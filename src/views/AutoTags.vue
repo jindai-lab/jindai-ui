@@ -63,7 +63,7 @@ export default {
         this.new_tag.cond = 'author=' + this.new_tag.cond.substr(1)
       }
       if (!this.new_tag.tag) {
-        this.new_tag.tag = api.guess_group(this.new_tag.cond)
+        this.new_tag.tag = api.guess_group(this.new_tag.cond)[0] || ''
       }
       if (this.new_tag.tag == this.new_tag.cond || !this.new_tag.tag) return
       api.put("plugins/autotags", this.new_tag).then((data) => {

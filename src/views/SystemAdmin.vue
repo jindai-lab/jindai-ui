@@ -181,13 +181,13 @@ export default {
       });
     },
     del_user(u) {
-      if (!confirm(this.$t("user-delete-confirm", { user: u.username })))
-        return;
-      api.delete("users/" + u.username).then((data) => {
-        if (!data.result.ok) return;
-        api.notify({ text: this.$t("user-deleted", { user: u.username }) });
-        this.users = this.users.filter((x) => x._id != u._id);
-      });
+      api.dialogs.confirm({title: this.$t("user-delete-confirm", { user: u.username })}).then(() => {
+        api.delete("users/" + u.username).then((data) => {
+          if (!data.result.ok) return;
+          api.notify({ text: this.$t("user-deleted", { user: u.username }) });
+          this.users = this.users.filter((x) => x._id != u._id);
+        });
+      })
     },
     modify_user_role() {
       api

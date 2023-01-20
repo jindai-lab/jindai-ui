@@ -86,7 +86,7 @@
                       `;plugin('${format(filter.format, {
                         mediaitem: item,
                         paragraph: paragraph,
-                      })}')`,
+                      })}');`,
                   })
                 "
                 class="t_func sim"
@@ -287,7 +287,6 @@ export default {
       }
     },
     change_scale(e) {
-      console.log(e);
       if (e.ctrlKey || e.metaKey || e.altKey) {
         e.preventDefault();
         e.stopPropagation();

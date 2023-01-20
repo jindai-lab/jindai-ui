@@ -158,12 +158,13 @@ export default {
       if (!valid) this.valid.push(name);
     },
     delete_task() {
-      if (!confirm(this.$t("confirm-delete"))) return;
-      api.delete("tasks/" + this.task._id).then((data) => {
-        if (data.result.ok) {
-          api.notify(this.$t("deleted"));
-          this.$router.push("/tasks").catch(() => {});
-        }
+      api.dialogs.confirm({title: this.$t("confirm-delete")}).then(() => {
+        api.delete("tasks/" + this.task._id).then((data) => {
+          if (data.result.ok) {
+            api.notify(this.$t("deleted"));
+            this.$router.push("/tasks").catch(() => {});
+          }
+        });
       });
     },
     save() {
