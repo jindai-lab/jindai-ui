@@ -251,9 +251,9 @@ export default {
     });
   },
   mounted() {
-    api.call("meta").then((data) => {
-      Object.assign(this, data.result);
-    });
+    api.get_meta().then(() => {
+      Object.assign(this, api.meta)
+    })
     this.$emit("logined");
     window.onblur = () => {
       this.queue_source.close()

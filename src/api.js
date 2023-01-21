@@ -86,6 +86,8 @@ export default {
 
     apiBase,
 
+    meta: null,
+
     notify(notice) {
         this.bus.$emit("alert", notice);
     },
@@ -598,7 +600,14 @@ export default {
         else
             path = `/images/object/${Buffer.from(JSON.stringify(src)).toString('base64')}`;
         
-        return this._generate_domain(path, 'img', this.config.domain_delimiter) + path;
+        return this._generate_domain(path, 'img', this.meta.domain_delimiter) + path;
+    },
+
+    async get_meta() {
+        if (this.meta) return this.meta
+        let meta = await this.call('meta').then(data => data.result)
+        this.meta = meta
+        return meta
     },
 
     get_item_image(item, disable_args) {
