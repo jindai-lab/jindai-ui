@@ -186,6 +186,7 @@ export default {
       console_outputs: [],
       app_title: "Jindai",
       app_dark: false,
+      domain_delimiter: '.',
       copyright: "",
       ui_language: "",
       queue_timeout_flag: 0
@@ -197,6 +198,9 @@ export default {
     },
     app_title(val) {
       document.title = val;
+    },
+    domain_delimiter(val) {
+      api.config.domain_delimiter = val;
     },
     ui_language(val) {
       setup(val);

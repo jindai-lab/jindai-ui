@@ -563,7 +563,7 @@ export default {
         return s;
     },
 
-    _generate_domain(path, prefix) {
+    _generate_domain(path, prefix, delimiter) {
         const host_name_regex = /^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9-]*[A-Za-z0-9])$/;
 
         const simpleHash = str => {
@@ -577,7 +577,7 @@ export default {
             };
 
         if (this.config.multiple_image_domains && location.hostname.match(host_name_regex))
-            return `//${prefix}-` + simpleHash(path) + '.' + location.host;
+            return `//${prefix}-` + simpleHash(path) + delimiter + location.host;
         
         return ''
     },
@@ -598,7 +598,7 @@ export default {
         else
             path = `/images/object/${Buffer.from(JSON.stringify(src)).toString('base64')}`;
         
-        return this._generate_domain(path, 'img') + path;
+        return this._generate_domain(path, 'img', this.config.domain_delimiter) + path;
     },
 
     get_item_image(item, disable_args) {
