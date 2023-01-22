@@ -1,7 +1,13 @@
 <template>
   <v-sheet ref="results" :class="config.view_mode">
     <div class="tools">
-      <v-btn-toggle mandatory class="view-mode-toggler" dense v-model="config.view_mode" @change="update_view_mode">
+      <v-btn-toggle
+        mandatory
+        class="view-mode-toggler"
+        dense
+        v-model="config.view_mode"
+        @change="update_view_mode"
+      >
         <v-btn value="list">
           <v-icon>mdi-view-list</v-icon>
         </v-btn>
@@ -20,48 +26,81 @@
     <!-- divider -->
     <v-divider class="mt-5 mb-5"></v-divider>
     <!-- show content -->
-    <div class="wrapper-container" ref="all_items" v-if="columns.includes('content')">
+    <div
+      class="wrapper-container"
+      ref="all_items"
+      v-if="columns.includes('content')"
+    >
       <template v-for="(r, index) in visible_data">
         <div class="spacer" v-if="r.spacer" :key="'spacer' + index"></div>
         <div class="paragraph" :data-id="r._id" v-else :key="index">
           <div class="meta">
-            <v-checkbox v-model="r.selected" dense hide-details class="d-inline-block"
-              @change="update_selection(r, null, index)"></v-checkbox>
+            <v-checkbox
+              v-model="r.selected"
+              dense
+              hide-details
+              class="d-inline-block"
+              @change="update_selection(r, null, index)"
+            ></v-checkbox>
             {{ $t("dataset") }}:
-            <a :href="
-              '/' +
-              querystring_stringify({
-                q: current_q(),
-                selected_datasets: [r.dataset],
-                groups: 'none',
-              })
-            " target="_blank">{{ r.dataset }}</a>
+            <a
+              :href="
+                '/' +
+                querystring_stringify({
+                  q: current_q(),
+                  selected_datasets: [r.dataset],
+                  groups: 'none',
+                })
+              "
+              target="_blank"
+              >{{ r.dataset }}</a
+            >
             {{ $t("outline") }}: {{ r.outline }} {{ $t("source") }}:
-            <a :href="
-              '/' +
-              querystring_stringify({
-                q: `auto(${JSON.stringify(current_q())}),source.file=${quote(
-                  r.source.file
-                )}`,
-                selected_datasets: [r.dataset],
-                groups: 'none',
-              })
-            " target="_blank">{{ r.source.file }}</a>
+            <a
+              :href="
+                '/' +
+                querystring_stringify({
+                  q: `auto(${JSON.stringify(current_q())}),source.file=${quote(
+                    r.source.file
+                  )}`,
+                  selected_datasets: [r.dataset],
+                  groups: 'none',
+                })
+              "
+              target="_blank"
+              >{{ r.source.file }}</a
+            >
             <a :href="r.source.url" target="_blank">{{ r.source.url }}</a>
             {{ $t("pagenum") }}: {{ r.pagenum }} {{ $t("date") }}:
             {{ r.pdate | dateSafe }}
             <v-divider class="mt-5"></v-divider>
           </div>
-          <v-img v-if="config.view_mode == 'gallery'" :class="{ selected: r.selected }"
-            @click="update_selection(r, $event, index)" @dblclick="view_page(index)" :contain="config.contain"
-            :height="240" :src="get_paragraph_image(r)"></v-img>
-          <ContentView :key="r._id" :view_mode="config.view_mode" :paragraph="r" :item_width="200" :item_height="200" />
+          <v-img
+            v-if="config.view_mode == 'gallery'"
+            :class="{ selected: r.selected }"
+            @click="update_selection(r, $event, index)"
+            @dblclick="view_page(index)"
+            :contain="config.contain"
+            :height="240"
+            :src="get_paragraph_image(r)"
+          ></v-img>
+          <ContentView
+            :key="r._id"
+            :view_mode="config.view_mode"
+            :paragraph="r"
+            :item_width="200"
+            :item_height="200"
+          />
           <div class="mt-10 operations">
             <v-btn @click="view_page(index)">
               <v-icon>mdi-eye</v-icon> {{ $t("view") }}
             </v-btn>
-            <v-btn :href="`/view/${r.mongocollection}/${r.source.file ? r.source.file + '/' + r.source.page : r._id
-            }`" target="_blank">
+            <v-btn
+              :href="`/view/${r.mongocollection}/${
+                r.source.file ? r.source.file + '/' + r.source.page : r._id
+              }`"
+              target="_blank"
+            >
               <v-icon>mdi-dock-window</v-icon> {{ $t("browse") }}
             </v-btn>
             <v-btn @click="show_info_dialog(r)">
@@ -106,25 +145,57 @@
       <v-pagination v-model="page" :length="pages.length"></v-pagination>
       <div>
         <label> {{ $t("pagenum") }}</label>
-        <v-text-field class="d-inline-block ml-1" style="max-width: 40px" type="number" dense
-          @change="page = parseInt($event) || page"></v-text-field>
+        <v-text-field
+          class="d-inline-block ml-1"
+          style="max-width: 40px"
+          type="number"
+          dense
+          @change="page = parseInt($event) || page"
+        ></v-text-field>
       </div>
       <div>
         <label>{{ $t("page-size") }}</label>
-        <v-select :items="[20, 50, 100, 200]" dense class="d-inline-block ml-1" style="max-width: 60px"
-          v-model="config.page_size"></v-select>
+        <v-select
+          :items="[20, 50, 100, 200]"
+          dense
+          class="d-inline-block ml-1"
+          style="max-width: 60px"
+          v-model="config.page_size"
+        ></v-select>
       </div>
     </v-row>
 
-    <PageView v-model="dialogs.paragraph.visible" class="page-view" ref="page_view" :paragraphs="visible_data"
-      :view_mode="config.view_mode" :start_index="dialogs.paragraph.start_index" :plugin_pages="plugin_pages"
-      @next="turn_page(page + 1)" @prev="turn_page(page - 1)" @browse="browsing = $event"
-      @info="show_info_dialog($event)" @rating="rating" />
+    <PageView
+      v-model="dialogs.paragraph.visible"
+      class="page-view"
+      ref="page_view"
+      :paragraphs="visible_data"
+      :view_mode="config.view_mode"
+      :start_index="dialogs.paragraph.start_index"
+      :plugin_pages="plugin_pages"
+      @next="turn_page(page + 1)"
+      @prev="turn_page(page - 1)"
+      @browse="browsing = $event"
+      @info="show_info_dialog($event)"
+      @rating="rating"
+    />
 
-    <QuickActionButtons :selection_count="selection_count" @toggle-selection="toggle_selection"
-      @clear-selection="clear_selection" @delete="delete_items" @rating="rating(0.5)" @group="group"
-      @tag="show_tagging_dialog" @merge="merge" @split="split" @task="show_send_task_dialog" @play="playing"
-      :playing_interval="config.playing_interval" @reset-storage="reset_storage" />
+    <QuickActionButtons
+      :vm="this"
+      :selection_count="selection.length"
+      @toggle-selection="toggle_selection"
+      @clear-selection="clear_selection"
+      @delete="delete_items"
+      @rating="rating"
+      @group="group"
+      @tag="show_tagging_dialog"
+      @merge="merge"
+      @split="split"
+      @task="show_send_task_dialog"
+      @play="playing"
+      @reset-storage="reset_storage"
+      @close="close_dialogs"
+    />
   </v-sheet>
 </template>
 
@@ -163,11 +234,6 @@ export default {
       }),
       // dialog bools
       dialogs: {
-        edit: {
-          visible: false,
-          target: {},
-          new_field: "",
-        },
         paragraph: {
           visible: false,
           start_index: 0,
@@ -177,9 +243,7 @@ export default {
       // selection
       selection: [],
       browsing_item: {},
-      selection_count: 0,
       select_index: -1,
-      last_key: "",
     };
   },
   watch: {
@@ -227,6 +291,38 @@ export default {
       }
       return Array.from(cols).sort();
     },
+    selected_paragraphs() {
+      if (this.dialogs.paragraph.visible) {
+        return this.visible_data.filter(
+          (x) => x._id == this.$refs.page_view.active_paragraph._id
+        );
+      } else {
+        return [...this.selection];
+      }
+    },
+    selected_items() {
+      if (this.dialogs.paragraph.visible) {
+        return [
+          Object.assign({}, this.$refs.page_view.active_item, {
+            paragraph_id: this.selected_paragraphs[0]._id,
+          }),
+        ];
+      } else {
+        return this.selected_paragraphs.reduce(
+          (y, e) =>
+            y.concat(
+              e.images.map((i) => {
+                if (!i.paragraph_id) i.paragraph_id = e._id;
+                return i;
+              })
+            ),
+          []
+        );
+      }
+    },
+    selected_ids() {
+      return this.selected_paragraphs.map((x) => x._id);
+    },
   },
   mounted() {
     this.start();
@@ -241,12 +337,13 @@ export default {
     api
       .call("plugins/filters")
       .then((data) => (this.plugin_pages = data.result));
+  
   },
   created() {
-    window.addEventListener("keyup", this._keyup_handler);
+    window.addEventListener("keyup", this.select_shortcut_keys);
   },
   beforeDestroy() {
-    window.removeEventListener("keyup", this._keyup_handler);
+    window.removeEventListener("keyup", this.select_shortcut_keys);
   },
   methods: {
     _fetched() {
@@ -315,7 +412,7 @@ export default {
                 return;
               }
 
-              this.selection = [];
+              this.selection.splice(0, this.selection.length);
               this.page_range = [data.offset, data.offset + data.result.length];
               var items = data.result.map((x) =>
                 Object.assign(x, { selected: false })
@@ -384,212 +481,7 @@ export default {
       this.view_page(0);
       this.$refs.page_view.playing(api.config.playing_interval);
     },
-    _keyup_handler(e) {
-      if (e.target.tagName == "INPUT" || e.target.tagName == "TEXTAREA") return;
-
-      var selection_inc = 0,
-        ele;
-      var selection_line_number;
-      if (this.$refs.all_items && document.querySelector(".paragraph"))
-        selection_line_number = parseInt(
-          this.$refs.all_items.clientWidth /
-          document.querySelector(".paragraph").clientWidth
-        );
-
-      switch (e.key.toLowerCase()) {
-        case "arrowleft":
-          if (!this.dialogs.paragraph.visible) this.turn_page(this.page - 1);
-          break;
-        case "arrowright":
-          if (!this.dialogs.paragraph.visible) this.turn_page(this.page + 1);
-          break;
-        case "f":
-          this.toggle_selection();
-          break;
-        case "g":
-          this.group(e.altKey || e.ctrlKey);
-          break;
-        case "p":
-          e.altKey || e.ctrlKey ? this.split() : this.merge();
-          break;
-        case "t":
-          if (e.shiftKey) this.show_batch_tagging_dialog();
-          else this.show_tagging_dialog();
-          break;
-        case "@":
-          this.show_author_dialog();
-          break;
-        case "n":
-          this.tag([`noted:${new Date().toISOString()}`]);
-          break;
-        case "d":
-        case "-":
-        case "delete":
-          if (this.last_key == e.key && this.selected_paragraphs().length > 0) {
-            this.delete_items();
-            this.last_key = null;
-          }
-          break;
-        case "q":
-        case "`":
-        case "escape":
-          this.dialogs.paragraph.visible = false;
-          this.clear_selection();
-          break;
-        case "a":
-        case "arrowup":
-        case "arrowdown":
-          if (this.selected_items().length)
-            this.rating(e.key != "ArrowDown" ? 0.5 : -0.5);
-          break;
-        case "r":
-          if (this.last_key == e.key && this.selected_paragraphs().length > 0) {
-            this.reset_storage();
-            this.last_key = null;
-          }
-          break;
-        case "c":
-        case "z":
-        case "o":
-        case "i":
-          if (e.ctrlKey || e.metaKey) return;
-          if (this.selected_paragraphs().length > 0) {
-            var _album = this.selected_paragraphs()[0];
-            switch (e.key.toLowerCase()) {
-              case "o":
-                this._open_window(_album.source.url);
-                break;
-              case "c":
-                if (e.ctrlKey) return;
-                this._open_window({
-                  q: `author=${api.quote(_album.author) ||
-                    _album.keywords.filter((x) => x.startsWith("@"))[0] ||
-                    ""
-                    }`,
-                  groups: "none",
-                  sort: "-pdate",
-                });
-                break;
-              case "z":
-                this._open_window(
-                  "/" +
-                  api.querystring_stringify({
-                    q: e.shiftKey
-                      ? `source.url%\`${api
-                        .escape_regex(_album.source.url)
-                        .replace(/\/\d+\//, "/.*/")}\``
-                      : `${_album.gid || 'id=o"' + _album._id + '"'
-                      }=>expand()`,
-                    groups: "none",
-                  })
-                );
-                break;
-              case "i":
-                this.show_info_dialog(this.selected_paragraphs()[0]);
-                break;
-            }
-          }
-          break;
-        case "h":
-        case "j":
-        case "k":
-        case "l":
-        case ";":
-          // move selection in vim favor
-          switch (e.key.toLowerCase()) {
-            case "h":
-              selection_inc = -1;
-              break;
-            case "j":
-              selection_inc = selection_line_number;
-              break;
-            case "k":
-              selection_inc = -selection_line_number;
-              break;
-            case "l":
-              selection_inc = 1;
-              break;
-            case ";":
-              selection_inc = 0;
-              break;
-          }
-          if (this.select_index < 0) selection_inc = 0;
-          else
-            selection_inc = Math.min(
-              Math.max(0, this.select_index + selection_inc),
-              this.visible_data.length
-            );
-          if (!e.ctrlKey && !e.shiftKey) {
-            this.clear_selection();
-          }
-          this.update_selection(
-            this.visible_data[selection_inc],
-            e,
-            selection_inc
-          );
-          ele = document.querySelector(
-            `[data-id="${this.visible_data[selection_inc]._id}"]`
-          );
-          window.scrollTo(0, ele.offsetTop - ele.clientHeight);
-          this.select_index = selection_inc;
-          break;
-        case "0":
-        case "1":
-        case "2":
-        case "3":
-        case "4":
-        case "5":
-        case "6":
-        case "7":
-        case "8":
-        case "9":
-          if (this.selected_paragraphs().length > 0) {
-            api.dialogs.prompt({
-              title: this.$t("tagging"),
-              choices: this.match_shortctus,
-              initial: e.key,
-            }).then(tags => this.tag(tags, true));
-          }
-          break;
-        default:
-          var pages = Object.values(this.plugin_pages).filter(
-            (x) => x.keybind == e.key
-          );
-          if (pages.length) {
-            this._open_window({
-              archive: true,
-              q: `${api.scope(
-                this.selected_paragraphs()[0]
-              )};plugin('${this.format(pages[0].format, {
-                mediaitem: this.selected_items()[0],
-                paragraph: this.selected_paragraphs()[0],
-              })}');`,
-            });
-          }
-          break;
-      }
-
-      this.last_key = this.last_key === null ? "" : e.key;
-    },
-    format(str, bundle) {
-      function _replace(_, i) {
-        var b = bundle;
-        for (var k of i.split(".")) b = b[k] || "";
-        return b;
-      }
-      return (
-        (typeof str == "string" && str.replace(/\{([\w\d._]+)\}/g, _replace)) ||
-        ""
-      );
-    },
-    _open_window(url) {
-      if (typeof url === "object") url = "/" + api.querystring_stringify(url);
-      window.open(url);
-    },
-    _show_dialog(dialog) {
-      this.drawer = false;
-      this.dialogs[dialog] = true;
-    },
+    
     fav(r) {
       api.fav(r);
     },
@@ -597,39 +489,7 @@ export default {
       return api.favored(r);
     },
     quote: api.quote,
-    selected_paragraphs() {
-      if (this.dialogs.paragraph.visible) {
-        return this.visible_data.filter(
-          (x) => x._id == this.$refs.page_view.active_paragraph._id
-        );
-      } else {
-        return [...this.selection];
-      }
-    },
-    selected_items() {
-      if (this.dialogs.paragraph.visible) {
-        return [
-          Object.assign({}, this.$refs.page_view.active_item, {
-            paragraph_id: this.selected_paragraphs()[0]._id,
-          }),
-        ];
-      } else {
-        return this.selected_paragraphs().reduce(
-          (y, e) =>
-            y.concat(
-              e.images.map((i) => {
-                if (!i.paragraph_id) i.paragraph_id = e._id;
-                return i;
-              })
-            ),
-          []
-        );
-      }
-    },
-    selected_ids() {
-      return this.selected_paragraphs().map((x) => x._id);
-    },
-    // api calls
+    // selection
     update_selection(r, e, index) {
       var s = [];
       if (e && e.shiftKey && this.select_index >= 0) {
@@ -650,19 +510,15 @@ export default {
         if (it._id && it.selected) this.selection.push(it);
         else this.selection.splice(this.selection.indexOf(it), 1);
       }
-
-      this.selection_count = this.selection.length;
     },
     set_selection(sel) {
       this.clear_selection();
       sel.forEach((x) => (x.selected = true));
-      this.selection = sel;
-      this.selection_count = this.selection.length;
+      this.selection.splice(0, 0, ...sel);
     },
     toggle_selection() {
       this.visible_data.forEach((x) => (x.selected = !x.selected));
-      this.selection = this.visible_data.filter((x) => x._id && x.selected);
-      this.selection_count = this.selection.length;
+      this.selection.splice(0, this.selection.length, ...this.visible_data.filter((x) => x._id && x.selected));
     },
     clear_selection(s) {
       if (typeof s === "undefined") s = this.visible_data;
@@ -670,12 +526,75 @@ export default {
         x.selected = false;
         this.selection.splice(this.selection.indexOf(x), 1);
       });
-      this.selection_count = this.selection.length;
     },
+    select_shortcut_keys(e) {      
+      if (e.target.tagName == "INPUT" || e.target.tagName == "TEXTAREA") return;
+
+      var selection_inc = 0,
+        ele;
+      var selection_line_number;
+
+      // move selection in vim favor
+      switch (e.key.toLowerCase()) {
+        case "h":
+          selection_inc = -1;
+          break;
+        case "j":
+          selection_inc = selection_line_number;
+          break;
+        case "k":
+          selection_inc = -selection_line_number;
+          break;
+        case "l":
+          selection_inc = 1;
+          break;
+        case ";":
+          selection_inc = 0;
+          break;
+        // bind for turning page
+        case "arrowleft":
+          if (!this.dialogs.paragraph.visible) this.turn_page(this.page - 1);
+          return
+        case "arrowright":
+          if (!this.dialogs.paragraph.visible) this.turn_page(this.page + 1);
+          return
+
+        default:
+          return;
+      }
+      
+      if (this.select_index < 0) selection_inc = 0;
+      else
+        selection_inc = Math.min(
+          Math.max(0, this.select_index + selection_inc),
+          this.visible_data.length
+        );
+      if (!e.ctrlKey && !e.shiftKey) {
+        this.clear_selection();
+      }
+      this.update_selection(
+        this.visible_data[selection_inc],
+        e,
+        selection_inc
+      );
+      ele = document.querySelector(
+        `[data-id="${this.visible_data[selection_inc]._id}"]`
+      );
+      window.scrollTo(0, ele.offsetTop - ele.clientHeight);
+      this.select_index = selection_inc;
+      
+      if (this.$refs.all_items && document.querySelector(".paragraph"))
+        selection_line_number = parseInt(
+          this.$refs.all_items.clientWidth /
+            document.querySelector(".paragraph").clientWidth
+        );
+
+    },
+    // dialogs
     show_tagging_dialog() {
-      if (this.selected_paragraphs().length == 0) return;
+      if (this.selected_paragraphs.length == 0) return;
       var existing_tags = new Set(
-        this.selected_paragraphs().reduce((a, e) => a.concat(e.keywords), [])
+        this.selected_paragraphs.reduce((a, e) => a.concat(e.keywords), [])
       );
       api.dialogs
         .prompt({
@@ -694,11 +613,11 @@ export default {
     },
     show_author_dialog() {
       var authors = new Set(
-        this.selected_paragraphs()
+        this.selected_paragraphs
           .reduce((a, e) => a.concat(e.keywords), [])
           .filter((x) => x.startsWith("@"))
       ),
-        author = this.selected_paragraphs()[0].author;
+        author = this.selected_paragraphs[0].author;
       api.dialogs
         .prompt({
           title: this.$t("author"),
@@ -712,7 +631,10 @@ export default {
         });
     },
     show_send_task_dialog() {
-      api.dialogs.send_task({ selection: this.selected_paragraphs() });
+      api.dialogs.send_task({ selection: this.selected_paragraphs });
+    },
+    close_dialogs() {
+      this.dialogs.paragraph.visible = false
     },
     search_tag(search, vm) {
       let value = vm.new_value
@@ -751,7 +673,7 @@ export default {
           });
       });
     },
-    match_shortctus(search, vm) {
+    match_shortcuts(search, vm) {
       let value = vm.new_value
       return new Promise(accept => {
         if (!search) accept([]);
@@ -763,14 +685,14 @@ export default {
           else vm.typing = search
         }
         accept(matched);
-      })
+      });
     },
     set_author(author) {
-      var s = this.selected_paragraphs();
+      var s = this.selected_paragraphs;
       if (!s || !s.length) return;
       api
         .call(`collections/${s[0].mongocollection || "paragraph"}/batch`, {
-          ids: this.selected_ids(),
+          ids: this.selected_ids,
           author,
           $push: { keywords: author },
         })
@@ -782,18 +704,18 @@ export default {
         });
     },
     tag(e, append = true) {
-      var s = this.selected_paragraphs();
+      var s = this.selected_paragraphs;
       if (!s || !s.length) return;
 
       var existing_tags = new Set(
-        this.selected_paragraphs().reduce((a, e) => a.concat(e.keywords), [])
+        this.selected_paragraphs.reduce((a, e) => a.concat(e.keywords), [])
       );
       var push = append ? e : e.filter((x) => !existing_tags.has(x)),
         pull = append
           ? []
           : Array.from(existing_tags).filter((x) => !e.includes(x));
       var updates = {
-        ids: this.selected_ids(),
+        ids: this.selected_ids,
         $push: { keywords: push },
         $pull: { keywords: pull },
       };
@@ -814,57 +736,32 @@ export default {
           });
         });
     },
-    select_paragraph_item_objects(s) {
-      var album_items = {},
-        visible_album_items = {};
-
-      this.selected_items().forEach((item) => {
-        if (!album_items[item.paragraph_id])
-          album_items[item.paragraph_id] = [];
-        album_items[item.paragraph_id].push(item._id);
-      });
-
-      s.forEach((p) => {
-        if (!visible_album_items[p._id]) visible_album_items[p._id] = [];
-        visible_album_items[p._id].splice(
-          0,
-          0,
-          ...(this.dialogs.paragraph.visible
-            ? this.selected_items().map((i) => i._id)
-            : p.images.map((i) => i._id))
-        );
-      });
-
-      return {
-        album_items,
-        visible_album_items,
-      };
-    },
     delete_items() {
-      var s = this.selected_paragraphs();
-      var objs = this.select_paragraph_item_objects(s);
+      var s = this.selected_paragraphs;
+      var items = this.selected_items
+      var objs = api.get_paragraph_item_objects(s, items);
       api
         .call("mediaitem/delete", {
-          album_items: objs.album_items,
+          para_items: objs.para_items,
         })
         .then(() => {
           s.forEach((x) => {
             x.images = x.images.filter(
-              (i) => !objs.visible_album_items[x._id].includes(i._id)
+              (i) => !objs.visible_para_items[x._id].includes(i._id)
             );
           });
           this.clear_selection(s);
         });
     },
     rating(val) {
-      var s = this.selected_paragraphs();
+      var s = this.selected_paragraphs;
       if (typeof val === "number") {
         val = {
           inc: val,
           least: val > 0 ? 1 : -1,
         };
       }
-      val.ids = (val.item ? [val.item] : this.selected_items()).map(
+      val.ids = (val.item ? [val.item] : this.selected_items).map(
         (x) => x._id
       );
       if (val.item) delete val.item;
@@ -886,21 +783,21 @@ export default {
       }
     },
     group(del) {
-      var s = this.selected_paragraphs();
+      var s = this.selected_paragraphs;
       if (!s || !s.length) return;
       var bundle = {
-        ids: this.selected_ids(),
+        ids: this.selected_ids,
         ungroup: del,
       };
 
-      _call () => {
+      const _call = () => {
         api
           .call(
             `collections/${s[0].mongocollection || "paragraph"}/group`,
             bundle
           )
           .then((data) => {
-            ctx.clear_selection(s);
+            this.clear_selection(s);
             s.forEach(
               (p) =>
               (p.keywords = p.keywords
@@ -934,30 +831,32 @@ export default {
       }
     },
     merge() {
-      var s = this.selected_paragraphs();
-      var objs = this.select_paragraph_item_objects(s);
+      var s = this.selected_paragraphs;
+      var items = this.selected_items;
+      var objs = api.get_paragraph_item_objects(s, items);
       if (!s || !s.length) return;
       api
         .call(`collections/${s[0].mongocollection || "paragraph"}/merge`, {
-          paragraphs: objs.album_items,
+          paragraphs: objs.para_items,
         })
         .then(() => this.clear_selection(s));
     },
     split() {
-      var s = this.selected_paragraphs();
-      var objs = this.select_paragraph_item_objects(s);
+      var s = this.selected_paragraphs;
+      var items = this.selected_items;
+      var objs = api.get_paragraph_item_objects(s, items);
       if (!s || !s.length) return;
       api
         .call(`collections/${s[0].mongocollection || "paragraph"}/split`, {
-          paragraphs: objs.album_items,
+          paragraphs: objs.para_items,
         })
         .then(() => this.clear_selection(s));
     },
     reset_storage() {
-      var s = this.selected_paragraphs();
+      var s = this.selected_paragraphs;
       api
         .call("mediaitem/reset_storage", {
-          ids: this.selected_items().map((x) => x._id),
+          ids: this.selected_items.map((x) => x._id),
         })
         .then(() => this.clear_selection(s));
     },
@@ -1029,7 +928,7 @@ export default {
   margin-right: 100%;
 }
 
-.tools>.v-btn {
+.tools > .v-btn {
   margin-right: 12px;
 }
 
@@ -1043,7 +942,7 @@ export default {
   vertical-align: middle;
 }
 
-.view-mode-toggler>* {
+.view-mode-toggler > * {
   margin: 0;
 }
 

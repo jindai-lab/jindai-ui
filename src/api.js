@@ -455,6 +455,11 @@ export default {
     });
   },
 
+  open_window(url) {
+    if (typeof url === "object") url = "/" + this.querystring_stringify(url);
+    window.open(url);
+  },
+
   queue() {
     return this.call("queue/")
       .then((data) => data.result)
@@ -520,6 +525,32 @@ export default {
 
       return colls.sort(_comp);
     });
+  },
+
+  get_paragraph_item_objects(paras, items) {
+    
+      var para_items = {},
+        visible_para_items = {};
+
+      items.forEach((item) => {
+        if (!para_items[item.paragraph_id])
+          para_items[item.paragraph_id] = [];
+        para_items[item.paragraph_id].push(item._id);
+      });
+
+      paras.forEach((p) => {
+        if (!visible_para_items[p._id]) visible_para_items[p._id] = [];
+        visible_para_items[p._id].splice(
+          0,
+          0,
+          ...items.map((i) => i._id)
+        );
+      });
+
+      return {
+        para_items,
+        visible_para_items,
+      };
   },
 
   get_datasets_hierarchy() {
