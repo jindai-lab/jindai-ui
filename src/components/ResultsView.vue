@@ -1,13 +1,7 @@
 <template>
   <v-sheet ref="results" :class="config.view_mode">
     <div class="tools">
-      <v-btn-toggle
-        mandatory
-        class="view-mode-toggler"
-        dense
-        v-model="config.view_mode"
-        @change="update_view_mode"
-      >
+      <v-btn-toggle mandatory class="view-mode-toggler" dense v-model="config.view_mode" @change="update_view_mode">
         <v-btn value="list">
           <v-icon>mdi-view-list</v-icon>
         </v-btn>
@@ -26,81 +20,48 @@
     <!-- divider -->
     <v-divider class="mt-5 mb-5"></v-divider>
     <!-- show content -->
-    <div
-      class="wrapper-container"
-      ref="all_items"
-      v-if="columns.includes('content')"
-    >
+    <div class="wrapper-container" ref="all_items" v-if="columns.includes('content')">
       <template v-for="(r, index) in visible_data">
         <div class="spacer" v-if="r.spacer" :key="'spacer' + index"></div>
         <div class="paragraph" :data-id="r._id" v-else :key="index">
           <div class="meta">
-            <v-checkbox
-              v-model="r.selected"
-              dense
-              hide-details
-              class="d-inline-block"
-              @change="update_selection(r, null, index)"
-            ></v-checkbox>
+            <v-checkbox v-model="r.selected" dense hide-details class="d-inline-block"
+              @change="update_selection(r, null, index)"></v-checkbox>
             {{ $t("dataset") }}:
-            <a
-              :href="
-                '/' +
-                querystring_stringify({
-                  q: current_q(),
-                  selected_datasets: [r.dataset],
-                  groups: 'none',
-                })
-              "
-              target="_blank"
-              >{{ r.dataset }}</a
-            >
+            <a :href="
+              '/' +
+              querystring_stringify({
+                q: current_q(),
+                selected_datasets: [r.dataset],
+                groups: 'none',
+              })
+            " target="_blank">{{ r.dataset }}</a>
             {{ $t("outline") }}: {{ r.outline }} {{ $t("source") }}:
-            <a
-              :href="
-                '/' +
-                querystring_stringify({
-                  q: `auto(${JSON.stringify(current_q())}),source.file=${quote(
-                    r.source.file
-                  )}`,
-                  selected_datasets: [r.dataset],
-                  groups: 'none',
-                })
-              "
-              target="_blank"
-              >{{ r.source.file }}</a
-            >
+            <a :href="
+              '/' +
+              querystring_stringify({
+                q: `auto(${JSON.stringify(current_q())}),source.file=${quote(
+                  r.source.file
+                )}`,
+                selected_datasets: [r.dataset],
+                groups: 'none',
+              })
+            " target="_blank">{{ r.source.file }}</a>
             <a :href="r.source.url" target="_blank">{{ r.source.url }}</a>
             {{ $t("pagenum") }}: {{ r.pagenum }} {{ $t("date") }}:
             {{ r.pdate | dateSafe }}
             <v-divider class="mt-5"></v-divider>
           </div>
-          <v-img
-            v-if="config.view_mode == 'gallery'"
-            :class="{ selected: r.selected }"
-            @click="update_selection(r, $event, index)"
-            @dblclick="view_page(index)"
-            :contain="config.contain"
-            :height="240"
-            :src="get_paragraph_image(r)"
-          ></v-img>
-          <ContentView
-            :key="r._id"
-            :view_mode="config.view_mode"
-            :paragraph="r"
-            :item_width="200"
-            :item_height="200"
-          />
+          <v-img v-if="config.view_mode == 'gallery'" :class="{ selected: r.selected }"
+            @click="update_selection(r, $event, index)" @dblclick="view_page(index)" :contain="config.contain"
+            :height="240" :src="get_paragraph_image(r)"></v-img>
+          <ContentView :key="r._id" :view_mode="config.view_mode" :paragraph="r" :item_width="200" :item_height="200" />
           <div class="mt-10 operations">
             <v-btn @click="view_page(index)">
               <v-icon>mdi-eye</v-icon> {{ $t("view") }}
             </v-btn>
-            <v-btn
-              :href="`/view/${r.mongocollection}/${
-                r.source.file ? r.source.file + '/' + r.source.page : r._id
-              }`"
-              target="_blank"
-            >
+            <v-btn :href="`/view/${r.mongocollection}/${r.source.file ? r.source.file + '/' + r.source.page : r._id
+            }`" target="_blank">
               <v-icon>mdi-dock-window</v-icon> {{ $t("browse") }}
             </v-btn>
             <v-btn @click="show_info_dialog(r)">
@@ -145,56 +106,25 @@
       <v-pagination v-model="page" :length="pages.length"></v-pagination>
       <div>
         <label> {{ $t("pagenum") }}</label>
-        <v-text-field
-          class="d-inline-block ml-1"
-          style="max-width: 40px"
-          type="number"
-          dense
-          @change="page = parseInt($event) || page"
-        ></v-text-field>
+        <v-text-field class="d-inline-block ml-1" style="max-width: 40px" type="number" dense
+          @change="page = parseInt($event) || page"></v-text-field>
       </div>
       <div>
         <label>{{ $t("page-size") }}</label>
-        <v-select
-          :items="[20, 50, 100, 200]"
-          dense
-          class="d-inline-block ml-1"
-          style="max-width: 60px"
-          v-model="config.page_size"
-        ></v-select>
+        <v-select :items="[20, 50, 100, 200]" dense class="d-inline-block ml-1" style="max-width: 60px"
+          v-model="config.page_size"></v-select>
       </div>
     </v-row>
 
-    <PageView
-      v-model="dialogs.paragraph.visible"
-      class="page-view"
-      ref="page_view"
-      :paragraphs="visible_data"
-      :view_mode="config.view_mode"
-      :start_index="dialogs.paragraph.start_index"
-      :plugin_pages="plugin_pages"
-      @next="turn_page(page + 1)"
-      @prev="turn_page(page - 1)"
-      @browse="browsing = $event"
-      @info="show_info_dialog($event)"
-      @rating="rating"
-    />
+    <PageView v-model="dialogs.paragraph.visible" class="page-view" ref="page_view" :paragraphs="visible_data"
+      :view_mode="config.view_mode" :start_index="dialogs.paragraph.start_index" :plugin_pages="plugin_pages"
+      @next="turn_page(page + 1)" @prev="turn_page(page - 1)" @browse="browsing = $event"
+      @info="show_info_dialog($event)" @rating="rating" />
 
-    <QuickActionButtons
-      :selection_count="selection_count"
-      @toggle-selection="toggle_selection"
-      @clear-selection="clear_selection"
-      @delete="delete_items"
-      @rating="rating(0.5)"
-      @group="group"
-      @tag="show_tagging_dialog"
-      @merge="merge"
-      @split="split"
-      @task="show_send_task_dialog"
-      @play="playing"
-      :playing_interval="config.playing_interval"
-      @reset-storage="reset_storage"
-    />
+    <QuickActionButtons :selection_count="selection_count" @toggle-selection="toggle_selection"
+      @clear-selection="clear_selection" @delete="delete_items" @rating="rating(0.5)" @group="group"
+      @tag="show_tagging_dialog" @merge="merge" @split="split" @task="show_send_task_dialog" @play="playing"
+      :playing_interval="config.playing_interval" @reset-storage="reset_storage" />
   </v-sheet>
 </template>
 
@@ -435,13 +365,12 @@ export default {
       api.dialogs.edit({ target }).then((target) => {
         api
           .call(
-            `collections/${target.mongocollection || "paragraph"}/${
-              target._id
+            `collections/${target.mongocollection || "paragraph"}/${target._id
             }`,
             target
           )
           .then(() => {
-            api.notify({ title: this.$t("saved") });
+            api.notify(this.$t("saved"));
           });
       });
     },
@@ -464,7 +393,7 @@ export default {
       if (this.$refs.all_items && document.querySelector(".paragraph"))
         selection_line_number = parseInt(
           this.$refs.all_items.clientWidth /
-            document.querySelector(".paragraph").clientWidth
+          document.querySelector(".paragraph").clientWidth
         );
 
       switch (e.key.toLowerCase()) {
@@ -533,11 +462,10 @@ export default {
               case "c":
                 if (e.ctrlKey) return;
                 this._open_window({
-                  q: `author=${
-                    api.quote(_album.author) ||
+                  q: `author=${api.quote(_album.author) ||
                     _album.keywords.filter((x) => x.startsWith("@"))[0] ||
                     ""
-                  }`,
+                    }`,
                   groups: "none",
                   sort: "-pdate",
                 });
@@ -545,16 +473,15 @@ export default {
               case "z":
                 this._open_window(
                   "/" +
-                    api.querystring_stringify({
-                      q: e.shiftKey
-                        ? `source.url%\`${api
-                            .escape_regex(_album.source.url)
-                            .replace(/\/\d+\//, "/.*/")}\``
-                        : `${
-                            _album.gid || 'id=o"' + _album._id + '"'
-                          }=>expand()`,
-                      groups: "none",
-                    })
+                  api.querystring_stringify({
+                    q: e.shiftKey
+                      ? `source.url%\`${api
+                        .escape_regex(_album.source.url)
+                        .replace(/\/\d+\//, "/.*/")}\``
+                      : `${_album.gid || 'id=o"' + _album._id + '"'
+                      }=>expand()`,
+                    groups: "none",
+                  })
                 );
                 break;
               case "i":
@@ -619,7 +546,7 @@ export default {
           if (this.selected_paragraphs().length > 0) {
             api.dialogs.prompt({
               title: this.$t("tagging"),
-              choices: this.shortcut_choices,
+              choices: this.match_shortctus,
               initial: e.key,
             }).then(tags => this.tag(tags, true));
           }
@@ -767,10 +694,10 @@ export default {
     },
     show_author_dialog() {
       var authors = new Set(
-          this.selected_paragraphs()
-            .reduce((a, e) => a.concat(e.keywords), [])
-            .filter((x) => x.startsWith("@"))
-        ),
+        this.selected_paragraphs()
+          .reduce((a, e) => a.concat(e.keywords), [])
+          .filter((x) => x.startsWith("@"))
+      ),
         author = this.selected_paragraphs()[0].author;
       api.dialogs
         .prompt({
@@ -778,6 +705,7 @@ export default {
           value: author ? [author] : [],
           choices: Array.from(authors),
           limit: 1,
+          initial: authors[0] || author || ''
         })
         .then((authors) => {
           this.set_author(authors[0]);
@@ -786,11 +714,12 @@ export default {
     show_send_task_dialog() {
       api.dialogs.send_task({ selection: this.selected_paragraphs() });
     },
-    search_tag(search, value, canceller) {
+    search_tag(search, vm) {
+      let value = vm.new_value
       return new Promise((accept) => {
-        if (canceller.cancel) canceller.cancel.cancel();
+        if (vm.cancel) vm.cancel.cancel();
         if (search.length == 0 || search == "#" || search == "@") return [];
-        canceller.cancel = api.cancel_source();
+        vm.cancel = api.cancel_source();
         api
           .call(
             "term/keywords",
@@ -798,10 +727,11 @@ export default {
               pattern: api.escape_regex(search),
               regex: true,
             },
-            canceller.cancel
+            vm.cancel
           )
           .then((data) => {
-            canceller.cancel = null;
+            vm.cancel = null;
+            data = data || {result: []}
             var choices = value
               .map((x) => ({
                 text: x,
@@ -816,10 +746,24 @@ export default {
             accept(choices);
           })
           .catch((err) => {
-            canceller.cancel = null;
+            vm.cancel = null;
             console.log(err);
           });
       });
+    },
+    match_shortctus(search, vm) {
+      let value = vm.new_value
+      return new Promise(accept => {
+        if (!search) accept([]);
+        var matched = this.shortcut_choices.filter((x) => x.text.startsWith(search));
+        if (matched.length > 0 && matched[0].text.startsWith(search + " ")) {
+          if (!value.includes(matched[0]))
+            value.push(matched[0])
+          if (matched.length == 1) vm.typing = ''
+          else vm.typing = search
+        }
+        accept(matched);
+      })
     },
     set_author(author) {
       var s = this.selected_paragraphs();
@@ -949,7 +893,7 @@ export default {
         ungroup: del,
       };
 
-      function _call(ctx) {
+      _call () => {
         api
           .call(
             `collections/${s[0].mongocollection || "paragraph"}/group`,
@@ -959,11 +903,11 @@ export default {
             ctx.clear_selection(s);
             s.forEach(
               (p) =>
-                (p.keywords = p.keywords
-                  .filter(
-                    (x) => !x.match(del ? /^#/ : /^#0/) && !data.result.includes(x)
-                  )
-                  .concat(data.result))
+              (p.keywords = p.keywords
+                .filter(
+                  (x) => !x.match(del ? /^#/ : /^#0/) && !data.result.includes(x)
+                )
+                .concat(data.result))
             );
           });
       }
@@ -974,18 +918,19 @@ export default {
           .map((x) => x.keywords.filter((x) => x.match(/^#[^0]/)))
           .reduce((p, c) => p.concat(c)).length == 0
       ) {
-        var choices = [...api.guess_groups(this.current_q()), ... api.guess_groups(s)];
+        var choices = [...api.guess_groups(this.current_q()), ...api.guess_groups(s)];
         api.dialogs
           .prompt({
             title: this.$t("group"),
             choices,
+            initial: choices[0] || ''
           })
           .then((group) => {
             bundle.group = (group || []).map(x => x.replace(/^#/, ""));
-            _call(this);
+            _call();
           });
       } else {
-        _call(this);
+        _call();
       }
     },
     merge() {
@@ -1084,7 +1029,7 @@ export default {
   margin-right: 100%;
 }
 
-.tools > .v-btn {
+.tools>.v-btn {
   margin-right: 12px;
 }
 
@@ -1098,7 +1043,7 @@ export default {
   vertical-align: middle;
 }
 
-.view-mode-toggler > * {
+.view-mode-toggler>* {
   margin: 0;
 }
 
@@ -1122,11 +1067,13 @@ export default {
   width: 75% !important;
   margin: auto;
 }
+
 .v-select__selections {
   overflow-x: hidden;
   max-height: 200px;
   overflow-y: auto;
 }
+
 .v-chip {
   overflow: initial;
 }

@@ -38,7 +38,7 @@
       {{ $t('history') }}
       <v-row v-for="(h, index) in config.dbconsole.history" :key="index">
         <v-col>{{ stringify_command(h) }}</v-col>
-        <v-col><v-button icon @click="replay(h)"><v-icon>mdi-replay</v-icon></v-button></v-col>
+        <v-col><v-btn icon @click="replay(h)"><v-icon>mdi-replay</v-icon></v-btn></v-col>
       </v-row>
     </v-card-text>
   </v-card>

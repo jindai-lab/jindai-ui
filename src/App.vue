@@ -12,12 +12,8 @@
           <v-list-item link @click="$router.push('/tasks')">
             <v-list-item-title>{{ $t("all") }}</v-list-item-title>
           </v-list-item>
-          <v-list-item
-            link
-            v-for="s in shortcuts || [{ _id: '', name: $t('quick-task') }]"
-            :key="s._id"
-            @click="$router.push('/tasks/shortcut/' + s._id)"
-          >
+          <v-list-item link v-for="s in shortcuts || [{ _id: '', name: $t('quick-task') }]" :key="s._id"
+            @click="$router.push('/tasks/shortcut/' + s._id)">
             <v-list-item-title>{{ s.name }}</v-list-item-title>
           </v-list-item>
         </v-list-group>
@@ -26,46 +22,33 @@
           <template v-slot:activator>
             <v-list-item-title>{{ $t("user") }}</v-list-item-title>
           </template>
-          <v-list-item
-            v-for="item in [
-              ['preferences', 'preferences'],
-              ['history', 'history'],
-            ]"
-            :key="item[0]"
-            link
-            @click="$router.push(`/${item[1]}`)"
-          >
+          <v-list-item v-for="item in [
+            ['preferences', 'preferences'],
+            ['history', 'history'],
+          ]" :key="item[0]" link @click="$router.push(`/${item[1]}`)">
             <v-list-item-title>{{ $t(item[0]) }}</v-list-item-title>
           </v-list-item>
-          <v-list-item
-            link
-            @click="
-              log_out();
-              $router.push('/login');
-            "
-          >
+          <v-list-item link @click="
+            log_out();
+          $router.push('/login');
+          ">
             <v-list-item-title>{{ $t("log-out") }}</v-list-item-title>
           </v-list-item>
         </v-list-group>
 
-        <v-list-group>
+        <v-list-group v-show="admin">
           <template v-slot:activator>
             <v-list-item-title>{{ $t("admin") }}</v-list-item-title>
           </template>
 
-          <v-list-item
-            v-for="item in [
-              ['file-storage', 'storage'],
-              ['dataset', 'datasets'],
-              ['console', 'dbconsole'],
-              ['system-admin', 'admin'],
-              ['auto-tagging', 'autotags'],
-              ['shortcuts', 'shortcuts']
-            ]"
-            :key="item[0]"
-            link
-            @click="$router.push(`/${item[1]}`)"
-          >
+          <v-list-item v-for="item in [
+            ['file-storage', 'storage'],
+            ['dataset', 'datasets'],
+            ['console', 'dbconsole'],
+            ['system-admin', 'admin'],
+            ['auto-tagging', 'autotags'],
+            ['shortcuts', 'shortcuts']
+          ]" :key="item[0]" link @click="$router.push(`/${item[1]}`)">
             <v-list-item-title>{{ $t(item[0]) }}</v-list-item-title>
           </v-list-item>
         </v-list-group>
@@ -80,60 +63,29 @@
     </v-app-bar>
 
     <v-main>
-      <v-progress-linear
-        indeterminate
-        :style="{ opacity: loading ? 1 : 0, 'z-index': 5 }"
-        app
-        fixed
-      ></v-progress-linear>
+      <v-progress-linear indeterminate id="loadingBar" style="{opacity: 0}" app
+        fixed></v-progress-linear>
 
       <div :id="viewer ? 'viewer' : 'content-wrapper'">
         <keep-alive :include="['SearchForm', 'ResultsView', 'DbConsole']">
-          <router-view @logined="$emit('logined')" :key="$route.fullPath" />
+          <router-view :key="$route.fullPath" />
         </keep-alive>
       </div>
 
       <div style="height: 40px"></div>
 
       <template v-if="!viewer">
-        <v-card flat v-show="console_outputs.length > 0" ref="console">
-          <v-btn
-            small
-            left
-            bottom
-            text
-            class="ma-3"
-            @click="console_outputs = []"
-            ><v-icon>mdi-delete</v-icon>{{ $t("clear") }}</v-btn
-          >
-          <div class="console">
-            <div
-              v-for="(line, index) in console_outputs.slice(0, 50)"
-              :key="index"
-            >
-              {{ line }}
-            </div>
-          </div>
-        </v-card>
-
+        <event-console @queue="update_queue" :enabled="!this.viewer"></event-console>
         <v-footer id="footer">
           <div class="language mr-5">
-            <v-select
-              dense
-              flat
-              single-line
-              prepend-icon="mdi-web"
-              v-model="ui_language"
-              :items="
-                Object.entries($i18n.messages).map((pair) => ({
-                  value: pair[0],
-                  text: pair[1]._lang,
-                }))
-              "
-              :style="{
-                width: '150px',
-              }"
-            ></v-select>
+            <v-select dense flat single-line prepend-icon="mdi-web" v-model="ui_language" :items="
+              Object.entries($i18n.messages).map((pair) => ({
+                value: pair[0],
+                text: pair[1]._lang,
+              }))
+            " :style="{
+  width: '150px',
+}"></v-select>
           </div>
           <div class="powered-by">
             Powered by Jindai &copy; 2018-{{ new Date().getFullYear() }} zhuth
@@ -143,24 +95,12 @@
         </v-footer>
       </template>
     </v-main>
-
-    <v-snackbar
-      v-model="sb.visible"
-      v-for="(sb, index) in snackbars"
-      :key="`sb${index}`"
-    >
-      {{ sb.text }}
-      <template v-slot:action="">
-        <v-btn color="primary" text @click="snackbars.splice(index, 1)">
-          <v-icon>mdi-close</v-icon>
-        </v-btn>
-      </template>
-    </v-snackbar>
   </v-app>
 </template>
 
 <script>
 import api from "./api";
+import EventConsole from './components/EventConsole.vue';
 import QueueView from "./components/QueueView.vue";
 import { setup } from "./locales";
 
@@ -168,6 +108,7 @@ export default {
   name: "app",
   components: {
     QueueView,
+    EventConsole,
   },
   data() {
     return {
@@ -178,18 +119,16 @@ export default {
         waiting: 0,
         running: [],
       },
-      queue_source: null,
       logs: {},
       admin: false,
       shortcuts: [],
       snackbars: [],
-      console_outputs: [],
       app_title: "Jindai",
       app_dark: false,
       domain_delimiter: '.',
       copyright: "",
       ui_language: "",
-      queue_timeout_flag: 0
+      login_finished: false
     };
   },
   watch: {
@@ -205,7 +144,7 @@ export default {
     ui_language(val) {
       setup(val);
       api.locale = val;
-      this.$vuetify.lang.current = {'zhs': 'zhHans', 'zht': 'zhHant'}[val] || val;
+      this.$vuetify.lang.current = { 'zhs': 'zhHans', 'zht': 'zhHant' }[val] || val;
     },
     drawer(val) {
       api.config.drawer = val;
@@ -213,56 +152,21 @@ export default {
   },
   created() {
     this.ui_language = this.$i18n.locale;
-    api.bus
-      .$on("loading", (loading_num) => (this.loading = loading_num > 0))
-      .$on("alert", (bundle) => {
-        const message = bundle.title
-          ? `${bundle.title}\n${bundle.text || ""}`.trim()
-          : bundle;
-        this.snackbars = this.snackbars
-          .filter((x) => x.visible)
-          .concat([
-            {
-              text:
-                typeof this.$i18n.messages.zhs[message] !== "undefined"
-                  ? this.$t(message)
-                  : message,
-              visible: true,
-            },
-          ])
-          .slice(0, 5);
-      })
-      .$on("finish", (key) => {
-        if (this.logs[key]) delete this.logs[key];
-      });
-    this.$on("logined", () => {
-      api
-        .logined()
-        .then((data) => (this.admin = data.result.roles.indexOf("admin") >= 0))
-        .then(() => {
-          api
-            .call("tasks/shortcuts")
-            .then((data) => (this.shortcuts = data.result));
-          if (!this.viewer) {
-            this.queue_event();
-          }
-        })
-        .catch(() => (localStorage.token = ""));
-    });
   },
   mounted() {
     api.get_meta().then(() => {
       Object.assign(this, api.meta)
     })
-    this.$emit("logined");
-    window.onblur = () => {
-      this.queue_source.close()
-      this.queue_source = null
-    }
-    window.onfocus = () => {
-      this.queue_event()
-    }
     this.drawer = api.config.drawer;
+    api
+      .authenticate()
+      .then((data) => (this.admin = data.result.roles.indexOf("admin") >= 0))
+      .then(() => {
+        this.login_finished = true
+        api
+          .call("tasks/shortcuts")
+          .then((data) => (this.shortcuts = data.result));
+      })
   },
   computed: {
     viewer() {
@@ -271,7 +175,7 @@ export default {
   },
   methods: {
     nav_click(e) {
-      this.$router.push(e.target.getAttribute("to")).catch(() => {});
+      this.$router.push(e.target.getAttribute("to")).catch(() => { });
     },
     log_out() {
       api.log_out();
@@ -279,24 +183,10 @@ export default {
     update_queue(queue) {
       if (!queue) return;
       this.queue = {
-                'finished': queue.filter(x => x.status == 'stopped'),
-                'running': queue.filter(x => x.status == 'running'),
-                'waiting': queue.filter(x => x.status == 'pending'),
-            }
-    },
-    queue_event() {
-      api.queue().then((queue) => this.update_queue(queue));
-      if (this.queue_source) return;
-      this.queue_source = new EventSource("/api/queue/events");
-      this.queue_source.onmessage = (event) => {
-        console.log(event)
-        var data = JSON.parse(event.data);
-        if (data.log) {
-          this.console_outputs.splice(0, 0, data.log);
-          if (this.console_outputs.length > 100)
-            this.console_outputs.splice(50, this.console_outputs.length - 50);
-        } else this.update_queue(data);
-      };
+        'finished': queue.filter(x => x.status == 'stopped'),
+        'running': queue.filter(x => x.status == 'running'),
+        'waiting': queue.filter(x => x.status == 'pending'),
+      }
     },
   },
   sse: {

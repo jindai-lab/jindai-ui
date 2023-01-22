@@ -60,10 +60,10 @@ export default {
   methods: {
     auto_tags_create() {
       if (this.new_tag.cond.startsWith('@@')) {
-        this.new_tag.cond = 'author=' + this.new_tag.cond.substr(1)
+        this.new_tag.cond = 'author=' + this.new_tag.cond.substring(1)
       }
       if (!this.new_tag.tag) {
-        this.new_tag.tag = api.guess_groups(this.new_tag.cond)[0] || ''
+        this.new_tag.tag = '#' + this.new_tag.tag.replace(/^\d+|[^\w]/g, '')
       }
       if (this.new_tag.tag == this.new_tag.cond || !this.new_tag.tag) return
       api.put("plugins/autotags", this.new_tag).then((data) => {

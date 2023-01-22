@@ -186,8 +186,8 @@ export default {
         return id;
       });
     },
-    notify(title) {
-      api.notify({ title });
+    notify(text) {
+      api.notify(text);
     },
     enqueue() {
       this.save().then((id) =>

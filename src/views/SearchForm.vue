@@ -3,13 +3,18 @@
     <v-card-title>{{ $t("search") }}</v-card-title>
     <v-card-text @drop.prevent="drop_json_file" @dragover.prevent>
       <form autocapitalize="off" autocorrect="off" spellcheck="false">
-        <v-row>
+        <v-row v-if="expert">
           <v-col>
-            <ParamInput :arg="{name: $t('query'), type: 'QUERY'}" v-model="q" v-if="expert"
+            <ParamInput :arg="{name: $t('query'), type: 'QUERY'}" v-model="q"
               ref="search_code"
+              :style="{width: '100%'}"
               @submit="search"
-              class="mb-5 d-inline-block cond-width"></ParamInput>
-            <v-text-field v-else
+              class="mb-5 d-inline-block"></ParamInput>
+          </v-col>
+        </v-row>
+        <v-row v-else>
+          <v-col>
+            <v-text-field 
               class="d-inline-block selector cond-width"
               dense
               v-model="q"
@@ -187,7 +192,7 @@ export default {
             Object.assign(api.querystring_parse(location.search), {
               q: this.q,
               selected_datasets: this.selected_datasets,
-              sort: this.sort,
+              sort: this.expert ? '' : this.sort,
               groups: this.groups,
               selected_mongocollections: this.selected_mongocollections,
             })
@@ -225,7 +230,7 @@ export default {
       var params = {
         q: (this.expert ? '? ' : '') + this.q,
         req: this.req,
-        sort: typeof this.sort === "object" ? this.sort.value : this.sort,
+        sort: this.expert ? '' : typeof this.sort === "object" ? this.sort.value : this.sort,
         mongocollections: this.selected_mongocollections,
         offset: e.offset,
         limit: e.limit,
@@ -318,9 +323,7 @@ export default {
     export_file(fmt) {
       this.export_query(fmt, (data) => {
         api.put("queue/", { id: data.result }).then((ret) =>
-          api.notify({
-            title: this.$t("task-enqueued", { task: ret.result }),
-          })
+          api.notify(this.$t("task-enqueued", { task: ret.result }))
         );
       });
     },

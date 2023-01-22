@@ -36,9 +36,9 @@
         </v-btn>
       </span>
       <a :href="'/' + querystring_stringify({
-        q: `source=\`${paragraph.source.url || ''}\``})" class="force-text break-anywhere"
+        q: `source(\`${paragraph.source.url || paragraph.source.file || ''}\`)`})" class="force-text break-anywhere"
         target="_blank">{{ paragraph.source.url }}</a>
-      <p class="content">{{ text }}</p>
+      <p class="content" @click.ctrl="search_selection">{{ text }}</p>
       <template v-for="tag in tags">
         <a v-if="tag != '...'" :alt="tag" :key="`${paragraph._id}-${Math.random()}-${tag}`" :href="'/' + querystring_stringify({
           groups: tag.match(/^#/) ? 'none' : (tag.match(/^@/) ? 'group' : ''),
@@ -48,7 +48,7 @@
               ? quote(tag)
               : quote(tag) + ',' + scope(paragraph)
         })" :class="['tag', 'chip', tag_class(tag)]" target="_blank">{{ tag }}</a>
-        <v-btn icon v-else :key="tag" @click="show_all_tags = true">
+        <v-btn icon v-else :key="`${paragraph._id}-${Math.random()}-${tag}`" @click="show_all_tags = true">
           <v-icon>mdi-more</v-icon>
         </v-btn>
       </template>
@@ -114,6 +114,14 @@ export default {
           ? "t_author"
           : tag != 'author' && tag != 'group' ?
             "t_" + tag : '';
+    },
+    search_selection() {
+      var selected = document.getSelection().toString()
+      if (!selected)return
+      this._open_window(api.querystring_stringify({
+        q: `c(${this.quote(selected)}),${this.scope(this.paragraph)}`,
+        datasets: [this.paragraph.dataset]
+      }))
     },
     querystring_stringify: api.querystring_stringify,
     scope: api.scope

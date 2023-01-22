@@ -99,8 +99,8 @@ export default {
       if (l >= 0) this.valid.splice(l, 1);
       if (!valid) this.valid.push(name);
     },
-    notify(title) {
-      api.notify({ title });
+    notify(text) {
+      api.notify(text);
     },
     apply_params() {
       for (var k in this.shortcut_params) {
@@ -190,7 +190,7 @@ export default {
         })
         .then((id) =>
           api.put("queue/", { id }).then((data) => {
-            this.notify(this.$t("task-enqueued", { task: data.result }));
+            api.notify(this.$t("task-enqueued", { task: data.result }));
           })
         );
     },

@@ -5,6 +5,7 @@ import InfoDialog from "./InfoDialog.vue"
 import SendTaskDialog from "./SendTaskDialog.vue"
 import EmbeddedDialog from "./EmbeddedDialog.vue"
 import EditDialog from "./EditDialog.vue"
+import AlertDialog from "./AlertDialog.vue"
 
 import Vue from "vue";
 import i18n from "@/locales";
@@ -53,4 +54,5 @@ export default {
     send_task(options) { return this._create_dialog(SendTaskDialog, options) },
     embedded(options) { return this._create_dialog(EmbeddedDialog, options) },
     edit(options) { return this._create_dialog(EditDialog, options) },
+    alert(options) { return this._create_dialog(AlertDialog, options) },
 }

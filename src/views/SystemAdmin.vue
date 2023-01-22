@@ -173,9 +173,7 @@ export default {
   methods: {
     add_user() {
       api.put("users/", this.new_user).then((data) => {
-        api.notify({
-          text: this.$t("user-added", { user: data.result.username }),
-        });
+        api.notify(this.$t("user-added", { user: data.result.username }));
         this.users.push(data.result);
         this.show_user_modal = false;
       });
@@ -184,7 +182,7 @@ export default {
       api.dialogs.confirm({title: this.$t("user-delete-confirm", { user: u.username })}).then(() => {
         api.delete("users/" + u.username).then((data) => {
           if (!data.result.ok) return;
-          api.notify({ text: this.$t("user-deleted", { user: u.username }) });
+          api.notify(this.$t("user-deleted", { user: u.username }));
           this.users = this.users.filter((x) => x._id != u._id);
         });
       })
@@ -213,7 +211,7 @@ export default {
     },
     delete_schedule(key) {
       api.delete("scheduler/" + key).then(() => {
-        api.notify({ title: this.$t("deleted") });
+        api.notify(this.$t("deleted"));
         this.update_scheduler();
       });
     },

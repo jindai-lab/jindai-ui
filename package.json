@@ -19,6 +19,7 @@
         "axios": "^0.21.1",
         "blockly": "^3.20200924.4",
         "core-js": "^3.6.5",
+        "eventsource": "^2.0.2",
         "js-cookie": "^3.0.1",
         "prismjs": "^1.23.0",
         "qrcodejs2": "^0.0.2",

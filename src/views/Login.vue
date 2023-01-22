@@ -56,12 +56,11 @@ export default {
     };
   },
   methods: {
-    login(otp = null) {
+    login() {
       api
-        .auth(this.username, this.password, otp || this.otp, this.remember)
+        .authenticate(this.username, this.password, this.otp, this.remember)
         .then(() => {
-          this.$emit("logined");
-          this.$router.push("/");
+          location.href = '/';
         });
     },
   },

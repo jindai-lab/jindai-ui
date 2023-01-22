@@ -110,7 +110,7 @@ export default {
     delete_result(task) {
       var id = encodeURIComponent(task.key);
       api.delete("queue/" + id).then(() => {
-        api.notify({ title: "成功删除" });
+        api.notify(this.$t('deleted'));
         this.$emit("updated", {});
       });
     },

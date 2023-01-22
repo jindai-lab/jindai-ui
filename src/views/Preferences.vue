@@ -110,7 +110,7 @@ export default {
   methods: {
     update_password() {
       if (this.password !== this.password2) {
-        api.notify({ text: this.$t("password-dismatch") });
+        api.notify(this.$t("password-dismatch"));
       } else {
         api
           .call("account/", {

@@ -8,7 +8,7 @@
           v-model="new_value"
           :items="candidates"
           :search-input.sync="typing"
-          :loading="canceller.cancel !== null"
+          :loading="cancel !== null"
           flat
           multiple
           chips
@@ -17,21 +17,26 @@
           auto-select-first
           ref="ac"
           :filter="match_pattern"
-          @keyup="(e) => e.key != 'Enter' && (enter_hit = 0)"
-          @keyup.enter="() => (++enter_hit == 2 ? ret() : null)"
-          @change="new_value = limit > 0 ? new_value.slice(0, limit) : new_value"
+          @keyup.esc="typing = ''"
+          @keyup.enter="!typing ? ret() : null"
+          @change="
+            new_value = limit > 0 ? new_value.slice(0, limit) : new_value
+          "
           max-height="180"
         ></v-combobox>
       </v-card-text>
       <v-card-actions>
-          <v-btn color="primary" @click="ret">
-            {{ $t("ok") }}
-          </v-btn>
-          <v-btn
-            @click="retval = false; visible = false"
-          >
-            {{ $t("cancel") }}
-          </v-btn>
+        <v-btn color="primary" @click="ret">
+          {{ $t("ok") }}
+        </v-btn>
+        <v-btn
+          @click="
+            retval = false;
+            visible = false;
+          "
+        >
+          {{ $t("cancel") }}
+        </v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -44,12 +49,11 @@ export default {
   name: "PromptChoicesDialog",
   data() {
     return {
-      canceller: {cancel: null},
+      cancel: null,
       candidates: [],
       new_value: [],
       typing: "",
       visible: true,
-      enter_hit: 0,
     };
   },
   props: {
@@ -71,42 +75,38 @@ export default {
       default: "",
     },
     choices: null,
-    retval: Array
+    retval: Array,
   },
   watch: {
     typing(val) {
       val && this.search(val);
     },
-    new_value() {
-      if (this.typing) this.typing = "";
-    },
   },
   mounted() {
-    this.typing = this.initial
-    this.new_value = this.value.sort()
+    this.typing = this.initial;
+    this.new_value = this.value.sort();
     if (Array.isArray(this.choices)) this.candidates = this.choices;
   },
   computed: {
     search() {
-      if (typeof this.choices == 'function') return ((val) => {
-        this.choices(val, this.get_value(), this.canceller).then(choices => this.candidates = choices)
-    })
-      else return (()=>[])
-    }
+      if (typeof this.choices == "function")
+        return (val) => {
+          this.choices(val, this).then(
+            (choices) => (this.candidates = choices)
+          );
+        };
+      else return () => [];
+    },
   },
   methods: {
     match_pattern(item, query, item_text) {
       return item_text.match(new RegExp(api.escape_regex(query), "i"));
     },
-    get_value() {
-      return this.new_value.map((x) => x.value || x) || [this.typing]
-    },
     ret() {
-      this.enter_hit = 0;
-      var result = this.get_value();
-      if (this.limit) result = result.slice(this.limit)
-      result = result.map(x => typeof x == 'string' ? x : x.value)
-      this.retval = result
+      var result = this.new_value;
+      if (this.limit) result = result.slice(this.limit);
+      result = result.map((x) => (typeof x == "string" ? x : x.value));
+      this.retval = result;
       this.visible = false;
     },
   },
