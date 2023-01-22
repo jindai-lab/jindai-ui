@@ -35,7 +35,7 @@
     <v-card flat>
       <v-card-title>{{ $t("results") }}</v-card-title>
       <v-card-text>
-        <ResultsView @load="load_search" ref="results" :view_mode="view_mode" />
+        <ResultsView :load="results" ref="results" :view_mode="view_mode" />
         {{ result_plain }}
       </v-card-text>
     </v-card>
@@ -80,7 +80,7 @@ export default {
     },
   },
   mounted() {
-    var params = api.querystring_parse(location.search.substring(1))
+    var params = api.querystring_parse(location.search.substring(1));
     api.help_pipelines().then((data) => {
       for (var k in data) {
         Object.assign(this.stages, data[k]);
@@ -88,7 +88,8 @@ export default {
       api.call("tasks/" + this.id).then((data) => {
         this.task = data.result;
         for (var k in this.task.shortcut_map) {
-          this.shortcut_params[k] = typeof(params[k]) === 'undefined' ? this.get_map_val(k) : params[k];
+          this.shortcut_params[k] =
+            typeof params[k] === "undefined" ? this.get_map_val(k) : params[k];
         }
       });
     });
@@ -217,16 +218,7 @@ export default {
         target = seg.match(/^\d+$/) ? target[+seg][1] : target[seg];
       }
       return target;
-    },
-    load_search(e) {
-      var token = new Date().getTime() + Math.random();
-      e.callback({
-        result: this.results,
-        offset: 0,
-        total: this.results.length,
-        token,
-      });
-    },
+    }
   },
 };
 </script>

@@ -4,7 +4,7 @@
     <v-card-text>
       <p v-if="prompt" v-html="prompt"></p>
       <ResultsView
-        @load="load_data"
+        :load="load_data"
         v-else-if="typeof total === 'number'"
         ref="results"
       />
@@ -37,7 +37,7 @@ export default {
   methods: {
     load_data(e) {
       var token = new Date().getTime() - Math.random();
-      api
+      return api
         .call(
           "queue/" +
             encodeURIComponent(this.id) +
@@ -56,11 +56,11 @@ export default {
             }</h4><pre>${data.__tracestack__.join("\n")}</pre>`;
           } else if (data.result) {
             this.total = data.result.total;
-            e.callback({
+            return {
               offset: e.offset,
               result: data.result.results,
               token,
-            });
+            }
           }
         })
         .catch((ex) => {

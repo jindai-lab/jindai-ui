@@ -10,7 +10,7 @@
       </v-card-title>
       <v-card-text>
         <ResultsView
-          @load="(a) => a.callback({ offset: 0, result: target.arr })"
+          :load="target.arr"
           :total="(target.arr || []).length"
         />
       </v-card-text>

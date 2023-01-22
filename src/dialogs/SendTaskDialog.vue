@@ -1,57 +1,58 @@
 <template>
-    <v-dialog v-model="visible">
-      <v-card>
-        <v-card-title>
-          {{ $t("send-task") }}
-          <v-spacer></v-spacer>
-          <v-btn icon @click="visible = false; retval = false">
-            <v-icon>mdi-close</v-icon>
-          </v-btn>
-        </v-card-title>
-        <v-card-text class="mt-5">
-          <v-row>
-            <v-col>
-              <v-autocomplete
-                dense
-                :label="$t('send-to')"
-                :items="quicktasks"
-                v-model="pipeline"
-              ></v-autocomplete>
-              <v-btn
-                color="primary"
-                dense
-                @click="$refs.quicktask_results.start(1)"
-              >
-                <v-icon>mdi-fast-forward</v-icon> {{ $t("run-now") }}
-              </v-btn>
-            </v-col>
-          </v-row>
-          <v-sheet>
-            <ResultsView
-              @load="quicktask"
-              ref="quicktask_results"
-            />
-          </v-sheet>
-        </v-card-text>
-      </v-card>
-    </v-dialog>
+  <v-dialog v-model="visible">
+    <v-card>
+      <v-card-title>
+        {{ $t("send-task") }}
+        <v-spacer></v-spacer>
+        <v-btn
+          icon
+          @click="
+            visible = false;
+            retval = false;
+          "
+        >
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
+      </v-card-title>
+      <v-card-text class="mt-5">
+        <v-row>
+          <v-col>
+            <v-autocomplete
+              dense
+              :label="$t('send-to')"
+              :items="quicktasks"
+              v-model="pipeline"
+            ></v-autocomplete>
+            <v-btn
+              color="primary"
+              dense
+              @click="$refs.quicktask_results.start(1)"
+            >
+              <v-icon>mdi-fast-forward</v-icon> {{ $t("run-now") }}
+            </v-btn>
+          </v-col>
+        </v-row>
+        <v-sheet>
+          <ResultsView :load="quicktask" ref="quicktask_results" />
+        </v-sheet>
+      </v-card-text>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script>
-
-import api from "../api.js"
+import api from "../api.js";
 
 export default {
-    name: 'SendTaskDialog',
-    props: ['selection', 'retval'],
-    data: () => ({
-      visible: true,
-      results_count: 0,
-      pipeline: [],
-      quicktasks: [],
-    }),
-    mounted() {
-        
+  name: "SendTaskDialog",
+  props: ["selection", "retval"],
+  data: () => ({
+    visible: true,
+    results_count: 0,
+    pipeline: [],
+    quicktasks: [],
+  }),
+  mounted() {
     api.call("tasks/shortcuts").then(
       (data) =>
         (this.quicktasks = data.result.map((task) => ({
@@ -59,11 +60,10 @@ export default {
           value: task.pipeline,
         })))
     );
-
-    },
-    methods: {
-        quicktask(e) {
-      api
+  },
+  methods: {
+    quicktask() {
+      return api
         .call("quicktask", {
           pipeline: [
             [
@@ -80,14 +80,14 @@ export default {
           ],
         })
         .then((data) => {
-          e.callback({
+          return {
             result: data.result,
             offset: 0,
             total: data.result.length,
             token: new Date().getTime(),
-          });
+          };
         });
     },
-    }
-}
+  },
+};
 </script>

@@ -11,6 +11,8 @@ import Vue from "vue";
 import i18n from "@/locales";
 import vuetify from "@/plugins/vuetify.js";
 
+const _els = []
+
 export default {
 
     _create_dialog(class_, options) {
@@ -27,9 +29,11 @@ export default {
             launcher.style.visibility = 'hidden';
             launcher.click();
             launcher.remove();
+            _els.push(el)
 
             component.$watch('retval', function (value) {
                 el.remove();
+                _els.splice(_els.indexOf(el), 1)
                 if (value === false || value === null || typeof value === 'undefined')
                     reject(value);
                 else
@@ -55,4 +59,9 @@ export default {
     embedded(options) { return this._create_dialog(EmbeddedDialog, options) },
     edit(options) { return this._create_dialog(EditDialog, options) },
     alert(options) { return this._create_dialog(AlertDialog, options) },
+
+    close() {
+        _els.forEach(x => x.remove())
+        _els.splice(0, _els.length)
+    }
 }

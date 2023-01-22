@@ -11,7 +11,7 @@
         fab
         small
         @click="$emit('toggle-selection')"
-        @dblclick="$emit('clear-selection')"
+        @dblclick="$emit('close')"
       >
         <v-icon>mdi-select-all</v-icon>
       </v-btn>
@@ -21,7 +21,7 @@
       <v-icon>mdi-tag</v-icon>
     </v-btn>
 
-    <v-btn fab small @click="$emit('rating',{inc: 0.5})">
+    <v-btn fab small @click="$emit('rating', { inc: 0.5 })">
       <v-icon>mdi-heart</v-icon>
     </v-btn>
 
@@ -38,18 +38,22 @@
 
       <v-list class="pointer">
         <v-list-item
-          v-for="item in ['play', 'merge', 'split', 'reset-storage', 'task']"
-          :key="item"
+          v-for="item in [
+            { name: 'play', event: 'play' },
+            'merge',
+            'split',
+            'reset-storage',
+            'task',
+            { name: 'delete', icon: 'mdi-delete' },
+          ].map((x) => (typeof x === 'object' ? x : { name: x, call: x }))"
+          :key="item.name"
         >
-          <v-list-item-title @click="$emit(item)">{{
-            $t(item)
-          }}</v-list-item-title>
-        </v-list-item>
-        <v-list-item>
-          <v-list-item-title @click="$emit('delete')">
-            <v-icon>mdi-delete</v-icon>
-            {{ $t("delete") }}
-          </v-list-item-title>
+          <v-list-item-title
+            @click="item.call ? _emit('call', item.call) : _emit(item.event)"
+          >
+            <v-icon v-if="item.icon">{{ item.icon }}</v-icon>
+            {{ $t(item.name) }}</v-list-item-title
+          >
         </v-list-item>
       </v-list>
     </v-menu>
@@ -57,8 +61,9 @@
 </template>
 
 <script>
-import Vue from 'vue';
-import api from '../api'
+import Vue from "vue";
+import api from "../api";
+import business from "../business";
 export default {
   name: "QuickActionButtons",
   props: {
@@ -67,8 +72,8 @@ export default {
       default: 0,
     },
     vm: {
-      type: Vue
-    }
+      type: Vue,
+    },
   },
   data: () => ({
     last_key: "",
@@ -85,92 +90,87 @@ export default {
 
       switch (e.key.toLowerCase()) {
         case "f":
-          this.$emit('toggle-selection');
+          this.$emit("toggle-selection");
           break;
         case "g":
-          this.vm.group(e.altKey || e.ctrlKey);
+          this._emit("group", { del: e.altKey || e.ctrlKey });
           break;
         case "p":
-          e.altKey || e.ctrlKey ? this.vm.split() : this.vm.merge();
+          this._emit(e.altKey || e.ctrlKey ? "split" : "merge");
           break;
         case "t":
-          if (e.shiftKey) this.vm.show_batch_tagging_dialog();
-          else this.vm.show_tagging_dialog();
+          this._emit(e.shiftKey ? "batch-tagging" : "interactive-tagging");
           break;
         case "@":
-          this.vm.show_author_dialog();
+          this._emit("author");
           break;
         case "n":
-          this.vm.tag([`noted:${new Date().toISOString()}`]);
+          this._emit("tag", { val: [`noted:${new Date().toISOString()}`] });
           break;
         case "d":
         case "-":
         case "delete":
           if (this.last_key == e.key) {
-            this.$emit('delete')
+            this._emit("delete");
             this.last_key = null;
           }
           break;
         case "q":
         case "`":
         case "escape":
-          this.$emit('clear-selection')
-          this.$emit('close')
+          this.$emit("close");
           break;
         case "a":
         case "arrowup":
         case "arrowdown":
-          this.$emit('rating', {inc: e.key != "ArrowDown" ? 0.5 : -0.5})
+          this._emit("rating", { inc: e.key != "ArrowDown" ? 0.5 : -0.5 });
           break;
         case "r":
           if (this.last_key == e.key) {
-            this.$emit('reset-storage');
+            this._emit("reset-storage");
             this.last_key = null;
           }
           break;
         case "c":
         case "z":
         case "o":
-        case "i":
           if (e.ctrlKey || e.metaKey) return;
-          var paragraph = this.vm.selected_paragraphs[0];
-          if (paragraph) {
-            switch (e.key.toLowerCase()) {
-              case "o":
-                api.open_window(paragraph.source.url);
-                break;
-              case "c":
-                if (e.ctrlKey) return;
-                api.open_window({
-                  q: `author=${
-                    api.quote(paragraph.author) ||
-                    paragraph.keywords.filter((x) => x.startsWith("@"))[0] ||
-                    ""
-                  }`,
-                  groups: "none",
-                  sort: "-pdate",
-                });
-                break;
-              case "z":
-                api.open_window(
-                  "/" +
-                    api.querystring_stringify({
-                      q: e.shiftKey
-                        ? `source.url%\`${api
-                            .escape_regex(paragraph.source.url)
-                            .replace(/\/\d+\//, "/.*/")}\``
-                        : `${
-                            paragraph.gid || 'id=o"' + paragraph._id + '"'
-                          }=>expand()`,
-                      groups: "none",
-                    })
-                );
-                break;
-              case "i":
-                this.vm.show_info_dialog(paragraph);
-                break;
-            }
+          var sel_formatter = () => "";
+          switch (e.key.toLowerCase()) {
+            case "o":
+              sel_formatter = (options) => options.selection.paragraphs[0].source.url;
+              break;
+            case "c":
+              sel_formatter = (options) => ({
+                q: `author=${
+                  api.quote(options.selection.paragraphs[0].author) ||
+                  options.selection.paragraphs[0].keywords.filter((x) =>
+                    x.startsWith("@")
+                  )[0] ||
+                  ""
+                }`,
+                groups: "none",
+                sort: "-pdate",
+              });
+              break;
+            case "z":
+              sel_formatter = (options) => ({
+                q: e.shiftKey
+                  ? `source.url%\`${api
+                      .escape_regex(options.selection.paragraphs[0].source.url)
+                      .replace(/\/\d+\//, "/.*/")}\``
+                  : `${
+                      options.selection.paragraphs[0].gid ||
+                      'id=o"' + options.selection.paragraphs[0]._id + '"'
+                    }=>expand()`,
+                groups: "none",
+              });
+              break;
           }
+          this._emit("open-window", { formatter: sel_formatter });
+          break;
+        case "i":
+          this._emit("info-dialog");
           break;
         case "0":
         case "1":
@@ -182,29 +182,27 @@ export default {
         case "7":
         case "8":
         case "9":
-          if (this.vm.selected_paragraphs.length > 0) {
-            api.dialogs
-              .prompt({
-                title: this.$t("tagging"),
-                choices: this.vm.match_shortcuts,
-                initial: e.key,
-              })
-              .then((tags) => this.vm.tag(tags, true));
-          }
+          this._emit("short-tagging", {
+            initial: e.key,
+          });
           break;
         default:
-          var pages = Object.values(this.vm.plugin_pages).filter(
+          var pages = Object.values(business.plugin_pages).filter(
             (x) => x.keybind == e.key
           );
           if (pages.length) {
-            api.open_window({
-              archive: true,
-              q: `${api.scope(
-                this.vm.selected_paragraphs[0]
-              )};plugin('${this.format(pages[0].format, {
-                mediaitem: this.vm.selected_items[0],
-                paragraph: this.vm.selected_paragraphs[0],
-              })}');`,
+            this._emit("open-window", (options) => {
+              const { selection } = options;
+              return {
+                archive: true,
+                q: `${api.scope(selection.paragraph[0])};plugin('${this.format(
+                  pages[0].format,
+                  {
+                    mediaitem: selection.items[0],
+                    paragraph: selection.paragraph[0],
+                  }
+                )}');`,
+              };
             });
           }
           break;
@@ -212,8 +210,7 @@ export default {
 
       this.last_key = this.last_key === null ? "" : e.key;
     },
-  },
-  format(str, bundle) {
+    format(str, bundle) {
       function _replace(_, i) {
         var b = bundle;
         for (var k of i.split(".")) b = b[k] || "";
@@ -224,6 +221,10 @@ export default {
         ""
       );
     },
+    _emit(name, bundle) {
+      this.$emit("call", { name, ...bundle });
+    },
+  },
 };
 </script>
 

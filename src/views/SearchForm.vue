@@ -5,16 +5,19 @@
       <form autocapitalize="off" autocorrect="off" spellcheck="false">
         <v-row v-if="expert">
           <v-col>
-            <ParamInput :arg="{name: $t('query'), type: 'QUERY'}" v-model="q"
+            <ParamInput
+              :arg="{ name: $t('query'), type: 'QUERY' }"
+              v-model="q"
               ref="search_code"
-              :style="{width: '100%'}"
+              :style="{ width: '100%' }"
               @submit="search"
-              class="mb-5 d-inline-block"></ParamInput>
+              class="mb-5 d-inline-block"
+            ></ParamInput>
           </v-col>
         </v-row>
         <v-row v-else>
           <v-col>
-            <v-text-field 
+            <v-text-field
               class="d-inline-block selector cond-width"
               dense
               v-model="q"
@@ -81,7 +84,12 @@
           </v-btn>
         </v-row>
       </form>
-      <ResultsView class="mt-5" :page_size="page_size" @load="load_search" ref="results" />
+      <ResultsView
+        class="mt-5"
+        :page_size="page_size"
+        :load="external_json ?? load_search"
+        ref="results"
+      />
     </v-card-text>
   </v-card>
 </template>
@@ -109,7 +117,7 @@ export default {
       external_json: null,
       page_size: 50,
       cancel_source: api.cancel_source(),
-      expert: api.config.expert
+      expert: api.config.expert,
     };
   },
   mounted() {
@@ -119,7 +127,8 @@ export default {
     if (config.groups) this.groups = config.groups;
 
     let search_params = api.querystring_parse(location.search);
-    if (config.expert && search_params.q && search_params.q.startsWith('? ')) search_params.q = search_params.q.replace(/^\? /, '')
+    if (config.expert && search_params.q && search_params.q.startsWith("? "))
+      search_params.q = search_params.q.replace(/^\? /, "");
     for (var k of ["q", "sort", "groups"])
       if (search_params[k]) this[k] = search_params[k];
     if (api.config.expert) this.$refs.search_code.refresh(this.q);
@@ -135,14 +144,14 @@ export default {
   methods: {
     datasets_req() {
       var selected = this.selected_datasets.map(
-        (sid) => this.selection_bundles[sid]
-      ),
+          (sid) => this.selection_bundles[sid]
+        ),
         req = "";
 
       if (selected.length > 0) {
         var datasets = selected
-          .filter((x) => !x.source)
-          .map((x) => api.escape_regex(x.dataset_name)),
+            .filter((x) => !x.source)
+            .map((x) => api.escape_regex(x.dataset_name)),
           sourcefiles = selected
             .filter((x) => x.source)
             .map((x) => ({
@@ -156,7 +165,10 @@ export default {
         );
 
         if (datasets.length > 0) {
-          req_datasets = "dataset%`^" + datasets.map(x => x == '' ? '$' : x).join("|^") + "`";
+          req_datasets =
+            "dataset%`^" +
+            datasets.map((x) => (x == "" ? "$" : x)).join("|^") +
+            "`";
         }
         if (sourcefiles.length > 0) {
           req_sourcefiles = sourcefiles
@@ -172,7 +184,7 @@ export default {
       }
 
       if (api.config.view_mode == "gallery") {
-        req += (req ? ',' : '') + 'images!=[]'
+        req += (req ? "," : "") + "images!=[]";
       }
       return req;
     },
@@ -192,7 +204,7 @@ export default {
             Object.assign(api.querystring_parse(location.search), {
               q: this.q,
               selected_datasets: this.selected_datasets,
-              sort: this.expert ? '' : this.sort,
+              sort: this.expert ? "" : this.sort,
               groups: this.groups,
               selected_mongocollections: this.selected_mongocollections,
             })
@@ -203,34 +215,29 @@ export default {
     },
     load_search(e) {
       var token = new Date().getTime() + Math.random();
+      const empty = new Promise(accept=>accept([]))
 
-      if (this.external_json) {
-        e.callback({
-          result: this.external_json.slice(
-            e.offset,
-            e.offset + e.limit
-          ),
-          offset: e.offset,
-          total: this.external_json.length,
-          token,
+      if (!this.q && !this.req) return empty
+
+      if (this.q.startsWith("file:")) {
+        const json_path = this.q.substring(5).trim();        
+        return api.call("image?file=" + json_path).then((data) => {
+          this.external_json = data;
+          this.$refs.results.start();
         });
-        return;
-      }
-      if (!this.q && !this.req) return;
-
-      if (this.q.startsWith('file:')) {
-        this.load_remote_file(this.q.substring(5).trim())
-        return
       }
 
       if (this.cancel_source) this.cancel_source.cancel();
-
       this.cancel_source = api.cancel_source();
 
       var params = {
-        q: (this.expert ? '? ' : '') + this.q,
+        q: (this.expert ? "? " : "") + this.q,
         req: this.req,
-        sort: this.expert ? '' : typeof this.sort === "object" ? this.sort.value : this.sort,
+        sort: this.expert
+          ? ""
+          : typeof this.sort === "object"
+          ? this.sort.value
+          : this.sort,
         mongocollections: this.selected_mongocollections,
         offset: e.offset,
         limit: e.limit,
@@ -239,53 +246,63 @@ export default {
       };
 
       if (params.sort !== "random") api.config.sort = params.sort;
-      api.config.groups = params.groups
-
-      api.call("search", params, this.cancel_source).then((data) => {
-        if (!data) {
-          console.log("WARNING: no data returned.");
-          return;
-        }
-        if (data.result.query) {
-          var reg = new RegExp(
-            "(" +
-            this.keyword_patterns(data.result.query)
-              .filter((x) => x)
-              .join("|") +
-            ")",
-            "gi"
-          );
-          this.results = data.result.results;
-          if (reg != "/()/gi") {
-            this.results = this.results.map((x) => {
-              x.matched_content = (x.content || "").replace(reg, "<em>$1</em>");
-              return x;
-            });
+      api.config.groups = params.groups;
+      
+      return Promise.all([
+        api
+          .call(
+            "search",
+            Object.assign({ count: true }, params, this.cancel_source)
+          )
+          .then((data) => {
+            if (typeof data.result !== "undefined")
+              return { token, total: data.result };
+          }),
+       api.call("search", params, this.cancel_source).then((data) => {
+          if (!data) {
+            console.log("WARNING: no data returned.");
+            return;
           }
-        }
-        this.querystr = api.querify(data.result.query).replace(/^\(|\)$/g, "");
-        e.callback({
-          token,
-          result: data.result.results,
-          offset: e.offset,
-        });
-      });
-
-      api
-        .call(
-          "search",
-          Object.assign({ count: true }, params, this.cancel_source)
-        )
-        .then((data) => {
-          if (typeof data.result !== 'undefined') e.callback({ token, total: data.result });
-        });
+          if (data.result.query) {
+            var reg = new RegExp(
+              "(" +
+                this.keyword_patterns(data.result.query)
+                  .filter((x) => x)
+                  .join("|") +
+                ")",
+              "gi"
+            );
+            this.results = data.result.results;
+            if (reg != "/()/gi") {
+              this.results = this.results.map((x) => {
+                x.matched_content = (x.content || "").replace(
+                  reg,
+                  "<em>$1</em>"
+                );
+                return x;
+              });
+            }
+          }
+          this.querystr = api
+            .querify(data.result.query)
+            .replace(/^\(|\)$/g, "");
+          return {
+            token,
+            result: data.result.results,
+            offset: e.offset,
+          };
+        })]).then(results => Object.assign(...results));
     },
     keyword_patterns(query) {
       if (Array.isArray(query))
         return query
           .map((x) => this.keyword_patterns(x))
           .reduce((prev, curr) => (prev = prev.concat(curr)), []);
-      if (["string", "number", "boolean"].includes(typeof query) || query === null) return [];
+      if (
+        ["string", "number", "boolean"].includes(typeof query) ||
+        query === null
+      )
+        return [];
       return Object.entries(query)
         .map((kvpair) => {
           let key = kvpair[0],
@@ -301,10 +318,13 @@ export default {
     export_query(format, callback) {
       if (typeof callback !== "function")
         callback = (data) =>
-          this.$router.push("/tasks/" + data.result).catch(() => { });
+          this.$router.push("/tasks/" + data.result).catch(() => {});
       api
         .put("tasks/", {
-          name: this.$t("search") + " " + new Date().toLocaleString().replace(/[^\d]/g, ''),
+          name:
+            this.$t("search") +
+            " " +
+            new Date().toLocaleString().replace(/[^\d]/g, ""),
           pipeline: [
             [
               "DBQueryDataSource",
@@ -322,9 +342,11 @@ export default {
     },
     export_file(fmt) {
       this.export_query(fmt, (data) => {
-        api.put("queue/", { id: data.result }).then((ret) =>
-          api.notify(this.$t("task-enqueued", { task: ret.result }))
-        );
+        api
+          .put("queue/", { id: data.result })
+          .then((ret) =>
+            api.notify(this.$t("task-enqueued", { task: ret.result }))
+          );
       });
     },
     drop_json_file(e) {
@@ -340,12 +362,6 @@ export default {
       };
       reader.readAsText(file);
     },
-    load_remote_file(path) {
-      api.call('image?file=' + path).then((data) => {
-        this.external_json = data
-        this.$refs.results.start()
-    })
-    }
   },
 };
 </script>

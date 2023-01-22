@@ -77,7 +77,7 @@ function LocalConfig() {
 const _stack = {
   _list: [],
   get_loading_bar() {
-    return document.getElementById('loadingBar')
+    return document.getElementById('loadingBar') ?? {style: {}}
   },
   push(val) {
     this._list.push(val)
@@ -482,7 +482,7 @@ export default {
         $push: bundle,
       };
     }
-    this.call(
+    return this.call(
       `collections/${r.mongocollection || "paragraph"}/${r._id}`,
       bundle
     );
@@ -525,32 +525,6 @@ export default {
 
       return colls.sort(_comp);
     });
-  },
-
-  get_paragraph_item_objects(paras, items) {
-    
-      var para_items = {},
-        visible_para_items = {};
-
-      items.forEach((item) => {
-        if (!para_items[item.paragraph_id])
-          para_items[item.paragraph_id] = [];
-        para_items[item.paragraph_id].push(item._id);
-      });
-
-      paras.forEach((p) => {
-        if (!visible_para_items[p._id]) visible_para_items[p._id] = [];
-        visible_para_items[p._id].splice(
-          0,
-          0,
-          ...items.map((i) => i._id)
-        );
-      });
-
-      return {
-        para_items,
-        visible_para_items,
-      };
   },
 
   get_datasets_hierarchy() {
@@ -712,16 +686,16 @@ export default {
   },
 
   guess_groups(cond) {
+    var words = []
     if (Array.isArray(cond)) {
-      var words = null;
       for (var paragraph of cond) {
-        if (!words) words = Array.from(paragraph.keywords);
+        if (!words.length) words = Array.from(paragraph.keywords);
         else words = words.filter(x => paragraph.keywords.includes(x))
       }
-      return words.filter(x => !x.match(/^@/))
     } else {
-      return cond.match(/([_\w\u4e00-\u9fa5]+)/g) || []
+      words = cond.match(/([_\w\u4e00-\u9fa5]+)/g) || []
     }
+    return words.filter(x => x.length && !x.match(/^@/))
   },
 
   get_group(paragraph) {
@@ -739,7 +713,11 @@ export default {
     return es
   },
 
+  current_q() {
+    return this.querystring_parse(location.search).q || "";
+  },
   config: LocalConfig(),
 
-  dialogs
+  dialogs,
+  
 };

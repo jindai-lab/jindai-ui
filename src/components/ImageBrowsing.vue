@@ -103,7 +103,7 @@
               >
             </div>
           </v-row>
-          <ContentView
+          <GalleryContentView
             class="browsing-content"
             :paragraph="paragraph"
             view_mode="gallery-description"
@@ -115,17 +115,18 @@
 </template>
 
 <script>
-import ContentView from "../components/ContentView.vue";
-import VideoPlayer from "../components/VideoPlayer.vue";
+import VideoPlayer from "./VideoPlayer.vue";
+import GalleryContentView from "./GalleryContentView.vue"
 import api from "../api";
+import business from "../business"
 
 export default {
   name: "ImageBrowsing",
   components: {
-    ContentView,
+    GalleryContentView,
     VideoPlayer,
   },
-  props: ["paragraph", "item", "plugin_pages"],
+  props: ["paragraph", "item"],
   data() {
     return {
       browsing_page: 2,
@@ -139,6 +140,7 @@ export default {
         offset_y: 0,
         active: false,
       },
+      plugin_pages : business.plugin_pages
     };
   },
   watch: {
