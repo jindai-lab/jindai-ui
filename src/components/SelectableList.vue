@@ -6,7 +6,12 @@
   >
     <template v-for="(r, index) in items">
       <div class="spacer" v-if="r.spacer" :key="'spacer' + index"></div>
-      <div class="paragraph" :data-id="r._id" v-else :key="'paragraph' + index" @mousedown="simulate_dblclick(index)"
+      <div
+        class="paragraph"
+        :data-id="r._id"
+        v-else
+        :key="'paragraph' + index"
+        @mousedown="simulate_dblclick(index)"
       >
         <div class="meta">
           <v-checkbox
@@ -49,18 +54,24 @@
           {{ r.pdate | dateSafe }}
           <v-divider class="mt-5"></v-divider>
         </div>
-        <div        
+        <div
           v-if="view_mode == 'gallery'"
-          @click="update_selection(r, $event.shiftKey, index)">
-        <div class="overlaping-image"
-          :key="`${r._id} ${selection.length}`"
-          v-show="r.selected">&#xf012c;</div>
-        <v-img
-          v-if="view_mode == 'gallery'"
-          :contain="config.contain"
-          :height="240"
-          :src="r.src"
-        ></v-img></div>
+          @click="update_selection(r, $event.shiftKey, index)"
+        >
+          <div
+            class="overlaping-image"
+            :key="`${r._id} ${selection.length}`"
+            v-show="r.selected"
+          >
+            &#xf012c;
+          </div>
+          <v-img
+            v-if="view_mode == 'gallery'"
+            :contain="config.contain"
+            :height="240"
+            :src="r.src"
+          ></v-img>
+        </div>
         <ContentView
           :key="r._id"
           :view_mode="view_mode"
@@ -133,7 +144,8 @@ import ContentView from "./ContentView.vue";
 import GalleryContentView from "./GalleryContentView.vue";
 import api from "../api";
 
-var _lastmousedown = 0, _lastindex = -1
+var _lastmousedown = 0,
+  _lastindex = -1;
 
 export default {
   name: "SelectableList",
@@ -169,7 +181,7 @@ export default {
     window.removeEventListener("keyup", this.select_shortcut_keys);
   },
   mounted() {
-    this.selection.onchange.push( () => this.$forceUpdate());
+    this.selection.onchange.push(() => this.$forceUpdate());
   },
   methods: {
     querystring_stringify: api.querystring_stringify,
@@ -254,11 +266,11 @@ export default {
       }
     },
     simulate_dblclick(index) {
-      var timestamp = new Date().getTime()
+      var timestamp = new Date().getTime();
       if (timestamp - _lastmousedown < 500 && index == _lastindex)
-        this.$emit('start-view', index)
-      _lastmousedown = timestamp
-      _lastindex = index
+        this.$emit("start-view", index);
+      _lastmousedown = timestamp;
+      _lastindex = index;
     },
     current_q() {
       return api.current_q;
@@ -314,5 +326,9 @@ export default {
   width: 240px;
   height: 240px;
   background: rgba(255, 255, 255, 0.5);
+}
+
+.spacer {
+  margin-right: 100%;
 }
 </style>

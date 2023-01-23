@@ -358,7 +358,7 @@ export default {
       }, this.playing_interval);
     },
     _event_handler(direction) {
-      if (document.getSelection().toString() || !this.value) return;
+      if (document.getSelection().toString().trim() || !this.value) return;
 
       if (typeof direction !== "string") {
         // key stroke

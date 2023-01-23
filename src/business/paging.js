@@ -3,7 +3,7 @@ import api from "../api"
 
 class Paging {
 
-  constructor (page_size, prefetch_size, updater) {
+  constructor(page_size, prefetch_size, updater) {
     this.page_size = page_size
     this.prefetch_size = prefetch_size
     this._updater = updater
@@ -13,15 +13,15 @@ class Paging {
     this._data = []
   }
 
-  get['offset']() {
+  get ['offset']() {
     return (this._page - 1) * this.page_size;
   }
 
-  get['page'] () {
+  get ['page']() {
     return this._page
   }
 
-  get['visible'] () {
+  get ['visible']() {
     return this._data.slice(
       this.offset - this._offset_start,
       this.offset - this._offset_start + this.page_size
@@ -34,18 +34,18 @@ class Paging {
     );
   }
 
-  _prefetch_images () {
-      // preload images for every item
-      this.visible.map((x) => {
-        if (x.images) {
-          x.src = api.get_paragraph_image(x);
-          [...x.images.slice(0, 5), ...x.images.slice(-1)].map((i) => {
-            if (i.item_type == "image") {
-              let image = new Image();
-              image.src = api.get_item_image(i);
-            }
-          });
-        }
+  _prefetch_images() {
+    // preload images for every item
+    this.visible.map((x) => {
+      if (x.images) {
+        x.src = api.get_paragraph_image(x);
+        [...x.images.slice(0, 5), ...x.images.slice(-1)].map((i) => {
+          if (i.item_type == "image") {
+            let image = new Image();
+            image.src = api.get_item_image(i);
+          }
+        });
+      }
     })
   }
 
@@ -67,7 +67,8 @@ class Paging {
         offset: this.offset,
         limit: this.prefetch_size
       }).then(data => {
-        if (data) {
+        if (!data) throw new Error('no data')
+        
         if (Array.isArray(data) && !data.length) {
           this._page = 1;
         }
@@ -76,7 +77,7 @@ class Paging {
         this._data = data
         this._prefetch_images()
         return this.visible
-      }
+      
       })
     }
   }

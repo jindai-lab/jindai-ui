@@ -191,19 +191,20 @@ export default {
             (x) => x.keybind == e.key
           );
           if (pages.length) {
-            this._emit("open-window", (options) => {
+            this._emit("open-window", {
+              formatter: (options) => {
               const { selection } = options;
               return {
                 archive: true,
-                q: `${api.scope(selection.paragraph[0])};plugin('${this.format(
+                q: `${api.scope(selection.first)};plugin('${this.format(
                   pages[0].format,
                   {
-                    mediaitem: selection.items[0],
-                    paragraph: selection.paragraph[0],
+                    mediaitem: selection.first.images[0],
+                    paragraph: selection.first,
                   }
                 )}');`,
               };
-            });
+            }});
           }
           break;
       }

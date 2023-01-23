@@ -70,7 +70,7 @@
       @next="turn_page(page + 1)"
       @prev="turn_page(page - 1)"
       @info="show_info_dialog($event)"
-      @rating="call_business('rating', { val: $event })"
+      @rating="call_business('rating', typeof $event == 'object' ? $event : ({ val: $event }))"
     />
 
     <QuickActionButtons
@@ -187,20 +187,18 @@ export default {
       this.turn_page(page);
     },
     loader(options) {
-      this.sticky = [];
-
       if (Array.isArray(this.load))
         return new Promise((accept) =>
           accept(
             this.load
               .map((x) => Object.assign(x, { selected: false }))
-              .slice(options.offset, options.limit)
+              .slice(options.offset, options.offset + options.limit)
           )
         );
       else
         return this.load(options).then((data) => {
           if (typeof data.total !== "undefined") this.total = data.total;
-          return data.result;
+          return data.result
         });
     },
     turn_page(p) {
@@ -223,17 +221,11 @@ export default {
         this.selection.clear();
         data = data.map((x) => Object.assign(x, { selected: false }));
 
-        var has_sticky = data.filter((x) => x.spacer).length > 0;
-        if (has_sticky) {
-          var unsticky = [];
-          var sticky_flag = true;
-          for (var item of data) {
-            (sticky_flag ? this.sticky : unsticky).push(item);
-            if (item.spacer) sticky_flag = false;
-          }
-          data = unsticky;
+        var has_sticky = data.findIndex((x) => x.spacer) + 1;
+        if (has_sticky > 0) {
+          this.sticky = data.slice(0, has_sticky)
+          data = data.slice(has_sticky + 1);
         }
-
         this.value = [...this.sticky, ...data];
         this.page = this.paging.page;
       });
@@ -384,10 +376,6 @@ export default {
 
 .count {
   margin-bottom: 5px;
-}
-
-.spacer {
-  margin-right: 100%;
 }
 
 .view-mode-toggler {

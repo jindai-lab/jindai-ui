@@ -40,7 +40,7 @@
 import api from "../api";
 
 export default {
-  name: "ContentView",
+  name: "GalleryContentView",
   props: [
     "paragraph",
     "first_item_only",
@@ -72,9 +72,6 @@ export default {
     },
   },
   methods: {
-    _open_window(url) {
-      window.open(url);
-    },
     get_item_image(i) {
       return api.get_item_image(i);
     },
@@ -98,10 +95,10 @@ export default {
     search_selection() {
       var selected = document.getSelection().toString()
       if (!selected)return
-      this._open_window(api.querystring_stringify({
+      api.open_window({
         q: `c(${this.quote(selected)}),${this.scope(this.paragraph)}`,
         datasets: [this.paragraph.dataset]
-      }))
+      })
     },
     querystring_stringify: api.querystring_stringify,
     scope: api.scope
@@ -110,15 +107,6 @@ export default {
 </script>
 
 <style scoped>
-.fav-button {
-  opacity: 0;
-}
-
-p:hover .fav-button,
-.fav-button.orange--text {
-  opacity: 1;
-}
-
 .gallery-description a {
   margin-right: 5px;
 }
@@ -170,9 +158,5 @@ p:hover .fav-button,
 .theme--dark .gallery-description,
 .theme--dark .gallery-description .force-text {
   color: rgba(255, 255, 255, 0.6);
-}
-
-.paragraph>p {
-  font-family: Georgia, "Times New Roman", Times, serif;
 }
 </style>

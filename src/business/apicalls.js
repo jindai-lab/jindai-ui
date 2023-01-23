@@ -74,10 +74,12 @@ export default {
         para_items: objs.para_items,
       })
       .then(() => {
-        selection.paragraphs.forEach((x) => {
-          x.images = x.images.filter(
-            (i) => !objs.visible_para_items[x._id].includes(i._id)
-          );
+        selection.paragraphs.forEach((paragraph) => {
+          if (objs.visible_para_items[paragraph._id]) {
+            var index = -1;
+            while ((index = paragraph.images.findIndex(i => objs.visible_para_items[paragraph._id].includes(i._id) )) >= 0)
+              paragraph.images.splice(index, 1)
+          }
         });
       });
   },
@@ -96,7 +98,7 @@ export default {
         );
       });
     } else {
-      return Promise.all(selection.map((x) => api.fav(x)));
+      return Promise.all(selection.paragraphs.map((x) => api.fav(x)));
     }
   },
   group(options) {
@@ -127,7 +129,7 @@ export default {
 
     if (
       !del &&
-      selection
+      selection.paragraphs
         .map((x) => x.keywords.filter((x) => x.match(/^#[^0]/)))
         .reduce((p, c) => p.concat(c)).length == 0
     ) {
@@ -143,6 +145,10 @@ export default {
         })
         .then((group) => {
           bundle.group = (group || []).map((x) => x.replace(/^#/, ""));
+          return _call();
+        })
+        .catch(() => {
+          bundle.group = '';
           return _call();
         });
     } else {

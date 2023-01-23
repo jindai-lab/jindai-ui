@@ -57,9 +57,6 @@ export default {
     },
   },
   methods: {
-    _open_window(url) {
-      window.open(url);
-    },
     get_item_image(i) {
       return api.get_item_image(i);
     },
@@ -80,14 +77,6 @@ export default {
           : tag != 'author' && tag != 'group' ?
             "t_" + tag : '';
     },
-    search_selection() {
-      var selected = document.getSelection().toString()
-      if (!selected)return
-      this._open_window(api.querystring_stringify({
-        q: `c(${this.quote(selected)}),${this.scope(this.paragraph)}`,
-        datasets: [this.paragraph.dataset]
-      }))
-    },
     querystring_stringify: api.querystring_stringify,
     scope: api.scope
   },
@@ -102,59 +91,6 @@ export default {
 p:hover .fav-button,
 .fav-button.orange--text {
   opacity: 1;
-}
-
-.gallery-description a {
-  margin-right: 5px;
-}
-
-.gallery-description .content {
-  max-height: 150px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.gallery-description a.tag.t_author,
-.gallery-description a.tag.t_group {
-  color: white !important;
-  border-radius: 5px;
-  text-decoration: none;
-}
-
-.gallery-description a.tag.t_author {
-  background-color: darkorange;
-}
-
-.gallery-description a.tag.t_group {
-  background-color: purple;
-}
-
-.gallery-description a {
-  text-decoration: none;
-}
-
-.gallery-description .break-anywhere {
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  overflow: hidden;
-  max-width: 100%;
-  display: inline-block;
-  line-height: 100%;
-  vertical-align: middle;
-}
-
-.gallery-description span.nums>* {
-  margin-right: 5px;
-}
-
-.gallery-description,
-.gallery-description .force-text {
-  color: rgba(0, 0, 0, 0.6);
-}
-
-.theme--dark .gallery-description,
-.theme--dark .gallery-description .force-text {
-  color: rgba(255, 255, 255, 0.6);
 }
 
 .paragraph>p {
