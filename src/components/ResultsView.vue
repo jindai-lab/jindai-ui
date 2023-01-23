@@ -36,7 +36,11 @@
     ></SelectableList>
     <!-- pagination -->
     <v-row class="mt-5">
-      <v-pagination v-model="page" :length="pages.length"></v-pagination>
+      <v-pagination
+        v-model="page"
+        :length="pages.length"
+        @change="turn_page"
+      ></v-pagination>
       <div>
         <label> {{ $t("pagenum") }}</label>
         <v-text-field
@@ -67,10 +71,15 @@
       :view_mode="config.view_mode"
       :start_index="page_dialog.start_index"
       @browse="update_selection"
-      @next="turn_page(page + 1)"
-      @prev="turn_page(page - 1)"
+      @next="page++"
+      @prev="page--"
       @info="show_info_dialog($event)"
-      @rating="call_business('rating', typeof $event == 'object' ? $event : ({ val: $event }))"
+      @rating="
+        call_business(
+          'rating',
+          typeof $event == 'object' ? $event : { val: $event }
+        )
+      "
     />
 
     <QuickActionButtons
@@ -137,10 +146,11 @@ export default {
     };
   },
   watch: {
-    page(val) {
-      if (this.paging != val) this.turn_page(val);
+    page: function (val) {
+      this.turn_page(val);
     },
-    "page.visible": function (val) {
+    "page_dialog.visible": function (val) {
+      this.selection.clear();
       if (!val && this.browsing._id) {
         var ele = document.querySelector(`[data-id="${this.browsing._id}"]`);
         window.scrollTo(0, ele.offsetTop);
@@ -174,7 +184,7 @@ export default {
   methods: {
     start(page) {
       this.total = null;
-      this.paging.reset()
+      this.paging.reset();
       let params = api.querystring_parse(location.search);
       if (!page) {
         if (params.page) page = params.page | 0;
@@ -187,17 +197,18 @@ export default {
     },
     loader(options) {
       if (Array.isArray(this.load))
-        return new Promise((accept) =>
+        return new Promise((accept) => {
+          this.total = this.load.length;
           accept(
             this.load
-              .map((x) => Object.assign(x, { selected: false }))
               .slice(options.offset, options.offset + options.limit)
+              .map((x) => Object.assign(x, { selected: false }))
           )
-        );
+        });
       else
         return this.load(options).then((data) => {
           if (typeof data.total !== "undefined") this.total = data.total;
-          return data.result
+          return data.result;
         });
     },
     turn_page(p) {
@@ -207,8 +218,8 @@ export default {
         "",
         "",
         api.querystring_stringify({
-          page: this.paging.page,
           ...api.querystring_parse(location.search),
+          page: p,
         })
       );
 
@@ -220,16 +231,15 @@ export default {
         this.selection.clear();
 
         if (data.length == 0 && p != 1) {
-          this.page = 1 
-          this.turn_page(1)
-          return
+          this.page = 1;
+          return;
         }
 
         data = data.map((x) => Object.assign(x, { selected: false }));
 
         var has_sticky = data.findIndex((x) => x.spacer) + 1;
         if (has_sticky > 0) {
-          this.sticky = data.slice(0, has_sticky)
+          this.sticky = data.slice(0, has_sticky);
           data = data.slice(has_sticky + 1);
         }
         this.value = [...this.sticky, ...data];
@@ -237,11 +247,12 @@ export default {
     },
     update_selection(e) {
       if (this.page_dialog.visible) {
-        this.browsing = e.paragraph;
-        this.browsing_item = e.item;
-        this.selection.clear();
-        this.selection.add(e.paragraph);
-        this.selection.choose_item(e.item);
+        if (e.paragraph) this.browsing = e.paragraph;
+        if (e.item) {
+          this.browsing_item = e.item;
+          this.selection.set([this.browsing]);
+          this.selection.choose_item(this.browsing_item);
+        }
       }
     },
     update_view_mode() {
@@ -281,10 +292,10 @@ export default {
       switch (tags.key.toLowerCase()) {
         // bind for turning page
         case "arrowleft":
-          if (!this.page_dialog.visible) this.turn_page(this.paging.page - 1);
+          if (!this.page_dialog.visible) this.page--;
           return;
         case "arrowright":
-          if (!this.page_dialog.visible) this.turn_page(this.paging.page + 1);
+          if (!this.page_dialog.visible) this.page++;
           return;
 
         default:
@@ -304,50 +315,14 @@ export default {
       }
       if (!this.selection.length) return;
       var selection = new business.Selection([...this.selection.paragraphs]);
-      selection._chosen_item = [... this.selection._chosen_item]
+      selection._chosen_item = [...this.selection._chosen_item];
+      selection.all = this.value
       business[name.replace("-", "_")]({
         selection,
         ...options,
       }).then(() => {
         if (!this.page_dialog.visible)
           selection.paragraphs.forEach((x) => this.selection.remove(x));
-      });
-    },
-    search_tag(search, vm) {
-      let value = vm.new_value;
-      return new Promise((accept) => {
-        if (vm.cancel) vm.cancel.cancel();
-        if (search.length == 0 || search == "#" || search == "@") return [];
-        vm.cancel = api.cancel_source();
-        api
-          .call(
-            "term/keywords",
-            {
-              pattern: api.escape_regex(search),
-              regex: true,
-            },
-            vm.cancel
-          )
-          .then((data) => {
-            vm.cancel = null;
-            data = data || { result: [] };
-            var choices = value
-              .map((x) => ({
-                text: x,
-                value: x,
-              }))
-              .concat(
-                data.result.map((x) => ({
-                  text: x.term,
-                  value: x.term,
-                }))
-              );
-            accept(choices);
-          })
-          .catch((err) => {
-            vm.cancel = null;
-            console.log(err);
-          });
       });
     },
   },

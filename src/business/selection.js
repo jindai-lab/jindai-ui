@@ -41,7 +41,7 @@ class Selection {
   }
 
   add(p) {
-    if (this.paragraphs.includes(p)) return
+    if (this.paragraphs.includes(p) || this.paragraphs.find(x => x._id == p._id)) return
     p.selected = true
     this.paragraphs.push(p)
     this._chosen_item = []

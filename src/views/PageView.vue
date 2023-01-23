@@ -6,7 +6,7 @@
         left: () => _event_handler('left'),
         right: () => _event_handler('right'),
         down: () => $emit('input', false),
-        up: () => $emit('rating', { item: active_item, inc: 1 }),
+        up: () => $emit('rating', { inc: 1 }),
       }"
       @wheel="_wheel_handler"
       :style="
@@ -214,10 +214,12 @@ export default {
       var paragraph ={}
       if (this.view_mode == "file") paragraph= this.fetched_paragraphs[0];
       else paragraph= Object.assign({}, this.paragraphs[this.paragraph_index]);
+        this.$emit('browse', {paragraph})
       return paragraph
     },
     active_item() {
       var item = (this.active_paragraph_images || [])[this.item_index];
+        this.$emit('browse', {item})
       return item
     },
     shown_paragraphs() {
@@ -271,7 +273,6 @@ export default {
       } else {
         if (this.playing_timer) window.clearInterval(this.playing_timer);
       }
-      this.$emit('browse', {paragraph: this.active_paragraph, item: this.active_item})
     },
     paragraphs() {
       if (this.paragraph_index < 0) {
@@ -280,11 +281,6 @@ export default {
           this.item_index = this.paragraphs.slice(-1)[0].images.length - 1;
       }
     },
-    item_index(val) {
-      if (val >= 0) {
-        this.$emit('browse', {paragraph: this.active_paragraph, item: this.active_item})
-      }
-    }
   },
   methods: {
     _wheel_handler(e) {

@@ -60,7 +60,7 @@ export default {
         updates
       )
       .then((data) => {
-        selection.paragraphs.forEach((p) => {
+        selection.all.forEach((p) => {
           data.result[p._id] &&
             Object.assign(p, data.result[p._id], { images: p.images });
         });
@@ -74,11 +74,9 @@ export default {
         para_items: objs.para_items,
       })
       .then(() => {
-        selection.paragraphs.forEach((paragraph) => {
+        selection.all.forEach((paragraph) => {
           if (objs.visible_para_items[paragraph._id]) {
-            var index = -1;
-            while ((index = paragraph.images.findIndex(i => objs.visible_para_items[paragraph._id].includes(i._id) )) >= 0)
-              paragraph.images.splice(index, 1)
+            paragraph.images = paragraph.images.filter(i => !objs.visible_para_items[paragraph._id].includes(i._id))
             paragraph.src = api.get_paragraph_image(paragraph)
           }
         });
@@ -90,7 +88,7 @@ export default {
     if (api.config.view_mode == "gallery") {
       return api.call("mediaitem/rating", rating).then((data) => {
         data = data.result || {};
-        selection.paragraphs.forEach((p) =>
+        selection.all.forEach((p) =>
           p.images.forEach(
             (i) =>
               typeof data[i._id] !== "undefined" && (i.rating = data[i._id])
@@ -115,7 +113,7 @@ export default {
           bundle
         )
         .then((data) => {
-          selection.paragraphs.forEach(
+          selection.all.forEach(
             (p) =>
             (p.keywords = p.keywords
               .filter(
@@ -187,7 +185,43 @@ export default {
       .prompt({
         title: i18n.t("tagging"),
         value: Array.from(existing_tags),
-        choices: this.search_tag,
+        choices: (search, vm) => { // search tag
+          let value = vm.new_value;
+          return new Promise((accept) => {
+            if (vm.cancel) vm.cancel.cancel();
+            if (search.length == 0 || search == "#" || search == "@") return [];
+            vm.cancel = api.cancel_source();
+            api
+              .call(
+                "term/keywords",
+                {
+                  pattern: api.escape_regex(search),
+                  regex: true,
+                },
+                vm.cancel
+              )
+              .then((data) => {
+                vm.cancel = null;
+                data = data || { result: [] };
+                var choices = value
+                  .map((x) => ({
+                    text: x,
+                    value: x,
+                  }))
+                  .concat(
+                    data.result.map((x) => ({
+                      text: x.term,
+                      value: x.term,
+                    }))
+                  );
+                accept(choices);
+              })
+              .catch((err) => {
+                vm.cancel = null;
+                console.log(err);
+              });
+          });
+        } // end of search tag
       })
       .then((tags) => {
         this.tag({ selection, val: tags, append: false });
@@ -238,7 +272,7 @@ export default {
             $push: { keywords: author },
           })
           .then((data) => {
-            selection.paragraphs.forEach((p) => {
+            selection.all.forEach((p) => {
               data.result[p._id] && (p.author = data.result[p._id].author);
             });
             return data.result

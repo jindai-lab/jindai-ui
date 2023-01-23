@@ -17,15 +17,15 @@
       </v-btn>
     </v-badge>
 
-    <v-btn fab small @click="$emit('tag')">
+    <v-btn fab small @click="_emit('interactive-tagging')">
       <v-icon>mdi-tag</v-icon>
     </v-btn>
 
-    <v-btn fab small @click="$emit('rating', { inc: 0.5 })">
+    <v-btn fab small @click="_emit('rating', { inc: 0.5 })">
       <v-icon>mdi-heart</v-icon>
     </v-btn>
 
-    <v-btn fab small @click="$emit('group')">
+    <v-btn fab small @click="_emit('group', {advanced: true, del:false})">
       <v-icon>mdi-group</v-icon>
     </v-btn>
 
@@ -44,12 +44,12 @@
             'split',
             'reset-storage',
             'task',
-            { name: 'delete', icon: 'mdi-delete' },
+            { name: 'delete', icon: 'mdi-delete', call: 'delete' },
           ].map((x) => (typeof x === 'object' ? x : { name: x, call: x }))"
           :key="item.name"
         >
           <v-list-item-title
-            @click="item.call ? _emit('call', item.call) : _emit(item.event)"
+            @click="item.call ? _emit(item.call) : $emit(item.event)"
           >
             <v-icon v-if="item.icon">{{ item.icon }}</v-icon>
             {{ $t(item.name) }}</v-list-item-title

@@ -7,7 +7,7 @@ class Paging {
     this.page_size = page_size
     this.prefetch_size = prefetch_size
     this._updater = updater
-    this._page = 0
+    this._page = 1
     this._offset_start = 0
     this._offset_end = 0
     this._data = []
@@ -52,6 +52,7 @@ class Paging {
   reset() {
     this._offset_end = this._offset_start = 0
     this._page = 1
+    this._data = []
   }
 
   turn_page(p) {
