@@ -1,5 +1,5 @@
-import api from "./api"
-import i18n from "./locales";
+import api from "../api"
+import i18n from "../locales";
 
 const shortcut_choices = []
 const plugin_pages = []
@@ -15,100 +15,6 @@ api.call("plugins/shortcuts").then((data) => {
 api
   .call("plugins/filters")
   .then((data) => (plugin_pages.push(...data.result)));
-
-
-class Selection {
-
-  constructor(paragraphs) {
-    this.paragraphs = paragraphs
-  }
-
-  get['length'] () {
-    return this.paragraphs.length
-  }
-
-  get['ids'] () {
-    return this.paragraphs.map(x => x._id)
-  }
-
-  clear() {
-    this.paragraphs.forEach(x => x.selected = false)
-    this.paragraphs.splice(0, this.paragraphs.length)
-  }
-
-  set(to) {
-    this.clear()
-    to.forEach(x => this.add(x))
-  }
-
-  toggle(all) {
-    all.forEach((x) => {
-      if (x.selected) this.remove(x)
-      else this.add(x)
-    });
-  }
-
-  remove(p) {
-    var index = this.paragraphs.findIndex(x => x._id == p._id)
-    if (index >= 0) {
-      this.paragraphs[index].selected = false
-      this.paragraphs.splice(index, 1)
-    }
-  }
-
-  add(p) {
-    if (this.paragraphs.includes(p)) return
-    p.selected = true
-    this.paragraphs.push(p)
-  }
-
-  choose_item(item) {
-    this.paragraphs = [
-      Object.assign({}, this.paragraphs[0],
-        { images: Array.isArray(item) ? item : [item] })
-    ]
-  }
-
-  get['items']() {
-    return this.paragraphs.reduce(
-      (y, e) =>
-        y.concat(
-          e.images.map((i) => {
-            if (!i.paragraph_id) i.paragraph_id = e._id;
-            return i;
-          })
-        ),
-      []
-    );
-  }
-
-  to_objects() {
-
-    var para_items = {},
-      visible_para_items = {};
-
-    this.items.forEach((item) => {
-      if (!para_items[item.paragraph_id])
-        para_items[item.paragraph_id] = [];
-      para_items[item.paragraph_id].push(item._id);
-    });
-
-    this.paragraphs.forEach((p) => {
-      if (!visible_para_items[p._id]) visible_para_items[p._id] = [];
-      visible_para_items[p._id].splice(
-        0,
-        0,
-        ...this.items.map((i) => i._id)
-      );
-    });
-
-    return {
-      para_items,
-      visible_para_items,
-    };
-  }
-
-}
 
 
 export default {
@@ -130,17 +36,15 @@ export default {
 
   plugin_pages,
 
-  Selection,
-
   tag(options) {
-    const { selection, tags: val, append } = options
+    const { selection, val: tags, append } = options
     var existing_tags = new Set(
       selection.paragraphs.reduce((a, tags) => a.concat(tags.keywords), [])
     );
-    var push = append ? val : val.filter((x) => !existing_tags.has(x)),
+    var push = append ? tags : tags.filter((x) => !existing_tags.has(x)),
       pull = append
         ? []
-        : Array.from(existing_tags).filter((x) => !val.includes(x));
+        : Array.from(existing_tags).filter((x) => !tags.includes(x));
     var updates = {
       ids: selection.ids,
       $push: { keywords: push },
@@ -152,7 +56,7 @@ export default {
 
     return api
       .call(
-        `collections/${selection[0].mongocollection || "paragraph"}/batch`,
+        `collections/${selection.first.mongocollection || "paragraph"}/batch`,
         updates
       )
       .then((data) => {
@@ -162,7 +66,7 @@ export default {
         });
       });
   },
-  delete_items(options) {
+  delete(options) {
     const { selection } = options
     var objs = selection.to_objects();
     return api
@@ -205,7 +109,7 @@ export default {
     const _call = () => {
       return api
         .call(
-          `collections/${selection.paragraphs[0].mongocollection || "paragraph"}/group`,
+          `collections/${selection.first.mongocollection || "paragraph"}/group`,
           bundle
         )
         .then((data) => {
@@ -251,7 +155,7 @@ export default {
     var objs = selection.to_objects()
     if (!selection || !selection.length) return;
     return api
-      .call(`collections/${selection.paragraphs[0].mongocollection || "paragraph"}/merge`, {
+      .call(`collections/${selection.first.mongocollection || "paragraph"}/merge`, {
         paragraphs: objs.para_items,
       })
   },
@@ -259,7 +163,7 @@ export default {
     const { selection } = options
     var objs = selection.to_objects()
     return api
-      .call(`collections/${selection[0].mongocollection || "paragraph"}/split`, {
+      .call(`collections/${selection.first.mongocollection || "paragraph"}/split`, {
         paragraphs: objs.para_items,
       })
   },
@@ -291,7 +195,7 @@ export default {
     const { selection, initial } = options
     return api.dialogs
       .prompt({
-        title: this.$t("tagging"),
+        title: i18n.t("tagging"),
         choices: this.match_shortcuts,
         initial,
       })
@@ -312,7 +216,7 @@ export default {
         .reduce((a, tags) => a.concat(tags.keywords), [])
         .filter((x) => x.startsWith("@"))
     ),
-      author = selection.paragraphs[0].author;
+      author = selection.first.author;
     return api.dialogs
       .prompt({
         title: i18n.t("author"),
@@ -325,7 +229,7 @@ export default {
         const author = authors[0]
 
         return api
-          .call(`collections/${selection.paragraphs[0].mongocollection || "paragraph"}/batch`, {
+          .call(`collections/${selection.first.mongocollection || "paragraph"}/batch`, {
             ids: this.selected_ids,
             author,
             $push: { keywords: author },
@@ -347,10 +251,10 @@ export default {
     const { selection, formatter } = options
     let url = formatter({ selection })
     api.open_window(url, '_blank')
-    return new Promise(accept=>accept())
+    return new Promise(accept => accept())
   },
   info_dialog(options) {
     const { selection } = options
-    return api.dialogs.info({ target: selection.paragraphs[0] })
+    return api.dialogs.info({ target: selection.first })
   }
 }

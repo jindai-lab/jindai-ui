@@ -6,7 +6,7 @@
         class="view-mode-toggler"
         dense
         v-model="config.view_mode"
-        @change="update_view_mode"
+        @change="start()"
       >
         <v-btn value="list">
           <v-icon>mdi-view-list</v-icon>
@@ -26,9 +26,14 @@
     <!-- divider -->
     <v-divider class="mt-5 mb-5"></v-divider>
     <!-- show content -->
-    <SelectableList :items="visible_data" ref="selectable" :view_mode="config.view_mode"
-    :selection="selection"
-    @start-view="view_page"></SelectableList>
+    <SelectableList
+      :items="value"
+      class="selectable-list"
+      ref="selectable"
+      :view_mode="config.view_mode"
+      :selection="selection"
+      @start-view="view_page"
+    ></SelectableList>
     <!-- pagination -->
     <v-row class="mt-5">
       <v-pagination v-model="page" :length="pages.length"></v-pagination>
@@ -58,7 +63,7 @@
       v-model="page_dialog.visible"
       class="page-view"
       ref="page_view"
-      :paragraphs="visible_data"
+      :paragraphs="value"
       :view_mode="config.view_mode"
       :start_index="page_dialog.start_index"
       @browse="update_selection"
@@ -76,7 +81,7 @@
         close_dialogs();
         selection.clear();
       "
-      @toggle-selection="selection.toggle(visible_data)"
+      @toggle-selection="selection.toggle(value)"
     />
   </v-sheet>
 </template>
@@ -86,7 +91,7 @@ import PageView from "../views/PageView.vue";
 import QuickActionButtons from "./QuickActionButtons";
 import SelectableList from "./SelectableList";
 import api from "../api";
-import business from "../business";
+import business from "../business/";
 
 export default {
   name: "ResultsView",
@@ -103,11 +108,7 @@ export default {
       total: 0,
       page: 1,
       value: [],
-      token: null,
-      page_range: [0, 0],
       sticky: [],
-      browsing: {},
-      browsing_item: {},
       config: new Proxy(api.config, {
         get(target, name) {
           return target[name];
@@ -122,13 +123,22 @@ export default {
         start_index: 0,
         item: {},
       },
-      page_view: null,
-      selection: new business.Selection([])
+      browsing: {},
+      browsing_item: {},
+      // selection
+      selection: new business.Selection([]),
+      // paging
+      token: null,
+      paging: new business.Paging(
+        api.config.page_size,
+        api.config.page_size * 5,
+        this.loader
+      ),
     };
   },
   watch: {
     page(val) {
-      this.turn_page(val);
+      if (this.paging != val) this.turn_page(val);
     },
     "page.visible": function (val) {
       if (!val && this.browsing._id) {
@@ -151,21 +161,10 @@ export default {
       }
       return p;
     },
-    visible_data() {
-      return [
-        ...this.sticky,
-        ...this.value
-          .slice(this.offset - this.page_range[0])
-          .slice(0, api.config.page_size),
-      ];
-    },
-    offset() {
-      return (this.page - 1) * api.config.page_size;
-    },
   },
   mounted() {
     this.start();
-    this.page_view = this.$refs.page_view;
+    this.selection.onchange.push(() => this.$forceUpdate());
   },
   created() {
     window.addEventListener("keyup", this.page_hotkeys);
@@ -174,45 +173,35 @@ export default {
     window.removeEventListener("keyup", this.page_hotkeys);
   },
   methods: {
-    _fetched() {
-      return (
-        this.page_range[0] <= this.offset && this.page_range[1] > this.offset
-      );
-    },
     start(page) {
-      this.page_range = [0, 0];
+      this.total = null;
+      this.paging.reset()
       let params = api.querystring_parse(location.search);
       if (!page) {
         if (params.page) page = params.page | 0;
         else page = 1;
       } else {
-        this.page_range = [0, 0];
         this.value = [];
         this.sticky = [];
-        this.total = null;
       }
       this.turn_page(page);
     },
-    querify: api.querify,
-    preload(items) {
-      // preload images for every item
-      items.map((x) => {
-        if (x.images) {
-          [...x.images.slice(0, 5), ...x.images.slice(-1)].map((i) => {
-            if (i.item_type == "image") {
-              let image = new Image();
-              image.src = api.get_item_image(i);
-            }
-          });
-        }
-      });
-    },
     loader(options) {
-      var offset = options.offset,
-        limit = options.limit;
+      this.sticky = [];
+
       if (Array.isArray(this.load))
-        return new Promise((accept) => accept(this.load.slice(offset, limit)));
-      return this.load(options);
+        return new Promise((accept) =>
+          accept(
+            this.load
+              .map((x) => Object.assign(x, { selected: false }))
+              .slice(options.offset, options.limit)
+          )
+        );
+      else
+        return this.load(options).then((data) => {
+          if (typeof data.total !== "undefined") this.total = data.total;
+          return data.result;
+        });
     },
     turn_page(p) {
       if (p === 0) return;
@@ -221,80 +210,42 @@ export default {
         "",
         "",
         api.querystring_stringify({
-          page: this.page,
+          page: this.paging.page,
           ...api.querystring_parse(location.search),
         })
       );
 
-      if (this.page !== p) this.page = p;
-
       window.scroll({
         top: (this.$refs.selectable || { offsetTop: 64 }).offsetTop - 64,
       });
-      if (this._fetched()) {
-        this._preload(this.visible_data);
-        return;
-      }
 
-      this.total = null;
-      this.loader({
-        offset: this.offset,
-        limit: api.config.page_size * 5,
-      }).then((data) => {
-        if (this.token > data.token) return;
-        this.token = data.token;
+      this.paging.turn_page(p).then((data) => {
+        this.selection.clear();
+        data = data.map((x) => Object.assign(x, { selected: false }));
 
-        if (typeof data.result !== "undefined") {
-          if (Array.isArray(data.result) && !data.result.length) {
-            if (this.page > 1) this.page = 1;
-            return;
+        var has_sticky = data.filter((x) => x.spacer).length > 0;
+        if (has_sticky) {
+          var unsticky = [];
+          var sticky_flag = true;
+          for (var item of data) {
+            (sticky_flag ? this.sticky : unsticky).push(item);
+            if (item.spacer) sticky_flag = false;
           }
-
-          this.selection.clear()
-          this.page_range = [data.offset, data.offset + data.result.length];
-          var items = data.result.map((x) =>
-            Object.assign(x, { selected: false })
-          );
-
-          var has_sticky = items.filter((x) => x.spacer).length > 0;
-          if (has_sticky) {
-            var sticky_flag = true;
-            this.sticky = [];
-            this.value = [];
-            for (var item of items) {
-              (sticky_flag ? this.sticky : this.value).push(item);
-              if (item.spacer) sticky_flag = false;
-            }
-          } else {
-            this.sticky = [];
-            this.value = items;
-          }
-
-          this._preload(this.visible_data);
+          data = unsticky;
         }
 
-        if (typeof data.total !== "undefined") this.total = data.total;
-
-        this.$forceUpdate();
+        this.value = [...this.sticky, ...data];
+        this.page = this.paging.page;
       });
     },
-    _preload(items) {
-      
-        // preload images for every item
-        items.map((x) => {
-          if (x.images) {
-            [...x.images.slice(0, 5), ...x.images.slice(-1)].map((i) => {
-              if (i.item_type == "image") {
-                let image = new Image();
-                image.src = api.get_item_image(i);
-              }
-            });
-          }
-        });
-    },
     update_selection(e) {
-      this.browsing = e.paragraph; this.browsing_item = e.item;
-      this.selection.clear(); this.selection.add(e.paragraph); this.selection.choose_item(e.item)
+      if (this.page_dialog.visible) {
+        this.browsing = e.paragraph;
+        this.browsing_item = e.item;
+        this.selection.clear();
+        this.selection.add(e.paragraph);
+        this.selection.choose_item(e.item);
+      }
     },
     update_view_mode() {
       this.start();
@@ -324,7 +275,7 @@ export default {
     play() {
       if (api.config.view_mode != "gallery") return;
       this.view_page(0);
-      this.page_view.playing(api.config.playing_interval);
+      this.$refs.page_view.playing(api.config.playing_interval);
     },
     page_hotkeys(tags) {
       if (tags.target.tagName == "INPUT" || tags.target.tagName == "TEXTAREA")
@@ -333,10 +284,10 @@ export default {
       switch (tags.key.toLowerCase()) {
         // bind for turning page
         case "arrowleft":
-          if (!this.page_dialog.visible) this.turn_page(this.page - 1);
+          if (!this.page_dialog.visible) this.turn_page(this.paging.page - 1);
           return;
         case "arrowright":
-          if (!this.page_dialog.visible) this.turn_page(this.page + 1);
+          if (!this.page_dialog.visible) this.turn_page(this.paging.page + 1);
           return;
 
         default:
@@ -345,20 +296,24 @@ export default {
     },
     close_dialogs() {
       this.page_dialog.visible = false;
-      api.dialogs.close()
+      this.selection.clear();
+      api.dialogs.close();
     },
     call_business(name, options) {
-      if (typeof name == 'object') {
-        options = name
-        name = name.name
-        delete options.name
+      if (typeof name == "object") {
+        options = name;
+        name = name.name;
+        delete options.name;
       }
       if (!this.selection.length) return;
-      var selection = new business.Selection(this.selection.paragraphs)
+      var selection = new business.Selection([...this.selection.paragraphs]);
       business[name.replace("-", "_")]({
         selection,
         ...options,
-      }).then(() => selection.paragraphs.forEach(x => this.selection.remove(x)));
+      }).then(() => {
+        if (!this.page_dialog.visible)
+          selection.paragraphs.forEach((x) => this.selection.remove(x));
+      });
     },
     search_tag(search, vm) {
       let value = vm.new_value;
@@ -405,17 +360,15 @@ export default {
 .v-btn {
   margin-right: 12px;
 }
-</style>
 
-<style>
-.page .paragraph p,
-.list .paragraph p {
-  max-width: 960px;
+.tools > .v-btn {
+  margin-right: 12px;
 }
 
-.page-view {
-  overflow-y: auto;
-  max-height: 100%;
+.tools {
+  padding-right: 12px;
+  padding-bottom: 12px;
+  text-align: right;
 }
 
 .v-dialog .v-card__title .v-btn {
@@ -433,42 +386,8 @@ export default {
   margin-bottom: 5px;
 }
 
-.page .operations,
-.page .meta,
-.gallery .operations,
-.gallery .meta {
-  display: none;
-}
-
-.wrapper-container {
-  clear: both;
-  margin: 0;
-  padding: 0;
-  width: 100%;
-}
-
-.gallery .wrapper-container {
-  display: flex;
-  flex-wrap: wrap;
-}
-
-.gallery .wrapper-container .paragraph {
-  padding: 5px;
-  width: 250px;
-}
-
 .spacer {
   margin-right: 100%;
-}
-
-.tools > .v-btn {
-  margin-right: 12px;
-}
-
-.tools {
-  padding-right: 12px;
-  padding-bottom: 12px;
-  text-align: right;
 }
 
 .view-mode-toggler {
@@ -477,27 +396,6 @@ export default {
 
 .view-mode-toggler > * {
   margin: 0;
-}
-
-.v-image.selected::before {
-  content: "\F012C";
-  color: green;
-  font-family: "Material Design Icons";
-  display: block;
-  z-index: 4;
-  position: absolute;
-  margin: 0;
-  font-size: 40px;
-  opacity: 1;
-  width: 100%;
-  height: 100%;
-  background: rgba(255, 255, 255, 0.5);
-}
-
-.dialog-limit {
-  max-width: 800px !important;
-  width: 75% !important;
-  margin: auto;
 }
 
 .v-select__selections {

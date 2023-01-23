@@ -118,7 +118,7 @@
 import VideoPlayer from "./VideoPlayer.vue";
 import GalleryContentView from "./GalleryContentView.vue"
 import api from "../api";
-import business from "../business"
+import business from "../business/"
 
 export default {
   name: "ImageBrowsing",

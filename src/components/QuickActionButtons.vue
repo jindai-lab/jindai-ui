@@ -63,7 +63,7 @@
 <script>
 import Vue from "vue";
 import api from "../api";
-import business from "../business";
+import business from "../business/";
 export default {
   name: "QuickActionButtons",
   props: {
@@ -138,13 +138,13 @@ export default {
           var sel_formatter = () => "";
           switch (e.key.toLowerCase()) {
             case "o":
-              sel_formatter = (options) => options.selection.paragraphs[0].source.url;
+              sel_formatter = (options) => options.selection.first.source.url;
               break;
             case "c":
               sel_formatter = (options) => ({
                 q: `author=${
-                  api.quote(options.selection.paragraphs[0].author) ||
-                  options.selection.paragraphs[0].keywords.filter((x) =>
+                  api.quote(options.selection.first.author) ||
+                  options.selection.first.keywords.filter((x) =>
                     x.startsWith("@")
                   )[0] ||
                   ""
@@ -157,11 +157,11 @@ export default {
               sel_formatter = (options) => ({
                 q: e.shiftKey
                   ? `source.url%\`${api
-                      .escape_regex(options.selection.paragraphs[0].source.url)
+                      .escape_regex(options.selection.first.source.url)
                       .replace(/\/\d+\//, "/.*/")}\``
                   : `${
-                      options.selection.paragraphs[0].gid ||
-                      'id=o"' + options.selection.paragraphs[0]._id + '"'
+                      options.selection.first.gid ||
+                      'id=o"' + options.selection.first._id + '"'
                     }=>expand()`,
                 groups: "none",
               });

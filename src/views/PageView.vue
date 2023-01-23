@@ -155,7 +155,7 @@
 
 <script>
 import api from "../api";
-import business from "../business"
+import business from "../business/"
 import ParamInput from "../components/ParamInput.vue";
 import ContentView from "../components/ContentView.vue";
 import ImageBrowsing from "../components/ImageBrowsing.vue";

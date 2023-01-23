@@ -6,7 +6,8 @@
   >
     <template v-for="(r, index) in items">
       <div class="spacer" v-if="r.spacer" :key="'spacer' + index"></div>
-      <div class="paragraph" :data-id="r._id" v-else :key="index">
+      <div class="paragraph" :data-id="r._id" v-else :key="'paragraph' + index" @mousedown="simulate_dblclick(index)"
+      >
         <div class="meta">
           <v-checkbox
             v-model="r.selected"
@@ -48,15 +49,18 @@
           {{ r.pdate | dateSafe }}
           <v-divider class="mt-5"></v-divider>
         </div>
+        <div        
+          v-if="view_mode == 'gallery'"
+          @click="update_selection(r, $event.shiftKey, index)">
+        <div class="overlaping-image"
+          :key="`${r._id} ${selection.length}`"
+          v-show="r.selected">&#xf012c;</div>
         <v-img
           v-if="view_mode == 'gallery'"
-          :class="{ selected: r.selected }"
-          @click="update_selection(r, $event.shiftKey, index)"
-          @dblclick="$emit('start-view', index)"
           :contain="config.contain"
           :height="240"
-          :src="get_paragraph_image(r)"
-        ></v-img>
+          :src="r.src"
+        ></v-img></div>
         <ContentView
           :key="r._id"
           :view_mode="view_mode"
@@ -128,16 +132,16 @@
 import ContentView from "./ContentView.vue";
 import GalleryContentView from "./GalleryContentView.vue";
 import api from "../api";
-import business from "../business"
+
+var _lastmousedown = 0, _lastindex = -1
 
 export default {
   name: "SelectableList",
   components: {
     ContentView,
-    GalleryContentView
+    GalleryContentView,
   },
   data: () => ({
-    browsing_item: {},
     select_index: -1,
     config: new Proxy(api.config, {
       get(target, name) {
@@ -150,12 +154,6 @@ export default {
   }),
   props: ["items", "active_item", "view_mode", "selection"],
   computed: {
-    selected_paragraphs() {
-      return Array.from(this.selection.paragraphs);
-    },
-    selected_ids() {
-      return this.selection.paragraphs.map((x) => x._id);
-    },
     columns() {
       var cols = new Set();
       for (var r of this.items) {
@@ -169,6 +167,9 @@ export default {
   },
   beforeDestroy() {
     window.removeEventListener("keyup", this.select_shortcut_keys);
+  },
+  mounted() {
+    this.selection.onchange.push( () => this.$forceUpdate());
   },
   methods: {
     querystring_stringify: api.querystring_stringify,
@@ -212,9 +213,13 @@ export default {
           this.items.length
         );
       if (!e.ctrlKey && !e.shiftKey) {
-        this.selection.clear()
+        this.selection.clear();
       }
-      this.update_selection(this.items[selection_inc], e.shiftKey, selection_inc);
+      this.update_selection(
+        this.items[selection_inc],
+        e.shiftKey,
+        selection_inc
+      );
       ele = document.querySelector(
         `[data-id="${this.items[selection_inc]._id}"]`
       );
@@ -248,11 +253,66 @@ export default {
         else this.selection.remove(it);
       }
     },
-    current_q() { return  api.current_q},
-    quote: api.quote,
-    get_paragraph_image(i) {
-      return api.get_paragraph_image(i);
+    simulate_dblclick(index) {
+      var timestamp = new Date().getTime()
+      if (timestamp - _lastmousedown < 500 && index == _lastindex)
+        this.$emit('start-view', index)
+      _lastmousedown = timestamp
+      _lastindex = index
     },
+    current_q() {
+      return api.current_q;
+    },
+    quote: api.quote,
   },
 };
 </script>
+
+<style scoped>
+.page .paragraph p,
+.list .paragraph p {
+  max-width: 960px;
+}
+
+.page-view {
+  overflow-y: auto;
+  max-height: 100%;
+}
+
+.page .operations,
+.page .meta,
+.gallery .operations,
+.gallery .meta {
+  display: none;
+}
+
+.wrapper-container {
+  clear: both;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+.gallery .wrapper-container {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.gallery .wrapper-container .paragraph {
+  padding: 5px;
+  width: 250px;
+}
+
+.overlaping-image {
+  color: green;
+  font-family: "Material Design Icons";
+  display: block;
+  z-index: 4;
+  position: absolute;
+  margin: 0;
+  font-size: 40px;
+  width: 240px;
+  height: 240px;
+  background: rgba(255, 255, 255, 0.5);
+}
+</style>

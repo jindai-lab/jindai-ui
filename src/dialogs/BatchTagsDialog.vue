@@ -14,17 +14,17 @@
         ></v-text-field>
       </v-card-text>
       <v-card-actions>
-          <v-btn color="primary" @click="do_submit()">
-            {{ $t("ok") }}
-          </v-btn>
-          <v-btn
-            @click="
-              visible = false;
-              retval = false
-            "
-          >
-            {{ $t("cancel") }}
-          </v-btn>
+        <v-btn color="primary" @click="do_submit()">
+          {{ $t("ok") }}
+        </v-btn>
+        <v-btn
+          @click="
+            visible = false;
+            retval = false;
+          "
+        >
+          {{ $t("cancel") }}
+        </v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -70,3 +70,11 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+.dialog-limit {
+  max-width: 800px !important;
+  width: 75% !important;
+  margin: auto;
+}
+</style>
