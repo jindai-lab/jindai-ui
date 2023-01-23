@@ -64,7 +64,7 @@
                 half-increments
                 hover
                 size="18"
-                @input="$emit('rating', { item: item, val: $event })"
+                @input="$emit('rating', { val: $event })"
               ></v-rating>
               <span class="grey--text text--lighten-2"
                 >({{ item.rating.toFixed(1) }})

@@ -68,10 +68,6 @@ class Paging {
         limit: this.prefetch_size
       }).then(data => {
         if (!data) throw new Error('no data')
-        
-        if (Array.isArray(data) && !data.length) {
-          this._page = 1;
-        }
         this._offset_start = this.offset
         this._offset_end = this._offset_start + data.length
         this._data = data

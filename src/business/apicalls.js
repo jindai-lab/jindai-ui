@@ -79,13 +79,13 @@ export default {
             var index = -1;
             while ((index = paragraph.images.findIndex(i => objs.visible_para_items[paragraph._id].includes(i._id) )) >= 0)
               paragraph.images.splice(index, 1)
+            paragraph.src = api.get_paragraph_image(paragraph)
           }
         });
       });
   },
   rating(options) {
     const { selection, ...rating } = options
-
     rating.ids = selection.items.map((x) => x._id);
     if (api.config.view_mode == "gallery") {
       return api.call("mediaitem/rating", rating).then((data) => {
@@ -102,7 +102,7 @@ export default {
     }
   },
   group(options) {
-    const { selection, del } = options
+    const { selection, del, advanced } = options
     var bundle = {
       ids: selection.ids,
       ungroup: del,
@@ -128,10 +128,7 @@ export default {
     };
 
     if (
-      !del &&
-      selection.paragraphs
-        .map((x) => x.keywords.filter((x) => x.match(/^#[^0]/)))
-        .reduce((p, c) => p.concat(c)).length == 0
+      !del && advanced
     ) {
       var choices = [
         ...api.guess_groups(api.current_q()),

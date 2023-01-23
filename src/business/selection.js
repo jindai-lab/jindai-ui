@@ -3,7 +3,6 @@ class Selection {
   constructor(paragraphs) {
     this.paragraphs = paragraphs
     this._chosen_item = []
-    this.onchange = []
   }
 
   get ['length']() {

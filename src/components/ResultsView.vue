@@ -164,7 +164,6 @@ export default {
   },
   mounted() {
     this.start();
-    this.selection.onchange.push(() => this.$forceUpdate());
   },
   created() {
     window.addEventListener("keyup", this.page_hotkeys);
@@ -219,6 +218,13 @@ export default {
 
       this.paging.turn_page(p).then((data) => {
         this.selection.clear();
+
+        if (data.length == 0 && p != 1) {
+          this.page = 1 
+          this.turn_page(1)
+          return
+        }
+
         data = data.map((x) => Object.assign(x, { selected: false }));
 
         var has_sticky = data.findIndex((x) => x.spacer) + 1;
@@ -227,7 +233,6 @@ export default {
           data = data.slice(has_sticky + 1);
         }
         this.value = [...this.sticky, ...data];
-        this.page = this.paging.page;
       });
     },
     update_selection(e) {
@@ -299,6 +304,7 @@ export default {
       }
       if (!this.selection.length) return;
       var selection = new business.Selection([...this.selection.paragraphs]);
+      selection._chosen_item = [... this.selection._chosen_item]
       business[name.replace("-", "_")]({
         selection,
         ...options,

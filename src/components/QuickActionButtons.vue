@@ -93,7 +93,7 @@ export default {
           this.$emit("toggle-selection");
           break;
         case "g":
-          this._emit("group", { del: e.altKey || e.ctrlKey });
+          this._emit("group", { del: e.altKey || e.ctrlKey, advanced: e.shiftKey });
           break;
         case "p":
           this._emit(e.altKey || e.ctrlKey ? "split" : "merge");

@@ -33,6 +33,7 @@ export default {
     window.onfocus = () => {
       this.queue_event();
     };
+    this.queue_event()
   },
   methods: {
     queue_event() {

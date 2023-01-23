@@ -29,11 +29,11 @@ export default {
             launcher.style.visibility = 'hidden';
             launcher.click();
             launcher.remove();
-            _els.push(el)
+            _els.push(component)
 
             component.$watch('retval', function (value) {
                 el.remove();
-                _els.splice(_els.indexOf(el), 1)
+                _els.splice(_els.indexOf(component), 1)
                 if (value === false || value === null || typeof value === 'undefined')
                     reject(value);
                 else
@@ -61,7 +61,6 @@ export default {
     alert(options) { return this._create_dialog(AlertDialog, options) },
 
     close() {
-        _els.forEach(x => x.remove())
-        _els.splice(0, _els.length)
+        _els.forEach(x => x.retval = false)
     }
 }

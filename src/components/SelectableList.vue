@@ -180,9 +180,6 @@ export default {
   beforeDestroy() {
     window.removeEventListener("keyup", this.select_shortcut_keys);
   },
-  mounted() {
-    this.selection.onchange.push(() => this.$forceUpdate());
-  },
   methods: {
     querystring_stringify: api.querystring_stringify,
     show_embedded(r, col) {
@@ -192,6 +189,8 @@ export default {
       api.dialogs.embedded(target);
     },
     select_shortcut_keys(e) {
+      if (e.target.tagName == 'INPUT' || e.target.tagName == 'TEXTAREA') return
+
       var selection_inc = 0,
         ele;
       var selection_line_number;
