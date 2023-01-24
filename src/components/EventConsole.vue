@@ -12,7 +12,6 @@
 </template>
 
 <script>
-import api from '../api'
 export default {
   name: "EventConsole",
   data: () => ({
@@ -41,10 +40,10 @@ export default {
   },
   methods: {
     queue_event() {
-      if (!this.enabled || !api.is_logined()) return
-      api.queue().then((queue) => this.update_queue(queue));
+      if (!this.enabled || !this.api.is_logined()) return
+      this.api.queue().then((queue) => this.update_queue(queue));
       if (this.queue_source) return;
-      this.queue_source = api.get_event_source();
+      this.queue_source = this.api.get_event_source();
       this.queue_source.onmessage = (event) => {
         console.log(event);
         var data = JSON.parse(event.data);

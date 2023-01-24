@@ -25,8 +25,8 @@
           <a
             :href="
               '/' +
-              querystring_stringify({
-                q: current_q(),
+              api.querystring_stringify({
+                q: api.current_q(),
                 selected_datasets: [r.dataset],
                 groups: 'none',
               })
@@ -38,8 +38,8 @@
           <a
             :href="
               '/' +
-              querystring_stringify({
-                q: `auto(${JSON.stringify(current_q())}),source.file=${quote(
+              api.querystring_stringify({
+                q: `auto(${JSON.stringify(api.current_q())}),source.file=${api.quote(
                   r.source.file
                 )}`,
                 selected_datasets: [r.dataset],
@@ -67,7 +67,7 @@
           </div>
           <v-img
             v-if="view_mode == 'gallery'"
-            :contain="config.contain"
+            :contain="api.config.contain"
             :height="240"
             :src="r.src"
           ></v-img>
@@ -142,8 +142,6 @@
 <script>
 import ContentView from "./ContentView.vue";
 import GalleryContentView from "./GalleryContentView.vue";
-import api from "../api";
-import dialogs from "../dialogs"
 
 var _lastmousedown = 0,
   _lastindex = -1;
@@ -156,14 +154,6 @@ export default {
   },
   data: () => ({
     select_index: -1,
-    config: new Proxy(api.config, {
-      get(target, name) {
-        return target[name];
-      },
-      set(target, name, val) {
-        target[name] = val;
-      },
-    }),
   }),
   props: ["items", "active_item", "view_mode", "selection"],
   computed: {
@@ -182,12 +172,11 @@ export default {
     window.removeEventListener("keyup", this.select_shortcut_keys);
   },
   methods: {
-    querystring_stringify: api.querystring_stringify,
     show_embedded(r, col) {
       var source = Object.assign({}, r);
       delete source[col];
       var target = { arr: r[col], source };
-      dialogs.embedded(target);
+      this.api.dialogs.embedded(target);
     },
     select_shortcut_keys(e) {
       if (e.target.tagName == 'INPUT' || e.target.tagName == 'TEXTAREA') return
@@ -272,10 +261,6 @@ export default {
       _lastmousedown = timestamp;
       _lastindex = index;
     },
-    current_q() {
-      return api.current_q;
-    },
-    quote: api.quote,
   },
 };
 </script>

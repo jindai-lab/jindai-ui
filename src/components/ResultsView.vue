@@ -1,11 +1,11 @@
 <template>
-  <v-sheet ref="results" :class="config.view_mode">
+  <v-sheet ref="results" :class="api.config.view_mode">
     <div class="tools">
       <v-btn-toggle
         mandatory
         class="view-mode-toggler"
         dense
-        v-model="config.view_mode"
+        v-model="api.config.view_mode"
         @change="start()"
       >
         <v-btn value="list">
@@ -30,7 +30,7 @@
       :items="value"
       class="selectable-list"
       ref="selectable"
-      :view_mode="config.view_mode"
+      :view_mode="api.config.view_mode"
       :selection="selection"
       @start-view="view_page"
     ></SelectableList>
@@ -58,7 +58,7 @@
           dense
           class="d-inline-block ml-1"
           style="max-width: 60px"
-          v-model="config.page_size"
+          v-model="api.config.page_size"
         ></v-select>
       </div>
     </v-row>
@@ -68,7 +68,7 @@
       class="page-view"
       ref="page_view"
       :paragraphs="value"
-      :view_mode="config.view_mode"
+      :view_mode="api.config.view_mode"
       :start_index="page_dialog.start_index"
       @browse="update_selection"
       @next="page++"
@@ -91,6 +91,7 @@
         selection.clear();
       "
       @toggle-selection="selection.toggle(value)"
+      @toggle-fits="toggle_fits"
     />
   </v-sheet>
 </template>
@@ -99,9 +100,6 @@
 import PageView from "../views/PageView.vue";
 import QuickActionButtons from "./QuickActionButtons";
 import SelectableList from "./SelectableList";
-import api from "../api";
-import business from "../business/";
-import dialogs from "../dialogs"
 
 export default {
   name: "ResultsView",
@@ -119,14 +117,6 @@ export default {
       page: 1,
       value: [],
       sticky: [],
-      config: new Proxy(api.config, {
-        get(target, name) {
-          return target[name];
-        },
-        set(target, name, val) {
-          target[name] = val;
-        },
-      }),
       // page_view
       page_dialog: {
         visible: false,
@@ -136,12 +126,12 @@ export default {
       browsing: {},
       browsing_item: {},
       // selection
-      selection: new business.Selection([]),
+      selection: new this.business.Selection([]),
       // paging
       token: null,
-      paging: new business.Paging(
-        api.config.page_size,
-        api.config.page_size * 5,
+      paging: new this.business.Paging(
+        this.api.config.page_size,
+        this.api.config.page_size * 5,
         this.loader
       ),
     };
@@ -166,7 +156,7 @@ export default {
       for (
         let index = 0, i = 1;
         index < total && i <= 1000;
-        index += api.config.page_size, i++
+        index += this.api.config.page_size, i++
       ) {
         p.push(i);
       }
@@ -186,7 +176,7 @@ export default {
     start(page) {
       this.total = null;
       this.paging.reset();
-      let params = api.querystring_parse(location.search);
+      let params = this.api.querystring_parse(location.search);
       if (!page) {
         if (params.page) page = params.page | 0;
         else page = 1;
@@ -204,7 +194,7 @@ export default {
             this.load
               .slice(options.offset, options.offset + options.limit)
               .map((x) => Object.assign(x, { selected: false }))
-          )
+          );
         });
       else
         return this.load(options).then((data) => {
@@ -218,8 +208,8 @@ export default {
       history.pushState(
         "",
         "",
-        api.querystring_stringify({
-          ...api.querystring_parse(location.search),
+        this.api.querystring_stringify({
+          ...this.api.querystring_parse(location.search),
           page: p,
         })
       );
@@ -260,11 +250,11 @@ export default {
       this.start();
     },
     show_info_dialog(target) {
-      dialogs.info({ target });
+      this.api.dialogs.info({ target });
     },
     show_edit_dialog(target) {
-      dialogs.edit({ target }).then((target) => {
-        api
+      this.api.dialogs.edit({ target }).then((target) => {
+        this.api
           .call(
             `collections/${target.mongocollection || "paragraph"}/${
               target._id
@@ -272,7 +262,7 @@ export default {
             target
           )
           .then(() => {
-            api.notify(this.$t("saved"));
+            this.$notify(this.$t("saved"));
           });
       });
     },
@@ -282,9 +272,9 @@ export default {
       this.selection.clear();
     },
     play() {
-      if (api.config.view_mode != "gallery") return;
+      if (this.api.config.view_mode != "gallery") return;
       this.view_page(0);
-      this.$refs.page_view.playing(api.config.playing_interval);
+      this.$refs.page_view.playing(this.api.config.playing_interval);
     },
     page_hotkeys(tags) {
       if (tags.target.tagName == "INPUT" || tags.target.tagName == "TEXTAREA")
@@ -306,7 +296,11 @@ export default {
     close_dialogs() {
       this.page_dialog.visible = false;
       this.selection.clear();
-      dialogs.close();
+      this.api.dialogs.close();
+    },
+    toggle_fits() {
+      this.api.config.fit = this.api.next_fit();
+      this.$refs.page_view.apply_fit()
     },
     call_business(name, options) {
       if (typeof name == "object") {
@@ -315,10 +309,12 @@ export default {
         delete options.name;
       }
       if (!this.selection.length) return;
-      var selection = new business.Selection([...this.selection.paragraphs]);
+      var selection = new this.business.Selection([
+        ...this.selection.paragraphs,
+      ]);
       selection._chosen_item = [...this.selection._chosen_item];
-      selection.all = this.value
-      business[name.replace("-", "_")]({
+      selection.all = this.value;
+      this.business[name.replace("-", "_")]({
         selection,
         ...options,
       }).then(() => {

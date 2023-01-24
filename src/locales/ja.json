@@ -160,5 +160,8 @@
     "mongocollection": "データベースコレクション",
     "shortcuts": "ショートカット",
     "expression": "表現",
-    "disabled": "無効にする"
+    "disabled": "無効にする",
+    "fit-both": "自動适応",
+    "fit-width": "幅に合わせる",
+    "fit-height": "高に合わせる"
 }

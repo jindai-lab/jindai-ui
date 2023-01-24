@@ -62,8 +62,6 @@
 import ParamInput from "../components/ParamInput";
 import draggable from "vuedraggable";
 
-import api from "../api";
-
 export default {
   name: "DatasetList",
   components: {
@@ -82,7 +80,7 @@ export default {
   },
   methods: {
     load_datasets() {
-      api.get_datasets().then((x) => (this.datasets = x));
+      this.this.api.get_datasets().then((x) => (this.datasets = x));
     },
     prompt(t, v) {
       return window.prompt(t, v);
@@ -90,42 +88,42 @@ export default {
     update_valid(id, field, value) {
       var coll = { _id: id };
       coll[field] = value;
-      api
+      this.api
         .call("datasets/edit", coll)
-        .then(() => api.notify(this.$t("updated")));
+        .then(() => this.$notify(this.$t("updated")));
     },
     save() {
       if (this.valid.length > 0) {
         alert(this.$t("invalid-input"));
         return;
       }
-      api
+      this.api
         .call(
           "datasets/batch",
           this.datasets.map((x, i) =>
             Object.assign({}, x, { order_weight: i, sources: null })
           )
         )
-        .then(() => api.notify(this.$t("saved") ));
+        .then(() => this.$notify(this.$t("saved") ));
     },
     append_dataset() {
       if (!this.input_coll.name) return;
-      api.call("datasets/edit", this.input_coll).then(() => {
+      this.this.api.call("datasets/edit", this.input_coll).then(() => {
         this.load_datasets();
         this.input_coll = {};
       });
     },
     rename_collection(coll, to) {
       if (coll && to)
-        api
+        this.api
           .call("datasets/rename", { _id: coll._id, to })
-          .then(() => api.notify(this.$t("renamed") ))
+          .then(() => this.$notify(this.$t("renamed") ))
           .then(this.load_datasets);
     },
     refresh_sources(coll) {
-      api
+      this.api
         .call("datasets/sources", { _id: coll._id })
-        .then(() => api.notify(this.$t("refreshed") ));
+        .then(() => this.$notify(this.$t("refreshed") ));
     },
   },
 };

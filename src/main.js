@@ -30,6 +30,29 @@ Vue.filter("dateSafe", function (value) {
     return ds;
 });
 
+// v-viewer
+import 'viewerjs/dist/viewer.css'
+import VueViewer from 'v-viewer'
+Vue.use(VueViewer, {
+    defaultOptions: {
+        inline: true,
+        button: false,
+        navbar: false,
+        title: false,
+        toolbar: true,
+        loading: false,
+        tooltip: false,
+        movable: true,
+        zoomable: true,
+        scalarable: false,
+        rotatable: true,
+        fullscreen: true,
+        transition: false,
+        keyboard: false,
+        backdrop: false,
+      }
+  })
+
 // use vue-treeselect
 import Treeselect from "@riophae/vue-treeselect";
 Vue.component("treeselect", Treeselect);
@@ -53,6 +76,13 @@ import DbConsole from "./views/DbConsole.vue";
 import AutoTags from "./views/AutoTags.vue";
 import Shortcuts from "./views/Shortcuts.vue";
 import QueryFormTest from "./views/QueryFormTest.vue";
+
+// install api, dialogs and business modules
+import api from "./api"
+api.get_meta()
+
+import dialogs from "./dialogs"
+dialogs; // supress error
 
 // configure routes
 const routes = [{
@@ -148,9 +178,15 @@ router.beforeEach((to, from, next) => {
             name: "Login",
         });
     else next();
+    document.title = api.meta.app_title
 });
 
 import i18n from "./locales";
+
+import business from "./business";
+Vue.prototype.api = api
+Vue.prototype.business = business
+
 
 new Vue({
     vuetify,

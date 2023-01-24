@@ -44,8 +44,6 @@
 
 
 <script>
-import business from "../business";
-import api from "../api";
 import ParamInput from "../components/ParamInput.vue";
 import ResultsView from "../components/ResultsView.vue";
 
@@ -58,7 +56,7 @@ export default {
   props: ["id"],
   data() {
     return {
-      stages: business.pipelines,
+      stages: this.business.pipelines,
       task: {
         _id: "",
         name: "",
@@ -81,13 +79,13 @@ export default {
     },
   },
   mounted() {
-    var params = api.querystring_parse(location.search.substring(1));
+    var params = this.api.querystring_parse(location.search.substring(1));
     Object.assign(
       this.stages,
-      ...Object.entries(business.pipelines).map((kv) => kv[1])
+      ...Object.entries(this.business.pipelines).map((kv) => kv[1])
     );
 
-    api.call("tasks/" + this.id).then((data) => {
+    this.api.call("tasks/" + this.id).then((data) => {
       this.task = data.result;
       for (var k in this.task.shortcut_map) {
         this.shortcut_params[k] =
@@ -100,9 +98,6 @@ export default {
       var l = this.valid.indexOf(name);
       if (l >= 0) this.valid.splice(l, 1);
       if (!valid) this.valid.push(name);
-    },
-    notify(text) {
-      api.notify(text);
     },
     apply_params() {
       for (var k in this.shortcut_params) {
@@ -118,7 +113,7 @@ export default {
     quicktask() {
       this.apply_params();
       this.result_plain = "";
-      api
+      this.api
         .call("quicktask", {
           pipeline: this.task.pipeline,
         })
@@ -155,7 +150,7 @@ export default {
               const blob = new Blob(byteArrays, { type: contentType });
               return blob;
             };
-            api.blob_download(
+            this.api.blob_download(
               b64toBlob(data.result.data),
               this.task.name + "." + data.result.__file_ext__
             );
@@ -182,7 +177,7 @@ export default {
           delete this.task.shortcut_map[k];
       }
 
-      api
+      this.api
         .call("tasks/" + this.task._id, this.task)
         .then((data) => {
           var id = this.task._id;
@@ -191,13 +186,13 @@ export default {
           return id;
         })
         .then((id) =>
-          api.put("queue/", { id }).then((data) => {
-            api.notify(this.$t("task-enqueued", { task: data.result }));
+          this.api.put("queue/", { id }).then((data) => {
+            this.$notify(this.$t("task-enqueued", { task: data.result }));
           })
         );
     },
     querify() {
-      var s = api.querify(this.task.pipeline, "");
+      var s = this.api.querify(this.task.pipeline, "");
       if (this.task.pipeline.length == 1) return "[];" + s;
       return s;
     },

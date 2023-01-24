@@ -89,7 +89,7 @@ const _stack = {
   }
 };
 
-export default {
+const apis = {
   stack: _stack,
 
   locale: "zhs",
@@ -98,7 +98,7 @@ export default {
 
   apiBase,
 
-  meta: null,
+  meta: {},
 
   querystring_parse(str) {
     var params = {};
@@ -201,11 +201,6 @@ export default {
           throw ex;
         }
       });
-  },
-
-  notify(text, bundle) {
-    console.log(text, bundle)
-    window.alert(text)
   },
 
   _axios_config(other) {
@@ -595,10 +590,11 @@ export default {
   },
 
   async get_meta() {
-    if (this.meta) return this.meta
-    let meta = await this.call('meta').then(data => data.result)
-    this.meta = meta
-    return meta
+    if (!this.meta.app_title) {
+      let meta = await this.call('meta').then(data => data.result)
+      this.meta = meta
+    }
+    return this.meta
   },
 
   get_item_image(item, disable_args) {
@@ -692,6 +688,14 @@ export default {
   current_q() {
     return this.querystring_parse(location.search).q || "";
   },
+
+  next_fit() {
+    const fits = ["both", "width", "height"];
+    return fits[(fits.indexOf(this.config.fit) + 1) % fits.length]
+  },
+
   config: LocalConfig(),
 
 };
+
+export default apis

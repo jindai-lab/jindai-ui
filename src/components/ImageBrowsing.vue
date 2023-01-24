@@ -1,7 +1,7 @@
 <template>
   <div class="browser" v-if="item">
     <video-player
-      :src="get_item_video(item)"
+      :src="api.get_item_video(item)"
       :options="{
         muted: false,
         autoplay: true,
@@ -14,33 +14,22 @@
       ref="videoPlayer"
       v-if="browsing_video"
     />
-    <div
-      style="width: 100%; text-align: center"
-      @click="toggle_fits"
-      @mousedown="change_offsets_start"
-      @mousemove="change_offsets_between"
-      @mouseup="change_offsets_end"
-      @mousewheel="change_scale"
-      draggable="true"
-      v-else
-    >
+    <div style="width: 100%; text-align: center" draggable="true" v-else>
       <div
         :style="{
           height: '100vh',
           width: '100%',
           overflow: 'hidden',
         }"
+        id="viewer-parent"
       >
-        <img
-          :key="item._id + '-' + fit"
-          v-if="item"
-          :src="get_item_image(item)"
-          alt="Browsing Image"
-          ref="browsing_image"
-          @load="fit_image"
-          @drag="$event.preventDefault()"
-          draggable="true"
-        />
+        <viewer :images="[]"  @inited="viewer_inited" :options="{viewed: viewer_inited }" class="viewer">
+          <div class="map-img">
+            <div class="map-list">
+              <img :src="this.api.get_item_image(item)" ref="nativeImage" />
+            </div>
+          </div>
+        </viewer>
       </div>
     </div>
     <div class="browsing description">
@@ -81,9 +70,9 @@
                 dense
                 :href="
                   '/' +
-                  querystring_stringify({
+                  api.querystring_stringify({
                     q:
-                      scope(paragraph) +
+                      api.scope(paragraph) +
                       `;plugin('${format(filter.format, {
                         mediaitem: item,
                         paragraph: paragraph,
@@ -117,9 +106,7 @@
 
 <script>
 import VideoPlayer from "./VideoPlayer.vue";
-import GalleryContentView from "./GalleryContentView.vue"
-import api from "../api";
-import business from "../business/"
+import GalleryContentView from "./GalleryContentView.vue";
 
 export default {
   name: "ImageBrowsing",
@@ -131,34 +118,23 @@ export default {
   data() {
     return {
       browsing_page: 2,
-      scale: 1,
-      offset_x: 0,
-      offset_y: 0,
-      mouse_drag: {
-        x: 0,
-        y: 0,
-        offset_x: 0,
-        offset_y: 0,
-        active: false,
-      },
-      plugin_pages : business.plugin_pages
+      plugin_pages: this.business.plugin_pages,
     };
   },
   watch: {
     item(val) {
       if (!val || !val.source) this.$emit("browse", "continue");
-    },
+    }
   },
   computed: {
     browsing_video() {
       return this.item && this.item.item_type == "video";
     },
-    fit() {return api.config.fit}
+    fit() {
+      return this.api.config.fit;
+    },
   },
   methods: {
-    quote(x) {
-      return api.quote(x);
-    },
     format(str, bundle) {
       function _replace(_, i) {
         var b = bundle;
@@ -170,148 +146,6 @@ export default {
         ""
       );
     },
-    get_item_image(item) {
-      return api.get_item_image(item);
-    },
-    get_item_video(item) {
-      return api.get_item_video(item);
-    },
-    fit_image(e) {
-      const img = e.img || e.target,
-        wh = window.innerHeight,
-        ww = window.innerWidth,
-        imgr = img.naturalWidth / img.naturalHeight;
-      const scrr = ww / wh;
-      var nh = 0,
-        nw = 0,
-        transform = "",
-        mode = "",
-        offsetX = 0,
-        offsetY = 0,
-        rr = imgr < 1 != scrr < 1;
-
-      if (api.config.fit == "both" && rr) {
-        mode = 1 / imgr >= scrr ? "fit-height" : "fit-width";
-        switch (mode) {
-          case "fit-width":
-            nh = ww;
-            nw = nh * imgr;
-            offsetX = nh;
-            offsetY = (wh - nw) / 2;
-            break;
-          case "fit-height":
-            nw = wh;
-            nh = nw / imgr;
-            offsetX = (nh + ww) / 2;
-            offsetY = 0;
-            break;
-        }
-        transform = "rotate(90deg)";
-      } else {
-        switch (api.config.fit) {
-          case "both":
-          case "maximize":
-            mode = imgr >= scrr ? "fit-height" : "fit-width";
-            break;
-          default:
-            mode = imgr <= scrr ? "fit-height" : "fit-width";
-        }
-        switch (mode) {
-          case "fit-width":
-            nw = ww;
-            nh = ww / imgr;
-            break;
-          case "fit-height":
-            nh = wh;
-            nw = nh * imgr;
-            break;
-        }
-        transform = `translate(${(ww - nw) / 2}px, ${(wh - nh) / 2}px)`;
-      }
-      offsetX += this.offset_x;
-      offsetY += this.offset_y;
-      nh *= this.scale;
-      nw *= this.scale;
-      Object.assign(img.style, {
-        height: nh + "px",
-        width: nw + "px",
-        transform: transform,
-        "transform-origin": "left top",
-        top: offsetY + "px",
-        left: offsetX + "px",
-        position: "absolute",
-        display: "block",
-      });
-    },
-    toggle_fits() {
-      if (this.mouse_drag.active == null) {
-        this.mouse_drag.active = false
-        return
-      }
-      if (this.offset_x || this.offset_y || this.scale != 1) {
-        this.offset_x = 0;
-        this.offset_y = 0;
-        this.scale = 1;
-      } else {
-        const fits = ["both", "visible", "maximize"];
-        api.config.fit = fits[(fits.indexOf(api.config.fit) + 1) % fits.length];
-      }
-      this.fit_image({ target: this.$refs.browsing_image });
-    },
-    change_offsets_start(e) {
-      if (e.ctrlKey || e.altKey || e.metaKey) {
-        e.preventDefault();
-        e.stopPropagation();
-        this.mouse_drag.x = e.pageX;
-        this.mouse_drag.y = e.pageY;
-        this.mouse_drag.offset_x = this.offset_x;
-        this.mouse_drag.offset_y = this.offset_y;
-        this.mouse_drag.active = true;
-      }
-    },
-    change_offsets_between(e) {
-      if (!this.mouse_drag.active) return;
-      e.preventDefault();
-      e.stopPropagation();
-      var delta = {
-        x: e.pageX - this.mouse_drag.x + this.mouse_drag.offset_x,
-        y: e.pageY - this.mouse_drag.y + this.mouse_drag.offset_y,
-      };
-      this.offset_x = delta.x;
-      this.offset_y = delta.y;
-      e.img = this.$refs.browsing_image;
-      this.fit_image(e);
-    },
-    change_offsets_end(e) {
-      if (this.mouse_drag.active) {
-        this.mouse_drag.active = null
-        e.preventDefault()
-        e.stopPropagation()
-      }
-    },
-    change_scale(e) {
-      if (e.ctrlKey || e.metaKey || e.altKey) {
-        e.preventDefault();
-        e.stopPropagation();
-        var delta = 0;
-        if (e.deltaY > 0) {
-          // down
-          delta = 0.2;
-        } else {
-          delta = -0.2;
-        }
-        this.scale += delta;
-        this.offset_x -= e.clientX - window.innerWidth / 2;
-        this.offset_y -= e.clientY - window.innerHeight / 2;
-        if (this.scale < 0.2) {
-          this.scale = 1;
-          this.offset_x = 0;
-          this.offset_y = 0;
-        }
-        e.img = this.$refs.browsing_image;
-        this.fit_image(e);
-      }
-    },
     browse_next() {
       this.$emit("browse", "arrowright");
       this.browsing_page = 2;
@@ -320,8 +154,36 @@ export default {
       this.$emit("browse", "arrowleft");
       this.browsing_page = 2;
     },
-    querystring_stringify: api.querystring_stringify,
-    scope: api.scope,
+    viewer_inited(viewer) {
+      viewer = viewer || this.$viewer
+      if (viewer && viewer.target && viewer.target.viewer)
+        viewer = viewer.target.viewer
+      if (!viewer || !viewer.zoomTo) return
+      this.$viewer = viewer
+      viewer.reset()
+      var scale = 1,
+        degree = 0;
+      const width = this.$refs.nativeImage.naturalWidth,
+        height = this.$refs.nativeImage.naturalHeight;
+        if (!width || !height) return
+      switch (this.api.config.fit) {
+        case "width":
+          scale = window.innerWidth / width;
+          break;
+        case "height":
+          scale = window.innerHeight / height;
+          break;
+        default:
+          scale =
+            Math.max(window.innerWidth, window.innerHeight) /
+            Math.max(width, height);
+          if (window.innerHeight > window.innerWidth != (height > width))
+            degree = 90;
+          break;
+      }
+      viewer.zoomTo(scale)
+      viewer.rotate(degree)
+    },
   },
 };
 </script>
@@ -348,6 +210,9 @@ export default {
   opacity: 1;
   z-index: 101;
 }
+.map-img {
+  opacity: 0;
+}
 </style>
 
 <style>
@@ -360,5 +225,19 @@ export default {
 .browsing-content {
   max-height: 30vh;
   overflow-y: hidden;
+}
+
+.viewer-toolbar {
+  width: 20px;
+  position: fixed;
+  left: 20px;
+  top: calc((100vh - 250px) / 2);
+  z-index: 2;
+}
+
+.viewer-toolbar .viewer-play,
+.viewer-toolbar .viewer-next,
+.viewer-toolbar .viewer-prev {
+  display: none;
 }
 </style>

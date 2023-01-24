@@ -159,5 +159,8 @@
     "mongocollection": "資料庫集合名",
     "shortcuts": "快捷方式",
     "expression": "表達式",
-    "disabled": "禁用"
+    "disabled": "禁用",
+    "fit-both": "自動適應",
+    "fit-width": "適應寬度",
+    "fit-height": "適應高度"
 }

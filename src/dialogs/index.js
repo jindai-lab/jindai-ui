@@ -67,6 +67,8 @@ api.dialogs = {
     }
 }
 
-api.notify = (text, bundle) => api.dialogs1.alert({ text, ...bundle });
+api.notify = (text, bundle) => api.dialogs.alert({ text, ...bundle });
+
+Vue.prototype.$notify = api.notify
 
 export default api.dialogs

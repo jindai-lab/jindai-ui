@@ -147,8 +147,6 @@
 </template>
 
 <script>
-import api from "../api";
-import dialogs from "../dialogs"
 import ParamInput from "../components/ParamInput.vue";
 export default {
   name: "UserList",
@@ -173,23 +171,23 @@ export default {
   },
   methods: {
     add_user() {
-      api.put("users/", this.new_user).then((data) => {
-        api.notify(this.$t("user-added", { user: data.result.username }));
+      this.api.put("users/", this.new_user).then((data) => {
+        this.$notify(this.$t("user-added", { user: data.result.username }));
         this.users.push(data.result);
         this.show_user_modal = false;
       });
     },
     del_user(u) {
-      dialogs.confirm({title: this.$t("user-delete-confirm", { user: u.username })}).then(() => {
-        api.delete("users/" + u.username).then((data) => {
+      this.api.dialogs.confirm({title: this.$t("user-delete-confirm", { user: u.username })}).then(() => {
+        this.api.delete("users/" + u.username).then((data) => {
           if (!data.result.ok) return;
-          api.notify(this.$t("user-deleted", { user: u.username }));
+          this.$notify(this.$t("user-deleted", { user: u.username }));
           this.users = this.users.filter((x) => x._id != u._id);
         });
       })
     },
     modify_user_role() {
-      api
+      this.api
         .call("users/" + this.new_user.username, {
           roles: this.new_user.roles,
           datasets: this.new_user.datasets,
@@ -197,11 +195,11 @@ export default {
         .then(() => (this.show_user_modal = false));
     },
     update_scheduler() {
-      api.call("scheduler").then((data) => (this.scheduled_jobs = data.result));
+      this.api.call("scheduler").then((data) => (this.scheduled_jobs = data.result));
     },
     create_schedule() {
       var text = `every ${this.scheduler.cron} do ${this.scheduler.task}`;
-      api.put("scheduler", { text }).then(() => {
+      this.api.put("scheduler", { text }).then(() => {
         this.scheduler = {
           cron: "",
           task: "",
@@ -211,15 +209,15 @@ export default {
       this.show_creation = false;
     },
     delete_schedule(key) {
-      api.delete("scheduler/" + key).then(() => {
-        api.notify(this.$t("deleted"));
+      this.api.delete("scheduler/" + key).then(() => {
+        this.$notify(this.$t("deleted"));
         this.update_scheduler();
       });
     },
   },
   mounted() {
-    api.call("users/").then((data) => (this.users = data.result));
-    api.get_datasets_hierarchy().then((data) => (this.datasets = data));
+    this.api.call("users/").then((data) => (this.users = data.result));
+    this.api.get_datasets_hierarchy().then((data) => (this.datasets = data));
     this.update_scheduler();
   },
 };

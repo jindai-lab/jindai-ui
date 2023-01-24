@@ -94,8 +94,6 @@
 </template>
 
 <script>
-import api from "../api";
-
 export default {
   data() {
     return {
@@ -109,15 +107,15 @@ export default {
     },
     delete_result(task) {
       var id = encodeURIComponent(task.key);
-      api.delete("queue/" + id).then(() => {
-        api.notify(this.$t('deleted'));
+      this.api.delete("queue/" + id).then(() => {
+        this.$notify(this.$t('deleted'));
         this.$emit("updated", {});
       });
     },
     clear_not_viewable() {
       for (var task of this.data.finished) {
         var id = encodeURIComponent(task.key);
-        api.delete("queue/" + id).then(() => {
+        this.api.delete("queue/" + id).then(() => {
           this.$emit("updated", {});
         });
       }

@@ -85,7 +85,7 @@
 
 
 <script>
-import api from "../api";
+
 import QRCode from "qrcodejs2";
 
 export default {
@@ -98,11 +98,11 @@ export default {
       otp: false,
       otp_secret: "",
       username: "",
-      config: api.config,
+      config: this.api.config,
     };
   },
   mounted() {
-    api.call("authenticate").then((data) => {
+    this.api.call("authenticate").then((data) => {
       this.otp = data.result.otp_secret;
       this.username = data.result.username;
     });
@@ -110,19 +110,19 @@ export default {
   methods: {
     update_password() {
       if (this.password !== this.password2) {
-        api.notify(this.$t("password-dismatch"));
+        this.$notify(this.$t("password-dismatch"));
       } else {
-        api
+        this.api
           .call("account/", {
             old_password: this.old_password,
             password: this.password,
           })
-          .then(api.notify(this.$t("updated")));
+          .then(this.$notify(this.$t("updated")));
       }
     },
     change_otp(otp) {
-      api.call("account/", { otp }).then((data) => {
-        api.notify(this.$t("updated"));
+      this.api.call("account/", { otp }).then((data) => {
+        this.$notify(this.$t("updated"));
         this.otp = otp;
         if (otp && data.result) {
           this.otp_secret = data.result;

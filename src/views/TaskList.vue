@@ -39,8 +39,6 @@
 </template>
 
 <script>
-import api from "../api";
-
 export default {
   data() {
     return {
@@ -49,7 +47,7 @@ export default {
   },
   methods: {
     create_task() {
-      api
+      this.api
         .put("tasks/", { name: this.$t("new-task") + " " + new Date() })
         .then((data) => this.$router.push("/tasks/" + data.result));
     },
@@ -57,23 +55,23 @@ export default {
       var otask = Object.assign({}, task);
       otask._id = null;
       otask.name += " " + this.$t("copy");
-      api
+      this.api
         .put("tasks/", otask)
         .then((data) => this.$router.push("/tasks/" + data.result));
     },
     delete_task(task) {
-      api
+      this.api
         .delete("tasks/" + task._id)
         .then(() => (this.tasks = this.tasks.filter((x) => x._id != task._id)));
     },
     enqueue_task(task) {
-      api.put("queue/", { id: task._id }).then((data) => {
-        api.notify(this.$t("task-enqueued", {task: data.result}));
+      this.api.put("queue/", { id: task._id }).then((data) => {
+        this.$notify(this.$t("task-enqueued", {task: data.result}));
       });
     },
   },
   mounted() {
-    api.call("tasks/").then((data) => (this.tasks = data.result));
+    this.api.call("tasks/").then((data) => (this.tasks = data.result));
   },
 };
 </script>

@@ -55,6 +55,12 @@
             {{ $t(item.name) }}</v-list-item-title
           >
         </v-list-item>
+        <v-list-item>
+          <v-list-item-title
+            @click=" $emit('toggle-fits'); $forceUpdate()"
+          >
+            {{ $t('fit-' + api.next_fit()) }}</v-list-item-title
+          ></v-list-item>
       </v-list>
     </v-menu>
   </div>
@@ -62,8 +68,6 @@
 
 <script>
 import Vue from "vue";
-import api from "../api";
-import business from "../business/";
 export default {
   name: "QuickActionButtons",
   props: {
@@ -143,7 +147,7 @@ export default {
             case "c":
               sel_formatter = (options) => ({
                 q: `author=${
-                  api.quote(options.selection.first.author) ||
+                  this.api.quote(options.selection.first.author) ||
                   options.selection.first.keywords.filter((x) =>
                     x.startsWith("@")
                   )[0] ||
@@ -156,7 +160,7 @@ export default {
             case "z":
               sel_formatter = (options) => ({
                 q: e.shiftKey
-                  ? `source.url%\`${api
+                  ? `source.url%\`${this.api
                       .escape_regex(options.selection.first.source.url)
                       .replace(/\/\d+\//, "/.*/")}\``
                   : `${
@@ -187,7 +191,7 @@ export default {
           });
           break;
         default:
-          var pages = Object.values(business.plugin_pages).filter(
+          var pages = Object.values(this.business.plugin_pages).filter(
             (x) => x.keybind == e.key
           );
           if (pages.length) {
@@ -196,7 +200,7 @@ export default {
               const { selection } = options;
               return {
                 archive: true,
-                q: `${api.scope(selection.first)};plugin('${this.format(
+                q: `${this.api.scope(selection.first)};plugin('${this.format(
                   pages[0].format,
                   {
                     mediaitem: selection.first.images[0],

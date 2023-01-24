@@ -5,9 +5,9 @@
         <span class="datetime">{{ paragraph.pdate | dateSafe }}</span>
         <span class="count">
           <a class="counter secondary--text chip" target="_blank"
-            :href="'/' + querystring_stringify({
+            :href="'/' + api.querystring_stringify({
           groups:'none',
-          q: `(${get_group(paragraph)})`
+          q: `(${api.get_group(paragraph)})`
         })">{{
             paragraph.count || paragraph.images.length }}</a>
         </span>
@@ -15,18 +15,18 @@
           <v-icon>mdi-web</v-icon>
         </v-btn>
       </span>
-      <a :href="'/' + querystring_stringify({
+      <a :href="'/' + api.querystring_stringify({
         q: `source(\`${paragraph.source.url || paragraph.source.file || ''}\`)`})" class="force-text break-anywhere"
         target="_blank">{{ paragraph.source.url }}</a>
       <p class="content" @click.ctrl="search_selection">{{ text }}</p>
       <template v-for="tag in tags">
-        <a v-if="tag != '...'" :alt="tag" :key="`${paragraph._id}-${Math.random()}-${tag}`" :href="'/' + querystring_stringify({
+        <a v-if="tag != '...'" :alt="tag" :key="`${paragraph._id}-${Math.random()}-${tag}`" :href="'/' + api.querystring_stringify({
           groups: tag.match(/^#/) ? 'none' : (tag.match(/^@/) ? 'group' : ''),
           sort: '-pdate',
           q:
             tag.match(/^[@#]/)
               ? quote(tag)
-              : quote(tag) + ',' + scope(paragraph)
+              : quote(tag) + ',' + api.scope(paragraph)
         })" :class="['tag', 'chip', tag_class(tag)]" target="_blank">{{ tag }}</a>
         <v-btn icon v-else :key="`${paragraph._id}-${Math.random()}-${tag}`" @click="show_all_tags = true">
           <v-icon>mdi-more</v-icon>
@@ -37,8 +37,6 @@
 </template>
 
 <script>
-import api from "../api";
-
 export default {
   name: "GalleryContentView",
   props: [
@@ -59,9 +57,6 @@ export default {
     content() {
       return this.paragraph.matched_content || this.paragraph.content;
     },
-    favored() {
-      return api.favored(this.paragraph);
-    },
     tags() {
       var sorted = [...this.paragraph.keywords].filter((x) => x).sort();
       if (!this.show_all_tags && sorted.length > 20) sorted = [...sorted.slice(0, 20), "..."];
@@ -72,15 +67,6 @@ export default {
     },
   },
   methods: {
-    get_item_image(i) {
-      return api.get_item_image(i);
-    },
-    get_group(para) {
-      return api.get_group(para)
-    },
-    fav() {
-      api.fav(this.paragraph);
-    },
     quote(x) {
       return JSON.stringify("" + x);
     },
@@ -95,13 +81,11 @@ export default {
     search_selection() {
       var selected = document.getSelection().toString()
       if (!selected)return
-      api.open_window({
+      this.api.open_window({
         q: `c(${this.quote(selected)}),${this.scope(this.paragraph)}`,
         datasets: [this.paragraph.dataset]
       })
-    },
-    querystring_stringify: api.querystring_stringify,
-    scope: api.scope
+    }
   },
 };
 </script>

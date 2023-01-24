@@ -64,7 +64,7 @@
 </template>
 
 <script>
-import api from "../api";
+
 
 export default {
   name: "StorageList",
@@ -90,7 +90,7 @@ export default {
     new_folder() {
       var folder = prompt(this.$t("folder-name"))
       if (!folder) return
-      api.call(`storage/${this.selected_dir}`, { mkdir: folder }).then(() => {
+      this.api.call(`storage/${this.selected_dir}`, { mkdir: folder }).then(() => {
         this.update_files()
       })
     },
@@ -99,7 +99,7 @@ export default {
       for (var i = 0; i < e.target.files.length; ++i)
         data.append("file" + i, e.target.files[i]);
 
-      api
+      this.api
         .upload(this.selected_dir, data, (e) => {
           this.progress = ((e.loaded * 100) / e.total) | 0;
         })
@@ -111,7 +111,7 @@ export default {
     },
     search_file() {
       if (this.search) {
-        api
+        this.api
           .call(`storage/${this.selected_dir}`, { search: this.search })
           .then((data) => {
             this.files = data.result;
@@ -121,17 +121,17 @@ export default {
       }
     },
     file_link(f) {
-      return "/api/storage/" + f.fullpath.trimLeft('/');
+      return "/this.api/storage/" + f.fullpath.trimLeft('/');
     },
     install_plugin(f) {
-      api.call("plugins", { url: f.fullpath }).then((data) => {
-        if (data.result) api.notify(this.$t("installed"));
+      this.api.call("plugins", { url: f.fullpath }).then((data) => {
+        if (data.result) this.$notify(this.$t("installed"));
       });
     },
     rename_file(f) {
       var new_name = prompt(this.$t("raname-to"), f.name);
       if (!new_name) return;
-      api.call(
+      this.api.call(
         "storage/move",
         { source: f.fullpath, destination: new_name }.then(() =>
           this.update_files()
@@ -139,14 +139,14 @@ export default {
       );
     },
     update_files() {
-      api.call("storage/" + this.selected_dir).then((data) => {
+      this.api.call("storage/" + this.selected_dir).then((data) => {
         this.files = data.result;
         if (this.selected_dir !== "")
           this.files.splice(0, 0, { name: "..", type: "back" });
         history.pushState(
           null,
           null,
-          api.querystring_stringify({
+          this.api.querystring_stringify({
             path: this.selected_dir,
           })
         );
@@ -178,7 +178,7 @@ export default {
     },
   },
   mounted() {
-    this.selected_dir = api.querystring_parse(location.search).path || "";
+    this.selected_dir = this.api.querystring_parse(location.search).path || "";
     this.update_files();
   },
   watch: {

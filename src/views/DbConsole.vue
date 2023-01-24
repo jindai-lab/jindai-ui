@@ -45,7 +45,7 @@
 </template>
 
 <script>
-import api from "../api";
+
 import ParamInput from "../components/ParamInput";
 
 export default {
@@ -53,9 +53,9 @@ export default {
   components: { ParamInput },
   data() {
     return {
-      mongocollections: [api.config.dbconsole.mongocollection || "paragraph"],
+      mongocollections: [this.api.config.dbconsole.mongocollection || "paragraph"],
       command: {
-        mongocollection: api.config.dbconsole.mongocollection || "paragraph",
+        mongocollection: this.api.config.dbconsole.mongocollection || "paragraph",
         query: "",
         operation: "count_documents",
         operation_params: "",
@@ -63,7 +63,7 @@ export default {
       },
       previewed: false,
       preview_text: "",
-      config: api.config
+      config: this.api.config
     };
   },
   methods: {
@@ -86,7 +86,7 @@ export default {
     },
     preview() {
       this.command.preview = true;
-      api.call("admin/db", this.get_command()).then((data) => {
+      this.api.call("admin/db", this.get_command()).then((data) => {
         data = data.result;
         this.preview_text = this.stringify_command(data)
         this.previewed = true;
@@ -94,12 +94,12 @@ export default {
     },
     execute() {
       this.command.preview = false;
-      api.config.dbconsole.mongocollection = this.command.mongocollection;
-      if (!api.config.dbconsole.history) api.config.dbconsole.history = []
-      api.config.dbconsole.history.splice(0, 0, Object.assign({}, this.command));
-      if (api.config.dbconsole.history.length > 10) api.config.dbconsole.history = api.config.dbconsole.history.slice(0, 10)
-      api.config.save();
-      api.call("admin/db", this.get_command()).then((data) => {
+      this.api.config.dbconsole.mongocollection = this.command.mongocollection;
+      if (!this.api.config.dbconsole.history) this.api.config.dbconsole.history = []
+      this.api.config.dbconsole.history.splice(0, 0, Object.assign({}, this.command));
+      if (this.api.config.dbconsole.history.length > 10) this.api.config.dbconsole.history = this.api.config.dbconsole.history.slice(0, 10)
+      this.api.config.save();
+      this.api.call("admin/db", this.get_command()).then((data) => {
         this.preview_text += "\n\n" + JSON.stringify(data.result, "", 2);
       });
     },
@@ -109,7 +109,7 @@ export default {
     }
   },
   mounted() {
-    api
+    this.api
       .call("admin/db/collections")
       .then((data) => (this.mongocollections = data.result));
   },

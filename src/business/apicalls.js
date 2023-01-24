@@ -4,8 +4,8 @@ import i18n from "../locales";
 
 const shortcut_choices = []
 const plugin_pages = []
-const languages = []
-const pipelines = []
+const languages = {}
+const pipelines = {}
 
 
 api.call("plugins/shortcuts").then((data) => {
@@ -19,9 +19,13 @@ api
   .call("plugins/filters")
   .then((data) => (plugin_pages.push(...data.result)));
 
-api.call("help/pipelines").then(data => pipelines.push(...data.result))
+api.call("help/pipelines").then(data => {
+  Object.assign(pipelines, data.result);
+})
 
-api.call("help/langs").then(data => languages.push(...data.result))
+api.call("help/langs").then(data => {
+  Object.assign(languages, data.result);
+})
 
 
 export default {

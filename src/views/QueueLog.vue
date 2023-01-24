@@ -8,7 +8,7 @@
 </template>
 
 <script>
-import api from "../api";
+
 
 export default {
   name: "QueueLog",
@@ -28,7 +28,7 @@ export default {
   },
   methods: {
     load_data() {
-      api
+      this.api
         .call(
           "queue/logs/" +
             encodeURIComponent(this.id)

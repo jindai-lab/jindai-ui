@@ -111,9 +111,7 @@
 
 
 <script>
-import api from "../api";
 import dialogs from "../dialogs"
-import business from "../business";
 import ParamInput from "../components/ParamInput.vue";
 import Pipeline from "../components/Pipeline";
 import BlocklyComponent from "../components/BlocklyComponent.vue";
@@ -135,21 +133,21 @@ export default {
         pipeline: [],
       },
       blockly: false,
-      pipelines: business.pipelines,
+      pipelines: this.business.pipelines,
       valid: [],
       show_code: false,
       tasks: [],
     };
   },
   mounted() {
-    api.call("tasks/" + this.id).then((data) => {
+    this.api.call("tasks/" + this.id).then((data) => {
       this.task = data.result;
     });
-    api.call("tasks/").then((data) => (this.tasks = data.result));
+    this.api.call("tasks/").then((data) => (this.tasks = data.result));
   },
   computed: {
     user() {
-      return api.user;
+      return this.api.user;
     },
   },
   methods: {
@@ -160,9 +158,9 @@ export default {
     },
     delete_task() {
       dialogs.confirm({title: this.$t("confirm-delete")}).then(() => {
-        api.delete("tasks/" + this.task._id).then((data) => {
+        this.api.delete("tasks/" + this.task._id).then((data) => {
           if (data.result.ok) {
-            api.notify(this.$t("deleted"));
+            this.$notify(this.$t("deleted"));
             this.$router.push("/tasks").catch(() => {});
           }
         });
@@ -180,19 +178,16 @@ export default {
         )
           delete this.task.shortcut_map[k];
       }
-      return api.call("tasks/" + this.task._id, this.task).then((data) => {
+      return this.api.call("tasks/" + this.task._id, this.task).then((data) => {
         var id = this.task._id;
         this.task = data.result.updated;
         this.task._id = id;
         return id;
       });
     },
-    notify(text) {
-      api.notify(text);
-    },
     enqueue() {
       this.save().then((id) =>
-        api.put("queue/", { id }).then((data) => {
+        this.api.put("queue/", { id }).then((data) => {
           this.notify(this.$t("task-enqueued", { task: data.result }));
         })
       );
@@ -207,7 +202,7 @@ export default {
         .map((kv) => {
           var o = {};
           o["$" + kv[0]] = kv[1];
-          return api.querify(o).replace(/^\(|\)$/g, "");
+          return this.api.querify(o).replace(/^\(|\)$/g, "");
         })
         .join(";\n");
     },

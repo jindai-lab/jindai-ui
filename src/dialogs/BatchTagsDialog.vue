@@ -31,8 +31,6 @@
 </template>
 
 <script>
-import api from "../api";
-
 export default {
   name: "PromptChoicesDialog",
   data() {
@@ -50,11 +48,11 @@ export default {
     },
   },
   mounted() {
-    Object.assign(this, api.config.tagging);
+    Object.assign(this, this.api.config.tagging);
   },
   methods: {
     do_submit() {
-      api.config.tagging = {
+      this.api.config.tagging = {
         batch_delim: this.batch_delim,
         batch_prefix: this.batch_prefix,
       };

@@ -219,7 +219,6 @@ function input_func(vm) {
   };
 }
 
-import api from "../api";
 import { PrismEditor } from "vue-prism-editor";
 import "vue-prism-editor/dist/prismeditor.min.css"; // import the styles somewhere
 
@@ -227,7 +226,6 @@ import "vue-prism-editor/dist/prismeditor.min.css"; // import the styles somewhe
 import { highlight, languages } from "prismjs/components/prism-core";
 import "prismjs/components/prism-clike";
 import "prismjs/themes/prism-tomorrow.css"; // import syntax highlighting styles
-import business from "../business";
 
 export default {
   name: "ParamInput",
@@ -340,7 +338,7 @@ export default {
       switch (this.arg.type) {
         case "TASK":
         case "DATASET":
-          api.call(this.arg.type.toLowerCase() + "s").then(
+          this.api.call(this.arg.type.toLowerCase() + "s").then(
             (data) =>
               (this.choices = data.result.map((x) => ({
                 text: x.display_name || x.name,
@@ -350,7 +348,7 @@ export default {
           break;
         case "PIPELINE":
           this.choices = [].concat(
-            ...Object.values(business.pipelines).map((x) =>
+            ...Object.values(this.business.pipelines).map((x) =>
               Object.keys(x).map((k) => ({
                 text: `${x[k].doc} ${k}`,
                 value: k,
@@ -367,7 +365,7 @@ export default {
           );
           break;
         case "LANG":
-          for (var pair of Object.entries(business.languages)) {
+          for (var pair of Object.entries(this.business.languages)) {
             let key = pair[0],
               val = pair[1];
             if (this.langs.indexOf(`:${key}`) >= 0) continue;
@@ -385,7 +383,7 @@ export default {
         x.name.match(types_check)
       );
       if (!droppedFiles.length) {
-        api.notify(this.$t("match-file-type", { type: types.join(", ") }));
+        this.$notify(this.$t("match-file-type", { type: types.join(", ") }));
         return;
       }
       let file = droppedFiles[0];

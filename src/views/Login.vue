@@ -42,7 +42,7 @@
 </template>
 
 <script>
-import api from "../api";
+
 
 export default {
   name: "Login",
@@ -57,7 +57,7 @@ export default {
   },
   methods: {
     login() {
-      api
+      this.api
         .authenticate(this.username, this.password, this.otp, this.remember)
         .then(() => {
           location.href = '/';

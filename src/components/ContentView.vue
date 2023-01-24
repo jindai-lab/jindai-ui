@@ -4,7 +4,7 @@
     <p v-else>
       {{ content }}
       <v-btn class="fav-button" :color="favored ? 'orange' : ''" :dark="favored" icon small @click="
-        fav(); $forceUpdate();
+        api.fav(paragraph); $forceUpdate();
       ">
         <v-icon small>mdi-star</v-icon>
       </v-btn>
@@ -14,7 +14,7 @@
         <v-card v-for="item in first_item_only
         ? paragraph.images.slice(0, 1)
         : paragraph.images" :key="item._id" :width="item_width" style="overflow: hidden" class="ma-5">
-          <v-img :contain="contain" :height="item_height" :src="get_item_image(item)"></v-img>
+          <v-img :contain="contain" :height="item_height" :src="api.get_item_image(item)"></v-img>
         </v-card>
       </v-row>
     </div>
@@ -22,8 +22,6 @@
 </template>
 
 <script>
-import api from "../api";
-
 export default {
   name: "ContentView",
   props: [
@@ -45,7 +43,7 @@ export default {
       return this.paragraph.matched_content || this.paragraph.content;
     },
     favored() {
-      return api.favored(this.paragraph);
+      return this.api.favored(this.paragraph);
     },
     tags() {
       var sorted = [...this.paragraph.keywords].filter((x) => x).sort();
@@ -57,15 +55,6 @@ export default {
     },
   },
   methods: {
-    get_item_image(i) {
-      return api.get_item_image(i);
-    },
-    get_group(para) {
-      return api.get_group(para)
-    },
-    fav() {
-      api.fav(this.paragraph);
-    },
     quote(x) {
       return JSON.stringify("" + x);
     },
@@ -77,8 +66,6 @@ export default {
           : tag != 'author' && tag != 'group' ?
             "t_" + tag : '';
     },
-    querystring_stringify: api.querystring_stringify,
-    scope: api.scope
   },
 };
 </script>

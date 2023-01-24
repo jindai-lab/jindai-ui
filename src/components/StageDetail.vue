@@ -56,7 +56,6 @@
 </template>
 
 <script>
-import business from "../business";
 import ParamInput from "./ParamInput";
 import Pipeline from "./Pipeline";
 
@@ -85,8 +84,8 @@ export default {
   },
   computed: {
     stage_doc() {
-      for (var name in business.pipelines) {
-        let x = business.pipelines[name]
+      for (var name in this.business.pipelines) {
+        let x = this.business.pipelines[name]
         if (x[this.value[0]]) {
           var res = {... x[this.value[0]]};
           res.args = [... res.args, {name: 'disabled', type: 'bool', default: false, description: this.$t('disabled')}]
@@ -97,10 +96,10 @@ export default {
     },
     stage_options() {
       var opts = [];
-      for (var group in business.pipelines) {
+      for (var group in this.business.pipelines) {
         opts.push({ header: group });
-        for (var stname in business.pipelines[group]) {
-          const s = business.pipelines[group][stname];
+        for (var stname in this.business.pipelines[group]) {
+          const s = this.business.pipelines[group][stname];
           opts.push({
             value: stname,
             text: stname + " " + s.doc.split("\n")[0],

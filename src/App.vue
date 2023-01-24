@@ -1,6 +1,11 @@
 <template>
   <v-app>
-    <v-navigation-drawer v-model="drawer" app v-if="!viewer" disable-resize-watcher>
+    <v-navigation-drawer
+      v-model="api.config.drawer"
+      app
+      v-if="!viewer"
+      disable-resize-watcher
+    >
       <v-list nav>
         <v-list-item link @click="$router.push('/')">
           <v-list-item-title>{{ $t("search") }}</v-list-item-title>
@@ -12,8 +17,12 @@
           <v-list-item link @click="$router.push('/tasks')">
             <v-list-item-title>{{ $t("all") }}</v-list-item-title>
           </v-list-item>
-          <v-list-item link v-for="s in shortcuts || [{ _id: '', name: $t('quick-task') }]" :key="s._id"
-            @click="$router.push('/tasks/shortcut/' + s._id)">
+          <v-list-item
+            link
+            v-for="s in shortcuts || [{ _id: '', name: $t('quick-task') }]"
+            :key="s._id"
+            @click="$router.push('/tasks/shortcut/' + s._id)"
+          >
             <v-list-item-title>{{ s.name }}</v-list-item-title>
           </v-list-item>
         </v-list-group>
@@ -22,16 +31,24 @@
           <template v-slot:activator>
             <v-list-item-title>{{ $t("user") }}</v-list-item-title>
           </template>
-          <v-list-item v-for="item in [
-            ['preferences', 'preferences'],
-            ['history', 'history'],
-          ]" :key="item[0]" link @click="$router.push(`/${item[1]}`)">
+          <v-list-item
+            v-for="item in [
+              ['preferences', 'preferences'],
+              ['history', 'history'],
+            ]"
+            :key="item[0]"
+            link
+            @click="$router.push(`/${item[1]}`)"
+          >
             <v-list-item-title>{{ $t(item[0]) }}</v-list-item-title>
           </v-list-item>
-          <v-list-item link @click="
-            log_out();
-          $router.push('/login');
-          ">
+          <v-list-item
+            link
+            @click="
+              log_out();
+              $router.push('/login');
+            "
+          >
             <v-list-item-title>{{ $t("log-out") }}</v-list-item-title>
           </v-list-item>
         </v-list-group>
@@ -41,14 +58,19 @@
             <v-list-item-title>{{ $t("admin") }}</v-list-item-title>
           </template>
 
-          <v-list-item v-for="item in [
-            ['file-storage', 'storage'],
-            ['dataset', 'datasets'],
-            ['console', 'dbconsole'],
-            ['system-admin', 'admin'],
-            ['auto-tagging', 'autotags'],
-            ['shortcuts', 'shortcuts']
-          ]" :key="item[0]" link @click="$router.push(`/${item[1]}`)">
+          <v-list-item
+            v-for="item in [
+              ['file-storage', 'storage'],
+              ['dataset', 'datasets'],
+              ['console', 'dbconsole'],
+              ['system-admin', 'admin'],
+              ['auto-tagging', 'autotags'],
+              ['shortcuts', 'shortcuts'],
+            ]"
+            :key="item[0]"
+            link
+            @click="$router.push(`/${item[1]}`)"
+          >
             <v-list-item-title>{{ $t(item[0]) }}</v-list-item-title>
           </v-list-item>
         </v-list-group>
@@ -56,15 +78,26 @@
     </v-navigation-drawer>
 
     <v-app-bar app color="primary" dark v-if="!viewer">
-      <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
-      <v-toolbar-title>{{ app_title }}</v-toolbar-title>
+      <v-app-bar-nav-icon
+        @click="api.config.drawer = !api.config.drawer"
+      ></v-app-bar-nav-icon>
+      <v-toolbar-title>{{ api.meta.app_title }}</v-toolbar-title>
       <v-spacer></v-spacer>
       <queue-view :data="queue"></queue-view>
     </v-app-bar>
 
     <v-main>
-      <v-progress-linear indeterminate id="loadingBar" style="{opacity: 0}" app
-        fixed></v-progress-linear>
+      <v-progress-linear
+        indeterminate
+        id="loadingBar"
+        style="
+           {
+            opacity: 0;
+          }
+        "
+        app
+        fixed
+      ></v-progress-linear>
 
       <div :id="viewer ? 'viewer' : 'content-wrapper'">
         <keep-alive :include="['SearchForm', 'ResultsView', 'DbConsole']">
@@ -75,23 +108,34 @@
       <div style="height: 40px"></div>
 
       <template v-if="!viewer">
-        <event-console @queue="update_queue" :enabled="!this.viewer"></event-console>
+        <event-console
+          @queue="update_queue"
+          :enabled="!this.viewer"
+        ></event-console>
         <v-footer id="footer">
           <div class="language mr-5">
-            <v-select dense flat single-line prepend-icon="mdi-web" v-model="ui_language" :items="
-              Object.entries($i18n.messages).map((pair) => ({
-                value: pair[0],
-                text: pair[1]._lang,
-              }))
-            " :style="{
-  width: '150px',
-}"></v-select>
+            <v-select
+              dense
+              flat
+              single-line
+              prepend-icon="mdi-web"
+              v-model="ui_language"
+              :items="
+                Object.entries($i18n.messages).map((pair) => ({
+                  value: pair[0],
+                  text: pair[1]._lang,
+                }))
+              "
+              :style="{
+                width: '150px',
+              }"
+            ></v-select>
           </div>
           <div class="powered-by">
             Powered by Jindai &copy; 2018-{{ new Date().getFullYear() }} zhuth
             &amp; contributors
           </div>
-          <div v-html="copyright"></div>
+          <div v-html="api.meta.copyright"></div>
         </v-footer>
       </template>
     </v-main>
@@ -99,8 +143,7 @@
 </template>
 
 <script>
-import api from "./api";
-import EventConsole from './components/EventConsole.vue';
+import EventConsole from "./components/EventConsole.vue";
 import QueueView from "./components/QueueView.vue";
 import { setup } from "./locales";
 
@@ -112,7 +155,6 @@ export default {
   },
   data() {
     return {
-      drawer: true,
       loading: false,
       queue: {
         finished: [],
@@ -122,51 +164,34 @@ export default {
       logs: {},
       admin: false,
       shortcuts: [],
-      snackbars: [],
-      app_title: "Jindai",
-      app_dark: false,
-      domain_delimiter: '.',
-      copyright: "",
       ui_language: "",
-      login_finished: false
+      login_finished: false,
     };
   },
   watch: {
-    app_dark(val) {
-      this.$vuetify.theme.dark = !!val;
-    },
-    app_title(val) {
-      document.title = val;
-    },
-    domain_delimiter(val) {
-      api.config.domain_delimiter = val;
-    },
     ui_language(val) {
       setup(val);
-      api.locale = val;
-      this.$vuetify.lang.current = { 'zhs': 'zhHans', 'zht': 'zhHant' }[val] || val;
+      this.api.locale = val;
+      this.$vuetify.lang.current = { zhs: "zhHans", zht: "zhHant" }[val] || val;
     },
-    drawer(val) {
-      api.config.drawer = val;
-    }
   },
   created() {
     this.ui_language = this.$i18n.locale;
   },
   mounted() {
-    api.get_meta().then(() => {
-      Object.assign(this, api.meta)
-    })
-    this.drawer = api.config.drawer;
-    api
+    this.api.get_meta().then((meta) => {
+      this.$vuetify.theme.dark = !!meta.app_dark;
+      document.title = meta.app_title
+    });
+    this.api
       .authenticate()
       .then((data) => (this.admin = data.result.roles.indexOf("admin") >= 0))
       .then(() => {
-        this.login_finished = true
-        api
+        this.login_finished = true;
+        this.api
           .call("tasks/shortcuts")
           .then((data) => (this.shortcuts = data.result));
-      })
+      });
   },
   computed: {
     viewer() {
@@ -175,18 +200,18 @@ export default {
   },
   methods: {
     nav_click(e) {
-      this.$router.push(e.target.getAttribute("to")).catch(() => { });
+      this.$router.push(e.target.getAttribute("to")).catch(() => {});
     },
     log_out() {
-      api.log_out();
+      this.api.log_out();
     },
     update_queue(queue) {
       if (!queue) return;
       this.queue = {
-        'finished': queue.filter(x => x.status == 'stopped'),
-        'running': queue.filter(x => x.status == 'running'),
-        'waiting': queue.filter(x => x.status == 'pending'),
-      }
+        finished: queue.filter((x) => x.status == "stopped"),
+        running: queue.filter((x) => x.status == "running"),
+        waiting: queue.filter((x) => x.status == "pending"),
+      };
     },
   },
   sse: {

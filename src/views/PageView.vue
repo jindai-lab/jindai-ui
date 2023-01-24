@@ -87,8 +87,9 @@
             </div>
           </v-row>
           <!-- gallery view, image browser -->
-          <div v-else>
+          <div @dblclick="api.config.wheel_enabled = !api.config.wheel_enabled" v-else>
             <ImageBrowsing
+              ref="ib"
               :paragraph="active_paragraph"
               :item="active_item"
               v-if="value"
@@ -154,8 +155,8 @@
 </template>
 
 <script>
-import api from "../api";
-import business from "../business/"
+
+
 import ParamInput from "../components/ParamInput.vue";
 import ContentView from "../components/ContentView.vue";
 import ImageBrowsing from "../components/ImageBrowsing.vue";
@@ -189,7 +190,7 @@ export default {
       playing_interval: 1000,
       last_inc: 1,
       last_wheel: new Date(),
-      plugin_pages: business.plugin_pages
+      plugin_pages: this.business.plugin_pages
     };
   },
   props: {
@@ -284,12 +285,15 @@ export default {
   },
   methods: {
     _wheel_handler(e) {
-      if (this.view_mode !== "gallery") return;
+      if (this.view_mode !== "gallery" || !this.api.config.wheel_enabled) return;
       if (new Date() - this.last_wheel > 100) {
         this._event_handler(e.deltaY > 0 ? "arrowright" : "arrowleft");
         this.last_wheel = new Date();
       }
       e.preventDefault();
+    },
+    apply_fit() {
+      if (this.view_mode == 'gallery' && this.show_modal) this.$refs.ib.viewer_inited()
     },
     update_pdfpage() {
       if (this.view_mode == "file" && this.file) {
@@ -301,11 +305,11 @@ export default {
       this.pdf_image = this.loading_image;
 
       if (this.view_mode == "file" && this.file) {
-        api
+        this.api
           .call("quicktask", {
             query:
               "?" +
-              api.querify(
+              this.api.querify(
                 this.paragraph_id
                   ? { id: this.paragraph_id }
                   : { source: { file: this.file, page: this.page } }
@@ -335,7 +339,7 @@ export default {
           ? { file: this.file, page: this.page }
           : this.active_paragraph.source;
       if (src && src.file && typeof src.page !== "undefined") {
-        var image_url = api.get_image_url(src);
+        var image_url = this.api.get_image_url(src);
         var image_element = new Image();
         image_element.src = image_url;
         image_element.onload = () => {
@@ -454,7 +458,7 @@ export default {
       this.update_pdfpage();
     },
     save_pagenum() {
-      api.call(
+      this.api.call(
         `collections/${this.mongocollection || "paragraph"}/${
           this.active_paragraph._id
         }/pagenum`,

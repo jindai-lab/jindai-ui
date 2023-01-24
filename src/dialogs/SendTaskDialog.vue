@@ -41,8 +41,6 @@
 </template>
 
 <script>
-import api from "../api.js";
-
 export default {
   name: "SendTaskDialog",
   props: ["selection", "retval"],
@@ -53,7 +51,7 @@ export default {
     quicktasks: [],
   }),
   mounted() {
-    api.call("tasks/shortcuts").then(
+    this.api.call("tasks/shortcuts").then(
       (data) =>
         (this.quicktasks = data.result.map((task) => ({
           text: task.name,
@@ -63,7 +61,7 @@ export default {
   },
   methods: {
     quicktask() {
-      return api
+      return this.api
         .call("quicktask", {
           pipeline: [
             [

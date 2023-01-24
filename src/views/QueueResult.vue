@@ -15,7 +15,7 @@
 </template>
 
 <script>
-import api from "../api";
+
 import ResultsView from "../components/ResultsView";
 
 export default {
@@ -37,7 +37,7 @@ export default {
   methods: {
     load_data(e) {
       var token = new Date().getTime() - Math.random();
-      return api
+      return this.api
         .call(
           "queue/" +
             encodeURIComponent(this.id) +

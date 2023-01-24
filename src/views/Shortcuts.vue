@@ -51,7 +51,7 @@
 </template>
 
 <script>
-import api from "../api";
+
 import ParamInput from "../components/ParamInput.vue";
 
 export default {
@@ -85,18 +85,18 @@ export default {
       }
     },
     shortcut_delete(ids) {
-      api
+      this.api
         .call("plugins/shortcuts", { key: ids, value: '' })
         .then(
           () => this.reload()
         );
     },
     auto_tags_apply(id) {
-      api.call("plugins/shortcuts", { apply: id })
-        .then(() => (api.notify(this.$t('success'))))
+      this.api.call("plugins/shortcuts", { apply: id })
+        .then(() => (this.$notify('success')))
     },
     reload() {
-      api
+      this.api
         .call("plugins/shortcuts")
         .then((data) => (this.shortcuts = data.result));
     },
@@ -125,7 +125,7 @@ export default {
       item.expr = this.new_shortcut.expr
     },
     submit(item) {
-      return api.call("plugins/shortcuts", {key: item.name, value: item.expr}).then((data) => {
+      return this.api.call("plugins/shortcuts", {key: item.name, value: item.expr}).then((data) => {
           if (!data.__exception__) {
             this.new_shortcut.name = "";
             this.new_shortcut.expr = "";

@@ -43,8 +43,6 @@
 </template>
 
 <script>
-import api from "../api";
-
 export default {
   name: "PromptChoicesDialog",
   data() {
@@ -100,7 +98,7 @@ export default {
   },
   methods: {
     match_pattern(item, query, item_text) {
-      return item_text.match(new RegExp(api.escape_regex(query), "i"));
+      return item_text.match(new RegExp(this.api.escape_regex(query), "i"));
     },
     ret() {
       var result = this.new_value;

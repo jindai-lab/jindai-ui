@@ -95,7 +95,7 @@
 </template>
     
 <script>
-import api from "../api";
+
 import ResultsView from "../components/ResultsView";
 import ParamInput from "../components/ParamInput.vue";
 
@@ -116,24 +116,24 @@ export default {
       selection_bundles: {},
       external_json: null,
       page_size: 50,
-      cancel_source: api.cancel_source(),
-      expert: api.config.expert,
+      cancel_source: this.api.cancel_source(),
+      expert: this.api.config.expert,
     };
   },
   mounted() {
-    let config = api.config;
+    let config = this.api.config;
     if (config.page_size) this.page_size = config.page_size;
     if (config.sort) this.sort = config.sort;
     if (config.groups) this.groups = config.groups;
 
-    let search_params = api.querystring_parse(location.search);
+    let search_params = this.api.querystring_parse(location.search);
     if (config.expert && search_params.q && search_params.q.startsWith("? "))
       search_params.q = search_params.q.replace(/^\? /, "");
     for (var k of ["q", "sort", "groups"])
       if (search_params[k]) this[k] = search_params[k];
-    if (api.config.expert) this.$refs.search_code.refresh(this.q);
+    if (this.api.config.expert) this.$refs.search_code.refresh(this.q);
 
-    api.get_datasets_hierarchy().then((data) => {
+    this.api.get_datasets_hierarchy().then((data) => {
       this.datasets = data.hierarchy;
       this.selection_bundles = data.bundles;
       this.selected_datasets =
@@ -151,7 +151,7 @@ export default {
       if (selected.length > 0) {
         var datasets = selected
             .filter((x) => !x.source)
-            .map((x) => api.escape_regex(x.dataset_name)),
+            .map((x) => this.api.escape_regex(x.dataset_name)),
           sourcefiles = selected
             .filter((x) => x.source)
             .map((x) => ({
@@ -183,7 +183,7 @@ export default {
           ")";
       }
 
-      if (api.config.view_mode == "gallery") {
+      if (this.api.config.view_mode == "gallery") {
         req += (req ? "," : "") + "images!=[]";
       }
       return req;
@@ -196,12 +196,14 @@ export default {
 
       this.req = this.datasets_req();
 
+      document.title = this.api.meta.app_title + ' ' + this.q
+
       if (pagenum_preserve !== true)
         history.pushState(
           "",
           "",
-          api.querystring_stringify(
-            Object.assign(api.querystring_parse(location.search), {
+          this.api.querystring_stringify(
+            Object.assign(this.api.querystring_parse(location.search), {
               q: this.q,
               selected_datasets: this.selected_datasets,
               sort: this.expert ? "" : this.sort,
@@ -215,20 +217,23 @@ export default {
     },
     load_search(e) {
       var token = new Date().getTime() + Math.random();
-      const empty = new Promise(accept=>accept([]))
+      const empty = new Promise(accept=>accept({
+        result: [],
+        total: null
+      }))
 
       if (!this.q && !this.req) return empty
 
       if (this.q.startsWith("file:")) {
         const json_path = this.q.substring(5).trim();        
-        return api.call("image?file=" + json_path).then((data) => {
+        return this.api.call("image?file=" + json_path).then((data) => {
           this.external_json = data;
           this.$refs.results.start();
         });
       }
 
       if (this.cancel_source) this.cancel_source.cancel();
-      this.cancel_source = api.cancel_source();
+      this.cancel_source = this.api.cancel_source();
 
       var params = {
         q: (this.expert ? "? " : "") + this.q,
@@ -245,11 +250,11 @@ export default {
           typeof this.groups === "object" ? this.groups.value : this.groups,
       };
 
-      if (params.sort !== "random") api.config.sort = params.sort;
-      api.config.groups = params.groups;
+      if (params.sort !== "random") this.api.config.sort = params.sort;
+      this.api.config.groups = params.groups;
       
       return Promise.all([
-        api
+        this.api
           .call(
             "search",
             Object.assign({ count: true }, params, this.cancel_source)
@@ -258,7 +263,7 @@ export default {
             if (typeof data.result !== "undefined")
               return { token, total: data.result };
           }),
-       api.call("search", params, this.cancel_source).then((data) => {
+       this.api.call("search", params, this.cancel_source).then((data) => {
           if (!data) {
             console.log("WARNING: no data returned.");
             return;
@@ -283,7 +288,7 @@ export default {
               });
             }
           }
-          this.querystr = api
+          this.querystr = this.api
             .querify(data.result.query)
             .replace(/^\(|\)$/g, "");
           return {
@@ -308,7 +313,7 @@ export default {
           let key = kvpair[0],
             val = kvpair[1];
           if (key == "keywords") {
-            if (typeof val == "string") return [api.escape_regex(val)];
+            if (typeof val == "string") return [this.api.escape_regex(val)];
             else if (typeof val.$regex == "string") return [val.$regex];
           }
           return this.keyword_patterns(val);
@@ -319,7 +324,7 @@ export default {
       if (typeof callback !== "function")
         callback = (data) =>
           this.$router.push("/tasks/" + data.result).catch(() => {});
-      api
+      this.api
         .put("tasks/", {
           name:
             this.$t("search") +
@@ -342,10 +347,10 @@ export default {
     },
     export_file(fmt) {
       this.export_query(fmt, (data) => {
-        api
+        this.api
           .put("queue/", { id: data.result })
           .then((ret) =>
-            api.notify(this.$t("task-enqueued", { task: ret.result }))
+            this.$notify("task-enqueued", { task: ret.result })
           );
       });
     },

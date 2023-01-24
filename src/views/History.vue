@@ -21,18 +21,18 @@
 </template>
 
 <script>
-import api from "../api";
+
 
 export default {
   data() {
     return { history: [] };
   },
   mounted() {
-    api.call("history").then((data) => (this.history = data.result));
+    this.api.call("history").then((data) => (this.history = data.result));
   },
   methods: {
     export_query(h) {
-      api
+      this.api
         .put("tasks/", {
           pipeline: [
             [

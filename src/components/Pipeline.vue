@@ -44,7 +44,6 @@
 </template>
 
 <script>
-import business from '../business'
 import draggable from 'vuedraggable'
 
 export default {
@@ -55,7 +54,7 @@ export default {
   },
   data() {
     return {
-        stages: business.pipelines,
+        stages: this.business.pipelines,
         show_code: false,
         valid: [],
         shortcut: {}
