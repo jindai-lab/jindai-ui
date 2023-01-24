@@ -197,7 +197,7 @@ const apis = {
         }
 
         if (message !== "Cancel") {
-          this.notify(message, { detail: typeof ex != 'object' ? { '@val': ex } : ex });
+          this.dialogs.notify(message, { detail: typeof ex != 'object' ? { '@val': ex } : ex });
           throw ex;
         }
       });

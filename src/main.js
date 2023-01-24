@@ -183,7 +183,7 @@ router.beforeEach((to, from, next) => {
 import i18n from "./locales";
 import business from "./business";
 
-Promise.all([api.get_meta(), business.initialized]).then(() => {
+Promise.all([api.get_meta(), business.initialized]).finally(()=>{
   new Vue({
     vuetify,
     router,
