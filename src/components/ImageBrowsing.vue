@@ -23,7 +23,7 @@
         }"
         id="viewer-parent"
       >
-        <viewer :images="[]"  @inited="viewer_inited" :options="{viewed: viewer_inited }" class="viewer">
+        <viewer :options="{ viewed: viewer_inited }" class="viewer">
           <div class="map-img">
             <div class="map-list">
               <img :src="this.api.get_item_image(item)" ref="nativeImage" />

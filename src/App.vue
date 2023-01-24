@@ -1,7 +1,7 @@
 <template>
   <v-app>
     <v-navigation-drawer
-      v-model="api.config.drawer"
+      v-model="drawer"
       app
       v-if="!viewer"
       disable-resize-watcher
@@ -79,7 +79,7 @@
 
     <v-app-bar app color="primary" dark v-if="!viewer">
       <v-app-bar-nav-icon
-        @click="api.config.drawer = !api.config.drawer"
+        @click="drawer = !drawer"
       ></v-app-bar-nav-icon>
       <v-toolbar-title>{{ api.meta.app_title }}</v-toolbar-title>
       <v-spacer></v-spacer>
@@ -162,6 +162,7 @@ export default {
         running: [],
       },
       logs: {},
+      drawer: false,
       admin: false,
       shortcuts: [],
       ui_language: "",
@@ -179,6 +180,7 @@ export default {
     this.ui_language = this.$i18n.locale;
   },
   mounted() {
+    this.drawer = this.api.config.drawer
     this.api.get_meta().then((meta) => {
       this.$vuetify.theme.dark = !!meta.app_dark;
       document.title = meta.app_title

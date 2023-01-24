@@ -1,5 +1,8 @@
-import apicalls from './apicalls'
+import initialized from './apicalls'
 import Selection from './selection'
 import Paging from "./paging"
+import Vue from 'vue'
 
-export default {Selection, Paging, ... apicalls}
+Vue.prototype.business = {Selection, Paging}
+
+export default {Selection, Paging, initialized}

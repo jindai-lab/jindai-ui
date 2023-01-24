@@ -82,7 +82,7 @@ export default {
       var selected = document.getSelection().toString()
       if (!selected)return
       this.api.open_window({
-        q: `c(${this.quote(selected)}),${this.scope(this.paragraph)}`,
+        q: `c(${this.api.quote(selected)}),${this.api.scope(this.paragraph)}`,
         datasets: [this.paragraph.dataset]
       })
     }

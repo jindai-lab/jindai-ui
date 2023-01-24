@@ -11,7 +11,6 @@
         :data-id="r._id"
         v-else
         :key="'paragraph' + index"
-        @mousedown="simulate_dblclick(index)"
       >
         <div class="meta">
           <v-checkbox
@@ -56,15 +55,13 @@
         </div>
         <div
           v-if="view_mode == 'gallery'"
+            @dblclick="start_view(index)"
           @click="update_selection(r, $event.shiftKey, index)"
         >
           <div
-            class="overlaping-image"
-            :key="`${r._id} ${selection.length}`"
-            v-show="r.selected"
-          >
-            &#xf012c;
-          </div>
+            :class="{selected: r.selected, 'before-image': true}"
+            :v-key="`selector-${index}-${selection.length}`"
+          ></div>
           <v-img
             v-if="view_mode == 'gallery'"
             :contain="api.config.contain"
@@ -142,9 +139,6 @@
 <script>
 import ContentView from "./ContentView.vue";
 import GalleryContentView from "./GalleryContentView.vue";
-
-var _lastmousedown = 0,
-  _lastindex = -1;
 
 export default {
   name: "SelectableList",
@@ -254,12 +248,8 @@ export default {
         else this.selection.remove(it);
       }
     },
-    simulate_dblclick(index) {
-      var timestamp = new Date().getTime();
-      if (timestamp - _lastmousedown < 500 && index == _lastindex)
-        this.$emit("start-view", index);
-      _lastmousedown = timestamp;
-      _lastindex = index;
+    start_view(index) {
+      this.$emit("start-view", index);
     },
   },
 };
@@ -300,7 +290,8 @@ export default {
   width: 250px;
 }
 
-.overlaping-image {
+.before-image.selected::before {
+  content: '\f012c';
   color: green;
   font-family: "Material Design Icons";
   display: block;

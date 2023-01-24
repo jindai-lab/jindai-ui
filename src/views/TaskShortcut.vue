@@ -73,15 +73,15 @@ export default {
   watch: {
     id() {
       this.shortcut_params = {};
-      this.results = [];
+      this.results = {};
       this.valid = [];
       this.result_plain = "";
     },
   },
   mounted() {
     var params = this.api.querystring_parse(location.search.substring(1));
-    Object.assign(
-      this.stages,
+    this.stages = Object.assign(
+      {},
       ...Object.entries(this.business.pipelines).map((kv) => kv[1])
     );
 

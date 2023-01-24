@@ -37,6 +37,12 @@
       </template>
 
       <v-list class="pointer">
+        <v-list-item>
+          <v-list-item-title
+            @click=" $emit('toggle-fits'); $forceUpdate()"
+          >
+            {{ $t('fit-' + api.next_fit()) }}</v-list-item-title
+          ></v-list-item>
         <v-list-item
           v-for="item in [
             { name: 'play', event: 'play' },
@@ -55,12 +61,6 @@
             {{ $t(item.name) }}</v-list-item-title
           >
         </v-list-item>
-        <v-list-item>
-          <v-list-item-title
-            @click=" $emit('toggle-fits'); $forceUpdate()"
-          >
-            {{ $t('fit-' + api.next_fit()) }}</v-list-item-title
-          ></v-list-item>
       </v-list>
     </v-menu>
   </div>
