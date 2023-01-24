@@ -227,6 +227,7 @@ import "vue-prism-editor/dist/prismeditor.min.css"; // import the styles somewhe
 import { highlight, languages } from "prismjs/components/prism-core";
 import "prismjs/components/prism-clike";
 import "prismjs/themes/prism-tomorrow.css"; // import syntax highlighting styles
+import business from "../business";
 
 export default {
   name: "ParamInput",
@@ -348,35 +349,30 @@ export default {
           );
           break;
         case "PIPELINE":
-          api.help_langs.then(
-            (data) =>
-              (this.choices = [].concat(
-                ...Object.values(data).map((x) =>
-                  Object.keys(x).map((k) => ({
-                    text: `${x[k].doc} ${k}`,
-                    value: k,
-                    hint: x[k].args
-                      .map(
-                        (x) =>
-                          `${x.name} (${x.type}${
-                            x.default !== null ? " optional" : ""
-                          })`
-                      )
-                      .join(", "),
-                  }))
-                )
-              ))
+          this.choices = [].concat(
+            ...Object.values(business.pipelines).map((x) =>
+              Object.keys(x).map((k) => ({
+                text: `${x[k].doc} ${k}`,
+                value: k,
+                hint: x[k].args
+                  .map(
+                    (x) =>
+                      `${x.name} (${x.type}${
+                        x.default !== null ? " optional" : ""
+                      })`
+                  )
+                  .join(", "),
+              }))
+            )
           );
           break;
         case "LANG":
-          api.help_langs().then((data) => {
-            for (var pair of Object.entries(data)) {
-              let key = pair[0],
-                val = pair[1];
-              if (this.langs.indexOf(`:${key}`) >= 0) continue;
-              this.langs += `|${val}:${key}`;
-            }
-          });
+          for (var pair of Object.entries(business.languages)) {
+            let key = pair[0],
+              val = pair[1];
+            if (this.langs.indexOf(`:${key}`) >= 0) continue;
+            this.langs += `|${val}:${key}`;
+          }
           break;
         case "object":
           this.keys = this.arg.keys || [];

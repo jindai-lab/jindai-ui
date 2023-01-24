@@ -148,6 +148,7 @@
 
 <script>
 import api from "../api";
+import dialogs from "../dialogs"
 import ParamInput from "../components/ParamInput.vue";
 export default {
   name: "UserList",
@@ -179,7 +180,7 @@ export default {
       });
     },
     del_user(u) {
-      api.dialogs.confirm({title: this.$t("user-delete-confirm", { user: u.username })}).then(() => {
+      dialogs.confirm({title: this.$t("user-delete-confirm", { user: u.username })}).then(() => {
         api.delete("users/" + u.username).then((data) => {
           if (!data.result.ok) return;
           api.notify(this.$t("user-deleted", { user: u.username }));

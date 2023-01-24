@@ -32,6 +32,7 @@
         }"
       >
         <img
+          :key="item._id + '-' + fit"
           v-if="item"
           :src="get_item_image(item)"
           alt="Browsing Image"
@@ -152,6 +153,7 @@ export default {
     browsing_video() {
       return this.item && this.item.item_type == "video";
     },
+    fit() {return api.config.fit}
   },
   methods: {
     quote(x) {
@@ -255,7 +257,6 @@ export default {
         api.config.fit = fits[(fits.indexOf(api.config.fit) + 1) % fits.length];
       }
       this.fit_image({ target: this.$refs.browsing_image });
-      this.$forceUpdate();
     },
     change_offsets_start(e) {
       if (e.ctrlKey || e.altKey || e.metaKey) {

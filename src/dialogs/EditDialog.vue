@@ -34,7 +34,6 @@
                 <v-btn
                   @click="
                     target[new_field] = '';
-                    $forceUpdate();
                   "
                 >
                   <v-icon>mdi-plus</v-icon>

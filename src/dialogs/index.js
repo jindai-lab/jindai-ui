@@ -10,10 +10,12 @@ import AlertDialog from "./AlertDialog.vue"
 import Vue from "vue";
 import i18n from "@/locales";
 import vuetify from "@/plugins/vuetify.js";
+import api from "../api";
 
 const _els = []
 
-export default {
+
+api.dialogs = {
 
     _create_dialog(class_, options) {
         return new Promise((resolve, reject) => {
@@ -64,3 +66,7 @@ export default {
         _els.forEach(x => x.retval = false)
     }
 }
+
+api.notify = (text, bundle) => api.dialogs1.alert({ text, ...bundle });
+
+export default api.dialogs

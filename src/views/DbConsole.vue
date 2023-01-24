@@ -8,23 +8,23 @@
         label="Mongo Collection"
         :items="mongocollections"
         v-model="command.mongocollection"
-        @change="previewed = command.operation == 'count'"
+        @change="previewed = command.operation == 'count_documents'"
       ></v-select>
       <ParamInput
         :arg="{ name: 'Query', type: 'QUERY' }"
         v-model="command.query"
-        @input="previewed = command.operation == 'count'"
+        @input="previewed = command.operation == 'count_documents'"
       />
       <ParamInput
-        :arg="{ name: 'Operation', type: 'update_many|delete_many|count' }"
+        :arg="{ name: 'Operation', type: 'update_many|delete_many|count_documents' }"
         v-model="command.operation"
-        @input="previewed = command.operation == 'count'"
+        @input="previewed = command.operation == 'count_documents'"
       />
       <ParamInput
         :arg="{ name: 'Parameters', type: 'QUERY' }"
         v-model="command.operation_params"
-        @input="previewed = command.operation == 'count'"
-        v-show="command.operation != 'count'"
+        @input="previewed = command.operation == 'count_documents'"
+        v-show="command.operation != 'count_documents'"
       />
     </v-card-text>
     <v-card-actions>
@@ -57,7 +57,7 @@ export default {
       command: {
         mongocollection: api.config.dbconsole.mongocollection || "paragraph",
         query: "",
-        operation: "count",
+        operation: "count_documents",
         operation_params: "",
         preview: true,
       },
@@ -70,7 +70,7 @@ export default {
     get_command() {
       return Object.assign({}, this.command, {
         operation_params:
-          this.command.operation == "count" ? "" : this.command.operation_params,
+          this.command.operation == "count_documents" ? "" : this.command.operation_params,
       });
     },
     stringify_command(data) {

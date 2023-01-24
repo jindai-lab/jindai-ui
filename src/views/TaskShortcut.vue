@@ -44,6 +44,7 @@
 
 
 <script>
+import business from "../business";
 import api from "../api";
 import ParamInput from "../components/ParamInput.vue";
 import ResultsView from "../components/ResultsView.vue";
@@ -57,7 +58,7 @@ export default {
   props: ["id"],
   data() {
     return {
-      stages: {},
+      stages: business.pipelines,
       task: {
         _id: "",
         name: "",
@@ -81,17 +82,17 @@ export default {
   },
   mounted() {
     var params = api.querystring_parse(location.search.substring(1));
-    api.help_pipelines().then((data) => {
-      for (var k in data) {
-        Object.assign(this.stages, data[k]);
+    Object.assign(
+      this.stages,
+      ...Object.entries(business.pipelines).map((kv) => kv[1])
+    );
+
+    api.call("tasks/" + this.id).then((data) => {
+      this.task = data.result;
+      for (var k in this.task.shortcut_map) {
+        this.shortcut_params[k] =
+          typeof params[k] === "undefined" ? this.get_map_val(k) : params[k];
       }
-      api.call("tasks/" + this.id).then((data) => {
-        this.task = data.result;
-        for (var k in this.task.shortcut_map) {
-          this.shortcut_params[k] =
-            typeof params[k] === "undefined" ? this.get_map_val(k) : params[k];
-        }
-      });
     });
   },
   methods: {
@@ -218,7 +219,7 @@ export default {
         target = seg.match(/^\d+$/) ? target[+seg][1] : target[seg];
       }
       return target;
-    }
+    },
   },
 };
 </script>

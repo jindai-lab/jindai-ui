@@ -44,7 +44,7 @@
 </template>
 
 <script>
-import api from '../api'
+import business from '../business'
 import draggable from 'vuedraggable'
 
 export default {
@@ -55,7 +55,7 @@ export default {
   },
   data() {
     return {
-        stages: {},
+        stages: business.pipelines,
         show_code: false,
         valid: [],
         shortcut: {}
@@ -88,9 +88,6 @@ export default {
     }
   },
   mounted () {
-    api.help_pipelines().then((data) => {
-      this.stages = data;
-    });
     if (!Array.isArray(this.value))
         this.$emit("input", []);
   }

@@ -143,6 +143,7 @@
 import ContentView from "./ContentView.vue";
 import GalleryContentView from "./GalleryContentView.vue";
 import api from "../api";
+import dialogs from "../dialogs"
 
 var _lastmousedown = 0,
   _lastindex = -1;
@@ -186,7 +187,7 @@ export default {
       var source = Object.assign({}, r);
       delete source[col];
       var target = { arr: r[col], source };
-      api.dialogs.embedded(target);
+      dialogs.embedded(target);
     },
     select_shortcut_keys(e) {
       if (e.target.tagName == 'INPUT' || e.target.tagName == 'TEXTAREA') return

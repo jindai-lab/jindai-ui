@@ -1,8 +1,11 @@
 import api from "../api"
+import dialogs from "../dialogs"
 import i18n from "../locales";
 
 const shortcut_choices = []
 const plugin_pages = []
+const languages = []
+const pipelines = []
 
 
 api.call("plugins/shortcuts").then((data) => {
@@ -15,6 +18,10 @@ api.call("plugins/shortcuts").then((data) => {
 api
   .call("plugins/filters")
   .then((data) => (plugin_pages.push(...data.result)));
+
+api.call("help/pipelines").then(data => pipelines.push(...data.result))
+
+api.call("help/langs").then(data => languages.push(...data.result))
 
 
 export default {
@@ -35,6 +42,8 @@ export default {
   },
 
   plugin_pages,
+  languages,
+  pipelines,
 
   tag(options) {
     const { selection, val: tags, append } = options
@@ -113,14 +122,16 @@ export default {
           bundle
         )
         .then((data) => {
+          const {group_ids, paragraph_ids} = data.result
           selection.all.forEach(
             (p) =>
+            paragraph_ids.includes(p._id) ?
             (p.keywords = p.keywords
               .filter(
                 (x) =>
-                  !x.match(del ? /^#/ : /^#0/) && !data.result.includes(x)
+                  !x.match(del ? /^#/ : /^#0/) && !group_ids.includes(x)
               )
-              .concat(data.result))
+              .concat(group_ids)) : void(0)
           );
         });
     };
@@ -132,7 +143,7 @@ export default {
         ...api.guess_groups(api.current_q()),
         ...api.guess_groups(selection.paragraphs),
       ];
-      return api.dialogs
+      return dialogs
         .prompt({
           title: i18n.t("group"),
           choices,
@@ -181,7 +192,7 @@ export default {
     var existing_tags = new Set(
       selection.paragraphs.reduce((a, tags) => a.concat(tags.keywords), [])
     );
-    return api.dialogs
+    return dialogs
       .prompt({
         title: i18n.t("tagging"),
         value: Array.from(existing_tags),
@@ -230,7 +241,7 @@ export default {
 
   short_tagging(options) {
     const { selection, initial } = options
-    return api.dialogs
+    return dialogs
       .prompt({
         title: i18n.t("tagging"),
         choices: this.match_shortcuts,
@@ -241,7 +252,7 @@ export default {
 
   batch_tagging(options) {
     const { selection } = options
-    return api.dialogs
+    return dialogs
       .batch_tagging(api.config.tagging || {})
       .then((tags) => this.tag({ selection, val: tags, append: true }));
   },
@@ -254,7 +265,7 @@ export default {
         .filter((x) => x.startsWith("@"))
     ),
       author = selection.first.author;
-    return api.dialogs
+    return dialogs
       .prompt({
         title: i18n.t("author"),
         value: author ? [author] : [],
@@ -281,7 +292,7 @@ export default {
   },
 
   task(options) {
-    return api.dialogs.send_task(options);
+    return dialogs.send_task(options);
   },
 
   open_window(options) {
@@ -292,6 +303,6 @@ export default {
   },
   info_dialog(options) {
     const { selection } = options
-    return api.dialogs.info({ target: selection.first })
+    return dialogs.info({ target: selection.first })
   }
 }

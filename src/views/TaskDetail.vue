@@ -112,6 +112,8 @@
 
 <script>
 import api from "../api";
+import dialogs from "../dialogs"
+import business from "../business";
 import ParamInput from "../components/ParamInput.vue";
 import Pipeline from "../components/Pipeline";
 import BlocklyComponent from "../components/BlocklyComponent.vue";
@@ -133,7 +135,7 @@ export default {
         pipeline: [],
       },
       blockly: false,
-      pipelines: null,
+      pipelines: business.pipelines,
       valid: [],
       show_code: false,
       tasks: [],
@@ -144,7 +146,6 @@ export default {
       this.task = data.result;
     });
     api.call("tasks/").then((data) => (this.tasks = data.result));
-    api.help_pipelines().then((data) => (this.pipelines = data));
   },
   computed: {
     user() {
@@ -158,7 +159,7 @@ export default {
       if (!valid) this.valid.push(name);
     },
     delete_task() {
-      api.dialogs.confirm({title: this.$t("confirm-delete")}).then(() => {
+      dialogs.confirm({title: this.$t("confirm-delete")}).then(() => {
         api.delete("tasks/" + this.task._id).then((data) => {
           if (data.result.ok) {
             api.notify(this.$t("deleted"));

@@ -56,13 +56,14 @@
 </template>
 
 <script>
+import business from "../business";
 import ParamInput from "./ParamInput";
 import Pipeline from "./Pipeline";
 
 export default {
   name: "StageDetail",
   inheritAttrs: false,
-  props: ["stages", "value", "map_id"],
+  props: ["value", "map_id"],
   components: { ParamInput, Pipeline },
   events: ["validation"],
   data() {
@@ -84,20 +85,22 @@ export default {
   },
   computed: {
     stage_doc() {
-      for (var x in this.stages)
-        if (this.stages[x][this.value[0]]) {
-          var res = Object.assign({}, this.stages[x][this.value[0]]);
+      for (var name in business.pipelines) {
+        let x = business.pipelines[name]
+        if (x[this.value[0]]) {
+          var res = {... x[this.value[0]]};
           res.args = [... res.args, {name: 'disabled', type: 'bool', default: false, description: this.$t('disabled')}]
           return res;
         }
+      }
       return {};
     },
     stage_options() {
       var opts = [];
-      for (var group in this.stages) {
+      for (var group in business.pipelines) {
         opts.push({ header: group });
-        for (var stname in this.stages[group]) {
-          const s = this.stages[group][stname];
+        for (var stname in business.pipelines[group]) {
+          const s = business.pipelines[group][stname];
           opts.push({
             value: stname,
             text: stname + " " + s.doc.split("\n")[0],

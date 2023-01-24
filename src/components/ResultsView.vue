@@ -101,6 +101,7 @@ import QuickActionButtons from "./QuickActionButtons";
 import SelectableList from "./SelectableList";
 import api from "../api";
 import business from "../business/";
+import dialogs from "../dialogs"
 
 export default {
   name: "ResultsView",
@@ -259,10 +260,10 @@ export default {
       this.start();
     },
     show_info_dialog(target) {
-      api.dialogs.info({ target });
+      dialogs.info({ target });
     },
     show_edit_dialog(target) {
-      api.dialogs.edit({ target }).then((target) => {
+      dialogs.edit({ target }).then((target) => {
         api
           .call(
             `collections/${target.mongocollection || "paragraph"}/${
@@ -305,7 +306,7 @@ export default {
     close_dialogs() {
       this.page_dialog.visible = false;
       this.selection.clear();
-      api.dialogs.close();
+      dialogs.close();
     },
     call_business(name, options) {
       if (typeof name == "object") {

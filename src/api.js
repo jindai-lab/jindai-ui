@@ -1,7 +1,6 @@
 import axios from "axios";
 import Cookies from "js-cookie";
 import i18n from "./locales/";
-import dialogs from "./dialogs/"
 import EventSource from "eventsource"
 
 const _prompt_no_image = require("../public/assets/no-image.png");
@@ -77,7 +76,7 @@ function LocalConfig() {
 const _stack = {
   _list: [],
   get_loading_bar() {
-    return document.getElementById('loadingBar') ?? {style: {}}
+    return document.getElementById('loadingBar') ?? { style: {} }
   },
   push(val) {
     this._list.push(val)
@@ -100,10 +99,6 @@ export default {
   apiBase,
 
   meta: null,
-
-  notify(text, bundle) {
-    this.dialogs.alert({ text, ...bundle });
-  },
 
   querystring_parse(str) {
     var params = {};
@@ -208,6 +203,11 @@ export default {
       });
   },
 
+  notify(text, bundle) {
+    console.log(text, bundle)
+    window.alert(text)
+  },
+
   _axios_config(other) {
     return {
       headers: {
@@ -240,30 +240,6 @@ export default {
     return x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   },
 
-  help_pipelines() {
-    if (!this._pipelines)
-      return this.call("help/pipelines").then((data) => {
-        this._pipelines = data.result;
-        return data.result;
-      });
-    else
-      return new Promise((accept) => {
-        accept(this._pipelines);
-      });
-  },
-
-  help_langs() {
-    if (!this._langs)
-      return this.call("help/langs").then((data) => {
-        this._langs = data.result;
-        return data.result;
-      });
-    else
-      return new Promise((accept) => {
-        accept(this._langs);
-      });
-  },
-
   querify(obj) {
     function _debracket(x) {
       if (x.match(/^\(.*\)$/)) {
@@ -293,7 +269,7 @@ export default {
         return "[" + _debracket(this.querify(obj[0])) + "]";
       } else {
         return (
-          "[" + obj.map((x) => _debracket(this.querify(x))).join(";") + "]"
+          "[" + obj.map((x) => _debracket(this.querify(x))).join(",") + "]"
         );
       }
     }
@@ -350,14 +326,14 @@ export default {
   authenticate(username, password, otp, remember) {
 
     const _get_user = () => new Promise((resolve, reject) => {
-        this.call("authenticate")
-          .then((d) => {
-            this.user = d.result.username;
-            resolve(d);
-          })
-          .catch(reject);
-      });
-    
+      this.call("authenticate")
+        .then((d) => {
+          this.user = d.result.username;
+          resolve(d);
+        })
+        .catch(reject);
+    });
+
     if (typeof otp == "string") otp = otp.substring(0, 6)
 
     if (typeof username == 'string') return new Promise((resolve, reject) => {
@@ -718,6 +694,4 @@ export default {
   },
   config: LocalConfig(),
 
-  dialogs,
-  
 };

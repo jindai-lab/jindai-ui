@@ -31,7 +31,11 @@ export default {
       this.queue_source = null;
     };
     window.onfocus = () => {
-      this.queue_event();
+      try {
+        this.queue_event();        
+      } catch (error) {
+        console.log('[eventsource]', error)
+      }
     };
     this.queue_event()
   },
