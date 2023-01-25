@@ -252,7 +252,7 @@ export default {
 
       if (params.sort !== "random") this.api.config.sort = params.sort;
       this.api.config.groups = params.groups;
-      
+
       return Promise.all([
         this.api
           .call(

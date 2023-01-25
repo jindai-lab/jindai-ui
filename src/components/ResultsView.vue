@@ -48,6 +48,7 @@
           style="max-width: 40px"
           type="number"
           dense
+          :value="page"
           @change="page = parseInt($event) || page"
         ></v-text-field>
       </div>
@@ -58,7 +59,7 @@
           dense
           class="d-inline-block ml-1"
           style="max-width: 60px"
-          v-model="api.config.page_size"
+          v-model="page_size"
         ></v-select>
       </div>
     </v-row>
@@ -137,8 +138,8 @@ export default {
     };
   },
   watch: {
-    page: function (val) {
-      this.turn_page(val);
+    page (val) {
+      val > 0 ? this.turn_page(val) : (this.page = 1);
     },
     "page_dialog.visible": function (val) {
       this.selection.clear();
@@ -147,6 +148,12 @@ export default {
         window.scrollTo(0, ele.offsetTop);
       }
     },
+    page_size(val) {
+      this.paging.page_size = val
+      this.paging.prefetch_size = val * 5
+      this.api.config.page_size = val
+      this.start(1)
+    }
   },
   computed: {
     pages() {
@@ -164,6 +171,7 @@ export default {
     },
   },
   mounted() {
+    this.page_size = this.api.config.page_size
     this.start();
   },
   created() {

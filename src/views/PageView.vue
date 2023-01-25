@@ -1,5 +1,10 @@
 <template>
-  <v-dialog :value="value" :fullscreen="view_mode == 'file' || view_mode == 'gallery'" persistent class="white-bg">
+  <v-dialog
+    :value="value"
+    :fullscreen="view_mode == 'file' || view_mode == 'gallery'"
+    persistent
+    class="white-bg"
+  >
     <v-card
       flat
       v-touch="{
@@ -12,6 +17,7 @@
       :style="
         view_mode == 'gallery' ? { overflow: 'hidden', height: '100%' } : {}
       "
+      v-if="active_paragraph"
     >
       <v-card-text>
         <!-- operation buttons -->
@@ -86,17 +92,98 @@
               />
             </div>
           </v-row>
-          <!-- gallery view, image browser -->
-          <div @dblclick="api.config.wheel_enabled = !api.config.wheel_enabled" v-else>
-            <ImageBrowsing
-              ref="ib"
-              :paragraph="active_paragraph"
-              :item="active_item"
-              v-if="value"
-              @info="$emit('info', $event)"
-              @browse="_event_handler"
-              @rating="$emit('rating', $event)"
+          <!-- gallery view, use image or video player -->
+          <div class="browser" v-else>
+            <video-player
+              :src="api.get_item_video(active_item)"
+              :options="{
+                muted: false,
+                autoplay: true,
+                style: {
+                  width: '100%',
+                  height: '100vh',
+                },
+              }"
+              class="video-player"
+              ref="videoPlayer"
+              v-if="active_item && active_item.item_type != 'image'"
             />
+            <image-player
+              :src="active_item ? api.get_item_image(active_item) : (_event_handler('continue'), '')"
+              :fit="api.config.fit"
+              class="image-player"
+              ref="imagePlayer"
+              v-else
+            />
+            <div class="browsing description">
+              <v-row align="end">
+                <v-col cols="2">
+                  <v-pagination
+                    v-model="browsing_page"
+                    :length="3"
+                    :total-visible="0"
+                    @previous="browsing_page = 2; _event_handler('arrowleft')"
+                    @next="browsing_page = 2; _event_handler('arrowright')"
+                  ></v-pagination>
+                </v-col>
+                <v-col cols="10" class="item-description" v-if="active_item">
+                  <v-row class="mt-3 mb-3">
+                    <div class="mr-3" v-if="typeof active_item.rating == 'number'">
+                      <v-rating
+                        style="display: inline-block"
+                        v-model="active_item.rating"
+                        background-color="white"
+                        color="yellow accent-4"
+                        half-increments
+                        hover
+                        size="18"
+                        @input="$emit('rating', { val: $event })"
+                      ></v-rating>
+                      <span class="grey--text text--lighten-2"
+                        >({{ active_item.rating.toFixed(1) }})
+                      </span>
+                    </div>
+                    <div>
+                      <v-btn
+                        v-for="(filter, page_name) in plugin_pages.filter(
+                          (x) => x.format
+                        )"
+                        :key="page_name"
+                        icon
+                        dense
+                        :href="
+                          '/' +
+                          api.querystring_stringify({
+                            q:
+                              api.scope(active_paragraph) +
+                              `;plugin('${format(filter.format, {
+                                mediaitem: active_item,
+                                paragraph: active_paragraph,
+                              })}');`,
+                          })
+                        "
+                        class="t_func sim"
+                        target="_blank"
+                        ><v-icon>{{ filter.icon }}</v-icon></v-btn
+                      >
+                      <v-btn
+                        icon
+                        dense
+                        @click="$emit('info', active_item)"
+                        target="_blank"
+                        data-keybind="i"
+                        ><v-icon>mdi-information</v-icon></v-btn
+                      >
+                    </div>
+                  </v-row>
+                  <GalleryContentView
+                    class="browsing-content"
+                    :paragraph="active_paragraph"
+                    view_mode="gallery-description"
+                  />
+                </v-col>
+              </v-row>
+            </div>
           </div>
 
           <!-- fullscreen image view -->
@@ -113,6 +200,8 @@
             >
             <img :src="pdf_image" alt="" style="width: 100%" ref="image" />
           </v-dialog>
+
+          <!-- pagenum edit -->
           <v-dialog v-model="pagenum_edit" width="unset">
             <v-card>
               <v-card-title
@@ -155,18 +244,20 @@
 </template>
 
 <script>
-
-
 import ParamInput from "../components/ParamInput.vue";
 import ContentView from "../components/ContentView.vue";
-import ImageBrowsing from "../components/ImageBrowsing.vue";
+import ImagePlayer from "../components/ImagePlayer.vue";
+import VideoPlayer from "../components/VideoPlayer.vue";
+import GalleryContentView from "../components/GalleryContentView.vue";
 
 export default {
   name: "PageView",
   components: {
     ParamInput,
     ContentView,
-    ImageBrowsing,
+    ImagePlayer,
+    VideoPlayer,
+    GalleryContentView
   },
   data() {
     return {
@@ -180,6 +271,7 @@ export default {
         sequential: "all",
         folio: false,
       },
+
       fetched_paragraphs: [],
       mongocollection: "paragraph",
       loading_image: require("../../public/assets/loading.png"),
@@ -190,7 +282,8 @@ export default {
       playing_interval: 1000,
       last_inc: 1,
       last_wheel: new Date(),
-      plugin_pages: this.business.plugin_pages
+      plugin_pages: this.business.plugin_pages,
+      browsing_page: 2,
     };
   },
   props: {
@@ -212,16 +305,16 @@ export default {
       return window.innerHeight;
     },
     active_paragraph() {
-      var paragraph ={}
-      if (this.view_mode == "file") paragraph= this.fetched_paragraphs[0];
-      else paragraph= Object.assign({}, this.paragraphs[this.paragraph_index]);
-        this.$emit('browse', {paragraph})
-      return paragraph
+      var paragraph = {};
+      if (this.view_mode == "file") paragraph = this.fetched_paragraphs[0];
+      else paragraph = Object.assign({}, this.paragraphs[this.paragraph_index]);
+      this.$emit("browse", { paragraph });
+      return paragraph;
     },
     active_item() {
       var item = (this.active_paragraph_images || [])[this.item_index];
-        this.$emit('browse', {item})
-      return item
+      this.$emit("browse", { item });
+      return item;
     },
     shown_paragraphs() {
       return this.view_mode !== "file"
@@ -253,7 +346,7 @@ export default {
   },
   mounted() {
     this.$el.focus();
-    if (!this.paragraph) {
+    if (!this.paragraphs) {
       let params = window.location.href.split("/");
       if (!params.includes("view")) return;
       params = params.slice(params.indexOf("view") + 1);
@@ -285,15 +378,16 @@ export default {
   },
   methods: {
     _wheel_handler(e) {
-      if (this.view_mode !== "gallery" || !this.api.config.wheel_enabled) return;
+      e.preventDefault();
+      if (this.view_mode !== "gallery" || e.ctrlKey) return;
       if (new Date() - this.last_wheel > 100) {
         this._event_handler(e.deltaY > 0 ? "arrowright" : "arrowleft");
         this.last_wheel = new Date();
       }
-      e.preventDefault();
     },
     apply_fit() {
-      if (this.view_mode == 'gallery' && this.show_modal) this.$refs.ib.viewer_inited()
+      if (this.view_mode == "gallery" && this.active_item && this.$refs.imagePlayer)
+        this.$refs.imagePlayer.update();
     },
     update_pdfpage() {
       if (this.view_mode == "file" && this.file) {
@@ -348,10 +442,9 @@ export default {
       } else {
         this.pdf_image = "";
       }
-
     },
     playing(interval) {
-      if (this.view_mode !== 'gallery') return
+      if (this.view_mode !== "gallery") return;
       if (interval) this.playing_interval = interval;
       this.playing_timer = setInterval(() => {
         this._event_handler("arrowright");
@@ -367,7 +460,7 @@ export default {
           return;
         if (this.playing_timer) clearInterval(this.playing_timer);
         direction = e.key.toLowerCase();
-        if (e.shiftKey) direction += 'shift';
+        if (e.shiftKey) direction += "shift";
       }
 
       var inc = 0;
@@ -443,7 +536,7 @@ export default {
             break;
           } else {
             this.item_index = inc > 0 ? 0 : -1;
-            inc = Math.sign(inc)
+            inc = Math.sign(inc);
           }
           _paragraph(inc);
           break;
@@ -465,6 +558,17 @@ export default {
         this.pagenum_editor
       );
       this.pagenum_edit = false;
+    },
+    format(str, bundle) {
+      function _replace(_, i) {
+        var b = bundle;
+        for (var k of i.split(".")) b = b[k] || "";
+        return b;
+      }
+      return (
+        (typeof str == "string" && str.replace(/\{([\w\d._]+)\}/g, _replace)) ||
+        ""
+      );
     },
   },
 };
@@ -506,4 +610,37 @@ export default {
 .white-bg {
   background: white;
 }
+.description {
+  border: hidden;
+  background: none;
+  box-shadow: none !important;
+  position: fixed;
+  bottom: 0;
+}
+
+
+.description:hover {
+  opacity: 1;
+  z-index: 101;
+}
+
+.browsing-content {
+  max-height: 30vh;
+  overflow-y: hidden;
+}
+
+.description {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  backdrop-filter: blur(5px);
+  background-color: rgba(255, 255, 255, 0.5);
+  opacity: 0;
+}
+
+.theme--dark .description {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
 </style>

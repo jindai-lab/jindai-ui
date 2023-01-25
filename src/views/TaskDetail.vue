@@ -188,7 +188,7 @@ export default {
     enqueue() {
       this.save().then((id) =>
         this.api.put("queue/", { id }).then((data) => {
-          this.notify(this.$t("task-enqueued", { task: data.result }));
+          this.$notify(this.$t("task-enqueued", { task: data.result }));
         })
       );
     },
