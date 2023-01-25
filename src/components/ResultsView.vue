@@ -76,10 +76,7 @@
       @prev="page--"
       @info="show_info_dialog($event)"
       @rating="
-        call_business(
-          'rating',
-          typeof $event == 'object' ? $event : { val: $event }
-        )
+        call_business('rating', typeof $event == 'object' ? $event : { val: $event })
       "
     />
 
@@ -101,6 +98,7 @@
 import PageView from "../views/PageView.vue";
 import QuickActionButtons from "./QuickActionButtons";
 import SelectableList from "./SelectableList";
+import { nanoid } from "nanoid";
 
 export default {
   name: "ResultsView",
@@ -135,10 +133,11 @@ export default {
         this.api.config.page_size * 5,
         this.loader
       ),
+      page_size: 50,
     };
   },
   watch: {
-    page (val) {
+    page(val) {
       val > 0 ? this.turn_page(val) : (this.page = 1);
     },
     "page_dialog.visible": function (val) {
@@ -149,11 +148,11 @@ export default {
       }
     },
     page_size(val) {
-      this.paging.page_size = val
-      this.paging.prefetch_size = val * 5
-      this.api.config.page_size = val
-      this.start(1)
-    }
+      this.paging.page_size = val;
+      this.paging.prefetch_size = val * 5;
+      this.api.config.page_size = val;
+      this.start(1);
+    },
   },
   computed: {
     pages() {
@@ -171,7 +170,7 @@ export default {
     },
   },
   mounted() {
-    this.page_size = this.api.config.page_size
+    this.page_size = this.api.config.page_size;
     this.start();
   },
   created() {
@@ -192,22 +191,22 @@ export default {
         this.value = [];
         this.sticky = [];
       }
+      this.page = page;
       this.turn_page(page);
     },
     loader(options) {
+      const _mapper = (x) => Object.assign(x, { selected: false, _sel_id: nanoid() });
       if (Array.isArray(this.load))
         return new Promise((accept) => {
           this.total = this.load.length;
           accept(
-            this.load
-              .slice(options.offset, options.offset + options.limit)
-              .map((x) => Object.assign(x, { selected: false }))
+            this.load.slice(options.offset, options.offset + options.limit).map(_mapper)
           );
         });
       else
         return this.load(options).then((data) => {
           if (typeof data.total !== "undefined") this.total = data.total;
-          return data.result;
+          return data.result.map(_mapper);
         });
     },
     turn_page(p) {
@@ -233,8 +232,6 @@ export default {
           this.page = 1;
           return;
         }
-
-        data = data.map((x) => Object.assign(x, { selected: false }));
 
         var has_sticky = data.findIndex((x) => x.spacer) + 1;
         if (has_sticky > 0) {
@@ -264,9 +261,7 @@ export default {
       this.api.dialogs.edit({ target }).then((target) => {
         this.api
           .call(
-            `collections/${target.mongocollection || "paragraph"}/${
-              target._id
-            }`,
+            `collections/${target.mongocollection || "paragraph"}/${target._id}`,
             target
           )
           .then(() => {
@@ -285,8 +280,7 @@ export default {
       this.$refs.page_view.playing(this.api.config.playing_interval);
     },
     page_hotkeys(tags) {
-      if (tags.target.tagName == "INPUT" || tags.target.tagName == "TEXTAREA")
-        return;
+      if (tags.target.tagName == "INPUT" || tags.target.tagName == "TEXTAREA") return;
 
       switch (tags.key.toLowerCase()) {
         // bind for turning page
@@ -308,7 +302,7 @@ export default {
     },
     toggle_fits() {
       this.api.config.fit = this.api.next_fit();
-      this.$refs.page_view.apply_fit()
+      this.$refs.page_view.apply_fit();
     },
     call_business(name, options) {
       if (typeof name == "object") {
@@ -317,9 +311,7 @@ export default {
         delete options.name;
       }
       if (!this.selection.length) return;
-      var selection = new this.business.Selection([
-        ...this.selection.paragraphs,
-      ]);
+      var selection = new this.business.Selection([...this.selection.paragraphs]);
       selection._chosen_item = [...this.selection._chosen_item];
       selection.all = this.value;
       this.business[name.replace("-", "_")]({

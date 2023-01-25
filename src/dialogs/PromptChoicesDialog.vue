@@ -14,7 +14,7 @@
           chips
           deletable-chips
           hide-selected
-          auto-select-first
+          :auto-select-first="new_value.length == 0"
           ref="ac"
           :filter="match_pattern"
           @keyup.esc="typing = ''"

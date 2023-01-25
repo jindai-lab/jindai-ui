@@ -16,7 +16,7 @@ class Selection {
   clear() {
     this.paragraphs.forEach(x => x.selected = false)
     this.paragraphs.splice(0, this.paragraphs.length)
-    this._chosen_item = []
+    this._chosen_item.splice(0, this._chosen_item.length)
   }
 
   set(to) {
@@ -32,7 +32,7 @@ class Selection {
   }
 
   remove(p) {
-    var index = this.paragraphs.findIndex(x => x._id == p._id)
+    var index = this.paragraphs.findIndex(x => x._sel_id == p._sel_id)
     if (index >= 0) {
       this.paragraphs[index].selected = false
       this.paragraphs.splice(index, 1)
@@ -41,7 +41,7 @@ class Selection {
   }
 
   add(p) {
-    if (this.paragraphs.includes(p) || this.paragraphs.find(x => x._id == p._id)) return
+    if (this.paragraphs.includes(p) || this.paragraphs.find(x => x._sel_id == p._sel_id)) return
     p.selected = true
     this.paragraphs.push(p)
     this._chosen_item = []

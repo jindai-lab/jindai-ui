@@ -14,9 +14,7 @@
         up: () => $emit('rating', { inc: 1 }),
       }"
       @wheel="_wheel_handler"
-      :style="
-        view_mode == 'gallery' ? { overflow: 'hidden', height: '100%' } : {}
-      "
+      :style="view_mode == 'gallery' ? { overflow: 'hidden', height: '100%' } : {}"
       v-if="active_paragraph"
     >
       <v-card-text>
@@ -50,11 +48,7 @@
           <v-row class="main" v-if="view_mode !== 'gallery'">
             <div class="paragraphs">
               <div v-for="p in shown_paragraphs" :key="p._id">
-                <ContentView
-                  :paragraph="p"
-                  item_width="100%"
-                  :view_mode="view_mode"
-                />
+                <ContentView :paragraph="p" item_width="100%" :view_mode="view_mode" />
               </div>
               <div class="mt-5 meta" v-if="active_paragraph">
                 {{ $t("date") }}: {{ active_paragraph.pdate | dateSafe }}<br />
@@ -109,7 +103,11 @@
               v-if="active_item && active_item.item_type != 'image'"
             />
             <image-player
-              :src="active_item ? api.get_item_image(active_item) : (_event_handler('continue'), '')"
+              :src="
+                active_item
+                  ? api.get_item_image(active_item)
+                  : (_event_handler('continue'), '')
+              "
               :fit="api.config.fit"
               class="image-player"
               ref="imagePlayer"
@@ -118,12 +116,30 @@
             <div class="browsing description">
               <v-row align="end">
                 <v-col cols="2">
+                  <ol
+                    ref="thumbnails"
+                    v-show="active_paragraph && active_paragraph_images.length > 1"
+                  >
+                    <li
+                      v-for="thumbnail in active_paragraph_images"
+                      :key="thumbnail._id"
+                      :class="{ selected: active_item._id == thumbnail._id }"
+                    >
+                      <img :src="api.get_item_image(thumbnail)" alt="" />
+                    </li>
+                  </ol>
                   <v-pagination
                     v-model="browsing_page"
                     :length="3"
                     :total-visible="0"
-                    @previous="browsing_page = 2; _event_handler('arrowleft')"
-                    @next="browsing_page = 2; _event_handler('arrowright')"
+                    @previous="
+                      browsing_page = 2;
+                      _event_handler('arrowleft');
+                    "
+                    @next="
+                      browsing_page = 2;
+                      _event_handler('arrowright');
+                    "
                   ></v-pagination>
                 </v-col>
                 <v-col cols="10" class="item-description" v-if="active_item">
@@ -195,10 +211,15 @@
               top
               right
               class="ma-10"
+              style="background-color: #fff"
               @click="show_modal = false"
               ><v-icon>mdi-close</v-icon></v-btn
             >
-            <img :src="pdf_image" alt="" style="width: 100%" ref="image" />
+            <image-player
+              :src="pdf_image"
+              fit="width"
+              style="background-color: rgba(0, 0, 0, 0.5)"
+            />
           </v-dialog>
 
           <!-- pagenum edit -->
@@ -231,9 +252,7 @@
                 </v-sheet>
               </v-card-text>
               <v-card-actions>
-                <v-btn color="primary" @click="save_pagenum">{{
-                  $t("ok")
-                }}</v-btn>
+                <v-btn color="primary" @click="save_pagenum">{{ $t("ok") }}</v-btn>
               </v-card-actions>
             </v-card>
           </v-dialog>
@@ -257,7 +276,7 @@ export default {
     ContentView,
     ImagePlayer,
     VideoPlayer,
-    GalleryContentView
+    GalleryContentView,
   },
   data() {
     return {
@@ -314,6 +333,9 @@ export default {
     active_item() {
       var item = (this.active_paragraph_images || [])[this.item_index];
       this.$emit("browse", { item });
+      if (this.$refs.thumbnails && this.$refs.thumbnails.querySelector("li.selected")) {
+        this.$refs.thumbnails.querySelector("li.selected").scrollIntoView();
+      }
       return item;
     },
     shown_paragraphs() {
@@ -456,8 +478,7 @@ export default {
       if (typeof direction !== "string") {
         // key stroke
         const e = direction;
-        if (e.target.tagName == "INPUT" || e.target.tagName == "TEXTAREA")
-          return;
+        if (e.target.tagName == "INPUT" || e.target.tagName == "TEXTAREA") return;
         if (this.playing_timer) clearInterval(this.playing_timer);
         direction = e.key.toLowerCase();
         if (e.shiftKey) direction += "shift";
@@ -509,8 +530,7 @@ export default {
           else this.item_index = 0;
           if (
             this.view_mode == "gallery" &&
-            (!this.active_paragraph_images ||
-              this.active_paragraph_images.length == 0)
+            (!this.active_paragraph_images || this.active_paragraph_images.length == 0)
           )
             this._event_handler(direction);
         } else {
@@ -565,10 +585,7 @@ export default {
         for (var k of i.split(".")) b = b[k] || "";
         return b;
       }
-      return (
-        (typeof str == "string" && str.replace(/\{([\w\d._]+)\}/g, _replace)) ||
-        ""
-      );
+      return (typeof str == "string" && str.replace(/\{([\w\d._]+)\}/g, _replace)) || "";
     },
   },
 };
@@ -618,7 +635,6 @@ export default {
   bottom: 0;
 }
 
-
 .description:hover {
   opacity: 1;
   z-index: 101;
@@ -643,4 +659,30 @@ export default {
   background-color: rgba(0, 0, 0, 0.5);
 }
 
+.browsing.description ol {
+  list-style: none;
+  overflow-y: scroll;
+  white-space: nowrap;
+}
+
+.browsing.description ol::-webkit-scrollbar {
+  height: 0px;
+}
+
+.browsing.description li {
+  max-width: 80px;
+  height: 80px;
+  display: inline-block;
+  margin: 1px;
+  border: 2px solid gray;
+  overflow: hidden;
+}
+
+.browsing.description li.selected {
+  border: 2px solid white;
+}
+
+.browsing.description li > img {
+  max-height: 80px;
+}
 </style>

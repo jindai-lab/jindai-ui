@@ -106,51 +106,57 @@
       />
     </div>
 
-    <v-data-table
-      v-else-if="arg.type == 'LINES'"
-      :headers="[
-        { text: 'Actions', align: 'end', value: 'actions', sortable: false },
-        { text: '', align: 'start', sortable: false, value: 'text' },
-      ]"
-      class="lines-editor"
-      :items="lines"
-      :items-per-page="-1"
-      hide-default-header
-      hide-default-footer
-      @dblclick:row="edit_line"
-    >
-      <template v-slot:item.actions="{ item }">
-        <v-icon small class="mr-2" @click="edit_line(item.index)">
-          mdi-pencil
-        </v-icon>
-        <v-icon small @click="delete_line(item.index)"> mdi-delete </v-icon>
-        <v-icon small @click="move_line(item.index, -1)" v-if="item.index > 0">
-          mdi-arrow-up
-        </v-icon>
-        <v-icon
-          small
-          @click="move_line(item.index, 1)"
-          v-if="item.index < lines.length - 1"
-        >
-          mdi-arrow-down
-        </v-icon>
-      </template>
-      <template v-slot:body.append>
-        <tr>
-          <td></td>
-          <td>
-            <v-text-field
-              type="text"
-              label=""
-              v-model="new_line"
-              ref="new_line_input"
-              @keyup.enter="append_line()"
-              @blur="append_line()"
-            ></v-text-field>
-          </td>
-        </tr>
-      </template>
-    </v-data-table>
+    <div v-else-if="arg.type == 'LINES'">
+      <label>{{ arg.name }}</label>
+      <v-data-table
+        :headers="[
+          { text: 'Actions', align: 'end', value: 'actions', sortable: false },
+          { text: '', align: 'start', sortable: false, value: 'text' },
+        ]"
+        class="lines-editor"
+        :items="lines"
+        :items-per-page="-1"
+        hide-default-header
+        hide-default-footer
+        @dblclick:row="edit_line"
+      >
+        <template v-slot:item.actions="{ item }">
+          <v-icon small class="mr-2" @click="edit_line(item.index)">
+            mdi-pencil
+          </v-icon>
+          <v-icon small @click="delete_line(item.index)"> mdi-delete </v-icon>
+          <v-icon
+            small
+            @click="move_line(item.index, -1)"
+            v-if="item.index > 0"
+          >
+            mdi-arrow-up
+          </v-icon>
+          <v-icon
+            small
+            @click="move_line(item.index, 1)"
+            v-if="item.index < lines.length - 1"
+          >
+            mdi-arrow-down
+          </v-icon>
+        </template>
+        <template v-slot:body.append>
+          <tr>
+            <td></td>
+            <td>
+              <v-text-field
+                type="text"
+                label=""
+                v-model="new_line"
+                ref="new_line_input"
+                @keyup.enter="append_line()"
+                @blur="append_line()"
+              ></v-text-field>
+            </td>
+          </tr>
+        </template>
+      </v-data-table>
+    </div>
 
     <v-textarea
       v-else-if="arg.type == 'str' || arg.type == 'string'"
