@@ -6,7 +6,7 @@ import EventSource from "eventsource"
 const _prompt_no_image = require("../public/assets/no-image.png");
 const _prompt_video = require("../public/assets/video.png");
 
-const apiBase = "/api/";
+const apiBase = location.origin + "/api/";
 var _token = localStorage.token || "";
 Cookies.set("token", _token, { domain: '.' + location.hostname });
 
@@ -681,7 +681,7 @@ const apis = {
   },
 
   get_event_source() {
-    var es = new EventSource("/api/queue/events", this._axios_config())
+    var es = new EventSource(apiBase + "/queue/events?_token=" + _token)
     return es
   },
 
