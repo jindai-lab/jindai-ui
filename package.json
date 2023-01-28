@@ -1,74 +1,38 @@
 {
-    "name": "jindai-ui",
-    "version": "0.2.0",
-    "private": true,
-    "scripts": {
-        "serve": "vue-cli-service serve",
-        "build": "vue-cli-service build",
-        "lint": "vue-cli-service lint"
-    },
-    "dependencies": {
-        "@fontsource/roboto": "^4.5.1",
-        "@fortawesome/fontawesome-svg-core": "^1.2.35",
-        "@fortawesome/free-brands-svg-icons": "^5.15.3",
-        "@fortawesome/free-solid-svg-icons": "^5.15.3",
-        "@fortawesome/vue-fontawesome": "^2.0.2",
-        "@johmun/vue-tags-input": "^2.1.0",
-        "@mdi/font": "^6.5.95",
-        "@riophae/vue-treeselect": "^0.4.0",
-        "axios": "^0.21.1",
-        "blockly": "^3.20200924.4",
-        "core-js": "^3.6.5",
-        "eventsource": "^2.0.2",
-        "js-cookie": "^3.0.1",
-        "nanoid": "^4.0.0",
-        "prismjs": "^1.23.0",
-        "qrcodejs2": "^0.0.2",
-        "socket.io-client": "^4.2.0",
-        "string-hash": "^1.1.3",
-        "v-viewer": "^1.6.4",
-        "vue": "^2.6.14",
-        "vue-i18n": "^8.27.1",
-        "vue-prism-editor": "^1.2.2",
-        "vue-router": "^3.5.1",
-        "vue-waterfall2": "^1.10.1",
-        "vue2-viewer": "^1.0.3",
-        "vuedraggable": "^2.24.3",
-        "vuetify": "^2.4.0"
-    },
-    "devDependencies": {
-        "@vue/cli-plugin-babel": "~4.5.0",
-        "@vue/cli-plugin-eslint": "~4.5.0",
-        "@vue/cli-service": "~4.5.0",
-        "babel-eslint": "^10.1.0",
-        "eslint": "^6.7.2",
-        "eslint-plugin-vue": "^6.2.2",
-        "sass": "~1.32.0",
-        "sass-loader": "^10.0.0",
-        "vue-cli-plugin-vuetify": "~2.4.4",
-        "vue-template-compiler": "^2.6.11",
-        "vuetify-loader": "^1.7.0"
-    },
-    "eslintConfig": {
-        "root": true,
-        "env": {
-            "node": true
-        },
-        "extends": [
-            "plugin:vue/essential",
-            "eslint:recommended"
-        ],
-        "parserOptions": {
-            "parser": "babel-eslint"
-        },
-        "rules": {}
-    },
-    "browserslist": [
-        "> 1%",
-        "last 2 versions",
-        "not dead"
-    ],
-    "pre-commit": [
-        "build"
-    ]
+  "name": "jindai-ui2",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --fix --ignore-path .gitignore"
+  },
+  "dependencies": {
+    "@mdi/font": "7.0.96",
+    "axios": "^1.2.4",
+    "core-js": "^3.8.3",
+    "nanoid": "^4.0.0",
+    "roboto-fontface": "*",
+    "vue": "^3.2.13",
+    "vue-i18n": "^9.2.2",
+    "vue-router": "^4.0.0",
+    "vue-sse": "^2.5.2",
+    "vuetify": "^3.0.0",
+    "webfontloader": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/eventsource": "^1.1.11",
+    "@types/node": "^18.11.9",
+    "@types/webfontloader": "^1.6.35",
+    "@vitejs/plugin-vue": "^3.0.3",
+    "@vue/eslint-config-typescript": "^11.0.0",
+    "eslint": "^8.22.0",
+    "eslint-plugin-vue": "^9.3.0",
+    "sass": "^1.55.0",
+    "typescript": "^4.0.0",
+    "vite": "^3.0.9",
+    "vite-plugin-vuetify": "^1.0.0-alpha.12",
+    "vue-tsc": "^1.0.9"
+  }
 }
