@@ -7,15 +7,14 @@
   </v-card>
 </template>
 
-<script>
-
+<script lang="ts">import { call } from '@/api/net';
 
 export default {
   name: "QueueLog",
   props: ["id"],
   data() {
     return {
-      logs: []
+      logs: [] as ({text:string})[]
     };
   },
   watch: {
@@ -28,13 +27,12 @@ export default {
   },
   methods: {
     load_data() {
-      this.api
-        .call(
+      call<string[]>(
           "queue/logs/" +
             encodeURIComponent(this.id)
         )
         .then((data) => {
-          this.logs = data.result.map(x => ({text: x}))
+          this.logs = data.map(x => ({text: x}))
         })
     },
   },

@@ -11,12 +11,13 @@
   </v-card>
 </template>
 
-<script>
+<script lang="ts">import { createEventSource } from '@/api/net';
+
 export default {
   name: "EventConsole",
   data: () => ({
-    console_outputs: [],
-    queue_source: null,
+    console_outputs: [] as string[],
+    queue_source: createEventSource(),
   }),
   props: {
     enabled: {
@@ -26,8 +27,8 @@ export default {
   },
   mounted() {
     window.onblur = () => {
-      if (this.queue_source) this.queue_source.close();
-      this.queue_source = null;
+      if (this.queue_source && this.queue_source.readyState == EventSource.OPEN)
+        this.queue_source.close();
     };
     window.onfocus = () => {
       try {
@@ -40,10 +41,7 @@ export default {
   },
   methods: {
     queue_event() {
-      if (!this.enabled || !this.api.is_logined()) return
-      this.api.queue().then((queue) => this.update_queue(queue));
-      if (this.queue_source) return;
-      this.queue_source = this.api.get_event_source();
+      this.queue_source = createEventSource();
       this.queue_source.onmessage = (event) => {
         console.log(event);
         var data = JSON.parse(event.data);
@@ -54,7 +52,7 @@ export default {
         } else this.update_queue(data);
       };
     },
-    update_queue(queue) {
+    update_queue(queue: object) {
       this.$emit("queue", queue);
     },
   },

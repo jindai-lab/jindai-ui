@@ -4,6 +4,7 @@
     <v-card-text>
       <p v-if="prompt" v-html="prompt"></p>
       <ResultsView
+        :key="'results-' + id"
         :load="load_data"
         v-else-if="typeof total === 'number'"
         ref="results"
@@ -14,9 +15,11 @@
   </v-card>
 </template>
 
-<script>
+<script lang="ts">
 
-import ResultsView from "../components/ResultsView";
+import ResultsView from "../components/ResultsView.vue";
+import { DataError, call } from "@/api/net";
+import { UpdaterOptions } from "@/api/ui";
 
 export default {
   name: "QueueResult",
@@ -29,16 +32,11 @@ export default {
       redirect: "",
     };
   },
-  watch: {
-    id() {
-      this.$refs.results.turn_page(1);
-    },
-  },
   methods: {
-    load_data(e) {
+    async load_data(e: UpdaterOptions) {
       var token = new Date().getTime() - Math.random();
-      return this.api
-        .call(
+      try {
+        let data = await call<JobResult>(
           "queue/" +
             encodeURIComponent(this.id) +
             "?offset=" +
@@ -46,32 +44,34 @@ export default {
             "&limit=" +
             e.limit
         )
-        .then((data) => {
           if (data.__redirect__) {
             this.redirect = data.__redirect__;
-            this.total = null;
-          } else if (typeof data.__exception__ !== "undefined") {
-            this.prompt = `<h4>${
-              data.__exception__
-            }</h4><pre>${data.__tracestack__.join("\n")}</pre>`;
-          } else if (data.result) {
-            this.total = data.result.total;
-            return {
-              offset: e.offset,
-              result: data.result.results,
-              token,
-            }
+            this.total = -1;
+          } else if (data) {
+            this.total = data.total;
+            
           }
-        })
-        .catch((ex) => {
-          this.prompt =
+
+          if (data.__exception__) {
+
+          }
+
+          return {
+              result: data.results,
+              token,
+              total: data.total
+            }
+        
+      } catch (e) {
+        let ex = e as DataError
+        this.prompt =
             "<h4>" +
             ex.message +
             "</h4><p>" +
-            ex.stack.replace(/\n/g, "<br>") +
+            ex.remoteStack.join("<br>") +
             "</p>";
-          this.total = undefined;
-        });
+          this.total = -1;
+      }
     },
   },
 };

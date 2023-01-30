@@ -20,7 +20,7 @@
         <v-btn
           @click="
             visible = false;
-            retval = false;
+            $emit('input', false)
           "
         >
           {{ $t("cancel") }}
@@ -30,8 +30,11 @@
   </v-dialog>
 </template>
 
-<script>
-export default {
+<script lang="ts">
+import localConfig from "@/api/localConfig";
+import { defineComponent } from "vue";
+
+export default defineComponent({
   name: "PromptChoicesDialog",
   data() {
     return {
@@ -41,32 +44,26 @@ export default {
       batch_prefix: "",
     };
   },
-  props: {
-    retval: {
-      type: Array,
-      default: () => [],
-    },
-  },
   mounted() {
-    Object.assign(this, this.api.config.tagging);
+    Object.assign(this, localConfig.tagging);
   },
   methods: {
     do_submit() {
-      this.api.config.tagging = {
+      localConfig.tagging = {
         batch_delim: this.batch_delim,
         batch_prefix: this.batch_prefix,
       };
-      this.retval = [
+      this.$emit('input', [
         ...this.batch
           .split(this.batch_delim || ", ")
           .map((x) => x.trim())
           .filter((x) => x)
           .map((x) => this.batch_prefix + x),
-      ];
+      ]);
       this.visible = false;
     },
   },
-};
+});
 </script>
 
 <style scoped>

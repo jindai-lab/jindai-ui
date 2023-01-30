@@ -58,9 +58,13 @@
   >
 </template>
 
-<script>
-import ParamInput from "../components/ParamInput";
+<script lang="ts">
 import draggable from "vuedraggable";
+import { UIDataset } from "@/api";
+import { Dataset } from "@/api/dbo";
+import { call } from "@/api/net";
+import { notify } from "@/dialogs";
+import ParamInput from "../components/ParamInput.vue";
 
 export default {
   name: "DatasetList",
@@ -70,8 +74,8 @@ export default {
   },
   data() {
     return {
-      datasets: [],
-      input_coll: {},
+      datasets: [] as UIDataset[],
+      input_coll: {} as Partial<Dataset>,
       valid: [],
     };
   },
@@ -80,50 +84,44 @@ export default {
   },
   methods: {
     load_datasets() {
-      this.this.api.get_datasets().then((x) => (this.datasets = x));
+      UIDataset.get_datasets().then((x) => (this.datasets = x));
     },
-    prompt(t, v) {
-      return window.prompt(t, v);
-    },
-    update_valid(id, field, value) {
-      var coll = { _id: id };
-      coll[field] = value;
-      this.api
-        .call("datasets/edit", coll)
-        .then(() => this.$notify(this.$t("updated")));
+    update_valid(id: string, field: string, value: string) {
+      var coll : Partial<Dataset> = { _id: id };
+      coll[field as keyof Dataset] = value;
+      call("datasets/edit", 'post', coll)
+        .then(() => notify(this.$t("updated")));
     },
     save() {
       if (this.valid.length > 0) {
         alert(this.$t("invalid-input"));
         return;
       }
-      this.api
-        .call(
+      call(
           "datasets/batch",
+          'post',
           this.datasets.map((x, i) =>
             Object.assign({}, x, { order_weight: i, sources: null })
           )
         )
-        .then(() => this.$notify(this.$t("saved") ));
+        .then(() => notify(this.$t("saved") ));
     },
     append_dataset() {
       if (!this.input_coll.name) return;
-      this.this.api.call("datasets/edit", this.input_coll).then(() => {
+      call("datasets/edit", 'post', this.input_coll).then(() => {
         this.load_datasets();
         this.input_coll = {};
       });
     },
-    rename_collection(coll, to) {
+    rename_collection(coll:UIDataset, to:string) {
       if (coll && to)
-        this.api
-          .call("datasets/rename", { _id: coll._id, to })
-          .then(() => this.$notify(this.$t("renamed") ))
+        call("datasets/rename", 'post', { _id: coll._id, to })
+          .then(() => notify(this.$t("renamed") ))
           .then(this.load_datasets);
     },
-    refresh_sources(coll) {
-      this.api
-        .call("datasets/sources", { _id: coll._id })
-        .then(() => this.$notify(this.$t("refreshed") ));
+    refresh_sources(coll:UIDataset) {
+      call("datasets/sources", 'post',  { _id: coll._id })
+        .then(() => notify(this.$t("refreshed") ));
     },
   },
 };

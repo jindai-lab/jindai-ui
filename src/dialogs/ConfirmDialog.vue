@@ -15,8 +15,11 @@
   </v-dialog>
 </template>
 
-<script>
-export default {
+<script lang="ts">
+
+import { defineComponent } from "vue";
+
+export default defineComponent({
   name: "ConfirmDialog",
   data() {
     return {
@@ -36,12 +39,12 @@ export default {
     content: String,
   },
   methods: {
-    ret(val) {
-      this.retval = val;
+    ret(val: boolean) {
       this.visible = false
+      this.$emit('input', val)
     }
   },
-};
+});
 </script>
 
 <style scoped>

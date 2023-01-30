@@ -8,12 +8,9 @@
             <v-list-item-content>
               <v-list-item-title>{{ k }}</v-list-item-title>
               <v-list-item-subtitle>
-                <ParamInput
-                  :arg="get_map_arg(v)"
-                  v-model="shortcut_params[v]"
-                  @validation="update_valid('shortcut_param_' + v, $event)"
-                  @input="$forceUpdate()"
-              /></v-list-item-subtitle>
+                <ParamInput :arg="get_map_arg('' + v)" v-model="shortcut_params[v]"
+                  @validation="update_valid('shortcut_param_' + v, $event)" @input="$forceUpdate()" />
+              </v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
         </v-list>
@@ -35,7 +32,7 @@
     <v-card flat>
       <v-card-title>{{ $t("results") }}</v-card-title>
       <v-card-text>
-        <ResultsView :load="results" ref="results" :view_mode="view_mode" />
+        <ResultsView :data="results" ref="results" :view_mode="view_mode" />
         {{ result_plain }}
       </v-card-text>
     </v-card>
@@ -43,7 +40,12 @@
 </template>
 
 
-<script>
+<script lang="ts">
+import { Paragraph, PipelineArgument, TaskDBO } from "@/api/dbo";
+import { call } from "@/api/net";
+import remoteConfig from "@/api/remoteConfig";
+import { downloadBlob, qsparse, querify } from "@/api/ui";
+import { notify } from "@/dialogs";
 import ParamInput from "../components/ParamInput.vue";
 import ResultsView from "../components/ResultsView.vue";
 
@@ -56,37 +58,37 @@ export default {
   props: ["id"],
   data() {
     return {
-      stages: this.business.pipelines,
+      stages: remoteConfig.piplineDirectory,
       task: {
         _id: "",
         name: "",
         shortcut_map: {},
         pipeline: [],
-      },
+      } as Partial<TaskDBO>,
       view_mode: "list",
-      shortcut_params: {},
-      results: [],
+      shortcut_params: {} as { [key: string]: any },
+      results: [] as Paragraph[],
       result_plain: "",
-      valid: [],
+      valid: [] as string[],
     };
   },
   watch: {
     id() {
       this.shortcut_params = {};
-      this.results = {};
+      this.results = [];
       this.valid = [];
       this.result_plain = "";
     },
   },
   mounted() {
-    var params = this.api.querystring_parse(location.search.substring(1));
+    var params = qsparse(location.search.substring(1));
     this.stages = Object.assign(
       {},
-      ...Object.entries(this.business.pipelines).map((kv) => kv[1])
+      ...Object.entries(remoteConfig.pipelines).map((kv) => kv[1])
     );
 
-    this.api.call("tasks/" + this.id).then((data) => {
-      this.task = data.result;
+    call<TaskDBO>("tasks/" + this.id).then((data) => {
+      this.task = data;
       for (var k in this.task.shortcut_map) {
         this.shortcut_params[k] =
           typeof params[k] === "undefined" ? this.get_map_val(k) : params[k];
@@ -94,7 +96,7 @@ export default {
     });
   },
   methods: {
-    update_valid(name, valid) {
+    update_valid(name: string, valid?: string) {
       var l = this.valid.indexOf(name);
       if (l >= 0) this.valid.splice(l, 1);
       if (!valid) this.valid.push(name);
@@ -103,61 +105,55 @@ export default {
       for (var k in this.shortcut_params) {
         const v = this.shortcut_params[k];
         const mapped_to = k.split(".");
-        var target = this.task.pipeline;
-        for (var seg of mapped_to.slice(1, -1)) {
-          target = seg.match(/^\d+$/) ? target[+seg][1] : target[seg];
+        var target = this.task?.pipeline as { [id: string | number]: any };
+        if (target) {
+          for (var seg of mapped_to.slice(1, -1)) {
+            target = seg.match(/^\d+$/) ? target[+seg][1] : target[seg];
+          }
+          target[mapped_to.slice(-1)[0] as never] = v;
         }
-        target[mapped_to.slice(-1)[0]] = v;
       }
     },
     quicktask() {
       this.apply_params();
       this.result_plain = "";
-      this.api
-        .call("quicktask", {
-          pipeline: this.task.pipeline,
-        })
+      call("quicktask", 'post', {
+        pipeline: this.task.pipeline,
+      })
         .then((data) => {
-          if (Array.isArray(data.result)) {
-            this.results = data.result;
-            this.$refs.results.start(1);
+          if (Array.isArray(data)) {
+            this.results = data;
             this.result_plain = "";
           } else if (
-            typeof data.result === "object" &&
-            data.result !== null &&
-            data.result.__file_ext__
+            typeof data === "object" &&
+            data !== null &&
+            '__file_ext__' in data &&
+            'data' in data
           ) {
-            const b64toBlob = (b64Data, contentType = "", sliceSize = 512) => {
-              const byteCharacters = atob(b64Data);
-              const byteArrays = [];
+            const b64toBlob = (b64Data: string, contentType = "", sliceSize = 512) => {
+              const byteCharacters = Buffer.from(b64Data, 'base64');
+              const byteArrays = []
+              const bytes = Uint8Array.from(byteCharacters);
 
               for (
                 let offset = 0;
                 offset < byteCharacters.length;
                 offset += sliceSize
               ) {
-                const slice = byteCharacters.slice(offset, offset + sliceSize);
-
-                const byteNumbers = new Array(slice.length);
-                for (let i = 0; i < slice.length; i++) {
-                  byteNumbers[i] = slice.charCodeAt(i);
-                }
-
-                const byteArray = new Uint8Array(byteNumbers);
-                byteArrays.push(byteArray);
+                const slice = bytes.slice(offset, offset + sliceSize);
+                byteArrays.push(slice);
               }
 
               const blob = new Blob(byteArrays, { type: contentType });
               return blob;
             };
-            this.api.blob_download(
-              b64toBlob(data.result.data),
-              this.task.name + "." + data.result.__file_ext__
+            downloadBlob(
+              b64toBlob(data.data as string),
+              this.task.name + "." + data.__file_ext__
             );
           } else {
-            this.result_plain = JSON.stringify(data.result);
+            this.result_plain = JSON.stringify(data);
             this.results = [];
-            this.$refs.results.start(1);
           }
         });
     },
@@ -177,40 +173,39 @@ export default {
           delete this.task.shortcut_map[k];
       }
 
-      this.api
-        .call("tasks/" + this.task._id, this.task)
-        .then((data) => {
+      call<TaskDBO>("tasks/" + this.task._id, 'post', this.task)
+        .then((data: TaskDBO) => {
           var id = this.task._id;
-          this.task = data.result.updated;
+          this.task = data;
           this.task._id = id;
-          return id;
+          return id || '';
         })
-        .then((id) =>
-          this.api.put("queue/", { id }).then((data) => {
-            this.$notify(this.$t("task-enqueued", { task: data.result }));
+        .then((id: string) =>
+          call("queue/", 'put', { id }).then((data) => {
+            notify(this.$t("task-enqueued", { task: data }));
           })
         );
     },
-    querify() {
-      var s = this.api.querify(this.task.pipeline, "");
-      if (this.task.pipeline.length == 1) return "[];" + s;
+    querify_task() {
+      var s = querify(this.task.pipeline);
+      if (this.task.pipeline?.length == 1) return "[];" + s;
       return s;
     },
-    get_map_arg(v) {
-      v = v.split(".");
+    get_map_arg(v: string) {
+      const vals = v.split(".");
       var arg = {},
-        target = this.task.pipeline;
-      for (var seg of v.slice(1, -1)) {
+        target = this.task.pipeline as { [id: string | number]: any };
+      for (var seg of vals.slice(1, -1)) {
         target = seg.match(/^\d+$/) ? target[+seg] : target[1][seg];
       }
-      var argname = v.pop();
-      arg = this.stages[target[0]].args.filter((x) => x.name == argname)[0];
-      return arg;
+      var argname = vals.pop();
+      arg = this.stages[target[0] as string].args.filter((x) => x.name == argname)[0];
+      return arg as PipelineArgument;
     },
-    get_map_val(v) {
-      v = v.split(".");
-      var target = this.task.pipeline;
-      for (var seg of v.slice(1)) {
+    get_map_val(v: string) {
+      const vals = v.split(".");
+      var target = this.task.pipeline as { [id: string | number]: any };
+      for (var seg of vals.slice(1)) {
         target = seg.match(/^\d+$/) ? target[+seg][1] : target[seg];
       }
       return target;

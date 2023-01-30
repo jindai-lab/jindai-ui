@@ -20,7 +20,7 @@
           @keyup.esc="typing = ''"
           @keyup.enter="!typing ? ret() : null"
           @change="
-            new_value = limit > 0 ? new_value.slice(0, limit) : new_value
+            new_value = limit && limit > 0 ? new_value.slice(0, limit) : new_value
           "
           max-height="180"
         ></v-combobox>
@@ -31,8 +31,8 @@
         </v-btn>
         <v-btn
           @click="
-            retval = false;
             visible = false;
+            $emit('input', false)
           "
         >
           {{ $t("cancel") }}
@@ -42,14 +42,19 @@
   </v-dialog>
 </template>
 
-<script>
-export default {
+<script lang="ts">
+
+import { defineComponent } from "vue";
+import { Choice } from "@/api";
+import { escape_regex } from "@/api/ui";
+
+export default defineComponent({
   name: "PromptChoicesDialog",
   data() {
     return {
       cancel: null,
-      candidates: [],
-      new_value: [],
+      candidates: [] as Choice[],
+      new_value: [] as string[],
       typing: "",
       visible: true,
     };
@@ -65,14 +70,16 @@ export default {
     },
     limit: Number,
     value: {
-      type: Array,
+      type: Array<string>,
       default: () => [],
     },
     initial: {
       type: String,
       default: "",
     },
-    choices: null,
+    choices: {
+      type: string[]
+    },
     retval: Array,
   },
   watch: {
@@ -88,23 +95,22 @@ export default {
   computed: {
     search() {
       if (typeof this.choices == "function")
-        return (val) => {
+        return (val: string) => {
           this.choices(val, this).then(
-            (choices) => (this.candidates = choices)
+            (choices: Choice[]) => (this.candidates = choices)
           );
         };
       else return () => [];
     },
   },
   methods: {
-    match_pattern(item, query, item_text) {
-      return item_text.match(new RegExp(this.api.escape_regex(query), "i"));
+    match_pattern(item: any, query: string, item_text: string) {
+      return item_text.match(new RegExp(escape_regex(query), "i"));
     },
     ret() {
-      var result = this.new_value;
+      var result = this.new_value.map((x) => (x.value ?? x));
       if (this.limit) result = result.slice(this.limit);
-      result = result.map((x) => (typeof x == "string" ? x : x.value));
-      this.retval = result;
+      this.$emit('input', result);
       this.visible = false;
     },
   },

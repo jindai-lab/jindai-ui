@@ -25,20 +25,25 @@
   </v-dialog>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent } from 'vue'
 
-export default ({
+export default defineComponent({
   name: 'InfoDialog',
-  props: ['target', 'retval'],
+  props: {
+    target: Object,
+    retval: Boolean
+  },
+  emits: ['input'],
   data: (() => ({
     visible: true
   })),
   methods: {
     close() {
       this.visible = false
-      this.retval = true
+      this.$emit('input', true)
     },
-    render_text(obj) {
+    render_text(obj: object | string) {
       if (typeof obj !== 'object') return '' + obj
       var prefix = 'Object'
       if (Array.isArray(obj)) prefix = `<${obj.length} items>`

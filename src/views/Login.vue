@@ -41,8 +41,9 @@
   </v-card>
 </template>
 
-<script>
+<script lang="ts">
 
+import { call } from "@/api/net";
 
 export default {
   name: "Login",
@@ -57,10 +58,14 @@ export default {
   },
   methods: {
     login() {
-      this.api
-        .authenticate(this.username, this.password, this.otp, this.remember)
+      call("authenticate", "post", {
+        username: this.username,
+        password: this.password,
+        otp: this.otp,
+        remember: this.remember})
         .then(() => {
           location.href = '/';
+          sessionStorage.setItem('user', this.username)
         });
     },
   },

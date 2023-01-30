@@ -15,7 +15,7 @@
       }"
       @wheel="_wheel_handler"
       :style="view_mode == 'gallery' ? { overflow: 'hidden', height: '100%' } : {}"
-      v-if="active_paragraph"
+      v-if="activeParagraph"
     >
       <v-card-text>
         <!-- operation buttons -->
@@ -44,52 +44,48 @@
         >
 
         <!-- main view -->
-        <template v-if="active_paragraph && active_paragraph.source">
+        <template v-if="activeParagraph && activeParagraph.source">
           <v-row class="main" v-if="view_mode !== 'gallery'">
             <div class="paragraphs">
               <div v-for="p in shown_paragraphs" :key="p._id">
                 <ContentView :paragraph="p" item_width="100%" :view_mode="view_mode" />
               </div>
-              <div class="mt-5 meta" v-if="active_paragraph">
-                {{ $t("date") }}: {{ active_paragraph.pdate | dateSafe }}<br />
-                {{ $t("pagenum") }}: {{ active_paragraph.pagenum }}
+              <div class="mt-5 meta" v-if="activeParagraph">
+                {{ $t("date") }}: {{ activeParagraph.pdate }}<br />
+                {{ $t("pagenum") }}: {{ activeParagraph.pagenum }}
                 <v-btn
                   icon
                   small
                   @click="
-                    pagenum_editor.new_pagenum = active_paragraph.pagenum;
+                    pagenum_editor.new_pagenum =
+                      parseInt(activeParagraph.pagenum + '') ||
+                      activeParagraph.source.page ||
+                      1;
                     pagenum_edit = true;
                   "
                   ><v-icon small>mdi-form-textbox</v-icon></v-btn
                 >
                 <br />
-                {{ $t("outline") }}: {{ active_paragraph.outline }}<br />
+                {{ $t("outline") }}: {{ activeParagraph.outline }}<br />
                 {{ $t("source") }}:
                 <a
-                  :href="active_paragraph.source.url"
-                  v-if="active_paragraph.source.url"
+                  :href="activeParagraph.source.url"
+                  v-if="activeParagraph.source.url"
                   target="_blank"
-                  >{{ active_paragraph.source.url }}</a
+                  >{{ activeParagraph.source.url }}</a
                 >
-                {{ active_paragraph.source.file }}
-                {{ active_paragraph.source.page }}<br />
+                {{ activeParagraph.source.file }}
+                {{ activeParagraph.source.page }}<br />
               </div>
             </div>
             <div class="image" @click="show_modal = !!pdf_image">
-              <img
-                :src="pdf_image"
-                alt=""
-                @load="
-                  $event.target.style.height =
-                    window_height - $event.target.offsetTop - 20 + 'px'
-                "
-              />
+              <img :src="pdf_image" alt="" @load="adjust_width" />
             </div>
           </v-row>
           <!-- gallery view, use image or video player -->
           <div class="browser" v-else>
             <video-player
-              :src="api.get_item_video(active_item)"
+              :src="activeItem.src"
               :options="{
                 muted: false,
                 autoplay: true,
@@ -100,15 +96,11 @@
               }"
               class="video-player"
               ref="videoPlayer"
-              v-if="active_item && active_item.item_type != 'image'"
+              v-if="activeItem && activeItem.item_type != 'image'"
             />
             <image-player
-              :src="
-                active_item
-                  ? api.get_item_image(active_item)
-                  : (_event_handler('continue'), '')
-              "
-              :fit="api.config.fit"
+              :src="activeItem ? activeItem.src : (_event_handler('continue'), '')"
+              :fit="localConfig.fit"
               class="image-player"
               ref="imagePlayer"
               v-else
@@ -118,14 +110,14 @@
                 <v-col cols="2">
                   <ol
                     ref="thumbnails"
-                    v-show="active_paragraph && active_paragraph_images.length > 1"
+                    v-show="activeParagraph && active_paragraph_images.length > 1"
                   >
                     <li
                       v-for="thumbnail in active_paragraph_images"
                       :key="thumbnail._id"
-                      :class="{ selected: active_item._id == thumbnail._id }"
+                      :class="{ selected: activeItem._id == thumbnail._id }"
                     >
-                      <img :src="api.get_item_image(thumbnail)" alt="" />
+                      <img :src="thumbnail.src" alt="" />
                     </li>
                   </ol>
                   <v-pagination
@@ -142,12 +134,12 @@
                     "
                   ></v-pagination>
                 </v-col>
-                <v-col cols="10" class="item-description" v-if="active_item">
+                <v-col cols="10" class="item-description" v-if="activeItem">
                   <v-row class="mt-3 mb-3">
-                    <div class="mr-3" v-if="typeof active_item.rating == 'number'">
+                    <div class="mr-3" v-if="typeof activeItem.rating == 'number'">
                       <v-rating
                         style="display: inline-block"
-                        v-model="active_item.rating"
+                        v-model="activeItem.rating"
                         background-color="white"
                         color="yellow accent-4"
                         half-increments
@@ -156,7 +148,7 @@
                         @input="$emit('rating', { val: $event })"
                       ></v-rating>
                       <span class="grey--text text--lighten-2"
-                        >({{ active_item.rating.toFixed(1) }})
+                        >({{ activeItem.rating.toFixed(1) }})
                       </span>
                     </div>
                     <div>
@@ -169,13 +161,10 @@
                         dense
                         :href="
                           '/' +
-                          api.querystring_stringify({
+                          qstringify({
                             q:
-                              api.scope(active_paragraph) +
-                              `;plugin('${format(filter.format, {
-                                mediaitem: active_item,
-                                paragraph: active_paragraph,
-                              })}');`,
+                              activeParagraph.scope +
+                              `;plugin('${filter.formatter(selection)}');`,
                           })
                         "
                         class="t_func sim"
@@ -185,7 +174,7 @@
                       <v-btn
                         icon
                         dense
-                        @click="$emit('info', active_item)"
+                        @click="$emit('info', activeItem)"
                         target="_blank"
                         data-keybind="i"
                         ><v-icon>mdi-information</v-icon></v-btn
@@ -194,7 +183,7 @@
                   </v-row>
                   <GalleryContentView
                     class="browsing-content"
-                    :paragraph="active_paragraph"
+                    :paragraph="activeParagraph"
                     view_mode="gallery-description"
                   />
                 </v-col>
@@ -262,12 +251,19 @@
   </v-dialog>
 </template>
 
-<script>
+<script lang="ts">
 import ParamInput from "../components/ParamInput.vue";
 import ContentView from "../components/ContentView.vue";
 import ImagePlayer from "../components/ImagePlayer.vue";
 import VideoPlayer from "../components/VideoPlayer.vue";
 import GalleryContentView from "../components/GalleryContentView.vue";
+
+import { UIParagraph, UIMediaItem, UIPluginPage } from "@/api";
+import { Paragraph } from "@/api/dbo";
+import remoteConfig from "@/api/remoteConfig";
+import { querify, qstringify, ParagraphSelection } from "@/api/ui";
+import { call } from "@/api/net";
+import localConfig from "@/api/localConfig";
 
 export default {
   name: "PageView",
@@ -291,7 +287,7 @@ export default {
         folio: false,
       },
 
-      fetched_paragraphs: [],
+      fetchedParagraphs: [] as UIParagraph[],
       mongocollection: "paragraph",
       loading_image: require("../../public/assets/loading.png"),
       paragraph_index: 0,
@@ -301,8 +297,9 @@ export default {
       playing_interval: 1000,
       last_inc: 1,
       last_wheel: new Date(),
-      plugin_pages: this.business.plugin_pages,
+      plugin_pages: remoteConfig.plugin_pages.map((x) => new UIPluginPage(x)),
       browsing_page: 2,
+      localConfig,
     };
   },
   props: {
@@ -310,7 +307,7 @@ export default {
       default: "file",
     },
     paragraphs: {
-      default: () => [],
+      default: () => [] as UIParagraph[],
     },
     start_index: {
       default: 0,
@@ -323,40 +320,45 @@ export default {
     window_height() {
       return window.innerHeight;
     },
-    active_paragraph() {
-      var paragraph = {};
-      if (this.view_mode == "file") paragraph = this.fetched_paragraphs[0];
-      else paragraph = Object.assign({}, this.paragraphs[this.paragraph_index]);
+    activeParagraph() {
+      var paragraph = new UIParagraph({});
+      if (this.view_mode == "file") paragraph = this.fetchedParagraphs[0];
+      else paragraph = this.paragraphs[this.paragraph_index];
       this.$emit("browse", { paragraph });
       return paragraph;
     },
-    active_item() {
+    activeItem() {
       var item = (this.active_paragraph_images || [])[this.item_index];
       this.$emit("browse", { item });
-      if (this.$refs.thumbnails && this.$refs.thumbnails.querySelector("li.selected")) {
-        this.$refs.thumbnails.querySelector("li.selected").scrollIntoView();
+      let thumbnails = this.$refs.thumbnails as HTMLElement;
+      if (thumbnails && thumbnails.querySelector("li.selected")) {
+        thumbnails.querySelector("li.selected")?.scrollIntoView();
       }
       return item;
     },
+    selection() {
+      const sel = new ParagraphSelection([this.activeParagraph], UIParagraph);
+      sel.select(this.activeParagraph);
+      sel.chooseItem(this.activeItem);
+      return sel;
+    },
     shown_paragraphs() {
-      return this.view_mode !== "file"
-        ? [this.active_paragraph]
-        : this.fetched_paragraphs;
+      return this.view_mode !== "file" ? [this.activeParagraph] : this.fetchedParagraphs;
     },
     active_paragraph_images() {
       if (
-        this.active_paragraph &&
-        this.active_paragraph.images &&
-        this.active_paragraph.images.length
+        this.activeParagraph &&
+        this.activeParagraph.images &&
+        this.activeParagraph.images.length
       )
-        return this.active_paragraph.images;
+        return this.activeParagraph.images;
       if (
-        this.active_paragraph &&
-        this.active_paragraph.source &&
-        this.active_paragraph.source.file &&
-        this.active_paragraph.source.file.endsWith(".pdf")
+        this.activeParagraph &&
+        this.activeParagraph.source &&
+        this.activeParagraph.source.file &&
+        this.activeParagraph.source.file.endsWith(".pdf")
       )
-        return [this.active_paragraph];
+        return [new UIMediaItem(this.activeParagraph)];
       return [];
     },
   },
@@ -399,63 +401,65 @@ export default {
     },
   },
   methods: {
-    _wheel_handler(e) {
+    _wheel_handler(e: WheelEvent) {
       e.preventDefault();
       if (this.view_mode !== "gallery" || e.ctrlKey) return;
-      if (new Date() - this.last_wheel > 100) {
+      if (new Date().getTime() - this.last_wheel.getTime() > 100) {
         this._event_handler(e.deltaY > 0 ? "arrowright" : "arrowleft");
         this.last_wheel = new Date();
       }
     },
+    adjust_width(e: Event) {
+      const target = e.target as HTMLElement;
+      if (target) target.style.height = window.innerHeight - target.offsetTop - 20 + "px";
+    },
     apply_fit() {
-      if (this.view_mode == "gallery" && this.active_item && this.$refs.imagePlayer)
-        this.$refs.imagePlayer.update();
+      if (this.view_mode == "gallery" && this.activeItem && this.$refs.imagePlayer)
+        (this.$refs.imagePlayer as { update: () => void }).update();
     },
     update_pdfpage() {
       if (this.view_mode == "file" && this.file) {
         var path = location.href.split("/");
         path.pop();
         path.push("" + this.page);
-        history.pushState(null, null, path.join("/"));
+        history.pushState(null, "", path.join("/"));
       }
       this.pdf_image = this.loading_image;
 
       if (this.view_mode == "file" && this.file) {
-        this.api
-          .call("quicktask", {
-            query:
-              "?" +
-              this.api.querify(
-                this.paragraph_id
-                  ? { id: this.paragraph_id }
-                  : { source: { file: this.file, page: this.page } }
-              ),
-            mongocollection: this.mongocollection,
-          })
-          .then((data) => {
-            this.fetched_paragraphs = data.result;
-            if (!data.result.length) {
-              this.fetched_paragraphs = [
-                {
-                  source: {
-                    file: this.file,
-                    page: this.page,
-                  },
-                  keywords: [],
-                  content: "",
-                  _id: "",
+        call<Paragraph[]>("quicktask", "post", {
+          query:
+            "?" +
+            querify(
+              this.activeParagraph._id
+                ? { id: this.activeParagraph._id }
+                : { source: { file: this.file, page: this.page } }
+            ),
+          mongocollection: this.mongocollection,
+        }).then((data: Paragraph[]) => {
+          this.fetchedParagraphs = data.map((x) => new UIParagraph(x));
+          if (!data.length) {
+            this.fetchedParagraphs = [
+              new UIParagraph({
+                source: {
+                  file: this.file,
+                  page: this.page,
                 },
-              ];
-            }
-          });
+                keywords: [],
+                content: "",
+                _id: "",
+              }),
+            ];
+          }
+        });
       }
 
-      var src =
+      var source =
         this.view_mode == "file"
           ? { file: this.file, page: this.page }
-          : this.active_paragraph.source;
-      if (src && src.file && typeof src.page !== "undefined") {
-        var image_url = this.api.get_image_url(src);
+          : this.activeParagraph.source;
+      if (source && source.file && typeof source.page !== "undefined") {
+        var image_url = new UIMediaItem({ source: source }).src;
         var image_element = new Image();
         image_element.src = image_url;
         image_element.onload = () => {
@@ -465,20 +469,24 @@ export default {
         this.pdf_image = "";
       }
     },
-    playing(interval) {
+    playing(interval: number) {
       if (this.view_mode !== "gallery") return;
       if (interval) this.playing_interval = interval;
-      this.playing_timer = setInterval(() => {
+      this.playing_timer = window.setInterval(() => {
         this._event_handler("arrowright");
       }, this.playing_interval);
     },
-    _event_handler(direction) {
-      if (document.getSelection().toString().trim() || !this.value) return;
+    _event_handler(direction: string | KeyboardEvent) {
+      if (document.getSelection()?.toString().trim() || !this.value) return;
 
       if (typeof direction !== "string") {
         // key stroke
-        const e = direction;
-        if (e.target.tagName == "INPUT" || e.target.tagName == "TEXTAREA") return;
+        const e = direction as KeyboardEvent;
+        if (
+          (e.target as HTMLElement)?.tagName == "INPUT" ||
+          (e.target as HTMLElement)?.tagName == "TEXTAREA"
+        )
+          return;
         if (this.playing_timer) clearInterval(this.playing_timer);
         direction = e.key.toLowerCase();
         if (e.shiftKey) direction += "shift";
@@ -504,21 +512,24 @@ export default {
           inc = this.last_inc;
           break;
         case "g":
-          document.querySelector(".browsing.description a.t_group").click();
+          (document.querySelector(
+            ".browsing.description a.t_group"
+          ) as HTMLElement)?.click();
           break;
         case "enter":
-          this.playing();
+          this.playing(localConfig.playing_interval);
           break;
         default:
-          var btn = document.querySelector(`[data-keybind="${direction}"]`);
-          if (btn) btn.click();
+          (document.querySelector(
+            `[data-keybind="${direction}"]`
+          ) as HTMLElement)?.click();
           break;
       }
 
       if (inc == 0) return;
       this.last_inc = Math.sign(inc);
 
-      const _paragraph = (inc) => {
+      const _paragraph = (inc: number) => {
         // paragraph
         if (
           this.paragraph_index + inc >= 0 &&
@@ -565,28 +576,22 @@ export default {
           break;
       }
     },
-    try_page(e) {
+    try_page(e: number) {
       e = e | 0;
       this.page = e;
       this.update_pdfpage();
     },
     save_pagenum() {
-      this.api.call(
+      call(
         `collections/${this.mongocollection || "paragraph"}/${
-          this.active_paragraph._id
+          this.activeParagraph._id
         }/pagenum`,
+        "post",
         this.pagenum_editor
       );
       this.pagenum_edit = false;
     },
-    format(str, bundle) {
-      function _replace(_, i) {
-        var b = bundle;
-        for (var k of i.split(".")) b = b[k] || "";
-        return b;
-      }
-      return (typeof str == "string" && str.replace(/\{([\w\d._]+)\}/g, _replace)) || "";
-    },
+    qstringify,
   },
 };
 </script>
@@ -627,6 +632,7 @@ export default {
 .white-bg {
   background: white;
 }
+
 .description {
   border: hidden;
   background: none;

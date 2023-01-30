@@ -38,40 +38,41 @@
   </v-card>
 </template>
 
-<script>
+<script lang="ts">
+import { TaskDBO } from '@/api/dbo';
+import { call } from '@/api/net';
+import { notify } from '@/dialogs'
+
 export default {
   data() {
     return {
-      tasks: [],
+      tasks: [] as TaskDBO[],
     };
   },
   methods: {
     create_task() {
-      this.api
-        .put("tasks/", { name: this.$t("new-task") + " " + new Date() })
-        .then((data) => this.$router.push("/tasks/" + data.result));
+      call("tasks/", 'put', { name: this.$t("new-task") + " " + new Date() })
+        .then((data) => this.$router.push("/tasks/" + data));
     },
-    duplicate_task(task) {
+    duplicate_task(task: Partial<TaskDBO>) {
       var otask = Object.assign({}, task);
-      otask._id = null;
+      delete otask._id;
       otask.name += " " + this.$t("copy");
-      this.api
-        .put("tasks/", otask)
-        .then((data) => this.$router.push("/tasks/" + data.result));
+      call("tasks/", 'put', otask)
+        .then((data) => this.$router.push("/tasks/" + data));
     },
-    delete_task(task) {
-      this.api
-        .delete("tasks/" + task._id)
+    delete_task(task: Partial<TaskDBO>) {
+      call("tasks/" + task._id, 'delete')
         .then(() => (this.tasks = this.tasks.filter((x) => x._id != task._id)));
     },
-    enqueue_task(task) {
-      this.api.put("queue/", { id: task._id }).then((data) => {
-        this.$notify(this.$t("task-enqueued", {task: data.result}));
+    enqueue_task(task: Partial<TaskDBO>) {
+      call("queue/", 'put', { id: task._id }).then((data) => {
+        notify(this.$t("task-enqueued", {task: data}));
       });
     },
   },
   mounted() {
-    this.api.call("tasks/").then((data) => (this.tasks = data.result));
+    call<TaskDBO[]>("tasks/").then((data) => (this.tasks = data));
   },
 };
 </script>

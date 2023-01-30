@@ -64,7 +64,7 @@
           ></div>
           <v-img
             v-if="view_mode == 'gallery'"
-            :contain="api.config.contain"
+            :contain="localConfig.contain"
             :height="240"
             :src="r.src"
           ></v-img>
@@ -136,11 +136,14 @@
   </v-sheet>
 </template>
 
-<script>
+<script lang="ts">
 import ContentView from "./ContentView.vue";
 import GalleryContentView from "./GalleryContentView.vue";
 
-export default {
+
+import { defineComponent } from "vue";
+
+export default defineComponent({
   name: "SelectableList",
   components: {
     ContentView,

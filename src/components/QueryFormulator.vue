@@ -38,7 +38,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 const FIELDS = [
   "keywords",
   "content",
@@ -75,7 +75,10 @@ const FUNCTIONS = ["in", "first", "last", "groupby", ""];
 
 import ParamInput from "./ParamInput.vue";
 
-export default {
+
+import { defineComponent } from "vue";
+
+export default defineComponent({
   name: "QueryFormulator",
   components: {
     ParamInput,

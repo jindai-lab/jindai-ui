@@ -1,7 +1,7 @@
 import { nanoid } from "nanoid";
 import { Dataset, MediaItem, Paragraph, PluginPage, Source } from "./dbo";
 import { call } from "./net";
-import { ParagraphSelection, SelectableParagraph, open_window } from "./ui";
+import { ParagraphSelection, SelectableParagraph, openWindow } from "./ui";
 import remoteConfig from "./remoteConfig";
 import { Singletons } from "./singleton";
 
@@ -21,7 +21,7 @@ export class UIMediaItem implements MediaItem {
     Object.assign(this, obj)
   }
 
-  getUrl() {
+  get ['src'] () {
     let imgdomain = `img-${this._id.slice(-8)}${remoteConfig.meta.domain_delimiter}`
     let path = ''
 
@@ -143,10 +143,19 @@ export class UIParagraph implements SelectableParagraph {
   selected: boolean = false
   __selectId__: string = ''
   mongocollection: string = 'paragraph'
+  private _matched_content?: string = ''
 
   constructor(obj: Partial<Paragraph>) {
     Object.assign(this, obj)
     this.__selectId__ = nanoid()
+  }
+
+  get matched_content() {
+    return  this._matched_content || this.content
+  }
+
+  set matched_content(val: string) {
+    this._matched_content = val
   }
 
   get coverImage() {
@@ -162,7 +171,7 @@ export class UIParagraph implements SelectableParagraph {
       else item = UnavailableVideoThumbnailItem
     }
 
-    return item.getUrl()
+    return item.src
   }
 
   get scope() {
@@ -179,7 +188,7 @@ export class UIParagraph implements SelectableParagraph {
     return '';
   }
 
-  static guessGroups(condition: string | UIParagraph[]) {
+  static guessGroups(condition: string | UIParagraph[]): string[] {
     if (typeof condition == 'string') {
       let words = condition.match(/([_\w\u4e00-\u9fa5]+)/g) || []
       return words
@@ -430,7 +439,7 @@ export class Caller {
   }
 
   applyPluginFilter(filter: UIPluginPage, selection: ParagraphSelection<UIParagraph>) {
-    open_window(filter.formatter(selection))
+    openWindow(filter.formatter(selection))
   }
 
 }

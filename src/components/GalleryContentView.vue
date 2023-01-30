@@ -2,12 +2,12 @@
   <div class="gallery-item">
     <div class="gallery-description">
       <span class="nums">
-        <span class="datetime">{{ paragraph.pdate | dateSafe }}</span>
+        <span class="datetime">{{ paragraph.pdate }}</span>
         <span class="count">
           <a class="counter secondary--text chip" target="_blank"
-            :href="'/' + api.querystring_stringify({
+            :href="'/' + qstringify({
           groups:'none',
-          q: `(${api.get_group(paragraph)})`
+          q: `(${paragraph.scope})`
         })">{{
             paragraph.count || paragraph.images.length }}</a>
         </span>
@@ -15,20 +15,20 @@
           <v-icon>mdi-web</v-icon>
         </v-btn>
       </span>
-      <a :href="'/' + api.querystring_stringify({
+      <a :href="'/' + qstringify({
         q: `source(\`${paragraph.source.url || paragraph.source.file || ''}\`)`})" class="force-text break-anywhere"
         target="_blank">{{ paragraph.source.url }}</a>
       <p class="content" @click.ctrl="search_selection">{{ text }}</p>
       <template v-for="tag in tags">
-        <a v-if="tag != '...'" :alt="tag" :key="`${paragraph._id}-${Math.random()}-${tag}`" :href="'/' + api.querystring_stringify({
+        <a v-if="tag != '...'" :alt="tag" :key="`${paragraph._id}-${Math.random()}-${tag}`" :href="'/' + qstringify({
           groups: tag.match(/^#/) ? 'none' : (tag.match(/^@/) ? 'group' : ''),
           sort: '-pdate',
           q:
             tag.match(/^[@#]/)
               ? quote(tag)
-              : quote(tag) + ',' + api.scope(paragraph)
+              : quote(tag) + ',' + paragraph.scope
         })" :class="['tag', 'chip', tag_class(tag)]" target="_blank">{{ tag }}</a>
-        <v-btn icon v-else :key="`${paragraph._id}-${Math.random()}-${tag}`" @click="show_all_tags = true">
+        <v-btn icon v-else :key="`${paragraph._id}-e${Math.random()}-${tag}`" @click="show_all_tags = true">
           <v-icon>mdi-more</v-icon>
         </v-btn>
       </template>
@@ -36,7 +36,9 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
+import { open_window, qstringify } from '@/api/ui';
+
 export default {
   name: "GalleryContentView",
   props: [
@@ -67,10 +69,11 @@ export default {
     },
   },
   methods: {
-    quote(x) {
+    qstringify,    
+    quote(x: string) {
       return JSON.stringify("" + x);
     },
-    tag_class(tag) {
+    tag_class(tag: string) {
       return tag.startsWith("#")
         ? "t_group"
         : tag == this.paragraph.author
@@ -79,10 +82,10 @@ export default {
             "t_" + tag : '';
     },
     search_selection() {
-      var selected = document.getSelection().toString()
+      var selected = document.getSelection()?.toString()
       if (!selected)return
-      this.api.open_window({
-        q: `c(${this.api.quote(selected)}),${this.api.scope(this.paragraph)}`,
+      open_window({
+        q: `c(${this.quote(selected)}),${this.paragraph.scope}`,
         datasets: [this.paragraph.dataset]
       })
     }

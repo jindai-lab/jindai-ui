@@ -1,9 +1,7 @@
 import { MediaItem, Paragraph } from "./dbo";
-import assert from "assert";
-import { UIMediaItem } from "./business";
 
 export interface ParagraphItemObject {
-  [id: string]: Array<string>
+  [id: string]: String[]
 }
 
 export interface SelectableParagraph extends Paragraph {
@@ -30,19 +28,21 @@ export class ParagraphSelection<T extends SelectableParagraph> {
     return this._selected.has(para.__selectId__)
   }
 
-  select(para: SelectableParagraph): boolean {
+  select(...paras: SelectableParagraph[]): boolean {
     if (this._selected_items) this._selected_items = []
-    if (this.has(para)) return false
-    this._selected.add(para.__selectId__)
-    para.selected = true
+    for(var para of paras) {
+      if (!this.has(para)) this._selected.add(para.__selectId__)
+      para.selected = true
+    }
     return true
   }
 
-  deselect(para: SelectableParagraph): boolean {
+  deselect(...paras: SelectableParagraph[]): boolean {
     if (this._selected_items) this._selected_items = []
-    if (!this.has(para)) return false
-    this._selected.delete(para.__selectId__)
-    para.selected = false
+    for(var para of paras) {
+      if (this.has(para)) this._selected.delete(para.__selectId__)
+      para.selected = false
+    }
     return true
   }
 
@@ -98,13 +98,13 @@ export class ParagraphSelection<T extends SelectableParagraph> {
   }
 }
 
-export interface UpdateOptions {
+export interface UpdaterOptions {
   limit: number
   offset: number
 }
 
 export type UpdaterFunction =
-  (options: UpdateOptions) => Promise<Array<Paragraph>>
+  (options: UpdaterOptions) => Promise<Paragraph[]>
 
 
 export class Paging {
@@ -112,7 +112,6 @@ export class Paging {
   page_size: number
   prefetch_size: number
   _updater: UpdaterFunction
-  _url_getter: (i: MediaItem) => string
   _page: number
   _offset_start: number
   _offset_end: number
@@ -149,14 +148,14 @@ export class Paging {
     );
   }
 
-  _prefetch_images() {
+  private performPrefetch() {
     // preload images for every item
     this.visible.map((x) => {
       if (x.images) {
         [...x.images.slice(0, 5), ...x.images.slice(-1)].map((i) => {
           if (i.item_type == "image") {
             let image = new Image();
-            image.src = new UIMediaItem(i).getUrl();
+            image.src = i.src;
           }
         });
       }
@@ -169,12 +168,12 @@ export class Paging {
     this._data = []
   }
 
-  turn_page(p: number) {
+  turn_page(p: number): Promise<Paragraph[]> {
     this._page = p
     if (this._fetched()) {
       // return directly from prefetched data
       return new Promise(accept => {
-        this._prefetch_images()
+        this.performPrefetch()
         accept(this.visible)
       })
     } else {
@@ -186,7 +185,7 @@ export class Paging {
         this._offset_start = this.offset
         this._offset_end = this._offset_start + data.length
         this._data = data
-        this._prefetch_images()
+        this.performPrefetch()
         return this.visible
       })
     }
@@ -252,7 +251,7 @@ export function qstringify(obj: object) {
   return "?" + str.substring(1);
 }
 
-export function blob_download(blob: Blob, filename: string) {
+export function downloadBlob(blob: Blob, filename: string) {
   var url = URL.createObjectURL(blob);
 
   const link = document.createElement("a");
@@ -324,14 +323,14 @@ export function querify(obj: any): string {
       let [key, val] = kvpair;
       switch (key) {
         case "$and":
-          assert(Array.isArray(val), 'value should be an array')
+          if (Array.isArray(val), 'value should be an array')
           s +=
             ",(" +
             val.map((x) => _debracket(querify(x))).join(",") +
             ")";
           break;
         case "$or":
-          assert(Array.isArray(val), 'value should be an array')
+          if (Array.isArray(val), 'value should be an array')
           s +=
             ",(" +
             val.map((x) => _debracket(querify(x))).join("|") +
@@ -364,11 +363,18 @@ export function querify(obj: any): string {
   return JSON.stringify(obj);
 }
 
-export function open_window(url: string | object) {
+export function openWindow(url: string | object) {
   let urlstring = ''
   if (typeof url == 'object')
     urlstring = '/' + qstringify(url)
   else
     urlstring = url.toString()
   window.open(urlstring)
+}
+
+export function dtstr(val: Date | number) {
+  var pdate: Date;
+  if (typeof val == 'number') pdate = new Date(val)
+  else pdate = val as Date
+  return pdate.toLocaleString()
 }

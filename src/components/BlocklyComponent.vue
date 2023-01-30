@@ -9,10 +9,10 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import Blockly from "blockly";
 
-export default {
+export default  {
   name: "BlocklyComponent",
   props: ["json", "pipelines", "tasks"],
   data() {
@@ -47,7 +47,7 @@ export default {
     }, 1000);
   },
   methods: {
-    auto_parse(val) {
+    auto_parse(val: string | number | object) {
       if (typeof val !== "string") return val;
       if (val === "FALSE" || val === "TRUE") return val === "TRUE";
       if (val.match(/^[+-]?\d+\.?\d*[Ee]?[+-]?\d*$/)) return +val;
@@ -178,22 +178,22 @@ export default {
       ];
 
       const constants = Object.entries({
-        文件来源: "source__file",
-        网页来源: "source__url",
-        文件页码: "source__page",
-        页码: "pagenum",
-        日期: "pdate",
-        关键词和标签: "keywords",
-        内容: "content",
-        语言: "lang",
-        数据集: "dataset",
-        大纲: "outline",
-        图像: "images",
+        'file-source': "source__file",
+        'url-source': "source__url",
+        'file-pagenum': "source__page",
+        'pagenum': "pagenum",
+        'pdate': "pdate",
+        'keywords': "keywords",
+        'content': "content",
+        'lang': "lang",
+        'dataset': "dataset",
+        'outline': "outline",
+        'images': "images",
       });
 
       toolbox.contents.push({
         kind: "category",
-        name: `查询`,
+        name: this.$t('query'),
         contents: [
           {
             kind: "block",
@@ -236,7 +236,7 @@ export default {
       });
       return toolbox;
     },
-    to_xml(parent, tuples) {
+    to_xml(parent: HTMLElement, tuples: [string, object][]) {
       var index = 0;
 
       for (var tup of tuples) {
@@ -246,8 +246,7 @@ export default {
           parent = next;
         }
 
-        let name = tup[0],
-          args = tup[1];
+        let [name, args] = tup
         var block = document.createElement("block");
         block.setAttribute("type", name);
         if (!this.blocks_dict[name]) {
@@ -264,7 +263,7 @@ export default {
             continue;
           }
           let argtype = arg.type;
-          var field = "";
+          var field : HTMLElement;
           if (
             ["bool", "float", "int", "TASK"].includes(argtype) ||
             argtype.includes("|")
@@ -302,10 +301,11 @@ export default {
         ++index;
       }
     },
-    from_field_expr(block) {
+    from_field_expr(block?: Element) {
       var op = "";
-      block.type = block.getAttribute("type");
-      switch (block.type) {
+      if (!block) return ''
+      let block_type = block.getAttribute("type") || '';
+      switch (block_type) {
         case "math_number":
         case "text":
         case "text_multiline":
@@ -313,7 +313,7 @@ export default {
             block.getElementsByTagName("field")[0].innerHTML
           );
         case "logic_compare":
-          op = block.querySelector('field[name="OP"]').textContent;
+          op = block.querySelector('field[name="OP"]')?.textContent || '';
           return (
             this.from_field_expr(block.querySelector("[name=A]")) +
             {
@@ -327,20 +327,20 @@ export default {
             this.from_field_expr(block.querySelector("[name=B]"))
           );
         default:
-          if (block.type.startsWith("constant_"))
-            return block.type.split("_", 2)[1].replace(/__/g, ".");
-          if (block.type.startsWith("function_"))
+          if (block_type.startsWith("constant_"))
+            return block_type.split("_", 2)[1].replace(/__/g, ".");
+          if (block_type.startsWith("function_"))
             return (
-              block.type.split("_", 2)[1] +
+              block_type.split("_", 2)[1] +
               "(" +
-              this.from_field_expr(block.type.querySelector("[name=VALUE]")) +
+              this.from_field_expr(block.querySelector("[name=VALUE]")) +
               ")"
             );
           break;
       }
       return "";
     },
-    from_xml(block) {
+    from_xml(block: Element) {
       var j = [];
       while (block) {
         // iterative through 'next' tags to get a sequence of blocks

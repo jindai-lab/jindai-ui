@@ -55,11 +55,14 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import ParamInput from "./ParamInput";
 import Pipeline from "./Pipeline";
 
-export default {
+
+import { defineComponent } from "vue";
+
+export default defineComponent({
   name: "StageDetail",
   inheritAttrs: false,
   props: ["value", "map_id"],

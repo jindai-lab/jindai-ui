@@ -24,10 +24,10 @@
       <v-sheet>
         <v-data-table :items="files.filter(x => x.name == '..' || !x.name.startsWith('.'))" :items-per-page="20"
           :page.sync="page" :headers="[
-            {text: $t('name'), value: 'name'},
-            {text: $t('operations'), value: 'actions'},
+            { text: $t('name'), value: 'name' },
+            { text: $t('operations'), value: 'actions' },
           ]">
-          <template v-slot:item.name="{item}">
+          <template v-slot:item.name="{ item }">
             <v-btn icon :href="file_link(item)" v-if="item.type === 'file'">
               <v-icon>mdi-download</v-icon>
             </v-btn>
@@ -38,12 +38,12 @@
             {{ item.name == ".." ? $t("parent-dir") : item.name }}
             <div class="description" v-if="item.type == 'file'">
               {{ $t("size") }}: {{ (item.size / 1024 / 1024).toFixed(2) }} MB
-              {{ $t("created-at") }}: {{ (item.ctime * 1000) | dateSafe }}
+              {{ $t("created-at") }}: {{ dtstr(item.ctime * 1000) }}
               {{ $t("modified-at") }}:
-              {{ (item.mtime * 1000) | dateSafe }}
+              {{ dtstr(item.mtime * 1000) }}
             </div>
           </template>
-          <template v-slot:item.actions="{item}">
+          <template v-slot:item.actions="{ item }">
             <v-btn @click="copy_file_path(item)" v-if="item.type !== 'back'" icon>
               <v-icon>mdi-content-copy</v-icon>
             </v-btn>
@@ -63,14 +63,18 @@
   </v-card>
 </template>
 
-<script>
-
+<script lang="ts">
+import { FileStorageItem } from "@/api/dbo"
+import { call } from "@/api/net";
+import { dtstr, qsparse, qstringify } from "@/api/ui"
+import { notify } from "@/dialogs";
+import { AxiosProgressEvent } from "axios";
 
 export default {
   name: "StorageList",
   data() {
     return {
-      files: [],
+      files: [] as FileStorageItem[],
       selected_dir: "",
       progress: 0,
       admin: false,
@@ -78,83 +82,80 @@ export default {
       page: 1,
     };
   },
-  computed: {
-    pages_count() {
-      return Math.ceil(this.files.length / 20);
-    },
-  },
   methods: {
+    dtstr,
     open_file_dialog() {
-      document.getElementById("file").click();
+      document.getElementById("file")?.click();
     },
     new_folder() {
       var folder = prompt(this.$t("folder-name"))
       if (!folder) return
-      this.api.call(`storage/${this.selected_dir}`, { mkdir: folder }).then(() => {
+      call(`storage/${this.selected_dir}`, 'post', { mkdir: folder }).then(() => {
         this.update_files()
       })
     },
-    upload_file(e) {
+    upload_file(e: Event) {
+      const target = (e.target as HTMLInputElement).files || []
       let data = new FormData();
-      for (var i = 0; i < e.target.files.length; ++i)
-        data.append("file" + i, e.target.files[i]);
+      for (var i = 0; i < (target.length || 0); ++i)
+        data.append("file" + i, target[i]);
 
-      this.api
-        .upload(this.selected_dir, data, (e) => {
-          this.progress = ((e.loaded * 100) / e.total) | 0;
-        })
+      call<FileStorageItem[]>(this.selected_dir, 'post', data, undefined, (e: AxiosProgressEvent) => {
+        this.progress = ((e.loaded * 100) / (e.total || 1)) | 0;
+      })
         .then((data) => {
           this.progress = 0;
-          for (var r of data.result)
+          for (var r of data)
             this.files.splice(this.selected_dir != "" ? 1 : 0, 0, r);
         });
     },
     search_file() {
       if (this.search) {
-        this.api
-          .call(`storage/${this.selected_dir}`, { search: this.search })
+        call<FileStorageItem[]>(`storage/${this.selected_dir}`, 'post', { search: this.search })
           .then((data) => {
-            this.files = data.result;
+            this.files = data;
           });
       } else {
         this.update_files();
       }
     },
-    file_link(f) {
-      return "/this.api/storage/" + f.fullpath.trimLeft('/');
+    file_link(f: FileStorageItem) {
+      return "/this.api/storage/" + f.fullpath.replace(/^\/+/, '')
     },
-    install_plugin(f) {
-      this.api.call("plugins", { url: f.fullpath }).then((data) => {
-        if (data.result) this.$notify(this.$t("installed"));
+    install_plugin(f: FileStorageItem) {
+      call("plugins", 'post', { url: f.fullpath }).then((data) => {
+        if (data) notify(this.$t("installed"));
       });
     },
-    rename_file(f) {
+    rename_file(f: FileStorageItem) {
       var new_name = prompt(this.$t("raname-to"), f.name);
       if (!new_name) return;
-      this.api.call(
+      call(
         "storage/move",
-        { source: f.fullpath, destination: new_name }.then(() =>
+        'post',
+        { source: f.fullpath, destination: new_name }).then(() =>
           this.update_files()
         )
-      );
     },
     update_files() {
-      this.api.call("storage/" + this.selected_dir).then((data) => {
-        this.files = data.result;
+      call<FileStorageItem[]>("storage/" + this.selected_dir).then((data) => {
+        this.files = data;
         if (this.selected_dir !== "")
-          this.files.splice(0, 0, { name: "..", type: "back" });
+          this.files.splice(0, 0, {
+            name: "..", type: "back", fullpath: '..', 'created-at': 0, 'modified-at': 0, size: 0
+          });
         history.pushState(
           null,
-          null,
-          this.api.querystring_stringify({
+          '',
+          qstringify({
             path: this.selected_dir,
           })
         );
       });
     },
-    copy_file_path(f) {
+    copy_file_path(f: FileStorageItem) {
       const text = 'file://' + f.fullpath;
-      const testingCodeToCopy = document.querySelector("#testing-code");
+      const testingCodeToCopy = document.querySelector("#testing-code") as HTMLInputElement;
       testingCodeToCopy.setAttribute("type", "text");
       testingCodeToCopy.setAttribute("value", text);
       testingCodeToCopy.select();
@@ -164,9 +165,9 @@ export default {
         alert("Oops, unable to copy");
       }
       testingCodeToCopy.setAttribute("type", "hidden");
-      window.getSelection().removeAllRanges();
+      window.getSelection()?.removeAllRanges();
     },
-    enter(d) {
+    enter(d: string) {
       if (d === "..")
         this.selected_dir = this.selected_dir.split("/").slice(0, -1).join("/");
       else
@@ -178,7 +179,7 @@ export default {
     },
   },
   mounted() {
-    this.selected_dir = this.api.querystring_parse(location.search).path || "";
+    this.selected_dir = qsparse(location.search).path || "";
     this.update_files();
   },
   watch: {

@@ -18,17 +18,22 @@
   </v-dialog>
 </template>
 
-<script>
-export default {
+<script lang="ts">
+
+import { defineComponent } from "vue";
+import { querify } from "@/api/ui";
+
+export default defineComponent({
   name: "EmbeddedDialog",
   data: () => ({
     visible: true,
   }),
-  props: ["target", "retval"],
+  props: ["target"],
   watch: {
     visible() {
-      this.retval = true;
+      this.$emit('input', true)
     },
   },
-};
+  methods: {querify}
+});
 </script>

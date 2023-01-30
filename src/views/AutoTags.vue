@@ -3,9 +3,9 @@
     <v-card-title> {{ $t("auto-tagging") }} </v-card-title>
     <v-card-text>
       <v-data-table :items="auto_tags" :items-per-page="20" :page.sync="page" :search="search" :headers="[
-        {text: $t('match-cond'), value: 'cond'},
-        {text: $t('tag'), value: 'tag'},
-        {text: $t('operations'), value: 'operations'},
+        { text: $t('match-cond'), value: 'cond' },
+        { text: $t('tag'), value: 'tag' },
+        { text: $t('operations'), value: 'operations' },
       ]">
         <template v-slot:top>
           <v-toolbar flat>
@@ -35,11 +35,17 @@
   </v-card>
 </template>
 
-<script>
+<script lang="ts">
+
+import { UIParagraph } from "@/api";
+import { AutoTag } from '@/api/dbo';
+import { call } from "@/api/net";
+import { notify } from '@/dialogs';
+
 export default {
   name: "AutoTags",
   data: () => ({
-    auto_tags: [],
+    auto_tags: [] as AutoTag[],
     page: 1,
     search: "",
     new_tag: {
@@ -61,43 +67,34 @@ export default {
         this.new_tag.cond = 'author=' + this.new_tag.cond.substring(1)
       }
       if (!this.new_tag.tag) {
-        this.new_tag.tag = '#' + this.api.guess_groups(this.new_tag.cond).pop()
+        this.new_tag.tag = '#' + UIParagraph.guessGroups(this.new_tag.cond).pop() || ''
       }
       if (this.new_tag.tag == this.new_tag.cond || !this.new_tag.tag) return
-      this.api.put("plugins/autotags", this.new_tag).then((data) => {
-        if (!data.__exception__) {
-          this.new_tag.tag = "";
-          this.new_tag.cond = "";
-          this.reload();
-        }
+      call("plugins/autotags", 'put', this.new_tag).then((data) => {
+        this.new_tag.tag = "";
+        this.new_tag.cond = "";
+        this.reload();
+      
       });
     },
-    auto_tags_delete(ids) {
-      this.api
-        .call("plugins/autotags", { ids, delete: true })
+    auto_tags_delete(id: string) {
+      call("plugins/autotags", 'post', { ids: id, delete: true })
         .then(
           () =>
           (this.auto_tags = this.auto_tags.filter(
-            (x) => !ids.includes(x._id)
+            (x) => !id.includes(x._id)
           ))
         );
     },
     auto_tags_apply(id) {
-      this.api.call("plugins/autotags", { apply: id })
-        .then(() => (this.$notify(this.$t('success'))))
+      call("plugins/autotags", 'post', { apply: id })
+        .then(() => (notify(this.$t('success'))))
     },
     reload() {
-      this.api
-        .call("plugins/autotags")
-        .then((data) => (this.auto_tags = data.result));
+      call<AutoTag[]>("plugins/autotags")
+        .then((data) => (this.auto_tags = data));
     },
-    next_page() {
-      if (this.page + 1 <= this.pages_count) this.page++;
-    },
-    prev_page() {
-      if (this.page - 1 >= 1) this.page--;
-    },
-    do_search(items, search) {
+    do_search(items: AutoTag[], search: string) {
       if (!search) return items;
       return items.filter(
         (x) =>
@@ -108,7 +105,7 @@ export default {
       );
     },
   },
-};
+}
 </script>
 
 <style scoped>

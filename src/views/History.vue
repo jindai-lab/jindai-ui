@@ -20,20 +20,20 @@
   </v-card>
 </template>
 
-<script>
-
+<script lang="ts">
+import {call} from "@/api/net"
+import { History } from "@/api/dbo";
 
 export default {
   data() {
-    return { history: [] };
+    return { history: [] as History[] };
   },
   mounted() {
-    this.api.call("history").then((data) => (this.history = data.result));
+    call("history").then((data) => (this.history = data as History[]));
   },
   methods: {
-    export_query(h) {
-      this.api
-        .put("tasks/", {
+    export_query(h: History) {
+      call("tasks/", "put", {
           pipeline: [
             [
               "DBQueryDataSource",
@@ -44,10 +44,10 @@ export default {
           ],
           name: this.$t("search") + " " + h.queries[0],
         })
-        .then((data) => this.$router.push("/tasks/" + data.result))
+        .then((data) => this.$router.push("/tasks/" + data as string))
         .catch(() => { });
     },
-    replay(h) {
+    replay(h: History) {
       this.$router.push(
         "search?q=" +
         encodeURIComponent(h.queries[0]) +
@@ -56,5 +56,5 @@ export default {
       );
     },
   },
-};
+})
 </script>

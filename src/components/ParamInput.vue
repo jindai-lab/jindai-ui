@@ -3,9 +3,7 @@
     <v-autocomplete
       v-if="type_choices"
       :label="arg.name"
-      :value="
-        value === null || typeof value === 'undefined' ? arg.default : value
-      "
+      :value="value === null || typeof value === 'undefined' ? arg.default : value"
       v-bind="$attrs"
       v-on="inputListeners"
       @change="inputListeners.input"
@@ -44,10 +42,7 @@
     <div v-else-if="arg.type == 'object'">
       <v-row v-for="(r, i) in keys" :key="r.name">
         <v-col>
-          <v-text-field
-            v-model="r.name"
-            @input="update_object_value"
-          ></v-text-field>
+          <v-text-field v-model="r.name" @input="update_object_value"></v-text-field>
         </v-col>
         <v-col>
           <v-select
@@ -121,15 +116,9 @@
         @dblclick:row="edit_line"
       >
         <template v-slot:item.actions="{ item }">
-          <v-icon small class="mr-2" @click="edit_line(item.index)">
-            mdi-pencil
-          </v-icon>
+          <v-icon small class="mr-2" @click="edit_line(item.index)"> mdi-pencil </v-icon>
           <v-icon small @click="delete_line(item.index)"> mdi-delete </v-icon>
-          <v-icon
-            small
-            @click="move_line(item.index, -1)"
-            v-if="item.index > 0"
-          >
+          <v-icon small @click="move_line(item.index, -1)" v-if="item.index > 0">
             mdi-arrow-up
           </v-icon>
           <v-icon
@@ -210,7 +199,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 function input_func(vm) {
   return function (event) {
     var val = vm.validate(event);
@@ -232,52 +221,22 @@ import "vue-prism-editor/dist/prismeditor.min.css"; // import the styles somewhe
 import { highlight, languages } from "prismjs/components/prism-core";
 import "prismjs/components/prism-clike";
 import "prismjs/themes/prism-tomorrow.css"; // import syntax highlighting styles
+import { PipelineArgument } from "@/api/dbo";
+import { PropType } from "vue";
+import remoteConfig from "@/api/remoteConfig";
+import { call } from "@/api/net";
+import { notify } from "@/dialogs";
 
 export default {
   name: "ParamInput",
   inheritAttrs: false,
-  props: ["value", "arg"],
+  props: {
+    value: String,
+    arg: Object as PropType<PipelineArgument>,
+  },
   events: ["validation"],
   components: {
     PrismEditor,
-  },
-  computed: {
-    inputListeners: function () {
-      const vm = this;
-      return Object.assign({}, this.$listeners, {
-        input: input_func(vm),
-      });
-    },
-    type_choices() {
-      function _expand_choices(x) {
-        return x
-          .split("|")
-          .map((x) => (x.includes(":") ? x.split(":") : [x, x]))
-          .map((x) => ({ text: x[0], value: x[1] }));
-      }
-
-      switch (this.arg.type) {
-        case "LANG":
-          return _expand_choices(this.langs);
-        default:
-          if (this.arg.type.includes("|")) {
-            return _expand_choices(this.arg.type);
-          }
-          var doc_choose = (this.arg.description || "").match(
-            /@choose\((.*?)\)/
-          );
-          if (doc_choose) {
-            return _expand_choices(doc_choose[1]);
-          }
-          return false;
-      }
-    },
-    lines() {
-      return (this.value || "")
-        .split("\n")
-        .filter((x) => x.length)
-        .map((x, i) => ({ text: x, index: i }));
-    },
   },
   data() {
     return {
@@ -291,24 +250,51 @@ export default {
       new_line: "",
     };
   },
+  computed: {
+    type_choices() {
+      function _expand_choices(descr: string) {
+        return descr
+          .split("|")
+          .map((x) => (x.includes(":") ? x.split(":") : [x, x]))
+          .map((x) => ({ text: x[0], value: x[1] }));
+      }
+
+      switch (this.arg?.type) {
+        case "LANG":
+          return _expand_choices(this.langs);
+        default:
+          if (this.arg?.type.includes("|")) {
+            return _expand_choices(this.arg?.type);
+          }
+          var doc_choose = (this.arg?.description || "").match(/@choose\((.*?)\)/);
+          if (doc_choose) {
+            return _expand_choices(doc_choose[1]);
+          }
+          return false;
+      }
+    },
+    lines() {
+      return (this.value || "")
+        .split("\n")
+        .filter((x) => x.length)
+        .map((x, i) => ({ text: x, index: i })) as Array<({text: string, index: number})>;
+    },
+  },
   watch: {
     arg() {
       this.update_choices();
     },
   },
   methods: {
-    validate(val) {
+    validate(val: string) {
       if (val === "") {
-        if (
-          typeof this.arg.default === "undefined" ||
-          this.arg.default === null
-        ) {
+        if (typeof this.arg?.default === "undefined" || this.arg?.default === null) {
           this.prompt = this.$t("required");
           return;
         }
         return null;
       }
-      switch (this.arg.type) {
+      switch (this.arg?.type) {
         case "bool":
           return val;
         case "int":
@@ -316,62 +302,52 @@ export default {
           break;
         case "float":
         case "number":
-          if (val.match(/^[+-]?\d?\.?\d+[eE]?[+-]?\d*$/))
-            return parseFloat(val);
+          if (val.match(/^[+-]?\d?\.?\d+[eE]?[+-]?\d*$/)) return parseFloat(val);
           break;
         default:
           return val;
       }
-      this.prompt = this.$t("match-type", { type: this.arg.type });
+      this.prompt = this.$t("match-type", { type: this.arg?.type });
       return;
     },
-    highlighter(code) {
+    highlighter(code:string) {
       return highlight(code, languages.clike); // languages.<insert language> to return html with markup
     },
     update_object_value() {
-      if (this.arg.type !== "object") return;
+      if (this.arg?.type !== "object") return;
       var val = {};
       for (var k of this.keys) {
         val[k.name] = this.object_value[k.name];
       }
       this.$emit("input", val);
     },
-    refresh(val) {
+    refresh(val:string) {
       this.code = val;
       this.$emit("input", val);
     },
     update_choices() {
-      switch (this.arg.type) {
+      switch (this.arg?.type) {
         case "TASK":
         case "DATASET":
-          this.api.call(this.arg.type.toLowerCase() + "s").then(
+          call<({display_name?: string, name: string, _id: string})[]>(this.arg?.type.toLowerCase() + "s").then(
             (data) =>
-              (this.choices = data.result.map((x) => ({
+              (this.choices = data.map((x) => ({
                 text: x.display_name || x.name,
-                value: this.arg.type == "TASK" ? x._id : x.name,
+                value: this.arg?.type == "TASK" ? x._id : x.name,
               })))
           );
           break;
         case "PIPELINE":
-          this.choices = [].concat(
-            ...Object.values(this.business.pipelines).map((x) =>
-              Object.keys(x).map((k) => ({
-                text: `${x[k].doc} ${k}`,
-                value: k,
-                hint: x[k].args
-                  .map(
-                    (x) =>
-                      `${x.name} (${x.type}${
-                        x.default !== null ? " optional" : ""
-                      })`
-                  )
-                  .join(", "),
-              }))
-            )
-          );
+          this.choices = Object.entries(remoteConfig.piplineDirectory).map(([k, x]) => ({
+            text: `${x.doc ?? ""} ${k}`,
+            value: k,
+            hint: x.args.map(
+              a => `${a.name} (${a.type}${a.default !== null ? " optional" : ""})`
+            ).join(", ")
+          }))
           break;
         case "LANG":
-          for (var pair of Object.entries(this.business.languages)) {
+          for (var pair of Object.entries(remoteConfig.languages)) {
             let key = pair[0],
               val = pair[1];
             if (this.langs.indexOf(`:${key}`) >= 0) continue;
@@ -379,30 +355,30 @@ export default {
           }
           break;
         case "object":
-          this.keys = this.arg.keys || [];
+          this.keys = this.arg?.keys || [];
       }
     },
-    drop_file(e) {
-      let types = this.arg.type.substr(5).split(",");
+    drop_file(e: DragEvent) {
+      let types = this.arg?.type.substring(5).split(",") || [];
       let types_check = new RegExp("\\.(" + types.join("|") + ")$", "i");
-      let droppedFiles = Array.from(e.dataTransfer.files).filter((x) =>
+      let droppedFiles = Array.from(e.dataTransfer?.files || []).filter((x) =>
         x.name.match(types_check)
       );
       if (!droppedFiles.length) {
-        this.$notify(this.$t("match-file-type", { type: types.join(", ") }));
+        notify(this.$t("match-file-type", { type: types.join(", ") }));
         return;
       }
       let file = droppedFiles[0];
       var reader = new FileReader();
       reader.onload = (e) => {
-        this.$emit("input", e.target.result);
+        this.$emit("input", e.target?.result);
         this.file_prompt = file.name;
       };
       reader.onerror = (e) => console.log("Error : " + e.type);
       reader.readAsDataURL(file);
     },
-    move_line(item_id, inc) {
-      var lines = this.lines.map((x) => x.text);
+    move_line(item_id: number, inc: number) {
+      var lines = this.lines.map((x: {text: string}) => x.text);
       var deleted = lines.splice(item_id, 1);
       switch (inc) {
         case -1:
@@ -417,7 +393,7 @@ export default {
       this.$emit("input", lines.join("\n"));
       return deleted[0];
     },
-    delete_line(item_id) {
+    delete_line(item_id: number) {
       return this.move_line(item_id, 0);
     },
     append_line() {
@@ -425,7 +401,7 @@ export default {
         this.$emit("input", ((this.value || "") + "\n" + this.new_line).trim());
       this.new_line = "";
     },
-    edit_line(item_id, row) {
+    edit_line(item_id: number, row: number) {
       if (typeof row == "object") item_id = row.item.index;
       this.new_line = this.delete_line(item_id);
       this.$refs.new_line_input.focus();

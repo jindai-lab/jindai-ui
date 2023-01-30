@@ -7,12 +7,7 @@
       :value="selection_count > 0"
       overlap
     >
-      <v-btn
-        fab
-        small
-        @click="$emit('toggle-selection')"
-        @dblclick="$emit('close')"
-      >
+      <v-btn fab small @click="$emit('toggle-selection')" @dblclick="$emit('close')">
         <v-icon>mdi-select-all</v-icon>
       </v-btn>
     </v-badge>
@@ -25,7 +20,7 @@
       <v-icon>mdi-heart</v-icon>
     </v-btn>
 
-    <v-btn fab small @click="_emit('group', {advanced: true, del:false})">
+    <v-btn fab small @click="_emit('group', { advanced: true, del: false })">
       <v-icon>mdi-group</v-icon>
     </v-btn>
 
@@ -38,11 +33,10 @@
 
       <v-list class="pointer">
         <v-list-item>
-          <v-list-item-title
-            @click=" $emit('toggle-fits'); $forceUpdate()"
-          >
-            {{ $t('fit-' + api.next_fit()) }}</v-list-item-title
-          ></v-list-item>
+          <v-list-item-title @click="$emit('toggle-fits', next_fit())">
+            {{ $t("fit-" + next_fit()) }}</v-list-item-title
+          ></v-list-item
+        >
         <v-list-item
           v-for="item in [
             { name: 'play', event: 'play' },
@@ -51,11 +45,13 @@
             'reset-storage',
             'task',
             { name: 'delete', icon: 'mdi-delete', call: 'delete' },
-          ].map((x) => (typeof x === 'object' ? x : { name: x, call: x }))"
+          ].map((x) =>
+            typeof x === 'object' ? x : { name: x, call: x, event: '', icon: '' }
+          )"
           :key="item.name"
         >
           <v-list-item-title
-            @click="item.call ? _emit(item.call) : $emit(item.event)"
+            @click="item.call ? _emit(item.call) : $emit(item.event || 'nop')"
           >
             <v-icon v-if="item.icon">{{ item.icon }}</v-icon>
             {{ $t(item.name) }}</v-list-item-title
@@ -66,17 +62,18 @@
   </div>
 </template>
 
-<script>
-import Vue from "vue";
+<script lang="ts">
+import { ParagraphSelection, SelectableParagraph, escape_regex } from "@/api/ui";
+import remoteConfig from "@/api/remoteConfig";
+import { UIPluginPage } from "@/api";
+import localConfig from "@/api/localConfig";
+
 export default {
   name: "QuickActionButtons",
   props: {
     selection_count: {
       type: Number,
       default: 0,
-    },
-    vm: {
-      type: Vue,
     },
   },
   data: () => ({
@@ -89,8 +86,9 @@ export default {
     window.removeEventListener("keyup", this._keyup_handler);
   },
   methods: {
-    _keyup_handler(e) {
-      if (e.target.tagName == "INPUT" || e.target.tagName == "TEXTAREA") return;
+    _keyup_handler(e: KeyboardEvent) {
+      const target = e.target as HTMLElement;
+      if (target?.tagName == "INPUT" || target?.tagName == "TEXTAREA") return;
 
       switch (e.key.toLowerCase()) {
         case "f":
@@ -116,7 +114,7 @@ export default {
         case "delete":
           if (this.last_key == e.key) {
             this._emit("delete");
-            this.last_key = null;
+            this.last_key = "";
           }
           break;
         case "q":
@@ -132,25 +130,25 @@ export default {
         case "r":
           if (this.last_key == e.key) {
             this._emit("reset-storage");
-            this.last_key = null;
+            this.last_key = "";
           }
           break;
         case "c":
         case "z":
         case "o":
           if (e.ctrlKey || e.metaKey) return;
-          var sel_formatter = () => "";
+          var sel_formatter: (opts: {
+            selection: ParagraphSelection<SelectableParagraph>;
+          }) => string | object = () => "";
           switch (e.key.toLowerCase()) {
             case "o":
-              sel_formatter = (options) => options.selection.first.source.url;
+              sel_formatter = (options) => options.selection.first.source.url || "";
               break;
             case "c":
               sel_formatter = (options) => ({
                 q: `author=${
-                  this.api.quote(options.selection.first.author) ||
-                  options.selection.first.keywords.filter((x) =>
-                    x.startsWith("@")
-                  )[0] ||
+                  JSON.stringify(options.selection.first.author) ||
+                  options.selection.first.keywords.filter((x) => x.startsWith("@"))[0] ||
                   ""
                 }`,
                 groups: "none",
@@ -160,13 +158,10 @@ export default {
             case "z":
               sel_formatter = (options) => ({
                 q: e.shiftKey
-                  ? `source.url%\`${this.api
-                      .escape_regex(options.selection.first.source.url)
-                      .replace(/\/\d+\//, "/.*/")}\``
-                  : `${
-                      options.selection.first.gid ||
-                      'id=o"' + options.selection.first._id + '"'
-                    }=>expand()`,
+                  ? `source.url%\`${escape_regex(
+                      options.selection.first.source.url || ""
+                    ).replace(/\/\d+\//, "/.*/")}\``
+                  : `${'id=o"' + options.selection.first._id + '"'}=>expand()`,
                 groups: "none",
               });
               break;
@@ -191,43 +186,24 @@ export default {
           });
           break;
         default:
-          var pages = Object.values(this.business.plugin_pages).filter(
+          var pages = Object.values(remoteConfig.plugin_pages).filter(
             (x) => x.keybind == e.key
           );
           if (pages.length) {
-            this._emit("open-window", {
-              formatter: (options) => {
-              const { selection } = options;
-              return {
-                archive: true,
-                q: `${this.api.scope(selection.first)};plugin('${this.format(
-                  pages[0].format,
-                  {
-                    mediaitem: selection.first.images[0],
-                    paragraph: selection.first,
-                  }
-                )}');`,
-              };
-            }});
+            const fp = new UIPluginPage(pages[0]);
+            this._emit("open-window", fp.formatter);
           }
           break;
       }
 
       this.last_key = this.last_key === null ? "" : e.key;
     },
-    format(str, bundle) {
-      function _replace(_, i) {
-        var b = bundle;
-        for (var k of i.split(".")) b = b[k] || "";
-        return b;
-      }
-      return (
-        (typeof str == "string" && str.replace(/\{([\w\d._]+)\}/g, _replace)) ||
-        ""
-      );
-    },
-    _emit(name, bundle) {
+    _emit(name: string, bundle: object = {}) {
       this.$emit("call", { name, ...bundle });
+    },
+    next_fit() {
+      const fits = ["both", "width", "height"];
+      return fits[(fits.indexOf(localConfig.fit || "both") + 1) % fits.length];
     },
   },
 };
@@ -240,6 +216,7 @@ export default {
   bottom: 50px;
   right: 10px;
 }
+
 .fabs > * {
   margin: 5px;
   clear: both;

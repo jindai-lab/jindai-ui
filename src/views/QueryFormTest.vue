@@ -5,8 +5,9 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import QueryFormulator from "../components/QueryFormulator.vue";
+
 export default {
   name: "QueryFormTest",
   components: {

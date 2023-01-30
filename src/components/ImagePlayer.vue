@@ -11,7 +11,16 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
+type TransformInfo = {
+  degree: number;
+  x: number;
+  y: number;
+  scale: number;
+};
+
+var dom: HTMLElement, img: HTMLImageElement, box: HTMLElement;
+
 export default {
   name: "ImagePlayer",
   components: {},
@@ -19,43 +28,45 @@ export default {
   data() {
     return {
       mouse: { x: 0, y: 0, enabled: false },
-      transform: { x: 0, y: 0, scale: 1, rotate: 0 },
+      transform: { x: 0, y: 0, scale: 1, degree: 0 },
     };
   },
   mounted() {
-    this.$dom = this.$refs.viewerDom;
-    this.$box = this.$refs.viewerBox;
-    this.$img = this.$refs.nativeImage;
+    dom = this.$refs.viewerDom as HTMLElement;
+    img = this.$refs.nativeImage as HTMLImageElement;
+    box = dom.parentElement as HTMLElement;
 
-    for (var act of ["move", "up", "down"])
-      document.addEventListener("mouse" + act, this["viewer_mouse" + act]);
+    box.addEventListener("mousemove", this.viewer_mousemove);
+    box.addEventListener("mouseup", this.viewer_mouseup);
+    box.addEventListener("mousedown", this.viewer_mousedown);
     window.addEventListener("resize", this.update);
   },
   beforeDestroy() {
-    for (var act of ["move", "up", "down"])
-      document.removeEventListener("mouse" + act, this["viewer_mouse" + act]);
+    box.removeEventListener("mousemove", this.viewer_mousemove);
+    box.removeEventListener("mouseup", this.viewer_mouseup);
+    box.removeEventListener("mousedown", this.viewer_mousedown);
     window.removeEventListener("resize", this.update);
   },
   methods: {
-    apply_transform(transf) {
+    apply_transform(transf: TransformInfo) {
       const { x, y, scale, degree } = transf;
-      var width = this.$img.naturalWidth * scale,
-        height = this.$img.naturalHeight * scale;
+      var width = img.naturalWidth * scale,
+        height = img.naturalHeight * scale;
       if (degree) {
         var t = height;
         height = width;
         width = t;
       }
-      (this.$dom.style.width = width + "px"),
-        (this.$dom.style.height = height + "px"),
-        (this.$dom.style["margin-left"] = x + "px");
-      this.$dom.style["margin-top"] = y + "px";
-      this.$img.style["transform-origin"] = "top left";
+      dom.style.width = width + "px";
+      dom.style.height = height + "px";
+      dom.style.marginLeft = x + "px";
+      dom.style.marginTop = y + "px";
+      img.style.transformOrigin = "top left";
       var trs = [
         degree ? `translate(${width}px, 0) rotate(90deg)` : "",
         `scale(${scale})`,
       ].join(" ");
-      this.$img.style.transform = trs;
+      img.style.transform = trs;
       this.transform = transf;
     },
 
@@ -63,7 +74,7 @@ export default {
       this.mouse.enabled = false;
     },
 
-    viewer_mousemove(e) {
+    viewer_mousemove(e: MouseEvent) {
       if (!this.mouse.enabled) return;
       let { degree, scale } = this.transform;
       let x = e.clientX - this.mouse.x;
@@ -71,14 +82,14 @@ export default {
       this.apply_transform({ x, y, scale, degree });
     },
 
-    viewer_mousedown(e) {
+    viewer_mousedown(e: MouseEvent) {
       let { x, y } = this.transform;
       this.mouse.enabled = true;
       this.mouse.x = e.clientX - x;
       this.mouse.y = e.clientY - y;
     },
 
-    viewer_mousewheel(e) {
+    viewer_mousewheel(e: WheelEvent) {
       if (!e.ctrlKey) return;
       let { x, y, scale, degree } = this.transform;
       let oldScale = scale;
@@ -87,15 +98,15 @@ export default {
       } else {
         scale /= 1.05;
       }
-      var dx = (this.$img.naturalWidth * (oldScale - scale)) / 2;
-      var dy = (this.$img.naturalHeight * (oldScale - scale)) / 2;
+      var dx = (img.naturalWidth * (oldScale - scale)) / 2;
+      var dy = (img.naturalHeight * (oldScale - scale)) / 2;
       x += dx;
       y += dy;
       this.apply_transform({ x, y, scale, degree });
     },
 
     update() {
-      const native = this.$img;
+      const native = img;
       var scale = 1,
         degree = 0,
         x = 0,
@@ -112,10 +123,8 @@ export default {
           break;
         default:
           scale =
-            Math.max(window.innerWidth, window.innerHeight) /
-            Math.max(width, height);
-          if (window.innerHeight > window.innerWidth != height > width)
-            degree = 90;
+            Math.max(window.innerWidth, window.innerHeight) / Math.max(width, height);
+          if (window.innerHeight > window.innerWidth != height > width) degree = 90;
           break;
       }
       var nh = height * scale,

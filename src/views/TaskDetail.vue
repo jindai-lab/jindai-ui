@@ -110,12 +110,14 @@
 </template>
 
 
-<script>
+<script lang="ts">
 import dialogs from "../dialogs"
 import ParamInput from "../components/ParamInput.vue";
-import Pipeline from "../components/Pipeline";
+import Pipeline from "../components/Pipeline.vue";
 import BlocklyComponent from "../components/BlocklyComponent.vue";
-
+import remoteConfig from "@/api/remoteConfig";
+import { call } from "@/api/net";
+import { TaskDBO } from "@/api/dbo";
 export default {
   name: "TaskDetail",
   components: {
@@ -133,21 +135,21 @@ export default {
         pipeline: [],
       },
       blockly: false,
-      pipelines: this.business.pipelines,
+      pipelines: remoteConfig.pipelines,
       valid: [],
       show_code: false,
       tasks: [],
     };
   },
   mounted() {
-    this.api.call("tasks/" + this.id).then((data) => {
-      this.task = data.result;
+    call<TaskDBO>("tasks/" + this.id).then((data) => {
+      this.task = data;
     });
-    this.api.call("tasks/").then((data) => (this.tasks = data.result));
+    call<TaskDBO[]>("tasks/").then((data) => (this.tasks = data));
   },
   computed: {
     user() {
-      return this.api.user;
+      return remoteConfig.user;
     },
   },
   methods: {
@@ -160,7 +162,7 @@ export default {
       dialogs.confirm({title: this.$t("confirm-delete")}).then(() => {
         this.api.delete("tasks/" + this.task._id).then((data) => {
           if (data.result.ok) {
-            this.$notify(this.$t("deleted"));
+            notify(this.$t("deleted"));
             this.$router.push("/tasks").catch(() => {});
           }
         });
@@ -188,7 +190,7 @@ export default {
     enqueue() {
       this.save().then((id) =>
         this.api.put("queue/", { id }).then((data) => {
-          this.$notify(this.$t("task-enqueued", { task: data.result }));
+          notify(this.$t("task-enqueued", { task: data.result }));
         })
       );
     },

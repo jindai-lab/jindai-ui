@@ -1,11 +1,11 @@
 <template>
   <v-snackbar v-model="visible">
-    {{ $te(text) ? $t(text) : text }}
-    <template v-slot:action="">
-      <v-btn v-if="detail" text @click="show_more">
+    <div v-if="content">{{ $te(content) ? $t(content) : content }}</div>
+    <template slot="action">
+      <v-btn v-if="target" text @click="show_more">
         <v-icon>mdi-dots-horizontal</v-icon>
       </v-btn>
-      <InfoDialog v-if="detail && info_visible" :target="detail"></InfoDialog>
+      <InfoDialog v-if="target && info_visible" :target="target"></InfoDialog>
       <v-btn color="primary" text @click="close">
         <v-icon>mdi-close</v-icon>
       </v-btn>
@@ -13,12 +13,18 @@
   </v-snackbar>
 </template>
 
-<script>
+<script lang="ts">
 import InfoDialog from "./InfoDialog.vue";
 
-export default {
+import { defineComponent } from 'vue'
+
+export default defineComponent({
   name: "AlertDialog",
-  props: ["text", "detail", "retval"],
+  props: {
+    content: String,
+    target: Object
+  },
+  emits: ['input'],
   components: { InfoDialog },
   data: () => ({
     visible: true,
@@ -26,12 +32,11 @@ export default {
   }),
   methods: {
     close() {
-      this.visible = false;
-      this.retval = true;
+      this.$emit('input', false)
     },
     show_more() {
       this.info_visible = true;
     },
   },
-};
+})
 </script>

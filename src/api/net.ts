@@ -5,7 +5,7 @@ import { LoadingStack } from "./ui"
 const _stack: LoadingStack = new LoadingStack()
 let _token: string = ''
 
-const SERVER_PATH = 'http://dh.local.innovors.info/api/'
+const SERVER_PATH = location.origin + '/api/'
 
 
 function getHeaders() {
@@ -22,11 +22,11 @@ export function cancel_source() {
 export class DataError extends Error {
   name = "DataError"
   message: string = ""
-  remote_stack: Array<string> = []
+  remoteStack: Array<string> = []
 
   constructor(message: string, stack: Array<string>) {
     super(message)
-    this.remote_stack = stack
+    this.remoteStack = stack
   }
 }
 
@@ -81,4 +81,6 @@ export async function call<T, U = any>(
   ))
 }
 
-
+export function createEventSource() {
+  return new EventSource(SERVER_PATH + 'queue/events')
+}

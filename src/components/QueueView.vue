@@ -93,8 +93,11 @@
   </div>
 </template>
 
-<script>
-export default {
+<script lang="ts">
+
+import { defineComponent } from "vue";
+
+export default defineComponent({
   data() {
     return {
       show_detail: false,
@@ -108,7 +111,7 @@ export default {
     delete_result(task) {
       var id = encodeURIComponent(task.key);
       this.api.delete("queue/" + id).then(() => {
-        this.$notify(this.$t('deleted'));
+        notify(this.$t('deleted'));
         this.$emit("updated", {});
       });
     },

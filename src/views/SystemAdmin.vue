@@ -126,11 +126,11 @@
           <v-card-text>
             <ParamInput
               v-model="scheduler.task"
-              :arg="{ type: 'TASK', name: $t('task') }"
+              :arg="{ type: 'TASK', name: $t('task'), default='', description: '' }"
             />
             <ParamInput
               v-model="scheduler.cron"
-              :arg="{ type: 'str', name: 'Description, e.g. day at 06:00' }"
+              :arg="{ type: 'str', name: $t('description'), default: '', description: 'Description, e.g. day at 06:00' }"
             />
           </v-card-text>
           <v-card-actions
@@ -146,22 +146,28 @@
   </v-card>
 </template>
 
-<script>
+<script lang="ts">
+import { DatasetHierarchy, UIDataset } from "@/api";
+import { ScheduledJob, User } from "@/api/dbo";
+import { call } from "@/api/net";
+import { create_dialog, notify } from "@/dialogs";
 import ParamInput from "../components/ParamInput.vue";
+
 export default {
   name: "UserList",
   components: { ParamInput },
   data() {
     return {
-      users: [],
+      users: [] as User[],
       show_user_modal: false,
       show_modify: false,
-      datasets: [],
+      datasets: [] as DatasetHierarchy[],
       new_user: {
+        username:'',
         roles: [],
         datasets: [],
       },
-      scheduled_jobs: [],
+      scheduled_jobs: [] as ScheduledJob[],
       show_creation: false,
       scheduler: {
         task: "",
@@ -171,35 +177,34 @@ export default {
   },
   methods: {
     add_user() {
-      this.api.put("users/", this.new_user).then((data) => {
-        this.$notify(this.$t("user-added", { user: data.result.username }));
-        this.users.push(data.result);
+      call<User>("users/", 'put', this.new_user).then((data) => {
+        notify(this.$t("user-added", { user: data.username }));
+        this.users.push(data);
         this.show_user_modal = false;
       });
     },
-    del_user(u) {
-      this.api.dialogs.confirm({title: this.$t("user-delete-confirm", { user: u.username })}).then(() => {
-        this.api.delete("users/" + u.username).then((data) => {
-          if (!data.result.ok) return;
-          this.$notify(this.$t("user-deleted", { user: u.username }));
+    del_user(u: User) {
+      create_dialog('confirm', {content: this.$t("user-delete-confirm", { user: u.username })}).then(() => {
+        call<boolean>("users/" + u.username, 'delete').then((data) => {
+          if (!data) return;
+          notify(this.$t("user-deleted", { user: u.username }));
           this.users = this.users.filter((x) => x._id != u._id);
         });
       })
     },
     modify_user_role() {
-      this.api
-        .call("users/" + this.new_user.username, {
+      call("users/" + this.new_user.username, 'post', {
           roles: this.new_user.roles,
           datasets: this.new_user.datasets,
         })
         .then(() => (this.show_user_modal = false));
     },
     update_scheduler() {
-      this.api.call("scheduler").then((data) => (this.scheduled_jobs = data.result));
+      call<ScheduledJob[]>("scheduler").then((data) => (this.scheduled_jobs = data));
     },
     create_schedule() {
       var text = `every ${this.scheduler.cron} do ${this.scheduler.task}`;
-      this.api.put("scheduler", { text }).then(() => {
+      call("scheduler", 'put', { text }).then(() => {
         this.scheduler = {
           cron: "",
           task: "",
@@ -208,17 +213,17 @@ export default {
       });
       this.show_creation = false;
     },
-    delete_schedule(key) {
-      this.api.delete("scheduler/" + key).then(() => {
-        this.$notify(this.$t("deleted"));
+    delete_schedule(key: string) {
+      call("scheduler/" + key, 'delete').then(() => {
+        notify(this.$t("deleted"));
         this.update_scheduler();
       });
     },
   },
-  mounted() {
-    this.api.call("users/").then((data) => (this.users = data.result));
-    this.api.get_datasets_hierarchy().then((data) => (this.datasets = data));
+  async mounted() {
+    call<User[]>("users/").then((data) => (this.users = data));
     this.update_scheduler();
+    await this.datasets = UIDataset.get_datasets_hierarchy();
   },
 };
 </script>

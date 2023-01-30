@@ -84,9 +84,13 @@
 </template>
 
 
-<script>
+<script lang="ts">
 
 import QRCode from "qrcodejs2";
+import localConfig from "@/api/localConfig";
+import {call} from "@/api/net"
+import { User } from "@/api/dbo";
+import { notify } from "@/dialogs";
 
 export default {
   name: "Preferences",
@@ -98,34 +102,33 @@ export default {
       otp: false,
       otp_secret: "",
       username: "",
-      config: this.api.config,
+      config: localConfig,
     };
   },
   mounted() {
-    this.api.call("authenticate").then((data) => {
-      this.otp = data.result.otp_secret;
-      this.username = data.result.username;
+    call<User>("authenticate").then((data) => {
+      this.otp = !!data.otp_secret;
+      this.username = data.username;
     });
   },
   methods: {
     update_password() {
       if (this.password !== this.password2) {
-        this.$notify(this.$t("password-dismatch"));
+        notify(this.$t("password-dismatch"));
       } else {
-        this.api
-          .call("account/", {
+        call("account/", 'post', {
             old_password: this.old_password,
             password: this.password,
           })
-          .then(this.$notify(this.$t("updated")));
+          .then(()=>notify(this.$t("updated")));
       }
     },
-    change_otp(otp) {
-      this.api.call("account/", { otp }).then((data) => {
-        this.$notify(this.$t("updated"));
+    change_otp(otp:boolean) {
+      call<User>("account/", 'post', { otp }).then((data) => {
+        notify(this.$t("updated"));
         this.otp = otp;
-        if (otp && data.result) {
-          this.otp_secret = data.result;
+        if (otp && data.otp_secret) {
+          this.otp_secret = data.otp_secret;
           this.create_qr_code();
         }
       });

@@ -23,12 +23,12 @@ def grep_text(vue_src):
 
 
 locales = {
-    path: load_json(path) for path in glob.glob('src/locales/*.json')
+    path: load_json(path) for path in glob.glob('src/plugins/locales/*.json')
 }
 
 
-ZHS_KEY = 'src/locales/zhs.json'
-ZHT_KEY = 'src/locales/zht.json'
+ZHS_KEY = 'src/plugins/locales/zhs.json'
+ZHT_KEY = 'src/plugins/locales/zht.json'
 
 if ZHT_KEY not in locales:
     locales[ZHT_KEY] = {}

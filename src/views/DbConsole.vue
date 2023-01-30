@@ -4,28 +4,14 @@
       {{ $t("console") }}
     </v-card-title>
     <v-card-text>
-      <v-select
-        label="Mongo Collection"
-        :items="mongocollections"
-        v-model="command.mongocollection"
-        @change="previewed = command.operation == 'count_documents'"
-      ></v-select>
-      <ParamInput
-        :arg="{ name: 'Query', type: 'QUERY' }"
-        v-model="command.query"
-        @input="previewed = command.operation == 'count_documents'"
-      />
-      <ParamInput
-        :arg="{ name: 'Operation', type: 'update_many|delete_many|count_documents' }"
-        v-model="command.operation"
-        @input="previewed = command.operation == 'count_documents'"
-      />
-      <ParamInput
-        :arg="{ name: 'Parameters', type: 'QUERY' }"
-        v-model="command.operation_params"
-        @input="previewed = command.operation == 'count_documents'"
-        v-show="command.operation != 'count_documents'"
-      />
+      <v-select label="Mongo Collection" :items="mongocollections" v-model="command.mongocollection"
+        @change="previewed = command.operation == 'count_documents'"></v-select>
+      <ParamInput :arg="{ name: 'Query', type: 'QUERY' }" v-model="command.query"
+        @input="previewed = command.operation == 'count_documents'" />
+      <ParamInput :arg="{ name: 'Operation', type: 'update_many|delete_many|count_documents' }"
+        v-model="command.operation" @input="previewed = command.operation == 'count_documents'" />
+      <ParamInput :arg="{ name: 'Parameters', type: 'QUERY' }" v-model="command.operation_params"
+        @input="previewed = command.operation == 'count_documents'" v-show="command.operation != 'count_documents'" />
     </v-card-text>
     <v-card-actions>
       <v-btn @click="preview">{{ $t("preview") }}</v-btn>
@@ -44,18 +30,31 @@
   </v-card>
 </template>
 
-<script>
+<script lang="ts">
 
-import ParamInput from "../components/ParamInput";
+import { call } from "@/api/net";
+import ParamInput from "../components/ParamInput.vue";
 
-export default {
+import localConfig from "@/api/localConfig";
+import { defineComponent, ref } from "vue";
+
+type DbConsoleRequest = {
+  mongocollection: string,
+  query: object,
+  operation: string,
+  operation_params: object
+}
+
+const history = ref(localConfig.dbconsole.history as DbConsoleRequest[])
+
+export default defineComponent({
   name: "DbConsole",
   components: { ParamInput },
   data() {
     return {
-      mongocollections: [this.api.config.dbconsole.mongocollection || "paragraph"],
+      mongocollections: [localConfig.dbconsole.mongocollection || "paragraph"],
       command: {
-        mongocollection: this.api.config.dbconsole.mongocollection || "paragraph",
+        mongocollection: localConfig.dbconsole.mongocollection || "paragraph",
         query: "",
         operation: "count_documents",
         operation_params: "",
@@ -63,7 +62,7 @@ export default {
       },
       previewed: false,
       preview_text: "",
-      config: this.api.config
+      config: localConfig
     };
   },
   methods: {
@@ -73,34 +72,33 @@ export default {
           this.command.operation == "count_documents" ? "" : this.command.operation_params,
       });
     },
-    stringify_command(data) {
+    stringify_command(data: DbConsoleRequest) {
       return 'MongoCollection("' +
         data.mongocollection +
         '").query(' +
-        JSON.stringify(data.query, "", 2) +
+        JSON.stringify(data.query, undefined, 2) +
         ")." +
         data.operation +
         "(" +
-        JSON.stringify(data.operation_params, "", 2) +
+        JSON.stringify(data.operation_params, undefined, 2) +
         ")";
     },
     preview() {
       this.command.preview = true;
-      this.api.call("admin/db", this.get_command()).then((data) => {
-        data = data.result;
+      call<DbConsoleRequest>("admin/db", "post", this.get_command()).then((data) => {
         this.preview_text = this.stringify_command(data)
         this.previewed = true;
       });
     },
     execute() {
       this.command.preview = false;
-      this.api.config.dbconsole.mongocollection = this.command.mongocollection;
-      if (!this.api.config.dbconsole.history) this.api.config.dbconsole.history = []
-      this.api.config.dbconsole.history.splice(0, 0, Object.assign({}, this.command));
-      if (this.api.config.dbconsole.history.length > 10) this.api.config.dbconsole.history = this.api.config.dbconsole.history.slice(0, 10)
-      this.api.config.save();
-      this.api.call("admin/db", this.get_command()).then((data) => {
-        this.preview_text += "\n\n" + JSON.stringify(data.result, "", 2);
+      localConfig.dbconsole.mongocollection = this.command.mongocollection;
+      if (!history) history.value = []
+      history.value.splice(0, 0, Object.assign({} as Partial<DbConsoleRequest>, this.command));
+      if (localConfig.dbconsole.history.length > 10) localConfig.dbconsole.history = localConfig.dbconsole.history.slice(0, 10)
+      localConfig.save();
+      call("admin/db", 'post', this.get_command()).then((data) => {
+        this.preview_text += "\n\n" + JSON.stringify(data, "", 2);
       });
     },
     replay(h) {
@@ -109,11 +107,10 @@ export default {
     }
   },
   mounted() {
-    this.api
-      .call("admin/db/collections")
-      .then((data) => (this.mongocollections = data.result));
+    call<string[]>("admin/db/collections")
+      .then((data) => (this.mongocollections = data));
   },
-};
+})
 </script>
 
 <style scoped>
