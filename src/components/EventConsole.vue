@@ -21,8 +21,8 @@ export default {
   props: {
     enabled: {
       type: Boolean,
-      default: true
-    }
+      default: true,
+    },
   },
   mounted() {
     window.onblur = () => {
@@ -31,16 +31,16 @@ export default {
     };
     window.onfocus = () => {
       try {
-        this.queue_event();        
+        this.queue_event();
       } catch (error) {
-        console.log('[eventsource]', error)
+        console.log("[eventsource]", error);
       }
     };
-    this.queue_event()
+    this.queue_event();
   },
   methods: {
     queue_event() {
-      if (!this.enabled || !this.api.is_logined()) return
+      if (!this.enabled || !this.api.is_logined()) return;
       this.api.queue().then((queue) => this.update_queue(queue));
       if (this.queue_source) return;
       this.queue_source = this.api.get_event_source();

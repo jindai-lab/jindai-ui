@@ -102,7 +102,7 @@ const promise = Promise.all([
           return api.call("mediaitem/rating", rating).then((data) => {
             data = data.result || {};
             selection.all.forEach((p) =>
-              p.images.forEach(
+              p.images && p.images.forEach(
                 (i) =>
                   typeof data[i._id] !== "undefined" && (i.rating = data[i._id])
               )

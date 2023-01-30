@@ -1,14 +1,12 @@
 import axios from "axios";
 import Cookies from "js-cookie";
 import i18n from "./locales/";
-import EventSource from "eventsource"
 
 const _prompt_no_image = require("../public/assets/no-image.png");
 const _prompt_video = require("../public/assets/video.png");
 
 const apiBase = location.origin + "/api/";
 var _token = localStorage.token || "";
-Cookies.set("token", _token, { domain: '.' + location.hostname });
 
 function LocalConfig() {
   // Local Config Object
@@ -323,6 +321,10 @@ const apis = {
     const _get_user = () => new Promise((resolve, reject) => {
       this.call("authenticate")
         .then((d) => {
+          Cookies.set("token", _token,
+            remember ? { expires: 30, } : undefined
+          );
+          Cookies.set("token", _token, { domain: '.' + location.hostname });
           this.user = d.result.username;
           resolve(d);
         })
@@ -339,15 +341,6 @@ const apis = {
       }).then((data) => {
         if (data) {
           localStorage.token = _token = data.result;
-          Cookies.set(
-            "token",
-            _token,
-            remember ?
-              {
-                expires: 30,
-              } :
-              undefined
-          );
           resolve(data)
           _get_user();
         } else {
@@ -659,15 +652,17 @@ const apis = {
 
   guess_groups(cond) {
     var words = []
+    var existent_groups = new Set()
     if (Array.isArray(cond)) {
       for (var paragraph of cond) {
+        for (var group of paragraph.keywords.filter(x => x.startsWith('#'))) existent_groups.add(group)
         if (!words.length) words = Array.from(paragraph.keywords);
         else words = words.filter(x => paragraph.keywords.includes(x))
       }
     } else {
       words = cond.match(/([_\w\u4e00-\u9fa5]+)/g) || []
     }
-    return words.filter(x => x.length && !x.match(/^@/))
+    return words.filter(x => x.length && !x.match(/^@/)).concat(...existent_groups)
   },
 
   get_group(paragraph) {
@@ -681,7 +676,7 @@ const apis = {
   },
 
   get_event_source() {
-    var es = new EventSource(apiBase + "/queue/events?_token=" + _token)
+    var es = new EventSource(apiBase + "queue/events")
     return es
   },
 
