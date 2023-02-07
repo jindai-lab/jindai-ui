@@ -97,6 +97,7 @@ const routes = [{
   path: "/view/:path(.*)",
   component: PageView,
   name: "PageView",
+  props: true
 },
 {
   path: "/tasks/shortcut/:id",

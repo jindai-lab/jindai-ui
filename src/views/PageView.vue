@@ -100,7 +100,9 @@
               }"
               class="video-player"
               ref="videoPlayer"
-              v-if="active_item && active_item.item_type != 'image'"
+              v-if="
+                value && active_item && ['video', 'audio'].includes(active_item.item_type)
+              "
             />
             <image-player
               :src="
@@ -318,6 +320,9 @@ export default {
     value: {
       default: true,
     },
+    path: {
+      default: "",
+    },
   },
   computed: {
     window_height() {
@@ -368,7 +373,7 @@ export default {
   },
   mounted() {
     this.$el.focus();
-    if (!this.paragraphs) {
+    if (this.path) {
       let params = window.location.href.split("/");
       if (!params.includes("view")) return;
       params = params.slice(params.indexOf("view") + 1);

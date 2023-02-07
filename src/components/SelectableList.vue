@@ -1,17 +1,8 @@
 <template>
-  <div
-    class="wrapper-container"
-    ref="all_items"
-    v-if="columns.includes('content')"
-  >
+  <div class="wrapper-container" ref="all_items" v-if="columns.includes('content')">
     <template v-for="(r, index) in items">
       <div class="spacer" v-if="r.spacer" :key="'spacer' + index"></div>
-      <div
-        class="paragraph"
-        :data-id="r._id"
-        v-else
-        :key="'paragraph' + index"
-      >
+      <div class="paragraph" :data-id="r._id" v-else :key="'paragraph' + index">
         <div class="meta">
           <v-checkbox
             v-model="r.selected"
@@ -55,11 +46,11 @@
         </div>
         <div
           v-if="view_mode == 'gallery'"
-            @dblclick="start_view(index)"
+          @dblclick="start_view(index)"
           @click="update_selection(r, $event.shiftKey, index)"
         >
           <div
-            :class="{selected: r.selected, 'before-image': true}"
+            :class="{ selected: r.selected, 'before-image': true }"
             :v-key="`selector-${index}-${selection.length}`"
           ></div>
           <v-img
@@ -172,8 +163,23 @@ export default {
       var target = { arr: r[col], source };
       this.api.dialogs.embedded(target);
     },
+    show_info_dialog(target) {
+      this.api.dialogs.info({ target });
+    },
+    show_edit_dialog(target) {
+      this.api.dialogs.edit({ target }).then((target) => {
+        this.api
+          .call(
+            `collections/${target.mongocollection || "paragraph"}/${target._id}`,
+            target
+          )
+          .then(() => {
+            this.$notify(this.$t("saved"));
+          });
+      });
+    },
     select_shortcut_keys(e) {
-      if (e.target.tagName == 'INPUT' || e.target.tagName == 'TEXTAREA') return
+      if (e.target.tagName == "INPUT" || e.target.tagName == "TEXTAREA") return;
 
       var selection_inc = 0,
         ele;
@@ -210,14 +216,8 @@ export default {
       if (!e.ctrlKey && !e.shiftKey) {
         this.selection.clear();
       }
-      this.update_selection(
-        this.items[selection_inc],
-        e.shiftKey,
-        selection_inc
-      );
-      ele = document.querySelector(
-        `[data-id="${this.items[selection_inc]._id}"]`
-      );
+      this.update_selection(this.items[selection_inc], e.shiftKey, selection_inc);
+      ele = document.querySelector(`[data-id="${this.items[selection_inc]._id}"]`);
       window.scrollTo(0, ele.offsetTop - ele.clientHeight);
       this.select_index = selection_inc;
 
@@ -291,7 +291,7 @@ export default {
 }
 
 .before-image.selected::before {
-  content: '\f012c';
+  content: "\f012c";
   color: green;
   font-family: "Material Design Icons";
   display: block;
