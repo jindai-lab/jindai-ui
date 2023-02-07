@@ -43,7 +43,7 @@
 
 <script lang="ts">
 
-import { call } from "@/api/net";
+import { authenticate } from "@/api/net";
 
 export default {
   name: "Login",
@@ -58,14 +58,13 @@ export default {
   },
   methods: {
     login() {
-      call("authenticate", "post", {
+      authenticate({
         username: this.username,
         password: this.password,
         otp: this.otp,
-        remember: this.remember})
-        .then(() => {
+        remember: this.remember
+      }).then(() => {
           location.href = '/';
-          sessionStorage.setItem('user', this.username)
         });
     },
   },

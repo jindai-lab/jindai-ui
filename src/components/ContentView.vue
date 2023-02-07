@@ -75,5 +75,7 @@ p:hover .fav-button,
 
 .paragraph>p {
   font-family: Georgia, "Times New Roman", Times, serif;
+  font-size: 16px;
+  line-height: 150%;
 }
 </style>

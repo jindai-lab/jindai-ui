@@ -6,11 +6,11 @@
     <v-card-text>
       <v-select label="Mongo Collection" :items="mongocollections" v-model="command.mongocollection"
         @change="previewed = command.operation == 'count_documents'"></v-select>
-      <ParamInput :arg="{ name: 'Query', type: 'QUERY' }" v-model="command.query"
+      <ParamInput :arg="{ name: 'Query', type: 'QUERY', description:'', default:'' }" v-model="command.query"
         @input="previewed = command.operation == 'count_documents'" />
-      <ParamInput :arg="{ name: 'Operation', type: 'update_many|delete_many|count_documents' }"
+      <ParamInput :arg="{ name: 'Operation', type: 'update_many|delete_many|count_documents', description:'', default:'' }"
         v-model="command.operation" @input="previewed = command.operation == 'count_documents'" />
-      <ParamInput :arg="{ name: 'Parameters', type: 'QUERY' }" v-model="command.operation_params"
+      <ParamInput :arg="{ name: 'Parameters', type: 'QUERY', description:'', default:'' }" v-model="command.operation_params"
         @input="previewed = command.operation == 'count_documents'" v-show="command.operation != 'count_documents'" />
     </v-card-text>
     <v-card-actions>
@@ -36,7 +36,7 @@ import { call } from "@/api/net";
 import ParamInput from "../components/ParamInput.vue";
 
 import localConfig from "@/api/localConfig";
-import { defineComponent, ref } from "vue";
+import { defineComponent, Ref, ref } from "vue";
 
 type DbConsoleRequest = {
   mongocollection: string,
@@ -45,7 +45,7 @@ type DbConsoleRequest = {
   operation_params: object
 }
 
-const history = ref(localConfig.dbconsole.history as DbConsoleRequest[])
+const history = ref(localConfig.dbconsole.history) as Ref<DbConsoleRequest[]>
 
 export default defineComponent({
   name: "DbConsole",
@@ -93,16 +93,15 @@ export default defineComponent({
     execute() {
       this.command.preview = false;
       localConfig.dbconsole.mongocollection = this.command.mongocollection;
-      if (!history) history.value = []
       history.value.splice(0, 0, Object.assign({} as Partial<DbConsoleRequest>, this.command));
-      if (localConfig.dbconsole.history.length > 10) localConfig.dbconsole.history = localConfig.dbconsole.history.slice(0, 10)
+      if (history.value.length > 10) history.value.splice(10, history.value.length - 10)
       localConfig.save();
       call("admin/db", 'post', this.get_command()).then((data) => {
-        this.preview_text += "\n\n" + JSON.stringify(data, "", 2);
+        this.preview_text += "\n\n" + JSON.stringify(data, undefined, 2);
       });
     },
-    replay(h) {
-      this.command = Object.assign({}, h);
+    replay(h: DbConsoleRequest) {
+      Object.assign(this.command, h);
       this.execute();
     }
   },

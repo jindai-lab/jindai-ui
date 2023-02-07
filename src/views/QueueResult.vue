@@ -3,12 +3,7 @@
     <v-card-title>{{ $t("task-result") }} {{ id }}</v-card-title>
     <v-card-text>
       <p v-if="prompt" v-html="prompt"></p>
-      <ResultsView
-        :key="'results-' + id"
-        :load="load_data"
-        v-else-if="typeof total === 'number'"
-        ref="results"
-      />
+      <ResultsView :key="'results-' + id" :load="load_data" v-else-if="typeof total === 'number'" ref="results" />
       <iframe v-else-if="redirect" :src="redirect" />
       <div v-else>{{ $t("task-file-result") }}</div>
     </v-card-text>
@@ -20,6 +15,7 @@
 import ResultsView from "../components/ResultsView.vue";
 import { DataError, call } from "@/api/net";
 import { UpdaterOptions } from "@/api/ui";
+import {JobResult} from "@/api/dbo"
 
 export default {
   name: "QueueResult",
@@ -38,39 +34,44 @@ export default {
       try {
         let data = await call<JobResult>(
           "queue/" +
-            encodeURIComponent(this.id) +
-            "?offset=" +
-            e.offset +
-            "&limit=" +
-            e.limit
+          encodeURIComponent(this.id) +
+          "?offset=" +
+          e.offset +
+          "&limit=" +
+          e.limit
         )
-          if (data.__redirect__) {
-            this.redirect = data.__redirect__;
-            this.total = -1;
-          } else if (data) {
-            this.total = data.total;
-            
-          }
+        if (data.__redirect__) {
+          this.redirect = data.__redirect__;
+          this.total = -1;
+        } else if (data) {
+          this.total = data.total;
 
-          if (data.__exception__) {
+        }
 
-          }
+        if (data.__exception__) {
 
-          return {
-              result: data.results,
-              token,
-              total: data.total
-            }
-        
+        }
+
+        return {
+          result: data.results,
+          token,
+          total: data.total
+        }
+
       } catch (e) {
         let ex = e as DataError
         this.prompt =
-            "<h4>" +
-            ex.message +
-            "</h4><p>" +
-            ex.remoteStack.join("<br>") +
-            "</p>";
-          this.total = -1;
+          "<h4>" +
+          ex.message +
+          "</h4><p>" +
+          ex.remoteStack.join("<br>") +
+          "</p>";
+        this.total = -1;
+        return {
+          result: [],
+          token,
+          total: -1
+        }
       }
     },
   },

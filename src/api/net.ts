@@ -1,17 +1,24 @@
 import i18n from "@/plugins/locales"
 import axios, { AxiosProgressEvent, AxiosRequestConfig, AxiosResponse, CancelToken } from "axios"
 import { LoadingStack } from "./ui"
+import { User } from "./dbo"
+
+export type UserLoginInfo = Partial<User> & {
+  otp?: string,
+  password?: string,
+  token?: string,
+  remember?: boolean
+}
 
 const _stack: LoadingStack = new LoadingStack()
-let _token: string = ''
+let _token: string = '', _user: UserLoginInfo = {}
 
 const SERVER_PATH = location.origin + '/api/'
 
-
 function getHeaders() {
   return {
-      "X-Authentication-Token": _token,
-      "X-Preferred-Language": i18n.global.locale
+    "X-Authentication-Token": _token,
+    "X-Preferred-Language": i18n.global.locale
   }
 }
 
@@ -83,4 +90,33 @@ export async function call<T, U = any>(
 
 export function createEventSource() {
   return new EventSource(SERVER_PATH + 'queue/events')
+}
+
+export function authenticate(user?: UserLoginInfo) {
+  let promise: Promise<UserLoginInfo>;
+  if (user) {
+    let { username, password, otp } = user
+    if (otp) {
+      promise = call("autenticate", 'post', { otp })
+    }
+    else {
+      promise = call("authenticate", 'post', { username, password })
+    }
+  } else {
+    promise = call("authenticate", 'get')
+  }
+  return promise.then((info) => {
+    if (info.token) {
+      _token = info.token
+      _user = info
+      localStorage['_token'] = _token
+      if (user?.remember) {
+        // set cookies....
+      }
+    }
+  })
+}
+
+export function getUser() {
+  return _user
 }

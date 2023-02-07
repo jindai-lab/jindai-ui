@@ -11,7 +11,7 @@
             color="primary"
             @click="
               show_modify = false;
-              new_user = { roles: [], datasets: [] };
+              new_user = { username: '', password: '', roles: [], datasets: [] };
               show_user_modal = true;
             "
           >
@@ -25,7 +25,7 @@
               <v-btn
                 @click="
                   show_modify = true;
-                  new_user = Object.assign(u, { password: '' });
+                  new_user = Object.assign({ password: '', roles: [], datasets: [] }, u);
                   show_user_modal = true;
                 "
               >
@@ -126,7 +126,7 @@
           <v-card-text>
             <ParamInput
               v-model="scheduler.task"
-              :arg="{ type: 'TASK', name: $t('task'), default='', description: '' }"
+              :arg="{ type: 'TASK', name: $t('task'), default: '', description: '' }"
             />
             <ParamInput
               v-model="scheduler.cron"
@@ -161,11 +161,12 @@ export default {
       users: [] as User[],
       show_user_modal: false,
       show_modify: false,
-      datasets: [] as DatasetHierarchy[],
+      datasets: {} as {hierarchy: DatasetHierarchy[]},
       new_user: {
         username:'',
         roles: [],
         datasets: [],
+        password: ''
       },
       scheduled_jobs: [] as ScheduledJob[],
       show_creation: false,
@@ -223,7 +224,7 @@ export default {
   async mounted() {
     call<User[]>("users/").then((data) => (this.users = data));
     this.update_scheduler();
-    await this.datasets = UIDataset.get_datasets_hierarchy();
+    this.datasets = await UIDataset.get_datasets_hierarchy();
   },
 };
 </script>

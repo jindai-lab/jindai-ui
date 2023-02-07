@@ -2,7 +2,7 @@
   <div>
     <v-card flat>
       <v-card-text>
-        <ParamInput v-model="task.name" :arg="{ name: $t('name'), type: '' }" />
+        <ParamInput v-model="task.name" :arg="{ name: $t('name'), type: '', description:'', default:'' }" />
         <span
           >ID: {{ task._id }} {{ $t("created-by") }}: {{ task.creator }}</span
         >
@@ -28,7 +28,7 @@
                 (v) =>
                   (v >= 1 && v <= 10 && v == parseInt(v)) || $t('number-1-10'),
               ]"
-              @input="(v) => (task.concurrent = parseInt(v))"
+              @input="(v: string) => (task.concurrent = parseInt(v))"
             >
             </v-text-field>
           </v-col>
@@ -62,7 +62,7 @@
           <div>
             <div v-for="(v, k) in task.shortcut_map" :key="k">
               <ParamInput
-                :arg="{ name: k, type: 'str', default: '\'\'' }"
+                :arg="{ name: k as string, type: 'str', default: '\'\'', description: '' }"
                 v-model="task.shortcut_map[k]"
               />
             </div>
@@ -111,13 +111,14 @@
 
 
 <script lang="ts">
-import dialogs from "../dialogs"
+import dialogs, { notify } from "../dialogs"
 import ParamInput from "../components/ParamInput.vue";
 import Pipeline from "../components/Pipeline.vue";
 import BlocklyComponent from "../components/BlocklyComponent.vue";
 import remoteConfig from "@/api/remoteConfig";
-import { call } from "@/api/net";
-import { TaskDBO } from "@/api/dbo";
+import { call, DataError } from "@/api/net";
+import { PipelineStage, TaskDBO } from "@/api/dbo";
+import { querify } from "@/api/ui";
 export default {
   name: "TaskDetail",
   components: {
@@ -132,13 +133,13 @@ export default {
         _id: "",
         name: "",
         shortcut_map: {},
-        pipeline: [],
-      },
+        pipeline: [] as PipelineStage[],
+      } as TaskDBO,
       blockly: false,
       pipelines: remoteConfig.pipelines,
-      valid: [],
+      valid: [] as string[],
       show_code: false,
-      tasks: [],
+      tasks: [] as TaskDBO[],
     };
   },
   mounted() {
@@ -153,7 +154,8 @@ export default {
     },
   },
   methods: {
-    update_valid(name, valid) {
+    notify,
+    update_valid(name: string, valid: boolean) {
       var l = this.valid.indexOf(name);
       if (l >= 0) this.valid.splice(l, 1);
       if (!valid) this.valid.push(name);
@@ -171,7 +173,7 @@ export default {
     save() {
       if (this.valid.length > 0) {
         alert(this.$t("invalid-input"));
-        return;
+        throw new DataError('invalid-input', [])
       }
       for (var k in this.task.shortcut_map) {
         if (
@@ -180,21 +182,21 @@ export default {
         )
           delete this.task.shortcut_map[k];
       }
-      return this.api.call("tasks/" + this.task._id, this.task).then((data) => {
-        var id = this.task._id;
-        this.task = data.result.updated;
+      return call("tasks/" + this.task._id, 'post', this.task).then((data) => {
+        var id = this.task._id
+        Object.assign(this.task, data);
         this.task._id = id;
         return id;
       });
     },
     enqueue() {
-      this.save().then((id) =>
-        this.api.put("queue/", { id }).then((data) => {
-          notify(this.$t("task-enqueued", { task: data.result }));
+      this.save().then((id: string) =>
+        call("queue/", 'post', { id }).then((data) => {
+          notify(this.$t("task-enqueued", { task: data }));
         })
       );
     },
-    update_shortcut(shortcut_name, shortcut_description) {
+    update_shortcut(shortcut_name: string, shortcut_description:string) {
       this.task.shortcut_map[shortcut_name] =
         shortcut_description || shortcut_name.split(".").slice(-1)[0];
       this.$forceUpdate();
@@ -202,9 +204,9 @@ export default {
     querify() {
       return this.task.pipeline
         .map((kv) => {
-          var o = {};
+          var o = {} as any;
           o["$" + kv[0]] = kv[1];
-          return this.api.querify(o).replace(/^\(|\)$/g, "");
+          return querify(o).replace(/^\(|\)$/g, "");
         })
         .join(";\n");
     },

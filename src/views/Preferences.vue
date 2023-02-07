@@ -88,7 +88,7 @@
 
 import QRCode from "qrcodejs2";
 import localConfig from "@/api/localConfig";
-import {call} from "@/api/net"
+import {authenticate, call, getUser} from "@/api/net"
 import { User } from "@/api/dbo";
 import { notify } from "@/dialogs";
 
@@ -106,10 +106,9 @@ export default {
     };
   },
   mounted() {
-    call<User>("authenticate").then((data) => {
-      this.otp = !!data.otp_secret;
-      this.username = data.username;
-    });
+    const user = getUser()
+    this.otp = !!user.otp_secret;
+    this.username = user.username || '';
   },
   methods: {
     update_password() {

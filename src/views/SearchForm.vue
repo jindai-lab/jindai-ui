@@ -254,7 +254,7 @@ export default {
         }),
       ])
       
-      let result = {token:0, total:-1, results:[] as UIParagraph[]}
+      let result = {token:0, total:-1, result:[] as UIParagraph[]}
       Object.assign(result, ...results)
       return result
     },

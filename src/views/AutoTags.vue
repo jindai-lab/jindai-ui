@@ -16,14 +16,14 @@
             <v-text-field v-model="new_tag.cond" :label="$t('match-cond')"></v-text-field>
             <v-text-field v-model="new_tag.tag" :label="$t('tag')" class="new-tag-data"></v-text-field>
 
-            <v-btn @click="auto_tags_create(new_tag)" class="new-tag-data">
+            <v-btn @click="auto_tags_create()" class="new-tag-data">
               <v-icon>mdi-plus</v-icon>
             </v-btn>
           </v-toolbar>
         </template>
 
         <template v-slot:item.operations="{ item }">
-          <v-btn @click="auto_tags_delete([item._id])" :alt="`Delete ${item._id}`">
+          <v-btn @click="auto_tags_delete(item._id)" :alt="`Delete ${item._id}`">
             <v-icon>mdi-delete</v-icon>
           </v-btn>
           <v-btn class="ml-5" @click="auto_tags_apply(item._id)">
@@ -78,7 +78,7 @@ export default {
       });
     },
     auto_tags_delete(id: string) {
-      call("plugins/autotags", 'post', { ids: id, delete: true })
+      call("plugins/autotags/" + id, 'delete')
         .then(
           () =>
           (this.auto_tags = this.auto_tags.filter(
@@ -86,7 +86,7 @@ export default {
           ))
         );
     },
-    auto_tags_apply(id) {
+    auto_tags_apply(id: string) {
       call("plugins/autotags", 'post', { apply: id })
         .then(() => (notify(this.$t('success'))))
     },

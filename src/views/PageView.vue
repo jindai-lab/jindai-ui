@@ -96,7 +96,7 @@
               }"
               class="video-player"
               ref="videoPlayer"
-              v-if="activeItem && activeItem.item_type != 'image'"
+              v-if="activeItem && ['video', 'audio'].includes(activeItem.item_type)"
             />
             <image-player
               :src="activeItem ? activeItem.src : (_event_handler('continue'), '')"

@@ -98,7 +98,7 @@ export type Pipelines = {
 
 export type PipelineArgument = {
 	name: string,
-	type: "str" | "int" | "float" | "bool" | "LINES" | "QUERY" | "TASK" | "PIPELINE" | "DATASET" | "object" | "file" | "LANG"
+	type: string | "str" | "int" | "float" | "bool" | "LINES" | "QUERY" | "TASK" | "PIPELINE" | "DATASET" | "object" | "file" | "LANG"
 	description: string,
 	default: string,
 	keys?: string[]
@@ -124,11 +124,17 @@ export type FileStorageItem = {
 }
 
 export type JobResult = {
-
+__exception__?: string,
+__traceback__?:string,
+__redirect__?: string,
+total?: number,
+results?: Array<Paragraph>
 }
 
-export interface ScheduledJob {
-
+export type ScheduledJob = {
+key: string,
+name: string,
+repr: string,
 }
 
 export interface QueueJob {
