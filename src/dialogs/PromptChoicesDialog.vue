@@ -19,10 +19,9 @@
           :filter="match_pattern"
           @keyup.esc="typing = ''"
           @keyup.enter="!typing ? ret() : null"
-          @change="
-            new_value = limit > 0 ? new_value.slice(0, limit) : new_value
-          "
+          @change="new_value = limit > 0 ? new_value.slice(0, limit) : new_value"
           max-height="180"
+          :delimiters="[' ', ',', '，', ';', '；', '、']"
         ></v-combobox>
       </v-card-text>
       <v-card-actions>
@@ -89,9 +88,7 @@ export default {
     search() {
       if (typeof this.choices == "function")
         return (val) => {
-          this.choices(val, this).then(
-            (choices) => (this.candidates = choices)
-          );
+          this.choices(val, this).then((choices) => (this.candidates = choices));
         };
       else return () => [];
     },
