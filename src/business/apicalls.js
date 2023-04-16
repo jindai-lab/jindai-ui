@@ -184,10 +184,10 @@ const promise = Promise.all([
           })
       },
       reset_storage(options) {
-        const { items } = options
+        const { selection } = options
         return api
           .call("mediaitem/reset_storage", {
-            ids: items.map((x) => x._id),
+            ids: selection.items.map((x) => x._id),
           })
       },
 
