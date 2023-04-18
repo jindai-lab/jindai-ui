@@ -249,6 +249,7 @@ const promise = Promise.all([
           .prompt({
             title: i18n.t("tagging"),
             choices: this.match_shortcuts,
+            allow_custom: false,
             initial,
           })
           .then((tags) => this.tag({ val: tags, append: true, selection }));

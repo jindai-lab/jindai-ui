@@ -73,6 +73,10 @@ export default {
     },
     choices: null,
     retval: Array,
+    allow_custom: {
+      type: Boolean,
+      default: true,
+    },
   },
   watch: {
     typing(val) {
@@ -100,7 +104,9 @@ export default {
     ret() {
       var result = this.new_value;
       if (this.limit) result = result.slice(this.limit);
-      result = result.map((x) => (typeof x == "string" ? x : x.value));
+      result = result
+        .filter((x) => this.allow_custom || this.candidates.indexOf(x) >= 0)
+        .map((x) => (typeof x == "string" ? x : x.value));
       this.retval = result;
       this.visible = false;
     },
