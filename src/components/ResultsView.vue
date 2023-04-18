@@ -101,9 +101,12 @@ import { Paragraph } from "@/api/dbo";
 import localConfig from "@/api/localConfig";
 import { call } from "@/api/net";
 import {
-Paging,
-ParagraphSelection,
-qsparse, qstringify, UpdaterFunction, UpdaterOptions
+  Paging,
+  ParagraphSelection,
+  qsparse,
+  qstringify,
+  UpdaterFunction,
+  UpdaterOptions,
 } from "@/api/ui";
 import { create_dialog, notify } from "@/dialogs";
 import { computed, onBeforeUnmount, onMounted, PropType, ref, watch } from "vue";
@@ -116,9 +119,7 @@ const props = defineProps({
     type: Array as PropType<Paragraph[]>,
   },
   load: {
-    type: Function as PropType<
-      UpdaterFunction
-    >,
+    type: Function as PropType<UpdaterFunction>,
   },
 });
 
@@ -229,7 +230,7 @@ async function turn_page(p: number) {
       ((document.querySelector(".selectable-list") as HTMLElement)?.offsetTop || 64) - 64,
   });
 
-  let data = await (await paging.turn_page(p)).map(x => new UIParagraph(x));
+  let data = await (await paging.turn_page(p)).map((x) => new UIParagraph(x));
   selection.clear();
 
   if (data.length == 0 && p != 1) {
@@ -237,7 +238,7 @@ async function turn_page(p: number) {
     return;
   }
 
-  var has_sticky = data.findIndex((x: object) => 'spacer' in x) + 1;
+  var has_sticky = data.findIndex((x: object) => "spacer" in x) + 1;
   if (has_sticky > 0) {
     sticky = data.slice(0, has_sticky);
     data = data.slice(has_sticky + 1);
@@ -258,21 +259,20 @@ function update_selection(e: { paragraph: UIParagraph; item: UIMediaItem }) {
 }
 
 function show_info_dialog(bundle: object) {
-  create_dialog('info', {bundle})
+  create_dialog("info", { bundle });
 }
 
 function show_edit_dialog(bundle: object) {
-  create_dialog('edit', { bundle }).then((target:Partial<Paragraph>) => {
+  create_dialog("edit", { bundle }).then((target: Partial<Paragraph>) => {
     call(
-        `collections/${target.mongocollection || "paragraph"}/${target._id}`,
-        'post',
-        target
-      )
-      .then(() => {
-        notify("saved");
-      });
+      `collections/${target.mongocollection || "paragraph"}/${target._id}`,
+      "post",
+      target
+    ).then(() => {
+      notify("saved");
+    });
   });
-},
+}
 function view_page(index: number) {
   page_dialog.visible.value = true;
   page_dialog.start_index = index;

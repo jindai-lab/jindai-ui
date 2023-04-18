@@ -4,14 +4,8 @@
       <v-card-title>{{ $t("tag-batch") }}</v-card-title>
       <v-card-text>
         <v-text-field v-model="batch" :label="$t('text')"></v-text-field>
-        <v-text-field
-          v-model="batch_delim"
-          :label="$t('delimiter')"
-        ></v-text-field>
-        <v-text-field
-          v-model="batch_prefix"
-          :label="$t('prefix')"
-        ></v-text-field>
+        <v-text-field v-model="batch_delim" :label="$t('delimiter')"></v-text-field>
+        <v-text-field v-model="batch_prefix" :label="$t('prefix')"></v-text-field>
       </v-card-text>
       <v-card-actions>
         <v-btn color="primary" @click="do_submit()">
@@ -20,7 +14,7 @@
         <v-btn
           @click="
             visible = false;
-            $emit('input', false)
+            $emit('input', false);
           "
         >
           {{ $t("cancel") }}
@@ -35,7 +29,7 @@ import localConfig from "@/api/localConfig";
 import { defineComponent } from "vue";
 
 export default defineComponent({
-  name: "PromptChoicesDialog",
+  name: "BatchTagsDialog",
   data() {
     return {
       visible: true,
@@ -53,7 +47,7 @@ export default defineComponent({
         batch_delim: this.batch_delim,
         batch_prefix: this.batch_prefix,
       };
-      this.$emit('input', [
+      this.$emit("input", [
         ...this.batch
           .split(this.batch_delim || ", ")
           .map((x) => x.trim())

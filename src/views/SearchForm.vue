@@ -5,40 +5,69 @@
       <form autocapitalize="off" autocorrect="off" spellcheck="false">
         <v-row v-if="expert">
           <v-col>
-            <ParamInput :arg="{ name: $t('query'), type: 'QUERY', default: '', description: '' }" v-model="q" ref="search_code"
-              :style="{ width: '100%' }" @submit="search" class="mb-5 d-inline-block"></ParamInput>
+            <ParamInput
+              :arg="{ name: $t('query'), type: 'QUERY', default: '', description: '' }"
+              v-model="q"
+              ref="search_code"
+              :style="{ width: '100%' }"
+              @submit="search"
+              class="mb-5 d-inline-block"
+            ></ParamInput>
           </v-col>
         </v-row>
         <v-row v-else>
           <v-col>
-            <v-text-field class="d-inline-block selector cond-width" dense v-model="q" @keyup.enter="search"
-              :label="$t('query')"></v-text-field>
-            <v-combobox class="d-inline-block ml-5 selector" v-model="sort" :label="$t('sort')" dense
-              :style="{ width: '100px' }" :items="[
+            <v-text-field
+              class="d-inline-block selector cond-width"
+              dense
+              v-model="q"
+              @keyup.enter="search"
+              :label="$t('query')"
+            ></v-text-field>
+            <v-combobox
+              class="d-inline-block ml-5 selector"
+              v-model="sort"
+              :label="$t('sort')"
+              dense
+              :style="{ width: '100px' }"
+              :items="[
                 { text: $t('default'), value: 'id' },
                 { text: $t('pdate'), value: 'pdate' },
                 { text: $t('pdate-rev'), value: '-pdate' },
                 { text: $t('source'), value: 'source' },
                 { text: $t('latest-imported'), value: '-id' },
                 { text: $t('random'), value: 'random' },
-              ]"></v-combobox>
+              ]"
+            ></v-combobox>
           </v-col>
         </v-row>
         <v-row style="margin-top: -24px">
           <v-col>
-            <treeselect :multiple="true" :options="datasets" v-model="selected_datasets" :placeholder="$t('dataset')" />
+            <treeselect
+              :multiple="true"
+              :options="datasets"
+              v-model="selected_datasets"
+              :placeholder="$t('dataset')"
+            />
           </v-col>
         </v-row>
         <v-row class="ml-0 mb-3">
           <v-btn @click="search" color="primary">{{ $t("search") }}</v-btn>
           <span class="ml-5" style="line-height: 100%; vertical-align: middle">
             {{ $t("grouping") }}
-            <v-combobox class="d-inline-block ml-1" style="width: 80px" dense flat :items="[
-              { text: $t('none'), value: 'none' },
-              { text: $t('group'), value: 'group' },
-              { text: $t('source'), value: 'source' },
-              { text: $t('author'), value: 'author' },
-            ]" v-model="groups" />
+            <v-combobox
+              class="d-inline-block ml-1"
+              style="width: 80px"
+              dense
+              flat
+              :items="[
+                { text: $t('none'), value: 'none' },
+                { text: $t('group'), value: 'group' },
+                { text: $t('source'), value: 'source' },
+                { text: $t('author'), value: 'author' },
+              ]"
+              v-model="groups"
+            />
           </span>
           <v-spacer></v-spacer>
           <v-btn @click="export_query" class="exports">
@@ -55,7 +84,12 @@
           </v-btn>
         </v-row>
       </form>
-      <ResultsView class="mt-5" :page_size="page_size" :load="load_search" ref="results" />
+      <ResultsView
+        class="mt-5"
+        :page_size="page_size"
+        :load="load_search"
+        ref="results"
+      />
     </v-card-text>
   </v-card>
 </template>
@@ -81,16 +115,16 @@ export default {
       open_datasets: [] as string[],
       selected_mongocollections: [] as string[],
       q: "",
-      groups: "none" as (string | {value: string, text: string}),
-      sort: "" as (string | {value: string, text: string}),
+      groups: "none" as string | { value: string; text: string },
+      sort: "" as string | { value: string; text: string },
       querystr: "",
       req: "",
-      selection_bundles: {} as {[id:string]: any},
-      external_json: null as ({results: Paragraph[], total: number} | null),
+      selection_bundles: {} as { [id: string]: any },
+      external_json: null as { results: Paragraph[]; total: number } | null,
       page_size: 50,
       cancel_source: cancel_source(),
       expert: localConfig.expert,
-      results: [] as Paragraph[]
+      results: [] as Paragraph[],
     };
   },
   mounted() {
@@ -102,17 +136,16 @@ export default {
     if (localConfig.expert && search_params.q && search_params.q.startsWith("? "))
       search_params.q = search_params.q.replace(/^\? /, "");
     for (var k in search_params)
-      if (!["q", "sort", "groups"].includes(k))
-        delete search_params[k]
+      if (!["q", "sort", "groups"].includes(k)) delete search_params[k];
 
-    Object.assign(this, search_params)
-    UIDataset.get_datasets_hierarchy().then(data => {
+    Object.assign(this, search_params);
+    UIDataset.get_datasets_hierarchy().then((data) => {
       this.datasets = data.hierarchy;
       this.selection_bundles = data.bundles;
       this.selected_datasets =
-        search_params.selected_datasets || localConfig.selected_datasets
+        search_params.selected_datasets || localConfig.selected_datasets;
       if (this.q) this.search(true);
-    })
+    });
   },
   methods: {
     datasets_req() {
@@ -121,8 +154,8 @@ export default {
 
       if (selected.length > 0) {
         var datasets = selected
-          .filter((x) => !x.source)
-          .map((x) => escape_regex(x.dataset_name)),
+            .filter((x) => !x.source)
+            .map((x) => escape_regex(x.dataset_name)),
           sourcefiles = selected
             .filter((x) => x.source)
             .map((x) => ({
@@ -182,10 +215,13 @@ export default {
 
       // this.$refs.results.start(pagenum_preserve === true ? undefined : 1);
     },
-    async load_search(e: UpdaterOptions):Promise<({ total:Number, result:Paragraph[]})> {
+    async load_search(
+      e: UpdaterOptions
+    ): Promise<{ total: Number; result: Paragraph[] }> {
       var token = new Date().getTime() + Math.random();
-    
-      if (!this.q && !this.req) return {
+
+      if (!this.q && !this.req)
+        return {
           result: [],
           total: -1,
         };
@@ -206,8 +242,8 @@ export default {
         sort: this.expert
           ? ""
           : typeof this.sort === "object"
-            ? this.sort.value
-            : this.sort,
+          ? this.sort.value
+          : this.sort,
         mongocollections: this.selected_mongocollections,
         offset: e.offset,
         limit: e.limit,
@@ -218,11 +254,19 @@ export default {
       localConfig.groups = params.groups;
 
       let results = await Promise.all([
-        call("search", 'post', Object.assign({ count: true }, params, this.cancel_source.token))
-          .then((data) => {
-            if (typeof data !== "undefined") return { token, total: data };
-          }),
-        call<{query: string[], results: Paragraph[]}>("search",'post', params, this.cancel_source.token).then((data) => {
+        call(
+          "search",
+          "post",
+          Object.assign({ count: true }, params, this.cancel_source.token)
+        ).then((data) => {
+          if (typeof data !== "undefined") return { token, total: data };
+        }),
+        call<{ query: string[]; results: Paragraph[] }>(
+          "search",
+          "post",
+          params,
+          this.cancel_source.token
+        ).then((data) => {
           if (!data) {
             console.log("WARNING: no data returned.");
             return;
@@ -230,10 +274,10 @@ export default {
           if (data.query) {
             var reg = new RegExp(
               "(" +
-              this.keyword_patterns(data.query)
-                .filter((x) => x)
-                .join("|") +
-              ")",
+                this.keyword_patterns(data.query)
+                  .filter((x) => x)
+                  .join("|") +
+                ")",
               "gi"
             );
             this.results = data.results;
@@ -241,7 +285,7 @@ export default {
               this.results = this.results.map((x) => {
                 var p = new UIParagraph(x);
                 p.matched_content = (p.content || "").replace(reg, "<em>$1</em>");
-                return p
+                return p;
               });
             }
           }
@@ -252,11 +296,11 @@ export default {
             offset: e.offset,
           };
         }),
-      ])
-      
-      let result = {token:0, total:-1, result:[] as UIParagraph[]}
-      Object.assign(result, ...results)
-      return result
+      ]);
+
+      let result = { token: 0, total: -1, result: [] as UIParagraph[] };
+      Object.assign(result, ...results);
+      return result;
     },
     keyword_patterns(query: any): string[] {
       if (Array.isArray(query))
@@ -267,47 +311,45 @@ export default {
         return [];
       return Object.entries(query)
         .map((kvpair: [key: string, val: any]) => {
-          let [key, val] = kvpair
+          let [key, val] = kvpair;
           if (key == "keywords") {
             if (typeof val == "string") return [escape_regex(val)];
-            else if ('$regex' in (val as object) && typeof val.$regex == "string") return [val.$regex as string];
+            else if ("$regex" in (val as object) && typeof val.$regex == "string")
+              return [val.$regex as string];
           }
           return this.keyword_patterns(val);
         })
         .reduce((prev, curr) => (prev = prev.concat(curr)), []);
     },
-    export_query(format: string, callback: ((task_id: string) => any)) {
+    export_query(format: string, callback: (task_id: string) => any) {
       if (typeof callback !== "function")
-        callback = (task_id) => this.$router.push("/tasks/" + task_id).catch(() => { });
-      call<string>("tasks/", 'put', {
-          name:
-            this.$t("search") + " " + new Date().toLocaleString().replace(/[^\d]/g, ""),
-          pipeline: [
-            [
-              "DBQueryDataSource",
-              {
-                query: this.q,
-                req: this.req,
-                mongocollections: this.selected_mongocollections,
-              },
-            ],
-            ["AccumulateParagraphs", {}],
-            ["Export", { output_format: format }],
+        callback = (task_id) => this.$router.push("/tasks/" + task_id).catch(() => {});
+      call<string>("tasks/", "put", {
+        name: this.$t("search") + " " + new Date().toLocaleString().replace(/[^\d]/g, ""),
+        pipeline: [
+          [
+            "DBQueryDataSource",
+            {
+              query: this.q,
+              req: this.req,
+              mongocollections: this.selected_mongocollections,
+            },
           ],
-        })
-        .then(callback);
+          ["AccumulateParagraphs", {}],
+          ["Export", { output_format: format }],
+        ],
+      }).then(callback);
     },
     export_file(exportFormat: string) {
       this.export_query(exportFormat, (task_id) => {
-        call<string>("queue/", 'put', { id: task_id })
-          .then((ret) => notify("task-enqueued", { task: ret }));
+        call<string>("queue/", "put", { id: task_id }).then((ret) =>
+          notify("task-enqueued", { task: ret })
+        );
       });
     },
     drop_json_file(e: InputEvent) {
-      const files = e.dataTransfer?.files || []
-      let droppedFiles = Array.from(files).filter((x) =>
-        x.name.match(/\.json$/)
-      );
+      const files = e.dataTransfer?.files || [];
+      let droppedFiles = Array.from(files).filter((x) => x.name.match(/\.json$/));
       if (!droppedFiles.length) return;
       let file = droppedFiles[0];
       let reader = new FileReader();
