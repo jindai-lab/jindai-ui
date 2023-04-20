@@ -206,7 +206,7 @@ export default {
       else
         return this.load(options).then((data) => {
           if (typeof data.total !== "undefined") this.total = data.total;
-          return data.result.map(_mapper);
+          return data.result ? data.result.map(_mapper) : [];
         });
     },
     turn_page(p) {

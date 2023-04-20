@@ -7,12 +7,7 @@
       :value="selection_count > 0"
       overlap
     >
-      <v-btn
-        fab
-        small
-        @click="$emit('toggle-selection')"
-        @dblclick="$emit('close')"
-      >
+      <v-btn fab small @click="$emit('toggle-selection')" @dblclick="$emit('close')">
         <v-icon>mdi-select-all</v-icon>
       </v-btn>
     </v-badge>
@@ -25,7 +20,7 @@
       <v-icon>mdi-heart</v-icon>
     </v-btn>
 
-    <v-btn fab small @click="_emit('group', {advanced: true, del:false})">
+    <v-btn fab small @click="_emit('group', { advanced: true, del: false })">
       <v-icon>mdi-group</v-icon>
     </v-btn>
 
@@ -38,11 +33,10 @@
 
       <v-list class="pointer">
         <v-list-item>
-          <v-list-item-title
-            @click=" $emit('toggle-fits'); $forceUpdate()"
-          >
-            {{ $t('fit-' + api.next_fit()) }}</v-list-item-title
-          ></v-list-item>
+          <v-list-item-title @click="$emit('toggle-fits')">
+            {{ $t("fit-" + api.next_fit()) }}</v-list-item-title
+          ></v-list-item
+        >
         <v-list-item
           v-for="item in [
             { name: 'play', event: 'play' },
@@ -54,9 +48,7 @@
           ].map((x) => (typeof x === 'object' ? x : { name: x, call: x }))"
           :key="item.name"
         >
-          <v-list-item-title
-            @click="item.call ? _emit(item.call) : $emit(item.event)"
-          >
+          <v-list-item-title @click="item.call ? _emit(item.call) : $emit(item.event)">
             <v-icon v-if="item.icon">{{ item.icon }}</v-icon>
             {{ $t(item.name) }}</v-list-item-title
           >
@@ -148,9 +140,7 @@ export default {
               sel_formatter = (options) => ({
                 q: `author=${
                   this.api.quote(options.selection.first.author) ||
-                  options.selection.first.keywords.filter((x) =>
-                    x.startsWith("@")
-                  )[0] ||
+                  options.selection.first.keywords.filter((x) => x.startsWith("@"))[0] ||
                   ""
                 }`,
                 groups: "none",
@@ -197,18 +187,19 @@ export default {
           if (pages.length) {
             this._emit("open-window", {
               formatter: (options) => {
-              const { selection } = options;
-              return {
-                archive: true,
-                q: `${this.api.scope(selection.first)};plugin('${this.format(
-                  pages[0].format,
-                  {
-                    mediaitem: selection.first.images[0],
-                    paragraph: selection.first,
-                  }
-                )}');`,
-              };
-            }});
+                const { selection } = options;
+                return {
+                  archive: true,
+                  q: `${this.api.scope(selection.first)};plugin('${this.format(
+                    pages[0].format,
+                    {
+                      mediaitem: selection.first.images[0],
+                      paragraph: selection.first,
+                    }
+                  )}');`,
+                };
+              },
+            });
           }
           break;
       }
@@ -221,10 +212,7 @@ export default {
         for (var k of i.split(".")) b = b[k] || "";
         return b;
       }
-      return (
-        (typeof str == "string" && str.replace(/\{([\w\d._]+)\}/g, _replace)) ||
-        ""
-      );
+      return (typeof str == "string" && str.replace(/\{([\w\d._]+)\}/g, _replace)) || "";
     },
     _emit(name, bundle) {
       this.$emit("call", { name, ...bundle });

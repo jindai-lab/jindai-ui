@@ -23,11 +23,7 @@
               :items="quicktasks"
               v-model="pipeline"
             ></v-autocomplete>
-            <v-btn
-              color="primary"
-              dense
-              @click="$refs.quicktask_results.start(1)"
-            >
+            <v-btn color="primary" dense @click="$refs.quicktask_results.start(1)">
               <v-icon>mdi-fast-forward</v-icon> {{ $t("run-now") }}
             </v-btn>
           </v-col>
@@ -41,9 +37,11 @@
 </template>
 
 <script>
+import ResultsView from "../components/ResultsView.vue";
 export default {
   name: "SendTaskDialog",
   props: ["selection", "retval"],
+  components: { ResultsView },
   data: () => ({
     visible: true,
     results_count: 0,
@@ -68,13 +66,13 @@ export default {
               "JSONDataSource",
               {
                 content: JSON.stringify(
-                  this.selection.map((x) =>
+                  this.selection.paragraphs.map((x) =>
                     Object.assign({}, x, { matched_content: null })
                   )
                 ),
               },
             ],
-            ...this.dialogs.send_task.pipeline.slice(1),
+            ...this.pipeline,
           ],
         })
         .then((data) => {
