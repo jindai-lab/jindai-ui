@@ -4,31 +4,65 @@
       <span class="nums">
         <span class="datetime">{{ paragraph.pdate | dateSafe }}</span>
         <span class="count">
-          <a class="counter secondary--text chip" target="_blank"
-            :href="'/' + api.querystring_stringify({
-          groups:'none',
-          q: `(${api.get_group(paragraph)})`
-        })">{{
-            paragraph.count || paragraph.images.length }}</a>
+          <a
+            class="counter secondary--text chip"
+            target="_blank"
+            :href="
+              '/' +
+              api.querystring_stringify({
+                groups: 'none',
+                q: `(${api.get_group(paragraph)})`,
+              })
+            "
+            >{{ paragraph.count || paragraph.images.length }}</a
+          >
         </span>
-        <v-btn :href="paragraph.source.url" target="_blank" class="orig no-underline" icon>
+        <v-btn
+          :href="paragraph.source.url"
+          target="_blank"
+          class="orig no-underline"
+          icon
+        >
           <v-icon>mdi-web</v-icon>
         </v-btn>
       </span>
-      <a :href="'/' + api.querystring_stringify({
-        q: `source(\`${paragraph.source.url || paragraph.source.file || ''}\`)`})" class="force-text break-anywhere"
-        target="_blank">{{ paragraph.source.url }}</a>
+      <a
+        :href="
+          '/' +
+          api.querystring_stringify({
+            q: `source(\`${paragraph.source.url || paragraph.source.file || ''}\`)`,
+          })
+        "
+        class="force-text break-anywhere"
+        target="_blank"
+        >{{ paragraph.source.url }}</a
+      >
       <p class="content" @click.ctrl="search_selection">{{ text }}</p>
       <template v-for="tag in tags">
-        <a v-if="tag != '...'" :alt="tag" :key="`${paragraph._id}-${Math.random()}-${tag}`" :href="'/' + api.querystring_stringify({
-          groups: tag.match(/^#/) ? 'none' : (tag.match(/^@/) ? 'group' : ''),
-          sort: '-pdate',
-          q:
-            tag.match(/^[@#]/)
-              ? quote(tag)
-              : quote(tag) + ',' + api.scope(paragraph)
-        })" :class="['tag', 'chip', tag_class(tag)]" target="_blank">{{ tag }}</a>
-        <v-btn icon v-else :key="`${paragraph._id}-${Math.random()}-${tag}`" @click="show_all_tags = true">
+        <a
+          v-if="tag != '...'"
+          :alt="tag"
+          :key="`${paragraph._id}-${Math.random()}-${tag}`"
+          :href="
+            '/' +
+            api.querystring_stringify({
+              groups: tag.match(/^#/) ? 'none' : tag.match(/^@/) ? 'group' : '',
+              sort: '-pdate',
+              q: tag.match(/^[@#]/)
+                ? quote(tag)
+                : quote(tag) + ',' + api.scope(paragraph),
+            })
+          "
+          :class="['tag', 'chip', tag_class(tag)]"
+          target="_blank"
+          >{{ tag }}</a
+        >
+        <v-btn
+          icon
+          v-else
+          :key="`${paragraph._id}-${Math.random()}-${tag}`"
+          @click="show_all_tags = true"
+        >
           <v-icon>mdi-more</v-icon>
         </v-btn>
       </template>
@@ -48,7 +82,7 @@ export default {
     "contain",
   ],
   data: () => ({
-    show_all_tags: false
+    show_all_tags: false,
   }),
   computed: {
     is_html() {
@@ -59,7 +93,8 @@ export default {
     },
     tags() {
       var sorted = [...this.paragraph.keywords].filter((x) => x).sort();
-      if (!this.show_all_tags && sorted.length > 20) sorted = [...sorted.slice(0, 20), "..."];
+      if (!this.show_all_tags && sorted.length > 20)
+        sorted = [...sorted.slice(0, 20), "..."];
       return sorted;
     },
     text() {
@@ -74,18 +109,19 @@ export default {
       return tag.startsWith("#")
         ? "t_group"
         : tag == this.paragraph.author
-          ? "t_author"
-          : tag != 'author' && tag != 'group' ?
-            "t_" + tag : '';
+        ? "t_author"
+        : tag != "author" && tag != "group"
+        ? "t_" + tag
+        : "";
     },
     search_selection() {
-      var selected = document.getSelection().toString()
-      if (!selected)return
+      var selected = document.getSelection().toString();
+      if (!selected) return;
       this.api.open_window({
-        q: `c(${this.api.quote(selected)}),${this.api.scope(this.paragraph)}`,
-        datasets: [this.paragraph.dataset]
-      })
-    }
+        q: `c(${this.api.quote(selected.trim())}),${this.api.scope(this.paragraph)}`,
+        datasets: [this.paragraph.dataset],
+      });
+    },
   },
 };
 </script>
@@ -130,7 +166,7 @@ export default {
   vertical-align: middle;
 }
 
-.gallery-description span.nums>* {
+.gallery-description span.nums > * {
   margin-right: 5px;
 }
 

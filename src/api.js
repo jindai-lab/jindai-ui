@@ -662,7 +662,7 @@ const apis = {
     } else {
       words = cond.match(/([_\w\u4e00-\u9fa5]+)/g) || []
     }
-    return words.filter(x => x.length && !x.match(/^@/)).concat(...existent_groups)
+    return words.filter(x => x.length && !x.match(/^@/)).concat(...existent_groups.map(x => x.replace(/^#/, "")))
   },
 
   get_group(paragraph) {
