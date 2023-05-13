@@ -13,9 +13,7 @@
                   <v-btn
                     class="oper"
                     icon
-                    @click="
-                      rename_collection(ds, prompt($t('raname-to'), ds.name))
-                    "
+                    @click="rename_collection(ds, prompt($t('raname-to'), ds.name))"
                   >
                     <v-icon>mdi-textbox</v-icon>
                   </v-btn>
@@ -61,6 +59,7 @@
 <script>
 import ParamInput from "../components/ParamInput";
 import draggable from "vuedraggable";
+import api from "../api";
 
 export default {
   name: "DatasetList",
@@ -80,7 +79,7 @@ export default {
   },
   methods: {
     load_datasets() {
-      this.this.api.get_datasets().then((x) => (this.datasets = x));
+      api.get_datasets().then((x) => (this.datasets = x));
     },
     prompt(t, v) {
       return window.prompt(t, v);
@@ -88,27 +87,25 @@ export default {
     update_valid(id, field, value) {
       var coll = { _id: id };
       coll[field] = value;
-      this.api
-        .call("datasets/edit", coll)
-        .then(() => this.$notify(this.$t("updated")));
+      api.call("datasets/edit", coll).then(() => this.$notify(this.$t("updated")));
     },
     save() {
       if (this.valid.length > 0) {
         alert(this.$t("invalid-input"));
         return;
       }
-      this.api
+      api
         .call(
           "datasets/batch",
           this.datasets.map((x, i) =>
             Object.assign({}, x, { order_weight: i, sources: null })
           )
         )
-        .then(() => this.$notify(this.$t("saved") ));
+        .then(() => this.$notify(this.$t("saved")));
     },
     append_dataset() {
       if (!this.input_coll.name) return;
-      this.this.api.call("datasets/edit", this.input_coll).then(() => {
+      api.call("datasets/edit", this.input_coll).then(() => {
         this.load_datasets();
         this.input_coll = {};
       });
@@ -117,13 +114,13 @@ export default {
       if (coll && to)
         this.api
           .call("datasets/rename", { _id: coll._id, to })
-          .then(() => this.$notify(this.$t("renamed") ))
+          .then(() => this.$notify(this.$t("renamed")))
           .then(this.load_datasets);
     },
     refresh_sources(coll) {
       this.api
         .call("datasets/sources", { _id: coll._id })
-        .then(() => this.$notify(this.$t("refreshed") ));
+        .then(() => this.$notify(this.$t("refreshed")));
     },
   },
 };

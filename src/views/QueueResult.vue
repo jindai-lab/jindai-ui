@@ -15,7 +15,6 @@
 </template>
 
 <script>
-
 import ResultsView from "../components/ResultsView";
 
 export default {
@@ -49,27 +48,24 @@ export default {
         .then((data) => {
           if (data.__redirect__) {
             this.redirect = data.__redirect__;
+            if (!this.redirect.match(/^\/api/)) location.href = this.redirect;
             this.total = null;
           } else if (typeof data.__exception__ !== "undefined") {
-            this.prompt = `<h4>${
-              data.__exception__
-            }</h4><pre>${data.__tracestack__.join("\n")}</pre>`;
+            this.prompt = `<h4>${data.__exception__}</h4><pre>${data.__tracestack__.join(
+              "\n"
+            )}</pre>`;
           } else if (data.result) {
             this.total = data.result.total;
             return {
               offset: e.offset,
               result: data.result.results,
               token,
-            }
+            };
           }
         })
         .catch((ex) => {
           this.prompt =
-            "<h4>" +
-            ex.message +
-            "</h4><p>" +
-            ex.stack.replace(/\n/g, "<br>") +
-            "</p>";
+            "<h4>" + ex.message + "</h4><p>" + ex.stack.replace(/\n/g, "<br>") + "</p>";
           this.total = undefined;
         });
     },
