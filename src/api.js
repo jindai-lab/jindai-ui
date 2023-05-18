@@ -651,18 +651,19 @@ const apis = {
   },
 
   guess_groups(cond) {
-    var words = []
-    var existent_groups = new Set()
-    if (Array.isArray(cond)) {
+    if (typeof cond == 'string') return cond.match(/([_\w\u4e00-\u9fa5]+)/g) || []
+    else if (Array.isArray(cond) && cond.length) {
+      var existent_groups = new Set()
+      var words = [...cond[0].keywords]
       for (var paragraph of cond) {
-        for (var group of paragraph.keywords.filter(x => x.startsWith('#'))) existent_groups.add(group)
+        for (var group of paragraph.keywords.filter(x => x.startsWith('#'))) existent_groups.add(group.substring(1))
         if (!words.length) words = Array.from(paragraph.keywords);
         else words = words.filter(x => paragraph.keywords.includes(x))
       }
-    } else {
-      words = cond.match(/([_\w\u4e00-\u9fa5]+)/g) || []
+      return Array.from(new Set(words.map(x=>x.replace(/^@/, '')).concat(...Array.from(existent_groups)))).sort()
     }
-    return words.filter(x => x.length && !x.match(/^@/)).concat(...Array.from(existent_groups).map(x => x.replace(/^#/, "")))
+    else 
+    return []
   },
 
   get_group(paragraph) {

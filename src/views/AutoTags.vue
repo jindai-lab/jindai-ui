@@ -2,19 +2,33 @@
   <v-card flat>
     <v-card-title> {{ $t("auto-tagging") }} </v-card-title>
     <v-card-text>
-      <v-data-table :items="auto_tags" :items-per-page="20" :page.sync="page" :search="search" :headers="[
-        {text: $t('match-cond'), value: 'cond'},
-        {text: $t('tag'), value: 'tag'},
-        {text: $t('operations'), value: 'operations'},
-      ]">
+      <v-data-table
+        :items="auto_tags"
+        :search="search"
+        :headers="[
+          { text: $t('match-cond'), value: 'cond' },
+          { text: $t('tag'), value: 'tag' },
+          { text: $t('operations'), value: 'operations' },
+        ]"
+      >
         <template v-slot:top>
           <v-toolbar flat>
-            <v-text-field v-model="search" clearable flat hide-details prepend-inner-icon="mdi-magnify"
-              :label="$t('search')"></v-text-field>
+            <v-text-field
+              v-model="search"
+              clearable
+              flat
+              hide-details
+              prepend-inner-icon="mdi-magnify"
+              :label="$t('search')"
+            ></v-text-field>
           </v-toolbar>
           <v-toolbar flat class="mb-5">
             <v-text-field v-model="new_tag.cond" :label="$t('match-cond')"></v-text-field>
-            <v-text-field v-model="new_tag.tag" :label="$t('tag')" class="new-tag-data"></v-text-field>
+            <v-text-field
+              v-model="new_tag.tag"
+              :label="$t('tag')"
+              class="new-tag-data"
+            ></v-text-field>
 
             <v-btn @click="auto_tags_create(new_tag)" class="new-tag-data">
               <v-icon>mdi-plus</v-icon>
@@ -40,30 +54,24 @@ export default {
   name: "AutoTags",
   data: () => ({
     auto_tags: [],
-    page: 1,
     search: "",
     new_tag: {
       tag: "",
       cond: "",
     },
   }),
-  computed: {
-    pages_count() {
-      return Math.ceil(this.auto_tags.length / 20);
-    },
-  },
   mounted() {
     this.reload();
   },
   methods: {
     auto_tags_create() {
-      if (this.new_tag.cond.startsWith('@@')) {
-        this.new_tag.cond = 'author=' + this.new_tag.cond.substring(1)
+      if (this.new_tag.cond.startsWith("@@")) {
+        this.new_tag.cond = "author=" + this.new_tag.cond.substring(1);
       }
       if (!this.new_tag.tag) {
-        this.new_tag.tag = '#' + this.api.guess_groups(this.new_tag.cond).pop()
+        this.new_tag.tag = "#" + this.api.guess_groups(this.new_tag.cond).pop();
       }
-      if (this.new_tag.tag == this.new_tag.cond || !this.new_tag.tag) return
+      if (this.new_tag.tag == this.new_tag.cond || !this.new_tag.tag) return;
       this.api.put("plugins/autotags", this.new_tag).then((data) => {
         if (!data.__exception__) {
           this.new_tag.tag = "";
@@ -76,35 +84,21 @@ export default {
       this.api
         .call("plugins/autotags", { ids, delete: true })
         .then(
-          () =>
-          (this.auto_tags = this.auto_tags.filter(
-            (x) => !ids.includes(x._id)
-          ))
+          () => (this.auto_tags = this.auto_tags.filter((x) => !ids.includes(x._id)))
         );
     },
     auto_tags_apply(id) {
-      this.api.call("plugins/autotags", { apply: id })
-        .then(() => (this.$notify(this.$t('success'))))
+      this.api
+        .call("plugins/autotags", { apply: id })
+        .then(() => this.$notify(this.$t("success")));
     },
     reload() {
-      this.api
-        .call("plugins/autotags")
-        .then((data) => (this.auto_tags = data.result));
-    },
-    next_page() {
-      if (this.page + 1 <= this.pages_count) this.page++;
-    },
-    prev_page() {
-      if (this.page - 1 >= 1) this.page--;
+      this.api.call("plugins/autotags").then((data) => (this.auto_tags = data.result));
     },
     do_search(items, search) {
       if (!search) return items;
       return items.filter(
-        (x) =>
-          [x.cond, x.tag]
-            .join(" ")
-            .toLowerCase()
-            .indexOf(search.toLowerCase()) >= 0
+        (x) => [x.cond, x.tag].join(" ").toLowerCase().indexOf(search.toLowerCase()) >= 0
       );
     },
   },

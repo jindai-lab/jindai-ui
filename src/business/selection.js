@@ -10,7 +10,7 @@ class Selection {
   }
 
   get ['ids']() {
-    return this.paragraphs.map(x => x._id)
+    return [... new Set(this.items.map(i => i.paragraph_id))]
   }
 
   clear() {
@@ -54,7 +54,7 @@ class Selection {
   get ['items']() {
     if (this._chosen_item.length)
       return this._chosen_item.map(i => {
-        i.paragraph_id = this.paragraphs[0]._id
+        if (!i.paragraph_id) i.paragraph_id = this.paragraphs[0]._id
         return i
       })
     return this.paragraphs.reduce(
@@ -98,7 +98,6 @@ class Selection {
       visible_para_items,
     };
   }
-
 }
  
 export default Selection;

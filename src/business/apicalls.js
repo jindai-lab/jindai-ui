@@ -146,7 +146,7 @@ const promise = Promise.all([
           var choices = [
             ...api.guess_groups(api.current_q()),
             ...api.guess_groups(selection.paragraphs),
-          ];
+          ].sort();
           return dialogs
             .prompt({
               title: i18n.t("group"),
@@ -200,7 +200,7 @@ const promise = Promise.all([
           .prompt({
             title: i18n.t("tagging"),
             value: Array.from(existing_tags),
-            choices: (search, vm) => { // search tag
+            matcher: (search, vm) => { // search tag
               let value = vm.new_value;
               return new Promise((accept) => {
                 if (vm.cancel) vm.cancel.cancel();
@@ -248,7 +248,8 @@ const promise = Promise.all([
         return dialogs
           .prompt({
             title: i18n.t("tagging"),
-            choices: this.match_shortcuts,
+            choices: shortcut_choices,
+            matcher: this.match_shortcuts,
             allow_custom: false,
             initial,
           })

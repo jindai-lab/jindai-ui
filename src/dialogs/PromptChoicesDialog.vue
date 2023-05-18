@@ -71,7 +71,10 @@ export default {
       type: String,
       default: "",
     },
-    choices: null,
+    matcher: {
+      default: () => [],
+    },
+    choices: Array,
     retval: Array,
     allow_custom: {
       type: Boolean,
@@ -86,15 +89,15 @@ export default {
   mounted() {
     this.typing = this.initial;
     this.new_value = this.value.sort();
-    if (Array.isArray(this.choices)) this.candidates = this.choices;
+    this.candidates = this.choices;
   },
   computed: {
     search() {
-      if (typeof this.choices == "function")
+      if (typeof this.matcher == "function")
         return (val) => {
-          this.choices(val, this).then((choices) => (this.candidates = choices));
+          this.matcher(val, this).then((choices) => (this.candidates = choices));
         };
-      else return () => [];
+      return () => this.candidates;
     },
   },
   methods: {
@@ -103,10 +106,14 @@ export default {
     },
     ret() {
       var result = this.new_value;
+      result = result.map((x) => (typeof x == "string" ? x : x.value));
       if (this.limit) result = result.slice(this.limit);
-      result = result
-        .filter((x) => this.allow_custom || this.candidates.indexOf(x) >= 0)
-        .map((x) => (typeof x == "string" ? x : x.value));
+      if (!this.allow_custom) {
+        const listed = this.choices.map((x) => (typeof x == "string" ? x : x.value));
+        console.log(listed, result);
+        result = result.filter((x) => listed.indexOf(x) >= 0);
+        console.log(result);
+      }
       this.retval = result;
       this.visible = false;
     },
