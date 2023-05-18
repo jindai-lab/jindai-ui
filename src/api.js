@@ -21,8 +21,8 @@ function LocalConfig() {
     view_mode: "list",
     page_size: 50,
     tagging: {
-      batch_delim: ", ",
-      batch_prefix: "*",
+      batch_delim: ",",
+      batch_prefix: "",
     },
     dbconsole: {
       mongocollection: 'paragraph',
