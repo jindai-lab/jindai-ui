@@ -37,7 +37,7 @@
         target="_blank"
         >{{ paragraph.source.url }}</a
       >
-      <p class="content" @click.ctrl="search_selection">{{ text }}</p>
+      <p class="content" @click="search_selection">{{ text }}</p>
       <template v-for="tag in tags">
         <a
           v-if="tag != '...'"
@@ -114,7 +114,8 @@ export default {
         ? "t_" + tag
         : "";
     },
-    search_selection() {
+    search_selection(e) {
+      if (!e.ctrlKey && !e.metaKey && !e.altKey) return;
       var selected = document.getSelection().toString();
       if (!selected) return;
       this.api.open_window({
