@@ -107,7 +107,7 @@ export default {
     ret() {
       var result = this.new_value;
       result = result.map((x) => (typeof x == "string" ? x : x.value));
-      if (this.limit) result = result.slice(this.limit);
+      if (this.limit) result = result.slice(0, this.limit);
       if (!this.allow_custom) {
         const listed = this.choices.map((x) => (typeof x == "string" ? x : x.value));
         console.log(listed, result);

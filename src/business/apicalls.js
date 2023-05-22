@@ -1,8 +1,10 @@
 import Vue from "vue";
-import api from "../api"
-import dialogs from "../dialogs"
+import api from "../api";
+import dialogs from "../dialogs";
 import i18n from "../locales";
+import { customAlphabet } from 'nanoid'
 
+const tempgroup = customAlphabet('1234567890abcdef', 10)
 const shortcut_choices = []
 const plugin_pages = []
 const languages = {}
@@ -140,13 +142,17 @@ const promise = Promise.all([
             });
         };
 
+        const existing_groups = new Set(selection.paragraphs.map(
+          p => p.keywords.filter(x => x.startsWith('#'))).reduce(
+            (prev, current) => prev.concat(current)))
+          
         if (
-          !del && advanced
+          !del && (advanced || existing_groups.length > 1)
         ) {
-          var choices = [
+          var choices = Array.from(new Set([
             ...api.guess_groups(api.current_q()),
             ...api.guess_groups(selection.paragraphs),
-          ].sort();
+          ])).sort();
           return dialogs
             .prompt({
               title: i18n.t("group"),
@@ -162,6 +168,7 @@ const promise = Promise.all([
               return _call();
             });
         } else {
+          bundle.group = existing_groups[0] || ('0' + tempgroup())
           return _call();
         }
       },
@@ -268,15 +275,15 @@ const promise = Promise.all([
         var authors = new Set(
           selection.paragraphs
             .reduce((a, tags) => a.concat(tags.keywords), [])
-            .filter((x) => x.startsWith("@"))
         ),
           author = selection.first.author;
         return dialogs
           .prompt({
             title: i18n.t("author"),
             value: author ? [author] : [],
-            choices: Array.from(authors),
+            choices: Array.from(authors).sort(),
             limit: 1,
+            allow_custom: true,
             initial: authors[0] || author || "",
           })
           .then((authors) => {
@@ -284,7 +291,7 @@ const promise = Promise.all([
 
             return api
               .call(`collections/${selection.first.mongocollection || "paragraph"}/batch`, {
-                ids: this.selected_ids,
+                ids: selection.ids,
                 author,
                 $push: { keywords: author },
               })
