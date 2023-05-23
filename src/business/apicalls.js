@@ -168,7 +168,7 @@ const promise = Promise.all([
               return _call();
             });
         } else {
-          bundle.group = Array.from(existing_groups)[0].replace(/^#/,'') || ('0' + tempgroup())
+          bundle.group = (Array.from(existing_groups)[0] || ('0' + tempgroup())).replace(/^#/,'')
           return _call();
         }
       },

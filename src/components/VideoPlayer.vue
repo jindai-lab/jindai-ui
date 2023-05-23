@@ -1,6 +1,5 @@
 <template>
-  <div class="video"
-  >
+  <div class="video">
     <!-- video player -->
     <video
       class="video__player"
@@ -64,8 +63,15 @@ export default {
       vp: {},
       currentTime: 0,
       playbackRate: 1,
-      playRates: [0.5, 1, 2, 3, 4, 8]
+      playRates: [0.5, 1, 2, 3, 4, 8],
     };
+  },
+  watch: {
+    src() {
+      this.currentTime = 0;
+      if (this.vp.currentTime) this.vp.currentTime = 0;
+      this.vp.play();
+    },
   },
   methods: {
     handleVideoPlay(e) {
@@ -78,16 +84,16 @@ export default {
     },
     handleMouse(e) {
       var delta = null;
-      if (e.type && e.type == 'mousedown') {
+      if (e.type && e.type == "mousedown") {
         e.cancelBubble = true;
         if (e.clientX < window.innerWidth / 3) delta = -15;
         else if (e.clientX > (window.innerWidth * 2) / 3) delta = 15;
-        else delta = 0
+        else delta = 0;
       }
-      if (delta == null) return
+      if (delta == null) return;
       if (delta == 0) this.toggle_play();
       else {
-        this.vp.currentTime += delta
+        this.vp.currentTime += delta;
       }
     },
     requestFullscreen(e) {
@@ -112,25 +118,33 @@ export default {
       this.vp.requestFullscreen();
     },
     handleKey(e) {
-      if (!this.playing) return
-      switch(e.key) {
+      if (!this.playing && e.key != " ") return;
+      switch (e.key) {
         case ",":
         case "<":
         case ">":
         case ".":
-          var delta = 15
-          if (e.shiftKey) delta = this.vp.duration / 8
-          if (e.key == ',' || e.key == '<') delta = -delta
-          this.vp.currentTime += delta
-          break
+          var delta = 15;
+          if (e.shiftKey) delta = this.vp.duration / 8;
+          if (e.key == "," || e.key == "<") delta = -delta;
+          this.vp.currentTime = Math.min(
+            this.vp.duration - 1,
+            Math.max(0, this.vp.currentTime + delta)
+          );
+          this.vp.play();
+          break;
         case "/":
-          this.vp.currentTime = this.vp.duration / 2
-          break
+          this.vp.currentTime = this.vp.duration / 2;
+          break;
         case "]":
-          this.vp.playbackRate = this.playRates[this.playRates.indexOf(this.vp.playbackRate) + 1] || this.vp.playbackRate;
-          break
+          this.vp.playbackRate =
+            this.playRates[this.playRates.indexOf(this.vp.playbackRate) + 1] ||
+            this.vp.playbackRate;
+          break;
         case "[":
-          this.vp.playbackRate = this.playRates[this.playRates.indexOf(this.vp.playbackRate) - 1] || this.vp.playbackRate;
+          this.vp.playbackRate =
+            this.playRates[this.playRates.indexOf(this.vp.playbackRate) - 1] ||
+            this.vp.playbackRate;
           break;
         case "m":
           this.vp.muted = !this.vp.muted;
@@ -145,8 +159,8 @@ export default {
     const vm = this;
     setInterval(() => {
       const span = vm.$refs.duration,
-          slider = vm.$refs.slider;
-      if (vm.playing && vm.vp.currentTime && document.activeElement != slider) {  
+        slider = vm.$refs.slider;
+      if (vm.playing && vm.vp.currentTime && document.activeElement != slider) {
         if (span) {
           span.innerText = `${vm.to_friendly_time(
             vm.vp.currentTime
@@ -159,11 +173,11 @@ export default {
     }, 500);
   },
   created() {
-    window.addEventListener('keydown', this.handleKey)
+    window.addEventListener("keydown", this.handleKey);
   },
   beforeDestroy() {
-    window.removeEventListener('keydown', this.handleKey)
-  }
+    window.removeEventListener("keydown", this.handleKey);
+  },
 };
 </script>
 
