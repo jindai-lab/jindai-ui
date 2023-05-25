@@ -9,18 +9,32 @@
     </v-card-title>
     <v-card-text>
       <v-data-table
-      :items="tasks"
-      :headers="[
-        {text: $t('name'), value: 'name'},
-        {text: $t('operations'), value: 'actions'},
-        {text: $t('run-at'), value: 'last_run'},
-        {text: 'ID', value: '_id'},
-      ]"
+        :items="tasks"
+        :search="search"
+        :headers="[
+          { text: $t('name'), value: 'name' },
+          { text: $t('operations'), value: 'actions' },
+          { text: $t('run-at'), value: 'last_run' },
+          { text: 'ID', value: '_id' },
+        ]"
       >
+        <template v-slot:top>
+          <v-toolbar flat>
+            <v-text-field
+              v-model="search"
+              clearable
+              flat
+              hide-details
+              prepend-inner-icon="mdi-magnify"
+              :label="$t('search')"
+            ></v-text-field>
+          </v-toolbar>
+        </template>
+
         <template v-slot:item.last_run="{ item }">
           <span>{{ new Date(item.last_run).toLocaleString() }}</span>
         </template>
-        <template v-slot:item.actions="{item}">
+        <template v-slot:item.actions="{ item }">
           <v-btn :to="`/tasks/${item._id}`">
             <v-icon>mdi-file-edit-outline</v-icon>
           </v-btn>
@@ -30,8 +44,8 @@
           </v-btn>
 
           <v-btn @click="enqueue_task(item)" class="ml-3">
-            <v-icon>mdi-play</v-icon>
-          </v-btn><br/>
+            <v-icon>mdi-play</v-icon> </v-btn
+          ><br />
         </template>
       </v-data-table>
     </v-card-text>
@@ -43,6 +57,7 @@ export default {
   data() {
     return {
       tasks: [],
+      search: "",
     };
   },
   methods: {
@@ -66,7 +81,7 @@ export default {
     },
     enqueue_task(task) {
       this.api.put("queue/", { id: task._id }).then((data) => {
-        this.$notify(this.$t("task-enqueued", {task: data.result}));
+        this.$notify(this.$t("task-enqueued", { task: data.result }));
       });
     },
   },

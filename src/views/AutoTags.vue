@@ -95,12 +95,6 @@ export default {
     reload() {
       this.api.call("plugins/autotags").then((data) => (this.auto_tags = data.result));
     },
-    do_search(items, search) {
-      if (!search) return items;
-      return items.filter(
-        (x) => [x.cond, x.tag].join(" ").toLowerCase().indexOf(search.toLowerCase()) >= 0
-      );
-    },
   },
 };
 </script>
