@@ -48,7 +48,12 @@
               :options="datasets"
               v-model="selected_datasets"
               :placeholder="$t('dataset')"
-            />
+              :matchKeys="['label', 'tags']"
+            >
+            <label slot="option-label" slot-scope="{ node }" class="treeselect-option-label">
+              {{ node.label }} <span v-for="tag in selection_bundles[node.id].tags" :key="node.id + tag">{{ tag }}</span>
+            </label>
+            </treeselect>
           </v-col>
         </v-row>
         <v-row class="ml-0 mb-3">
@@ -117,6 +122,7 @@ export default {
       page_size: 50,
       cancel_source: this.api.cancel_source(),
       expert: this.api.config.expert,
+      ds_search: '',
     };
   },
   mounted() {
@@ -374,5 +380,11 @@ export default {
 .cond-width {
   width: calc(100% - 120px);
   min-width: 200px;
+}
+
+.treeselect-option-label span {
+  font-size: 10px;
+  color: #039be5;
+  background-color: #e3f2fd;
 }
 </style>

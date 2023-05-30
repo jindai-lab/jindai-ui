@@ -497,6 +497,7 @@ const apis = {
       var hierarchy = {
         id: "ROOT",
         name: "",
+        tags: [],
         children: [],
       };
 
@@ -516,10 +517,12 @@ const apis = {
             cand = {
               id: segs,
               label: x.segments[i],
+              tags: (x.tags || []).join(', '),
               children: [],
             };
             bundles[cand.id] = {
               name: segs,
+              tags: x.tags,
               dataset_name: x.name,
               mongocollection: x.mongocollection,
             };
