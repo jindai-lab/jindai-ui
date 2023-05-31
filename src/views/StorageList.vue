@@ -121,7 +121,7 @@ export default {
       }
     },
     file_link(f) {
-      return "/this.api/storage/" + f.fullpath.trimLeft('/');
+      return "/api/storage/" + f.fullpath.trimLeft('/');
     },
     install_plugin(f) {
       this.api.call("plugins", { url: f.fullpath }).then((data) => {
