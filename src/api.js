@@ -517,7 +517,7 @@ const apis = {
             cand = {
               id: segs,
               label: x.segments[i],
-              tags: (x.tags || []).join(', '),
+              tags: ((i == x.level - 1 ? x.tags : []) || []).join(', '),
               children: [],
             };
             bundles[cand.id] = {

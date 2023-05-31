@@ -386,5 +386,6 @@ export default {
   font-size: 10px;
   color: #039be5;
   background-color: #e3f2fd;
+  margin-left: 2px;
 }
 </style>

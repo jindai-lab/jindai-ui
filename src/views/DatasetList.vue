@@ -148,12 +148,4 @@ label {
 [disabled] {
   opacity: 0;
 }
-
-.oper {
-  opacity: 0;
-}
-
-:hover>.oper {
-  opacity: 100%;
-}
 </style>
