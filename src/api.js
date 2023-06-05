@@ -622,7 +622,7 @@ const apis = {
   get_image_url(src) {
     var path = ''
     if (src.file.indexOf('://') >= 0) {
-      let ext = (src.url || src.orig_path || '').split('.').pop()
+      let ext = (src.url || src.orig_path || '').split('.').pop().split('?')[0]
       let segs = src.file.split('://')
       path = `/images/${segs[0]}/${segs[1].replace('$', src.block_id) || src.block_id}/image.${ext.length <= 4 ? ext : 'data'}`
     }

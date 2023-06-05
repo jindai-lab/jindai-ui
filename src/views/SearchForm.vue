@@ -120,13 +120,13 @@ export default {
 
       function combine(selection, field) {
         return Array.from(
-          selection.map((x) => 
-            typeof x[field] == 'string' ? new Set([x[field]]) : 
-            x[field]
-            ).reduce((prev, curr) => {
-            curr.forEach(y => prev.add(y))
+          selection.map((x) =>
+            typeof x[field] == 'string' ? new Set([x[field]]) :
+              x[field]
+          ).reduce((prev, curr) => {
+            (curr || []).forEach(y => prev.add(y))
             return prev
-          }))
+          }, new Set()))
       }
 
       if (selected.length > 0) {
@@ -141,7 +141,7 @@ export default {
             })),
           req_datasets = "",
           req_sourcefiles = "";
-          this.selected_mongocollections = combine(selected, 'mongocollection')
+        this.selected_mongocollections = combine(selected, 'mongocollection')
 
         if (datasets.length > 0) {
           req_datasets =
