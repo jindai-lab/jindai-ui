@@ -5,54 +5,33 @@
       <form autocapitalize="off" autocorrect="off" spellcheck="false">
         <v-row v-if="expert">
           <v-col>
-            <ParamInput
-              :arg="{ name: $t('query'), type: 'QUERY' }"
-              v-model="q"
-              ref="search_code"
-              :style="{ width: '100%' }"
-              @submit="search"
-              class="mb-5 d-inline-block"
-            ></ParamInput>
+            <ParamInput :arg="{ name: $t('query'), type: 'QUERY' }" v-model="q" ref="search_code"
+              :style="{ width: '100%' }" @submit="search" class="mb-5 d-inline-block"></ParamInput>
           </v-col>
         </v-row>
         <v-row v-else>
           <v-col>
-            <v-text-field
-              class="d-inline-block selector cond-width"
-              dense
-              v-model="q"
-              @keyup.enter="search"
-              :label="$t('query')"
-            ></v-text-field>
-            <v-combobox
-              class="d-inline-block ml-5 selector"
-              v-model="sort"
-              :label="$t('sort')"
-              dense
-              :style="{ width: '100px' }"
-              :items="[
+            <v-text-field class="d-inline-block selector cond-width" dense v-model="q" @keyup.enter="search"
+              :label="$t('query')"></v-text-field>
+            <v-combobox class="d-inline-block ml-5 selector" v-model="sort" :label="$t('sort')" dense
+              :style="{ width: '100px' }" :items="[
                 { text: $t('default'), value: 'id' },
                 { text: $t('pdate'), value: 'pdate' },
                 { text: $t('pdate-rev'), value: '-pdate' },
                 { text: $t('source'), value: 'source' },
                 { text: $t('latest-imported'), value: '-id' },
                 { text: $t('random'), value: 'random' },
-              ]"
-            ></v-combobox>
+              ]"></v-combobox>
           </v-col>
         </v-row>
         <v-row style="margin-top: -24px">
           <v-col>
-            <treeselect
-              :multiple="true"
-              :options="datasets"
-              v-model="selected_datasets"
-              :placeholder="$t('dataset')"
-              :matchKeys="['label', 'tags']"
-            >
-            <label slot="option-label" slot-scope="{ node }" class="treeselect-option-label">
-              {{ node.label }} <span v-for="tag in selection_bundles[node.id].tags" :key="node.id + tag">{{ tag }}</span>
-            </label>
+            <treeselect :multiple="true" :options="datasets" v-model="selected_datasets" :placeholder="$t('dataset')"
+              :matchKeys="['label', 'tags']">
+              <label slot="option-label" slot-scope="{ node }" class="treeselect-option-label">
+                {{ node.label }} <span v-for="tag in selection_bundles[node.id].tags" :key="node.id + tag">{{ tag
+                }}</span>
+              </label>
             </treeselect>
           </v-col>
         </v-row>
@@ -60,19 +39,12 @@
           <v-btn @click="search" color="primary">{{ $t("search") }}</v-btn>
           <span class="ml-5" style="line-height: 100%; vertical-align: middle">
             {{ $t("grouping") }}
-            <v-combobox
-              class="d-inline-block ml-1"
-              style="width: 80px"
-              dense
-              flat
-              :items="[
-                { text: $t('none'), value: 'none' },
-                { text: $t('group'), value: 'group' },
-                { text: $t('source'), value: 'source' },
-                { text: $t('author'), value: 'author' },
-              ]"
-              v-model="groups"
-            />
+            <v-combobox class="d-inline-block ml-1" style="width: 80px" dense flat :items="[
+              { text: $t('none'), value: 'none' },
+              { text: $t('group'), value: 'group' },
+              { text: $t('source'), value: 'source' },
+              { text: $t('author'), value: 'author' },
+            ]" v-model="groups" />
           </span>
           <v-spacer></v-spacer>
           <v-btn @click="export_query" class="exports">
@@ -89,12 +61,7 @@
           </v-btn>
         </v-row>
       </form>
-      <ResultsView
-        class="mt-5"
-        :page_size="page_size"
-        :load="external_json ?? load_search"
-        ref="results"
-      />
+      <ResultsView class="mt-5" :page_size="page_size" :load="external_json ?? load_search" ref="results" />
     </v-card-text>
   </v-card>
 </template>
@@ -151,10 +118,21 @@ export default {
       var selected = this.selected_datasets.map((sid) => this.selection_bundles[sid]),
         req = "";
 
+      function combine(selection, field) {
+        return Array.from(
+          selection.map((x) => 
+            typeof x[field] == 'string' ? new Set([x[field]]) : 
+            x[field]
+            ).reduce((prev, curr) => {
+            curr.forEach(y => prev.add(y))
+            return prev
+          }))
+      }
+
       if (selected.length > 0) {
-        var datasets = selected
-            .filter((x) => !x.source)
-            .map((x) => this.api.escape_regex(x.dataset_name)),
+        var datasets = combine(selected
+          .filter((x) => !x.source), 'dataset_name')
+          .map((x) => this.api.escape_regex(x)),
           sourcefiles = selected
             .filter((x) => x.source)
             .map((x) => ({
@@ -163,9 +141,7 @@ export default {
             })),
           req_datasets = "",
           req_sourcefiles = "";
-        this.selected_mongocollections = Array.from(
-          new Set(selected.map((x) => x.mongocollection))
-        );
+          this.selected_mongocollections = combine(selected, 'mongocollection')
 
         if (datasets.length > 0) {
           req_datasets =
@@ -244,8 +220,8 @@ export default {
         sort: this.expert
           ? ""
           : typeof this.sort === "object"
-          ? this.sort.value
-          : this.sort,
+            ? this.sort.value
+            : this.sort,
         mongocollections: this.selected_mongocollections,
         offset: e.offset,
         limit: e.limit,
@@ -269,10 +245,10 @@ export default {
           if (data.result.query) {
             var reg = new RegExp(
               "(" +
-                this.keyword_patterns(data.result.query)
-                  .filter((x) => x)
-                  .join("|") +
-                ")",
+              this.keyword_patterns(data.result.query)
+                .filter((x) => x)
+                .join("|") +
+              ")",
               "gi"
             );
             this.results = data.result.results;
@@ -313,7 +289,7 @@ export default {
     },
     export_query(format, callback) {
       if (typeof callback !== "function")
-        callback = (data) => this.$router.push("/tasks/" + data.result).catch(() => {});
+        callback = (data) => this.$router.push("/tasks/" + data.result).catch(() => { });
       this.api
         .put("tasks/", {
           name:
@@ -365,6 +341,7 @@ export default {
 .vue-treeselect__control {
   border-radius: 0;
 }
+
 .theme--dark .vue-treeselect {
   color: rgba(0, 0, 0, 0.7) !important;
 }

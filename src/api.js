@@ -234,37 +234,37 @@ const apis = {
   },
 
   querify(obj) {
-    function _debracket(x) {
-      if (x.match(/^\(.*\)$/)) {
-        var stack = 0;
-        for (var c of x.substr(1, x.length - 2)) {
-          switch (c) {
-            case "(":
-              ++stack;
-              break;
-            case ")":
-              if (stack) --stack;
-              else return x;
-              break;
-            case ",":
-            case "|":
-              return x;
-          }
+    function _debracket(expression) {
+      if (!expression.match(/^\(.+\)$/)) return expression
+      const subexpr = expression.substring(1, expression.length - 1)
+      var brackets = 0
+      for (var char of subexpr) {
+        if (char == '(') brackets++;
+        else if (char == ')') {
+          brackets--;
+          if (brackets < 0)
+            return expression
         }
-        if (stack == 0) return x.substr(1, x.length - 2);
       }
-      return x;
+      return subexpr;
     }
 
     if (Array.isArray(obj)) {
-      if (obj.length == 0) return "[]";
-      else if (obj.length == 1) {
-        return "[" + _debracket(this.querify(obj[0])) + "]";
-      } else {
-        return (
-          "[" + obj.map((x) => _debracket(this.querify(x))).join(",") + "]"
-        );
-      }
+      if (obj.filter(x => Object.keys(x).length == 1 && Object.keys(x)[0].startsWith('$')).length == obj.length)
+        return obj.map(x => this.querify(x)).join(';\n') + ';';
+
+      return `[${obj.map(x => this.querify(x)).join(', ')}]`;
+    }
+
+    if (obj instanceof Date) {
+      const year = obj.getFullYear();
+      const month = String(obj.getMonth() + 1).padStart(2, '0');
+      const day = String(obj.getDate()).padStart(2, '0');
+      const hours = String(obj.getHours()).padStart(2, '0');
+      const minutes = String(obj.getMinutes()).padStart(2, '0');
+      const seconds = String(obj.getSeconds()).padStart(2, '0');
+
+      return `d"${year}-${month}-${day} ${hours}:${minutes}:${seconds}"`;
     }
 
     if (obj === null || obj === undefined) {
@@ -272,47 +272,76 @@ const apis = {
     }
 
     if (typeof obj == "object") {
-      var s = "";
-      for (var kvpair of Object.entries(obj)) {
-        let key = kvpair[0],
-          val = kvpair[1];
-        switch (key) {
-          case "$and":
-            s +=
-              ",(" +
-              val.map((x) => _debracket(this.querify(x))).join(",") +
-              ")";
-            break;
-          case "$or":
-            s +=
-              ",(" +
-              val.map((x) => _debracket(this.querify(x))).join("|") +
-              ")";
-            break;
-          case "$options":
-            break;
-          case "$regex":
-            s += "%" + this.querify(val);
-            break;
-          default:
-            if (key.startsWith("$"))
-              s +=
-                "," + key.substr(1) + "(" + _debracket(this.querify(val)) + ")";
-            else {
-              s += "," + key;
-              val = this.querify(val);
-              if (val.startsWith("(%")) {
-                s += val.substr(1, val.length - 2);
-              } else {
-                s += "=" + val;
-              }
-            }
-            break;
+
+      const dollars = Object.keys(obj).filter(x => x.startsWith('$'))
+
+      if (!dollars.length)
+        return '(' + Object.entries(obj).map(([key, value]) => {
+          value = this.querify(value)
+          if (typeof value == 'string')
+            return `${key}=${value}`
+          else
+            return `${key}${value.value}`
+        }).join(', ') + ')'
+
+      if (obj.$regex) {
+        const regex = obj.$regex;
+        const options = obj.$options || '';
+        return ` % /${regex}/${options}`;
+      }
+
+      var conds = obj.$and || obj.$or
+      if (conds) {
+        const andor = dollars[0] == '$and' ? ' & ' : ' | '
+        return `(${conds.map(x => this.querify(x)).join(andor)})`
+      }
+
+      const oper = dollars[0].substring(1), value = obj[dollars[0]]
+
+      const rel_oper = {
+        'eq': '=',
+        'ne': '!=',
+        'lt': '<',
+        'lte': '<=',
+        'gt': '>',
+        'gte': '>=',
+        'subtract': '-',
+        'add': '+',
+        'multiply': '*',
+        'divide': '/',
+      }
+
+      if (rel_oper[oper]) {
+        if (Array.isArray(value))
+          return `(${this.querify(value[0])} ${rel_oper[oper]} ${this.querify(value[1])})`
+        return {
+          'value': ` ${rel_oper[oper]} ${this.querify(value)}`
         }
       }
-      return "(" + _debracket(s.replace(/^,/, "")) + ")";
+
+      switch (oper) {
+        case 'addFields':
+          if (Object.keys(value).length == 1)
+            return `${Object.keys(value)[0]} := ${Object.values(value)[0]}`
+          else
+            return `set${this.querify(value)}`
+        default:
+          var args = ''
+          if (Array.isArray(value))
+            args = value.map(x => _debracket(this.querify(x))).join(', ')
+          else
+            args = _debracket(this.querify(value))
+          return `${oper}(${args})`
+      }
     }
 
+    if (typeof obj == "string") {
+      if (obj.startsWith('$') || obj.indexOf('.') >= 0)
+        return obj;
+      return JSON.stringify(obj)
+    }
+
+    // numbers, booleans
     return JSON.stringify(obj);
   },
 
@@ -492,45 +521,69 @@ const apis = {
   },
 
   get_datasets_hierarchy() {
-    var bundles = {};
     return this.get_datasets().then((data) => {
-      var hierarchy = {
-        id: "ROOT",
-        name: "",
-        tags: [],
-        children: [],
-      };
+      var bundles = {};
 
-      data = data.map((x) => {
+      function Node(id, label, tags) {
+        this.id = id
+        this.label = label
+        this.tags = Array.isArray(tags) ? tags.join(', ') : (tags || '')
+        this.children = []
+
+        this.append = function(node, bundle) {
+          this.children.push(node)
+          bundles[node.id] = bundle
+        }
+
+        this.get = function(id, label, bundle) {
+          for (var child of this.children)
+            if (child.id == id)
+              return child
+          const created = new Node(id, label || '')
+          this.append(created, bundle)
+          return created
+        }
+      }
+
+      var hierarchy = new Node("ROOT", "")
+      hierarchy.append(new Node("Tags", "Tags"), {name: "Tags", tags: []})
+      const tagsNode = hierarchy.children[0];
+
+      data.map((x) => {
         x.segments = (x.display_name || x.name).split("--");
         x.level = x.segments.length;
-        return x;
-      });
+        
+        for (var tag of (x.tags || [])) {
+          var tagNode = tagsNode.get(`Tags--${tag}`, tag, {
+            name: tag,
+            tags: [],
+            mongocollection: new Set(),
+            dataset_name: new Set()
+          })
+          bundles[tagNode.id].mongocollection.add(x.mongocollection)
+          bundles[tagNode.id].dataset_name.add(x.name)
+          tagNode.append(new Node(`Tags--${tag}--${x.name}`, x.name, []), {
+            name: x.name,
+            tags: [],
+            mongocollection: x.mongocollection,
+            dataset_name: x.name
+          })
+        }
 
-      for (var x of data) {
         var parent_obj = hierarchy;
         for (
           var i = 0, segs = x.segments[0]; i < x.level; i++, segs += "--" + x.segments[i]
         ) {
-          var cand = parent_obj.children.filter((child) => child.id == segs)[0];
-          if (typeof cand === "undefined") {
-            cand = {
-              id: segs,
-              label: x.segments[i],
-              tags: ((i == x.level - 1 ? x.tags : []) || []).join(', '),
-              children: [],
-            };
-            bundles[cand.id] = {
-              name: segs,
-              tags: x.tags,
-              dataset_name: x.name,
-              mongocollection: x.mongocollection,
-            };
-            parent_obj.children.push(cand);
-          }
+          var cand = parent_obj.get(segs, x.segments[i], {
+            name: segs,
+            tags: [],
+            dataset_name: x.name,
+            mongocollection: x.mongocollection
+          })
+          cand.tags = ((i == x.level - 1 ? x.tags : []) || []).join(', ')
           parent_obj = cand;
         }
-      }
+      });
 
       return {
         hierarchy: hierarchy.children,
@@ -548,7 +601,7 @@ const apis = {
   },
 
   _generate_domain(path, prefix, delimiter) {
-    const host_name_regex = /^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9-]*[A-Za-z0-9])$/;
+    const host_name_regex = /^((\w|\w[a-zA-Z0-9-]*\w)\.)*(\w|\w\w*\w)$/;
 
     const simpleHash = str => {
       let hash = 0;
@@ -561,7 +614,7 @@ const apis = {
     };
 
     if (this.config.multiple_image_domains && location.hostname.match(host_name_regex))
-      return `//${prefix}-` + simpleHash(path) + delimiter + location.host;
+      return `//${prefix}-${simpleHash(path)}${delimiter}${location.host}`;
 
     return ''
   },
@@ -663,10 +716,10 @@ const apis = {
         if (!words.length) words = Array.from(paragraph.keywords);
         else words = words.filter(x => paragraph.keywords.includes(x))
       }
-      return Array.from(new Set(words.map(x=>x.replace(/^@/, '')).concat(...Array.from(existent_groups)))).sort()
+      return Array.from(new Set(words.map(x => x.replace(/^@/, '')).concat(...Array.from(existent_groups)))).sort()
     }
-    else 
-    return []
+    else
+      return []
   },
 
   get_group(paragraph) {

@@ -90,6 +90,7 @@ export default {
         data = data.result;
         this.preview_text = this.stringify_command(data)
         this.previewed = true;
+        console.log(this.api.querify(data.query))
       });
     },
     execute() {
