@@ -29,7 +29,7 @@
             <treeselect :multiple="true" :options="datasets" v-model="selected_datasets" :placeholder="$t('dataset')"
               :matchKeys="['label', 'tags']">
               <label slot="option-label" slot-scope="{ node }" class="treeselect-option-label">
-                {{ node.label }} <span v-for="tag in selection_bundles[node.id].tags" :key="node.id + tag">{{ tag
+                {{ node.label }} <span v-for="tag in node.raw.tags.split(', ')" :key="node.id + tag">{{ tag
                 }}</span>
               </label>
             </treeselect>
