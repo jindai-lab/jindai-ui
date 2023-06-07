@@ -295,6 +295,9 @@ export default {
     arg() {
       this.update_choices();
     },
+    value(val) {
+      if (this.code != val) this.code = val;
+    }
   },
   methods: {
     validate(val) {
@@ -337,6 +340,7 @@ export default {
       this.$emit("input", val);
     },
     refresh(val) {
+      if (!val) val = this.value;
       this.code = val;
       this.$emit("input", val);
     },

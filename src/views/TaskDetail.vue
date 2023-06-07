@@ -44,16 +44,24 @@
         <div id="pipeline">
           <h2>
             {{ $t("pipeline") }}
-            <v-btn @click="blockly = true" class="ml-5" v-if="pipelines"
-              ><v-icon>mdi-layers</v-icon> {{ $t("design-view") }}</v-btn
-            >
+              <v-btn class="ml-3" @click="show_code = !show_code; if (show_code) querify(); else parse();" :color="show_code ? 'secondary' : ''">
+                <v-icon>mdi-code-braces</v-icon>
+              </v-btn>
           </h2>
           <Pipeline
+            v-show="!show_code"
             v-model="task.pipeline"
             @shortcut="update_shortcut"
             :map_id="'pipeline'"
             @validation="update_valid('pipeline_main', $event)"
             style="margin-left: 0 !important"
+          />
+          <ParamInput
+            v-model="code"
+            v-show="show_code"
+            :arg="{name: '', type: 'QUERY'}"
+            ref="code"
+            class="mb-10 mt-10"
           />
         </div>
 
@@ -80,32 +88,8 @@
         <v-btn class="ml-3" color="error" @click="delete_task()">
           <v-icon>mdi-delete</v-icon> {{ $t("delete") }}
         </v-btn>
-        <v-btn class="ml-3" @click="show_code = !show_code">
-          <v-icon>mdi-code-braces</v-icon>
-        </v-btn>
       </v-card-actions>
-      <v-row class="ma-10">
-        <v-textarea
-          v-show="show_code"
-          :value="querify(task)"
-          readonly
-        ></v-textarea>
-      </v-row>
     </v-card>
-    <!-- <v-dialog fullscreen persistent v-model="blockly"> -->
-    <BlocklyComponent
-      :json="task.pipeline"
-      :pipelines="pipelines"
-      :tasks="tasks"
-      @save="
-        task.pipeline = $event;
-        blockly = false;
-      "
-      @cancel="blockly = false"
-      v-show="blockly"
-      v-if="pipelines"
-    />
-    <!-- </v-dialog> -->
   </div>
 </template>
 
@@ -114,13 +98,11 @@
 import dialogs from "../dialogs"
 import ParamInput from "../components/ParamInput.vue";
 import Pipeline from "../components/Pipeline";
-import BlocklyComponent from "../components/BlocklyComponent.vue";
 
 export default {
   name: "TaskDetail",
   components: {
     Pipeline,
-    BlocklyComponent,
     ParamInput,
   },
   props: ["id"],
@@ -132,10 +114,10 @@ export default {
         shortcut_map: {},
         pipeline: [],
       },
-      blockly: false,
+      show_code: false,
       pipelines: this.business.pipelines,
       valid: [],
-      show_code: false,
+      code: '',
       tasks: [],
     };
   },
@@ -198,14 +180,89 @@ export default {
       this.$forceUpdate();
     },
     querify() {
-      return this.task.pipeline
-        .map((kv) => {
-          var o = {};
-          o["$" + kv[0]] = kv[1];
-          return this.api.querify(o).replace(/^\(|\)$/g, "");
-        })
-        .join(";\n");
+      var code = '', indent = ''
+      for (var line of this.api.querify(this.task.pipeline).split('\n')) {
+        line = line.trim()
+        if (line.match(/^\}.*\{$/)) {
+          indent = indent.substring(0, indent.length-2)
+          code += indent + line + '\n'
+          indent += '  ';
+        } else if (line.startsWith('}')) {
+          indent = indent.substring(0, indent.length-2)
+          code += indent + line + '\n'
+        } else if (line.endsWith('{')) {
+          code += indent + line + '\n'
+          indent += '  ';
+        } else {
+          code += indent + line + '\n'
+        }
+      }
+      this.code = code
     },
+    parse() {
+      const api = this.api;
+      const _replaceHook = {
+        addFields(params) {
+          var [field, value] = Object.entries(params)[0] 
+          return [
+            'FieldAssignment', {
+              field, value: api.querify(value).replace(/^\((.*)\)$/, '$1')
+            }
+          ]
+        }
+      };
+
+      function _replaceFC(pipeline) {
+        return pipeline.map(x => {
+          var [stage, params] = Object.entries(x)[0]
+          if (stage.startsWith('$_FC')) {
+            switch(stage.substring(4)) {
+              case "Conditional":
+                return ['Condition', {
+                  cond: api.querify(params.cond).replace(/^\((.*)\)$/, '$1'),
+                  iffalse: _replaceFC(params.if_false),
+                  iftrue: _replaceFC(params.if_true)
+                }]
+              case "Repeat":
+                var repeat_cond = api.querify(params.cond).replace(/^\((.*)\)$/, '$1'), repeat_times = 0;
+                if (params.cond.$lt && params.cond.$lt[0] == '$$itercounter') {
+                  repeat_times = params.cond.$lt[1]
+                  repeat_cond = ''
+                }
+                return ['RepeatWhile', {
+                  cond: repeat_cond,
+                  times: repeat_times,
+                  pipeline: _replaceFC(params.pipeline)
+                }]
+              case "ForEach":
+                return ['ForEach', {
+                  as_name: params.as,
+                  input_value: api.querify(params.input).replace(/^\((.*)\)$/, '$1'),
+                  pipeline: _replaceFC(params.pipeline)
+                }]
+              case "Break":
+              case "Continue":
+              case "Halt":
+              case "Return":
+                throw new Exception(`Cannot use "${stage.substring(4).toLowerCase()}" here.`)
+              default:
+                throw new Exception(`Unknown flow control: "${stage.substring(4)}".`)
+            }
+          } else if (_replaceHook[stage.substring(1)]) {
+            return _replaceHook[stage.substring(1)](params)
+          } else {
+            return [stage.substring(1), params]
+          }
+        })
+      }
+
+      api.call('qx', {query: this.code}).then(data => {
+        var { result } = data
+        result = _replaceFC(result)
+        console.log(result)
+        this.task.pipeline = result
+      })
+    }
   },
 };
 </script>

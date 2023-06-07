@@ -234,6 +234,7 @@ const apis = {
   },
 
   querify(obj) {
+
     function _debracket(expression) {
       if (!expression.match(/^\(.+\)$/)) return expression
       const subexpr = expression.substring(1, expression.length - 1)
@@ -249,9 +250,20 @@ const apis = {
       return subexpr;
     }
 
+    function _normalize_pipeline(pipeline) {
+      return pipeline.map(([stage, params]) => {
+        var o = {}
+        o['$' + stage] = params
+        return o
+      })
+    }
+
     if (Array.isArray(obj)) {
+      if (obj.filter(x => Array.isArray(x) && x.length == 2 && typeof x[0] == 'string' && typeof x[1] == 'object' && !Array.isArray(x[1])).length == obj.length)
+        obj = _normalize_pipeline(obj)
+
       if (obj.filter(x => Object.keys(x).length == 1 && Object.keys(x)[0].startsWith('$')).length == obj.length)
-        return obj.map(x => this.querify(x)).join(';\n') + ';';
+        return obj.map(x => this.querify(x)).map(x => x + (x.endsWith('}') ? '' : ';')).join('\n');
 
       return `[${obj.map(x => this.querify(x)).join(', ')}]`;
     }
@@ -267,7 +279,7 @@ const apis = {
       return `d"${year}-${month}-${day} ${hours}:${minutes}:${seconds}"`;
     }
 
-    if (obj === null || obj === undefined) {
+    if (obj === null || typeof obj == 'undefined') {
       return "null";
     }
 
@@ -287,7 +299,7 @@ const apis = {
       if (obj.$regex) {
         const regex = obj.$regex;
         const options = obj.$options || '';
-        return ` % /${regex}/${options}`;
+        return {value: ` % \`${regex}\`${options}`};
       }
 
       var conds = obj.$and || obj.$or
@@ -311,32 +323,40 @@ const apis = {
         'divide': '/',
       }
 
-      if (rel_oper[oper]) {
+      if (typeof rel_oper[oper] == 'string') {
         if (Array.isArray(value))
           return `(${this.querify(value[0])} ${rel_oper[oper]} ${this.querify(value[1])})`
         return {
-          'value': ` ${rel_oper[oper]} ${this.querify(value)}`
+          value: ` ${rel_oper[oper]} ${this.querify(value)}`
         }
       }
 
       switch (oper) {
         case 'addFields':
-          if (Object.keys(value).length == 1)
-            return `${Object.keys(value)[0]} := ${Object.values(value)[0]}`
-          else
-            return `set${this.querify(value)}`
+          return Object.entries(value).map(([target, expr]) => `${target} := ${expr}`).join(', ')
+        case 'Condition':
+          return `if (${value.cond}) {
+            ${this.querify(value.iftrue)}
+          } else {
+            ${this.querify(value.iffalse)}
+          }`.replace(/^\s+/gm, '')
+        case 'RepeatWhile':
+          return `repeat (${value.cond || ('$$itercounter < ' + value.times)}) {
+            ${this.querify(value.pipeline)}
+          }`.replace(/^\s+/gm, '')
         default:
           var args = ''
           if (Array.isArray(value))
             args = value.map(x => _debracket(this.querify(x))).join(', ')
           else
             args = _debracket(this.querify(value))
+          if (args == '()') args = ''
           return `${oper}(${args})`
       }
     }
 
     if (typeof obj == "string") {
-      if (obj.startsWith('$') || obj.indexOf('.') >= 0)
+      if (obj.match(/^\$\w+$|^\w+\.\w+$/))
         return obj;
       return JSON.stringify(obj)
     }
@@ -545,9 +565,8 @@ const apis = {
         }
       }
 
-      var hierarchy = new Node("ROOT", "")
-      hierarchy.append(new Node("Tags", "Tags"), {name: "Tags", tags: []})
-      const tagsNode = hierarchy.children[0];
+      const hierarchy = new Node("ROOT", "")
+      const tagsNode = new Node("Tags", "Tags");
 
       data.map((x) => {
         x.segments = (x.display_name || x.name).split("--");
@@ -587,6 +606,7 @@ const apis = {
 
       return {
         hierarchy: hierarchy.children,
+        tags: tagsNode.children,
         bundles: bundles,
       };
     });

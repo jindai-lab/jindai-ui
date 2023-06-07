@@ -26,7 +26,7 @@
         </v-row>
         <v-row style="margin-top: -24px">
           <v-col>
-            <treeselect :multiple="true" :options="datasets" v-model="selected_datasets" :placeholder="$t('dataset')"
+            <treeselect :multiple="true" :options="filtering" v-model="selected_datasets" :placeholder="$t('dataset')"
               :matchKeys="['label', 'tags']">
               <label slot="option-label" slot-scope="{ node }" class="treeselect-option-label">
                 {{ node.label }} <span v-for="tag in node.raw.tags.split(', ')" :key="node.id + tag">{{ tag
@@ -45,6 +45,12 @@
               { text: $t('source'), value: 'source' },
               { text: $t('author'), value: 'author' },
             ]" v-model="groups" />
+          </span>
+          <span class="ml-5" style="line-height: 100%; vertical-align: middle">
+            <v-checkbox class="d-inline-block ml-1" style="width: 80px" dense flat
+              v-model="filter_by_tags"
+              :label="$t('tag')"
+            ></v-checkbox>
           </span>
           <v-spacer></v-spacer>
           <v-btn @click="export_query" class="exports">
@@ -76,6 +82,8 @@ export default {
   data() {
     return {
       datasets: [],
+      tags: [],
+      filter_by_tags: false,
       selected_datasets: [],
       open_datasets: [],
       selected_mongocollections: [],
@@ -92,6 +100,11 @@ export default {
       ds_search: '',
     };
   },
+  computed: {
+    filtering() {
+      return this.filter_by_tags ? this.tags : this.datasets;
+    }
+  },
   mounted() {
     let config = this.api.config;
     if (config.page_size) this.page_size = config.page_size;
@@ -107,6 +120,7 @@ export default {
 
     this.api.get_datasets_hierarchy().then((data) => {
       this.datasets = data.hierarchy;
+      this.tags = data.tags;
       this.selection_bundles = data.bundles;
       this.selected_datasets =
         search_params.selected_datasets || config.selected_datasets || [];
