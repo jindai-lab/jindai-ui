@@ -69,8 +69,7 @@ export default {
   watch: {
     src() {
       this.currentTime = 0;
-      if (this.vp.currentTime) this.vp.currentTime = 0;
-      this.vp.play();
+      if (this.vp.currentTime) this.vp.currentTime = 0
     },
   },
   methods: {

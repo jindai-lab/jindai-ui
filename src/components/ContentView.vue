@@ -1,6 +1,6 @@
 <template>
   <div class="paragraph mt-5">
-    <p v-html="content" v-if="is_html"></p>
+    <p v-html="content" v-if="is_html" :lang="paragraph.lang"></p>
     <p v-else>
       {{ content }}
       <v-btn class="fav-button" :color="favored ? 'orange' : ''" :dark="favored" icon small @click="
