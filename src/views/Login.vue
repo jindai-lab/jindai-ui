@@ -53,6 +53,7 @@ export default {
       remember: true,
       otp: "",
       tab: "",
+      target: "",
     };
   },
   methods: {
@@ -60,10 +61,15 @@ export default {
       this.api
         .authenticate(this.username, this.password, this.otp, this.remember)
         .then(() => {
-          location.href = '/';
+          location.href = this.target || '/';
         });
     },
   },
+  mounted () {
+    if (location.search) {
+      this.target = this.api.querystring_parse(location.search).target;
+    }
+  }
 };
 </script>
 

@@ -120,7 +120,6 @@ export default {
         .then((data) => {
           if (Array.isArray(data.result)) {
             this.results = data.result;
-            this.$refs.results.start(1);
             this.result_plain = "";
           } else if (
             typeof data.result === "object" &&
@@ -157,8 +156,9 @@ export default {
           } else {
             this.result_plain = JSON.stringify(data.result);
             this.results = [];
-            this.$refs.results.start(1);
           }
+        }).then(() => {
+          this.$refs.results.start(1);
         });
     },
     enqueue() {

@@ -189,7 +189,7 @@ const apis = {
           else if (message.match("Forbidden.")) {
             localStorage.token = "";
             message = "forbidden";
-            if (!location.href.endsWith("/login")) location.href = "/login";
+            if (!location.pathname.endsWith("/login")) location.href = "/login?target=" + encodeURIComponent(location.href);
           } else if (message.match("Unmatched credentials"))
             message = "unmatched-credentials";
         }

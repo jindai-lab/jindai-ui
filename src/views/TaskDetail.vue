@@ -244,9 +244,9 @@ export default {
               case "Continue":
               case "Halt":
               case "Return":
-                throw new Exception(`Cannot use "${stage.substring(4).toLowerCase()}" here.`)
+                throw new Error(`Cannot use "${stage.substring(4).toLowerCase()}" here.`)
               default:
-                throw new Exception(`Unknown flow control: "${stage.substring(4)}".`)
+                throw new Error(`Unknown flow control: "${stage.substring(4)}".`)
             }
           } else if (_replaceHook[stage.substring(1)]) {
             return _replaceHook[stage.substring(1)](params)
