@@ -206,7 +206,7 @@ export default {
       else
         return this.load(options).then((data) => {
           if (typeof data.total !== "undefined") this.total = data.total;
-          return data.result ? data.result.map(_mapper) : [];
+          return data.results ? data.results.map(_mapper) : [];
         });
     },
     turn_page(p) {
@@ -259,12 +259,7 @@ export default {
     },
     show_edit_dialog(target) {
       this.api.dialogs.edit({ target }).then((target) => {
-        this.api
-          .call(
-            `collections/${target.mongocollection || "paragraph"}/${target._id}`,
-            target
-          )
-          .then(() => {
+        this.business.edit_paragraph(target).then(() => {
             this.$notify(this.$t("saved"));
           });
       });

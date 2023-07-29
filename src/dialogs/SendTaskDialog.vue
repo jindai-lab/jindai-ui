@@ -48,19 +48,12 @@ export default {
     pipeline: [],
     quicktasks: [],
   }),
-  mounted() {
-    this.api.call("tasks/shortcuts").then(
-      (data) =>
-        (this.quicktasks = data.result.map((task) => ({
-          text: task.name,
-          value: task.pipeline,
-        })))
-    );
+  async mounted() {
+    this.quicktasks = await this.business.task_shortcuts()
   },
   methods: {
     quicktask() {
-      return this.api
-        .call("quicktask", {
+      return this.business.quicktask({
           pipeline: [
             [
               "JSONDataSource",
@@ -77,9 +70,9 @@ export default {
         })
         .then((data) => {
           return {
-            result: data.result,
+            results: data.results,
             offset: 0,
-            total: data.result.length,
+            total: data.results.length,
             token: new Date().getTime(),
           };
         });

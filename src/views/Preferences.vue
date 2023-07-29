@@ -101,11 +101,10 @@ export default {
       config: this.api.config,
     };
   },
-  mounted() {
-    this.api.call("authenticate").then((data) => {
-      this.otp = data.result.otp_secret;
-      this.username = data.result.username;
-    });
+  async mounted() {
+    var data = await this.api.authenticate()
+    this.otp = data.otp_secret;
+    this.username = data.username;
   },
   methods: {
     update_password() {
@@ -124,8 +123,8 @@ export default {
       this.api.call("account/", { otp }).then((data) => {
         this.$notify(this.$t("updated"));
         this.otp = otp;
-        if (otp && data.result) {
-          this.otp_secret = data.result;
+        if (otp && data.otp_secret) {
+          this.otp_secret = data.otp_secret;
           this.create_qr_code();
         }
       });

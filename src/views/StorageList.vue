@@ -90,7 +90,7 @@ export default {
     new_folder() {
       var folder = prompt(this.$t("folder-name"))
       if (!folder) return
-      this.api.call(`storage/${this.selected_dir}`, { mkdir: folder }).then(() => {
+      this.business.storage(this.selected_dir, { mkdir: folder }).then(() => {
         this.update_files()
       })
     },
@@ -105,16 +105,15 @@ export default {
         })
         .then((data) => {
           this.progress = 0;
-          for (var r of data.result)
+          for (var r of data.results)
             this.files.splice(this.selected_dir != "" ? 1 : 0, 0, r);
         });
     },
     search_file() {
       if (this.search) {
-        this.api
-          .call(`storage/${this.selected_dir}`, { search: this.search })
+        this.business.storage(this.selected_dir, { search: this.search })
           .then((data) => {
-            this.files = data.result;
+            this.files = data.results;
           });
       } else {
         this.update_files();
@@ -124,23 +123,22 @@ export default {
       return "/api/storage/" + f.fullpath.trimLeft('/');
     },
     install_plugin(f) {
-      this.api.call("plugins", { url: f.fullpath }).then((data) => {
-        if (data.result) this.$notify(this.$t("installed"));
+      this.business.install_plugin(f.fullpath).then((data) => {
+        if (data.success) this.$notify(this.$t("installed"));
       });
     },
     rename_file(f) {
       var new_name = prompt(this.$t("raname-to"), f.name);
       if (!new_name) return;
-      this.api.call(
-        "storage/move",
+      this.business.storage('move', 
         { source: f.fullpath, destination: new_name }.then(() =>
           this.update_files()
         )
       );
     },
     update_files() {
-      this.api.call("storage/" + this.selected_dir).then((data) => {
-        this.files = data.result;
+      this.business.storage(this.selected_dir).then((data) => {
+        this.files = data.results;
         if (this.selected_dir !== "")
           this.files.splice(0, 0, { name: "..", type: "back" });
         history.pushState(

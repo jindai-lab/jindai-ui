@@ -187,12 +187,10 @@ export default {
     });
     this.api
       .authenticate()
-      .then((data) => (this.admin = data.result.roles.indexOf("admin") >= 0))
-      .then(() => {
+      .then((data) => (this.admin = data.roles.indexOf("admin") >= 0))
+      .then(async () => {
         this.login_finished = true;
-        this.api
-          .call("tasks/shortcuts")
-          .then((data) => (this.shortcuts = data.result));
+        this.shortcuts = await this.business.get_shortcuts()
       });
   },
   computed: {

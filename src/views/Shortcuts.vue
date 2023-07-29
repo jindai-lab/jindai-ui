@@ -85,20 +85,17 @@ export default {
       }
     },
     shortcut_delete(ids) {
-      this.api
-        .call("plugins/shortcuts", { key: ids, value: '' })
+      this.business.plugin_shortcuts({ key: ids, value: '' })
         .then(
           () => this.reload()
         );
     },
     auto_tags_apply(id) {
-      this.api.call("plugins/shortcuts", { apply: id })
+      this.business.plugin_shortcuts({ apply: id })
         .then(() => (this.$notify('success')))
     },
-    reload() {
-      this.api
-        .call("plugins/shortcuts")
-        .then((data) => (this.shortcuts = data.result));
+    async reload() {
+      this.shortcuts = await this.business.plugin_shortcuts()
     },
     next_page() {
       if (this.page + 1 <= this.pages_count) this.page++;
@@ -125,7 +122,7 @@ export default {
       item.expr = this.new_shortcut.expr
     },
     submit(item) {
-      return this.api.call("plugins/shortcuts", {key: item.name, value: item.expr}).then((data) => {
+      return this.business.plugin_shortcuts({key: item.name, value: item.expr}).then((data) => {
           if (!data.__exception__) {
             this.new_shortcut.name = "";
             this.new_shortcut.expr = "";

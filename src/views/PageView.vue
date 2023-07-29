@@ -426,8 +426,7 @@ export default {
       this.pdf_image = this.loading_image;
 
       if (this.view_mode == "file" && this.file) {
-        this.api
-          .call("quicktask", {
+        this.business.quicktask({
             query:
               "?" +
               this.api.querify(
@@ -438,8 +437,8 @@ export default {
             mongocollection: this.mongocollection,
           })
           .then((data) => {
-            this.fetched_paragraphs = data.result;
-            if (!data.result.length) {
+            this.fetched_paragraphs = data.results;
+            if (!data.results.length) {
               this.fetched_paragraphs = [
                 {
                   source: {
@@ -576,12 +575,7 @@ export default {
       this.update_pdfpage();
     },
     save_pagenum() {
-      this.api.call(
-        `collections/${this.mongocollection || "paragraph"}/${
-          this.active_paragraph._id
-        }/pagenum`,
-        this.pagenum_editor
-      );
+      this.business.edit_paragraph_pagenum(this.mongocollection, this.active_paragraph._id, this.pagenum_editor)
       this.pagenum_edit = false;
     },
     format(str, bundle) {

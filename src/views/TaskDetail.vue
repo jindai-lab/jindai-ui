@@ -121,11 +121,9 @@ export default {
       tasks: [],
     };
   },
-  mounted() {
-    this.api.call("tasks/" + this.id).then((data) => {
-      this.task = data.result;
-    });
-    this.api.call("tasks/").then((data) => (this.tasks = data.result));
+  async mounted() {
+    this.task = await this.business.tasks({id: this.id})
+    this.tasks = await this.business.tasks()
   },
   computed: {
     user() {
@@ -141,7 +139,7 @@ export default {
     delete_task() {
       dialogs.confirm({title: this.$t("confirm-delete")}).then(() => {
         this.api.delete("tasks/" + this.task._id).then((data) => {
-          if (data.result.ok) {
+          if (data.success) {
             this.$notify(this.$t("deleted"));
             this.$router.push("/tasks").catch(() => {});
           }
@@ -160,9 +158,9 @@ export default {
         )
           delete this.task.shortcut_map[k];
       }
-      return this.api.call("tasks/" + this.task._id, this.task).then((data) => {
+      return this.business.tasks({update: this.task}).then((data) => {
         var id = this.task._id;
-        this.task = data.result.updated;
+        this.task = data;
         this.task._id = id;
         return id;
       });
@@ -170,7 +168,7 @@ export default {
     enqueue() {
       this.save().then((id) =>
         this.api.put("queue/", { id }).then((data) => {
-          this.$notify(this.$t("task-enqueued", { task: data.result }));
+          this.$notify(this.$t("task-enqueued", { task: data }));
         })
       );
     },
@@ -199,69 +197,10 @@ export default {
       }
       this.code = code
     },
-    parse() {
-      const api = this.api;
-      const _replaceHook = {
-        addFields(params) {
-          var [field, value] = Object.entries(params)[0] 
-          return [
-            'FieldAssignment', {
-              field, value: api.querify(value).replace(/^\((.*)\)$/, '$1')
-            }
-          ]
-        }
-      };
-
-      function _replaceFC(pipeline) {
-        return pipeline.map(x => {
-          var [stage, params] = Object.entries(x)[0]
-          if (stage.startsWith('$_FC')) {
-            switch(stage.substring(4)) {
-              case "Conditional":
-                return ['Condition', {
-                  cond: api.querify(params.cond).replace(/^\((.*)\)$/, '$1'),
-                  iffalse: _replaceFC(params.if_false),
-                  iftrue: _replaceFC(params.if_true)
-                }]
-              case "Repeat":
-                var repeat_cond = api.querify(params.cond).replace(/^\((.*)\)$/, '$1'), repeat_times = 0;
-                if (params.cond.$lt && params.cond.$lt[0] == '$$itercounter') {
-                  repeat_times = params.cond.$lt[1]
-                  repeat_cond = ''
-                }
-                return ['RepeatWhile', {
-                  cond: repeat_cond,
-                  times: repeat_times,
-                  pipeline: _replaceFC(params.pipeline)
-                }]
-              case "ForEach":
-                return ['ForEach', {
-                  as_name: params.as,
-                  input_value: api.querify(params.input).replace(/^\((.*)\)$/, '$1'),
-                  pipeline: _replaceFC(params.pipeline)
-                }]
-              case "Break":
-              case "Continue":
-              case "Halt":
-              case "Return":
-                throw new Error(`Cannot use "${stage.substring(4).toLowerCase()}" here.`)
-              default:
-                throw new Error(`Unknown flow control: "${stage.substring(4)}".`)
-            }
-          } else if (_replaceHook[stage.substring(1)]) {
-            return _replaceHook[stage.substring(1)](params)
-          } else {
-            return [stage.substring(1), params]
-          }
-        })
-      }
-
-      api.call('qx', {query: this.code}).then(data => {
-        var { result } = data
-        result = _replaceFC(result)
-        console.log(result)
-        this.task.pipeline = result
-      })
+    async parse() {
+      var result = await this.business.qx(this.code)
+      console.log(result)
+      this.task.pipeline = result
     }
   },
 };

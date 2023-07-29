@@ -93,44 +93,38 @@ export default {
     update_valid(id, field, value) {
       var coll = { _id: id };
       coll[field] = value;
-      api.call("datasets/edit", coll).then(() => this.$notify(this.$t("updated")));
+      this.business.datasets({edit: coll}).then(() => this.$notify(this.$t("updated")));
     },
     save() {
       if (this.valid.length > 0) {
         alert(this.$t("invalid-input"));
         return;
       }
-      api
-        .call(
-          "datasets/batch",
+      this.business.datasets({batch: 
           this.datasets.map((x, i) =>
             Object.assign({}, x, { order_weight: i, sources: null })
-          )
-        )
+          )})
         .then(() => this.$notify(this.$t("saved")));
     },
     append_dataset() {
       if (!this.input_coll.name) return;
-      api.call("datasets/edit", this.input_coll).then(() => {
+      this.business.datasets({edit: this.input_coll}).then(() => {
         this.load_datasets();
         this.input_coll = {};
       });
     },
     rename_collection(coll, to) {
       if (coll && to)
-        this.api
-          .call("datasets/rename", { _id: coll._id, to })
+        this.business.datasets({rename: { _id: coll._id, to }})
           .then(() => this.$notify(this.$t("renamed")))
           .then(this.load_datasets);
     },
     refresh_sources(coll) {
-      this.api
-        .call("datasets/sources", { _id: coll._id })
+      this.business.datasets({sources: { _id: coll._id }})
         .then(() => this.$notify(this.$t("refreshed")));
     },
     update_tags(ds) {
-      this.api
-        .call("datasets/edit", {_id: ds._id, tags: ds.tags})
+      this.business.datasets({edit: {_id: ds._id, tags: ds.tags}})
         .then(() => this.$notify(this.$t("saved")));
     }
   },

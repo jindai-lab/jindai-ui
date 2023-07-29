@@ -168,14 +168,7 @@ export default {
     },
     show_edit_dialog(target) {
       this.api.dialogs.edit({ target }).then((target) => {
-        this.api
-          .call(
-            `collections/${target.mongocollection || "paragraph"}/${target._id}`,
-            target
-          )
-          .then(() => {
-            this.$notify(this.$t("saved"));
-          });
+        this.business.edit_paragraph(target);
       });
     },
     select_shortcut_keys(e) {

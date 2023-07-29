@@ -219,7 +219,7 @@ export default {
 
       if (this.q.startsWith("file:")) {
         const json_path = this.q.substring(5).trim();
-        return this.api.call("image?file=" + json_path).then((data) => {
+        return this.business.remote_json(json_path).then((data) => {
           this.external_json = data;
           this.$refs.results.start();
         });
@@ -246,26 +246,25 @@ export default {
       this.api.config.groups = params.groups;
 
       return Promise.all([
-        this.api
-          .call("search", Object.assign({ count: true }, params, this.cancel_source))
-          .then((data) => {
-            if (typeof data.result !== "undefined") return { token, total: data.result };
+        this.business.search(params, true, this.cancel_source).then((data) => {
+            if (data.total != -1) return { token, total: data.total };
           }),
-        this.api.call("search", params, this.cancel_source).then((data) => {
+
+        this.business.search(params, false, this.cancel_source).then((data) => {
           if (!data) {
             console.log("WARNING: no data returned.");
             return;
           }
-          if (data.result.query) {
+          if (data.query) {
             var reg = new RegExp(
               "(" +
-              this.keyword_patterns(data.result.query)
+              this.keyword_patterns(data.query)
                 .filter((x) => x)
                 .join("|") +
               ")",
               "gi"
             );
-            this.results = data.result.results;
+            this.results = data.results;
             if (reg != "/()/gi") {
               this.results = this.results.map((x) => {
                 x.matched_content = (x.content || "").replace(reg, "<em>$1</em>");
@@ -273,10 +272,10 @@ export default {
               });
             }
           }
-          this.querystr = this.api.querify(data.result.query).replace(/^\(|\)$/g, "");
+          this.querystr = this.api.querify(data.query).replace(/^\(|\)$/g, "");
           return {
             token,
-            result: data.result.results,
+            results: data.results,
             offset: e.offset,
           };
         }),
@@ -303,7 +302,7 @@ export default {
     },
     export_query(format, callback) {
       if (typeof callback !== "function")
-        callback = (data) => this.$router.push("/tasks/" + data.result).catch(() => { });
+        callback = (data) => this.$router.push("/tasks/" + data.bundle.task_id).catch(() => { });
       this.api
         .put("tasks/", {
           name:
@@ -326,8 +325,8 @@ export default {
     export_file(fmt) {
       this.export_query(fmt, (data) => {
         this.api
-          .put("queue/", { id: data.result })
-          .then((ret) => this.$notify("task-enqueued", { task: ret.result }));
+          .put("queue/", { id: data.bundle.task_id })
+          .then((ret) => this.$notify("task-enqueued", { task: ret.bundle.job }));
       });
     },
     drop_json_file(e) {

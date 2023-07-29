@@ -85,8 +85,8 @@ export default {
       ...Object.entries(this.business.pipelines).map((kv) => kv[1])
     );
 
-    this.api.call("tasks/" + this.id).then((data) => {
-      this.task = data.result;
+    this.business.tasks({id: this.id}).then((data) => {
+      this.task = data;
       for (var k in this.task.shortcut_map) {
         this.shortcut_params[k] =
           typeof params[k] === "undefined" ? this.get_map_val(k) : params[k];
@@ -113,48 +113,14 @@ export default {
     quicktask() {
       this.apply_params();
       this.result_plain = "";
-      this.api
-        .call("quicktask", {
+      this.business.quicktask({
           pipeline: this.task.pipeline,
-        })
-        .then((data) => {
-          if (Array.isArray(data.result)) {
-            this.results = data.result;
+        }).then((data) => {
+          if (Array.isArray(data.results)) {
+            this.results = data.results;
             this.result_plain = "";
-          } else if (
-            typeof data.result === "object" &&
-            data.result !== null &&
-            data.result.__file_ext__
-          ) {
-            const b64toBlob = (b64Data, contentType = "", sliceSize = 512) => {
-              const byteCharacters = atob(b64Data);
-              const byteArrays = [];
-
-              for (
-                let offset = 0;
-                offset < byteCharacters.length;
-                offset += sliceSize
-              ) {
-                const slice = byteCharacters.slice(offset, offset + sliceSize);
-
-                const byteNumbers = new Array(slice.length);
-                for (let i = 0; i < slice.length; i++) {
-                  byteNumbers[i] = slice.charCodeAt(i);
-                }
-
-                const byteArray = new Uint8Array(byteNumbers);
-                byteArrays.push(byteArray);
-              }
-
-              const blob = new Blob(byteArrays, { type: contentType });
-              return blob;
-            };
-            this.api.blob_download(
-              b64toBlob(data.result.data),
-              this.task.name + "." + data.result.__file_ext__
-            );
-          } else {
-            this.result_plain = JSON.stringify(data.result);
+          } else if (data) {
+            this.result_plain = JSON.stringify(data);
             this.results = [];
           }
         }).then(() => {
@@ -177,17 +143,17 @@ export default {
           delete this.task.shortcut_map[k];
       }
 
-      this.api
-        .call("tasks/" + this.task._id, this.task)
-        .then((data) => {
+      this.business.tasks({
+        update: this.task
+      }).then((data) => {
           var id = this.task._id;
-          this.task = data.result.updated;
+          this.task = data.updated;
           this.task._id = id;
           return id;
         })
         .then((id) =>
           this.api.put("queue/", { id }).then((data) => {
-            this.$notify(this.$t("task-enqueued", { task: data.result }));
+            this.$notify(this.$t("task-enqueued", { task: data }));
           })
         );
     },

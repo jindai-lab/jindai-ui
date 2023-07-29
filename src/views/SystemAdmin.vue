@@ -172,30 +172,30 @@ export default {
   methods: {
     add_user() {
       this.api.put("users/", this.new_user).then((data) => {
-        this.$notify(this.$t("user-added", { user: data.result.username }));
-        this.users.push(data.result);
+        this.$notify(this.$t("user-added", { user: data.username }));
+        this.users.push(data);
         this.show_user_modal = false;
       });
     },
     del_user(u) {
       this.api.dialogs.confirm({title: this.$t("user-delete-confirm", { user: u.username })}).then(() => {
         this.api.delete("users/" + u.username).then((data) => {
-          if (!data.result.ok) return;
+          if (!data.success) return;
           this.$notify(this.$t("user-deleted", { user: u.username }));
           this.users = this.users.filter((x) => x._id != u._id);
         });
       })
     },
     modify_user_role() {
-      this.api
-        .call("users/" + this.new_user.username, {
+      this.business.admin_users({
+          username: this.new_user.username,
           roles: this.new_user.roles,
           datasets: this.new_user.datasets,
         })
         .then(() => (this.show_user_modal = false));
     },
-    update_scheduler() {
-      this.api.call("scheduler").then((data) => (this.scheduled_jobs = data.result));
+    async update_scheduler() {
+      this.scheduled_jobs = await this.business.scheduler()
     },
     create_schedule() {
       var text = `every ${this.scheduler.cron} do ${this.scheduler.task}`;
@@ -216,7 +216,7 @@ export default {
     },
   },
   mounted() {
-    this.api.call("users/").then((data) => (this.users = data.result));
+    this.business.admin_users().then((data) => (this.users = data.results));
     this.api.get_datasets_hierarchy().then((data) => (this.datasets = data));
     this.update_scheduler();
   },

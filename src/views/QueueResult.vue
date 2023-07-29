@@ -36,16 +36,11 @@ export default {
   methods: {
     load_data(e) {
       var token = new Date().getTime() - Math.random();
-      return this.api
-        .call(
-          "queue/" +
-            encodeURIComponent(this.id) +
-            "?offset=" +
-            e.offset +
-            "&limit=" +
-            e.limit
-        )
-        .then((data) => {
+      return this.business.queue_results({
+        offset: e.offset,
+        limit: e.limit,
+        id: this.id,
+      }).then((data) => {
           if (data.__redirect__) {
             this.redirect = data.__redirect__;
             if (!this.redirect.match(/^\/api/)) location.href = this.redirect;
@@ -54,11 +49,11 @@ export default {
             this.prompt = `<h4>${data.__exception__}</h4><pre>${data.__tracestack__.join(
               "\n"
             )}</pre>`;
-          } else if (data.result) {
-            this.total = data.result.total;
+          } else if (data.results) {
+            this.total = data.total;
             return {
               offset: e.offset,
-              result: data.result.results,
+              result: data.results,
               token,
             };
           }

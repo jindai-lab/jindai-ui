@@ -27,13 +27,12 @@ export default {
   data() {
     return { history: [] };
   },
-  mounted() {
-    this.api.call("history").then((data) => (this.history = data.result));
+  async mounted() {
+    this.history = await this.business.history()
   },
   methods: {
     export_query(h) {
-      this.api
-        .put("tasks/", {
+      this.business.tasks({
           pipeline: [
             [
               "DBQueryDataSource",
@@ -43,8 +42,7 @@ export default {
             ],
           ],
           name: this.$t("search") + " " + h.queries[0],
-        })
-        .then((data) => this.$router.push("/tasks/" + data.result))
+      }).then((data) => this.$router.push("/tasks/" + data.bundle.task_id))
         .catch(() => { });
     },
     replay(h) {

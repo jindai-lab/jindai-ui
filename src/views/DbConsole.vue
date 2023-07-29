@@ -86,8 +86,7 @@ export default {
     },
     preview() {
       this.command.preview = true;
-      this.api.call("admin/db", this.get_command()).then((data) => {
-        data = data.result;
+      this.business.admin_db(this.get_command()).then((data) => {
         this.preview_text = this.stringify_command(data)
         this.previewed = true;
         console.log(this.api.querify(data.query))
@@ -100,8 +99,8 @@ export default {
       this.api.config.dbconsole.history.splice(0, 0, Object.assign({}, this.command));
       if (this.api.config.dbconsole.history.length > 10) this.api.config.dbconsole.history = this.api.config.dbconsole.history.slice(0, 10)
       this.api.config.save();
-      this.api.call("admin/db", this.get_command()).then((data) => {
-        this.preview_text += "\n\n" + JSON.stringify(data.result, "", 2);
+      this.business.admin_db(this.get_command()).then((data) => {
+        this.preview_text += "\n\n" + JSON.stringify(data, "", 2);
       });
     },
     replay(h) {
@@ -109,10 +108,8 @@ export default {
       this.execute();
     }
   },
-  mounted() {
-    this.api
-      .call("admin/db/collections")
-      .then((data) => (this.mongocollections = data.result));
+  async mounted() {
+    this.mongocollections = await this.business.admin_db({collections: true})
   },
 };
 </script>

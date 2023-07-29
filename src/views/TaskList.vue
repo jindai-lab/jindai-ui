@@ -64,7 +64,7 @@ export default {
     create_task() {
       this.api
         .put("tasks/", { name: this.$t("new-task") + " " + new Date() })
-        .then((data) => this.$router.push("/tasks/" + data.result));
+        .then((data) => this.$router.push("/tasks/" + data));
     },
     duplicate_task(task) {
       var otask = Object.assign({}, task);
@@ -72,7 +72,7 @@ export default {
       otask.name += " " + this.$t("copy");
       this.api
         .put("tasks/", otask)
-        .then((data) => this.$router.push("/tasks/" + data.result));
+        .then((data) => this.$router.push("/tasks/" + data));
     },
     delete_task(task) {
       this.api
@@ -81,12 +81,12 @@ export default {
     },
     enqueue_task(task) {
       this.api.put("queue/", { id: task._id }).then((data) => {
-        this.$notify(this.$t("task-enqueued", { task: data.result }));
+        this.$notify(this.$t("task-enqueued", { task: data }));
       });
     },
   },
-  mounted() {
-    this.api.call("tasks/").then((data) => (this.tasks = data.result));
+  async mounted() {
+    this.tasks = await this.business.tasks();
   },
 };
 </script>

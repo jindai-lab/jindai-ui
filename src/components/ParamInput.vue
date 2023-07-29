@@ -344,17 +344,11 @@ export default {
       this.code = val;
       this.$emit("input", val);
     },
-    update_choices() {
+    async update_choices() {
       switch (this.arg.type) {
         case "TASK":
         case "DATASET":
-          this.api.call(this.arg.type.toLowerCase() + "s").then(
-            (data) =>
-              (this.choices = data.result.map((x) => ({
-                text: x.display_name || x.name,
-                value: this.arg.type == "TASK" ? x._id : x.name,
-              })))
-          );
+          this.choices = await this.business.get_choices(this.arg.type)
           break;
         case "PIPELINE":
           this.choices = [].concat(

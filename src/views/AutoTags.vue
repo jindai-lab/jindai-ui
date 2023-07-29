@@ -72,7 +72,7 @@ export default {
         this.new_tag.tag = "#" + this.api.guess_groups(this.new_tag.cond).pop();
       }
       if (this.new_tag.tag == this.new_tag.cond || !this.new_tag.tag) return;
-      this.api.put("plugins/autotags", this.new_tag).then((data) => {
+      this.business.autotags({creation: this.new_tag}).then((data) => {
         if (!data.__exception__) {
           this.new_tag.tag = "";
           this.new_tag.cond = "";
@@ -81,19 +81,16 @@ export default {
       });
     },
     auto_tags_delete(ids) {
-      this.api
-        .call("plugins/autotags", { ids, delete: true })
+      this.business.autotags({ deletion: ids })
         .then(
           () => (this.auto_tags = this.auto_tags.filter((x) => !ids.includes(x._id)))
         );
     },
     auto_tags_apply(id) {
-      this.api
-        .call("plugins/autotags", { apply: id })
-        .then(() => this.$notify(this.$t("success")));
+      this.business.autotags({apply: id}).then(() => this.$notify(this.$t("success")));
     },
-    reload() {
-      this.api.call("plugins/autotags").then((data) => (this.auto_tags = data.result));
+    async reload() {
+      this.auto_tags = await this.business.autotags();
     },
   },
 };

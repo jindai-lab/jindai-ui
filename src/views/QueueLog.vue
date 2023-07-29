@@ -27,15 +27,8 @@ export default {
     this.load_data();
   },
   methods: {
-    load_data() {
-      this.api
-        .call(
-          "queue/logs/" +
-            encodeURIComponent(this.id)
-        )
-        .then((data) => {
-          this.logs = data.result.map(x => ({text: x}))
-        })
+    async load_data() {
+      this.logs = await this.business.queue_logs(this.id)
     },
   },
 };

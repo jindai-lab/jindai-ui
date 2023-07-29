@@ -374,8 +374,8 @@ const apis = {
             remember ? { expires: 30, } : undefined
           );
           Cookies.set("token", _token, { domain: '.' + location.hostname });
-          this.user = d.result.username;
-          resolve(d);
+          this.user = d.username;
+          resolve(d.bundle);
         })
         .catch(reject);
     });
@@ -388,9 +388,9 @@ const apis = {
         password,
         otp,
       }).then((data) => {
-        if (data) {
-          localStorage.token = _token = data.result;
-          resolve(data)
+        if (data.success) {
+          localStorage.token = _token = data.bundle.token;
+          resolve(data.bundle)
           _get_user();
         } else {
           reject(data);
@@ -475,7 +475,7 @@ const apis = {
 
   queue() {
     return this.call("queue/")
-      .then((data) => data.result)
+      .then(data => data.results)
       .catch(() => { });
   },
 
@@ -519,7 +519,7 @@ const apis = {
 
     return this.call("datasets").then((data) => {
       var weights = {},
-        colls = data.result.sort((x) => x.order_weight);
+        colls = data.results.sort((x) => x.order_weight);
       for (var c of colls) {
         for (var s of _segs(c))
           if (!weights[s]) weights[s] = c.order_weight;
@@ -660,7 +660,7 @@ const apis = {
 
   async get_meta() {
     if (!this.meta.app_title) {
-      let meta = await this.call('meta').then(data => data.result)
+      let meta = await this.call('meta')
       this.meta = meta
     }
     return this.meta
