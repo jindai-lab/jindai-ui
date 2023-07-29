@@ -9,7 +9,6 @@ const shortcut_choices = []
 const plugin_pages = []
 const languages = {}
 const pipelines = {}
-const apimap = {}
 
 const apicalls = {
   match_shortcuts(search, vm) {
@@ -41,8 +40,8 @@ const apicalls = {
     );
   },
 
-  get_shortcuts() {
-    return this.api
+  get_task_shortcuts() {
+    return api
       .call("tasks/shortcuts")
       .then((data) => data.results);
   },
@@ -265,10 +264,9 @@ const apicalls = {
       )
   },
 
-  edit_paragraph_pagenum({mongocollection, paragraph_id, pagenum_bundle}) {
-    return api.call(`collections/${mongocollection || "paragraph"}/${
-      paragraph_id
-    }/pagenum`, pagenum_bundle)
+  edit_paragraph_pagenum({ mongocollection, paragraph_id, pagenum_bundle }) {
+    return api.call(`collections/${mongocollection || "paragraph"}/${paragraph_id
+      }/pagenum`, pagenum_bundle)
   },
 
   task_shortcuts() {
@@ -385,7 +383,7 @@ const apicalls = {
     })
   },
 
-  autotags({ deletion, apply, creation }) {
+  autotags({ deletion, apply, creation } = {}) {
     if (creation) {
       return api.put("plugins/autotags", creation)
     } else if (deletion) {
@@ -397,19 +395,19 @@ const apicalls = {
     }
   },
 
-  tasks({ id, update, pipeline, name }) {
+  tasks({ id, update, pipeline, name } = {}) {
     if (id) {
       return api.call(`tasks/${id}`)
     } else if (update) {
       return api.call(`tasks/${update._id}`, update)
     } else if (pipeline) {
-      return api.put('tasks/', {pipeline, name})
+      return api.put('tasks/', { pipeline, name })
     } else {
       return api.call('tasks/').then(data => data.results)
     }
   },
 
-  datasets({edit, batch, rename, sources}) {
+  datasets({ edit, batch, rename, sources } = {}) {
     if (edit) {
       return api.call('datasets/edit', edit)
     } else if (batch) {
@@ -424,11 +422,10 @@ const apicalls = {
   },
 
   scheduler() {
-    return api.call('scheduler').then(data=>data.results)
+    return api.call('scheduler').then(data => data.results)
   },
 
-  author(options) {
-    const { selection } = options
+  author({selection}) {
     var authors = new Set(
       selection.paragraphs
         .reduce((a, tags) => a.concat(tags.keywords), [])
@@ -465,18 +462,16 @@ const apicalls = {
     return dialogs.send_task(options);
   },
 
-  open_window(options) {
-    const { selection, formatter } = options
+  open_window({ selection, formatter }) {
     let url = formatter({ selection })
     api.open_window(url, '_blank')
     return new Promise(accept => accept())
   },
 
-  info_dialog(options) {
-    const { selection } = options
+  info_dialog({selection}) {
     return dialogs.info({ target: selection.first })
   },
-  
+
   search(params, count, cancel_source) {
     if (count)
       params = Object.assign({ count: true }, params, cancel_source)
@@ -484,10 +479,10 @@ const apicalls = {
   },
 
   queue_logs(id) {
-    return api.call(`queue/logs/${encodeURIComponent(id)}`).then(data => data.results.map(x => ({text: x})))
+    return api.call(`queue/logs/${encodeURIComponent(id)}`).then(data => data.results.map(x => ({ text: x })))
   },
 
-  queue_results({offset, limit, id}) {
+  queue_results({ offset, limit, id } = {}) {
     return api.call(`queue/${encodeURIComponent(id)}?offset=${offset}&limit=${limit}`)
   },
 
@@ -495,11 +490,11 @@ const apicalls = {
     return api.call(`image?file=${json_path}`)
   },
 
-  account({password, old_password, otp}) {
+  account({ password, old_password, otp } = {}) {
     if (otp) {
-      return api.call('account/', {otp})
+      return api.call('account/', { otp })
     } else {
-      return api.call('account/', {password, old_password})
+      return api.call('account/', { password, old_password })
     }
   },
 
@@ -511,12 +506,12 @@ const apicalls = {
     return api.call("plugins", { url })
   },
 
-  plugin_shortcuts({key, value, apply}) {
-    if (key) return api.call('plugins/shortcuts', {key, value})
-    else if (apply) return api.call('plugins/shortcuts', {apply})
+  plugin_shortcuts({ key = null, value = null, apply = null }) {
+    if (key) return api.call('plugins/shortcuts', { key, value })
+    else if (apply) return api.call('plugins/shortcuts', { apply })
     else return api.call('plugins/shortctus').then(data => data.results)
   },
-  
+
   admin_users(new_user) {
     if (new_user) return api.call(`users/${new_user.username}`, new_user)
     return api.call('users/')

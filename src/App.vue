@@ -190,7 +190,7 @@ export default {
       .then((data) => (this.admin = data.roles.indexOf("admin") >= 0))
       .then(async () => {
         this.login_finished = true;
-        this.shortcuts = await this.business.get_shortcuts()
+        this.shortcuts = await this.business.get_task_shortcuts()
       });
   },
   computed: {

@@ -111,8 +111,7 @@ export default {
       if (this.password !== this.password2) {
         this.$notify(this.$t("password-dismatch"));
       } else {
-        this.api
-          .call("account/", {
+        this.business.account({
             old_password: this.old_password,
             password: this.password,
           })
@@ -120,7 +119,7 @@ export default {
       }
     },
     change_otp(otp) {
-      this.api.call("account/", { otp }).then((data) => {
+      this.business.account(otp).then((data) => {
         this.$notify(this.$t("updated"));
         this.otp = otp;
         if (otp && data.otp_secret) {
