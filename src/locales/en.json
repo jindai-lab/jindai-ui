@@ -101,7 +101,7 @@
     "tag-batch": "Batch Tagging",
     "tag": "Tag",
     "tagging": "Tagging",
-    "task-enqueued": "Task %{task} enqueued.",
+    "job-enqueued": "Job %{job} enqueued.",
     "task": "Task",
     "tasks": "Tasks",
     "text": "Text",

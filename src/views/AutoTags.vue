@@ -37,7 +37,7 @@
         </template>
 
         <template v-slot:item.operations="{ item }">
-          <v-btn @click="auto_tags_delete([item._id])" :alt="`Delete ${item._id}`">
+          <v-btn @click="auto_tags_delete(item._id)" :alt="`Delete ${item._id}`">
             <v-icon>mdi-delete</v-icon>
           </v-btn>
           <v-btn class="ml-5" @click="auto_tags_apply(item._id)">

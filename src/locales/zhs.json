@@ -87,7 +87,7 @@
     "tag-batch": "批量标签",
     "tag": "标签",
     "tagging": "标签",
-    "task-enqueued": "任务 %{task} 已加入到队列中。",
+    "job-enqueued": "任务 %{job} 已加入到队列中。",
     "task": "任务",
     "text": "文本",
     "total": "总数",

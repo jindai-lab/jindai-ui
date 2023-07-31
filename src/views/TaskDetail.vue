@@ -138,11 +138,9 @@ export default {
     },
     delete_task() {
       dialogs.confirm({title: this.$t("confirm-delete")}).then(() => {
-        this.api.delete("tasks/" + this.task._id).then((data) => {
-          if (data.success) {
-            this.$notify(this.$t("deleted"));
-            this.$router.push("/tasks").catch(() => {});
-          }
+        this.business.tasks({deletion: this.task._id}).then(() => {
+          this.$notify(this.$t("deleted"));
+          this.$router.push("/tasks").catch(() => {});
         });
       });
     },
@@ -165,12 +163,10 @@ export default {
         return id;
       });
     },
-    enqueue() {
-      this.save().then((id) =>
-        this.api.put("queue/", { id }).then((data) => {
-          this.$notify(this.$t("task-enqueued", { task: data }));
-        })
-      );
+    async enqueue() {
+      var task_id = await this.save()
+      var {job} = await this.business.enqueue(task_id)
+      this.$notify(this.$t("job-enqueued", { job }));
     },
     update_shortcut(shortcut_name, shortcut_description) {
       this.task.shortcut_map[shortcut_name] =

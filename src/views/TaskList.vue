@@ -61,27 +61,24 @@ export default {
     };
   },
   methods: {
-    create_task() {
-      this.api
-        .put("tasks/", { name: this.$t("new-task") + " " + new Date() })
-        .then((data) => this.$router.push("/tasks/" + data));
+    async create_task() {
+      var {task_id} = await this.business.tasks({creation: { name: this.$t("new-task") + " " + new Date() }})
+      this.$router.push("/tasks/" + task_id);
     },
-    duplicate_task(task) {
+    async duplicate_task(task) {
       var otask = Object.assign({}, task);
       otask._id = null;
       otask.name += " " + this.$t("copy");
-      this.api
-        .put("tasks/", otask)
-        .then((data) => this.$router.push("/tasks/" + data));
+      var {task_id} = await this.business.tasks({creation: otask})
+      this.$router.push("/tasks/" + task_id);
     },
-    delete_task(task) {
-      this.api
-        .delete("tasks/" + task._id)
-        .then(() => (this.tasks = this.tasks.filter((x) => x._id != task._id)));
+    async delete_task(task) {
+      await this.task.deletion(task._id);
+      this.tasks = this.tasks.filter((x) => x._id != task._id)
     },
     enqueue_task(task) {
-      this.api.put("queue/", { id: task._id }).then((data) => {
-        this.$notify(this.$t("task-enqueued", { task: data }));
+      this.business.enqueue(task._id).then(({job}) => {
+        this.$notify(this.$t("job-enqueued", { job }));
       });
     },
   },

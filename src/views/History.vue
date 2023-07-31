@@ -33,6 +33,7 @@ export default {
   methods: {
     export_query(h) {
       this.business.tasks({
+        creation: {
           pipeline: [
             [
               "DBQueryDataSource",
@@ -42,7 +43,8 @@ export default {
             ],
           ],
           name: this.$t("search") + " " + h.queries[0],
-      }).then((data) => this.$router.push("/tasks/" + data.bundle.task_id))
+        }
+      }).then(({task_id}) => this.$router.push("/tasks/" + task_id))
         .catch(() => { });
     },
     replay(h) {

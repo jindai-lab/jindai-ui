@@ -49,7 +49,10 @@ export default {
     quicktasks: [],
   }),
   async mounted() {
-    this.quicktasks = await this.business.task_shortcuts()
+    this.quicktasks = (await this.business.get_task_shortcuts()).map((task) => ({
+        text: task.name,
+        value: task.pipeline,
+      }))
   },
   methods: {
     quicktask() {

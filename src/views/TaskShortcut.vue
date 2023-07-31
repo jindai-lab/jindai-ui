@@ -152,8 +152,8 @@ export default {
           return id;
         })
         .then((id) =>
-          this.api.put("queue/", { id }).then((data) => {
-            this.$notify(this.$t("task-enqueued", { task: data }));
+          this.business.enqueue(id).then(({job}) => {
+            this.$notify(this.$t("job-enqueued", { job }));
           })
         );
     },

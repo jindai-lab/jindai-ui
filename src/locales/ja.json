@@ -86,7 +86,7 @@
     "tag-batch": "一括タグ付け",
     "tag": "タグ",
     "tagging": "タグ",
-    "task-enqueued": "タスク",
+    "job-enqueued": "タスク %{job}",
     "task": "タスク",
     "text": "テキスト",
     "total": "合計",

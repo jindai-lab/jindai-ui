@@ -51,7 +51,7 @@
               <v-icon>mdi-cog-outline</v-icon>
             </v-btn>
             <v-btn v-if="item.type !== 'back'" icon @click="rename_file(item)">
-              <v-icon>mdi-textbox</v-icon>
+              <v-icon>mdi-pencil</v-icon>
             </v-btn>
           </template>
         </v-data-table>
@@ -123,18 +123,17 @@ export default {
       return "/api/storage/" + f.fullpath.trimLeft('/');
     },
     install_plugin(f) {
-      this.business.install_plugin(f.fullpath).then((data) => {
-        if (data.success) this.$notify(this.$t("installed"));
+      this.business.install_plugin(f.fullpath).then(() => {
+        this.$notify(this.$t("installed"));
       });
     },
     rename_file(f) {
       var new_name = prompt(this.$t("raname-to"), f.name);
       if (!new_name) return;
       this.business.storage('move', 
-        { source: f.fullpath, destination: new_name }.then(() =>
+        { source: f.fullpath, destination: new_name }).then(() =>
           this.update_files()
         )
-      );
     },
     update_files() {
       this.business.storage(this.selected_dir).then((data) => {

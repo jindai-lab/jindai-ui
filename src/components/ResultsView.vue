@@ -99,6 +99,7 @@ import PageView from "../views/PageView.vue";
 import QuickActionButtons from "./QuickActionButtons";
 import SelectableList from "./SelectableList";
 import { nanoid } from "nanoid";
+import business from "../business"
 
 export default {
   name: "ResultsView",
@@ -125,10 +126,10 @@ export default {
       browsing: {},
       browsing_item: {},
       // selection
-      selection: new this.business.Selection([]),
+      selection: new business.Selection([]),
       // paging
       token: null,
-      paging: new this.business.Paging(
+      paging: new business.Paging(
         this.api.config.page_size,
         this.api.config.page_size * 5,
         this.loader
@@ -306,7 +307,7 @@ export default {
         delete options.name;
       }
       if (!this.selection.length) return;
-      var selection = new this.business.Selection([...this.selection.paragraphs]);
+      var selection = new business.Selection([...this.selection.paragraphs]);
       selection._chosen_item = [...this.selection._chosen_item];
       selection.all = this.value;
       this.business[name.replace("-", "_")]({

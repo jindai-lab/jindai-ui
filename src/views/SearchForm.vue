@@ -302,9 +302,9 @@ export default {
     },
     export_query(format, callback) {
       if (typeof callback !== "function")
-        callback = (data) => this.$router.push("/tasks/" + data.bundle.task_id).catch(() => { });
-      this.api
-        .put("tasks/", {
+        callback = (data) => this.$router.push("/tasks/" + data.task_id).catch(() => { });
+      this.business.tasks({creation:
+        {
           name:
             this.$t("search") + " " + new Date().toLocaleString().replace(/[^\d]/g, ""),
           pipeline: [
@@ -319,15 +319,13 @@ export default {
             ["AccumulateParagraphs", {}],
             ["Export", { output_format: format }],
           ],
-        })
+        }})
         .then(callback);
     },
-    export_file(fmt) {
-      this.export_query(fmt, (data) => {
-        this.api
-          .put("queue/", { id: data.bundle.task_id })
-          .then((ret) => this.$notify("task-enqueued", { task: ret.bundle.job }));
-      });
+    async export_file(fmt) {
+      var {bundle} = await this.export_query(fmt) 
+      var {job} = await this.business.enqueue(bundle.task_id)
+      this.$notify("job-enqueued", { job })
     },
     drop_json_file(e) {
       let droppedFiles = Array.from(e.dataTransfer.files).filter((x) =>

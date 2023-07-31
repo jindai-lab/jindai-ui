@@ -175,7 +175,14 @@ const apis = {
             resp.data.__tracestack__.join("\n")
           );
         } else {
-          return resp.data;
+          var data = resp.data;
+          if (typeof data.success !== 'undefined') {
+            if (!data.success)
+              throw new DataError('Operation Failure')
+            else
+              return data.bundle
+          }
+          return data
         }
       })
       .catch((ex) => {
@@ -375,7 +382,7 @@ const apis = {
           );
           Cookies.set("token", _token, { domain: '.' + location.hostname });
           this.user = d.username;
-          resolve(d.bundle);
+          resolve(d);
         })
         .catch(reject);
     });
@@ -388,14 +395,14 @@ const apis = {
         password,
         otp,
       }).then((data) => {
-        if (data.success) {
-          localStorage.token = _token = data.bundle.token;
-          resolve(data.bundle)
+        if (data) {
+          localStorage.token = _token = data.token;
+          resolve(data)
           _get_user();
         } else {
           reject(data);
         }
-      });
+      }).catch(() => reject({}));
     });
     else return _get_user()
   },
@@ -661,7 +668,7 @@ const apis = {
   async get_meta() {
     if (!this.meta.app_title) {
       let meta = await this.call('meta')
-      this.meta = meta
+      Object.assign(this.meta, meta)
     }
     return this.meta
   },

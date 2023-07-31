@@ -106,16 +106,14 @@ export default {
       return "/api/queue/" + encodeURIComponent(task.key);
     },
     delete_result(task) {
-      var id = encodeURIComponent(task.key);
-      this.api.delete("queue/" + id).then(() => {
+      this.business.dequeue(task.key).then(() => {
         this.$notify(this.$t('deleted'));
         this.$emit("updated", {});
       });
     },
     clear_not_viewable() {
       for (var task of this.data.finished) {
-        var id = encodeURIComponent(task.key);
-        this.api.delete("queue/" + id).then(() => {
+        this.business.dequeue(task.key).then(() => {
           this.$emit("updated", {});
         });
       }

@@ -11,6 +11,12 @@ const languages = {}
 const pipelines = {}
 
 const apicalls = {
+
+  plugin_pages,
+  languages,
+  pipelines,
+
+  // data helpers
   match_shortcuts(search, vm) {
     let value = vm.new_value;
     return new Promise((accept) => {
@@ -27,10 +33,6 @@ const apicalls = {
     });
   },
 
-  plugin_pages,
-  languages,
-  pipelines,
-
   get_choices(lang_or_dataset) {
     return api.call(lang_or_dataset.toLowerCase() + "s").then(
       (data) => data.results.map((x) => ({
@@ -46,6 +48,7 @@ const apicalls = {
       .then((data) => data.results);
   },
 
+  // paragraph/mediaitem operations
   tag(options) {
     const { selection, val: tags, append } = options
     var existing_tags = new Set(
@@ -76,6 +79,7 @@ const apicalls = {
         });
       });
   },
+
   delete(options) {
     const { selection } = options
     var objs = selection.to_objects();
@@ -92,6 +96,7 @@ const apicalls = {
         });
       });
   },
+
   rating(options) {
     const { selection, ...rating } = options
     rating.ids = selection.items.map((x) => x._id);
@@ -109,6 +114,7 @@ const apicalls = {
       return Promise.all(selection.paragraphs.map((x) => api.fav(x)));
     }
   },
+
   group(options) {
     const { selection, del, advanced } = options
     var bundle = {
@@ -162,6 +168,7 @@ const apicalls = {
       return _call();
     }
   },
+
   merge({ selection }) {
 
     var objs = selection.to_objects()
@@ -171,6 +178,7 @@ const apicalls = {
         paragraphs: objs.para_items,
       })
   },
+
   split({ selection }) {
     var objs = selection.to_objects()
     return api
@@ -178,6 +186,7 @@ const apicalls = {
         paragraphs: objs.para_items,
       })
   },
+
   reset_storage({ selection }) {
     return api
       .call("mediaitem/reset_storage", {
@@ -236,6 +245,39 @@ const apicalls = {
       });
   },
 
+  author({selection}) {
+    var authors = new Set(
+      selection.paragraphs
+        .reduce((a, tags) => a.concat(tags.keywords), [])
+    ),
+      author = selection.first.author;
+    return dialogs
+      .prompt({
+        title: i18n.t("author"),
+        value: author ? [author] : [],
+        choices: Array.from(authors).sort(),
+        limit: 1,
+        allow_custom: true,
+        initial: authors[0] || author || "",
+      })
+      .then((authors) => {
+        const author = authors[0]
+
+        return api
+          .call(`collections/${selection.first.mongocollection || "paragraph"}/batch`, {
+            ids: selection.ids,
+            author,
+            $push: { keywords: author },
+          })
+          .then((data) => {
+            selection.all.forEach((p) => {
+              data.paragraphs[p._id] && (p.author = data.paragraphs[p._id].author);
+            });
+            return data.paragraphs
+          });
+      });
+  },
+
   short_tagging(options) {
     const { selection, initial } = options
     return dialogs
@@ -269,20 +311,27 @@ const apicalls = {
       }/pagenum`, pagenum_bundle)
   },
 
-  task_shortcuts() {
-    return api.call("tasks/shortcuts").then(
-      (data) =>
-      (data.results.map((task) => ({
-        text: task.name,
-        value: task.pipeline,
-      })))
-    );
+  send_task(options) {
+    return dialogs.send_task(options);
   },
 
-  history() {
-    return api.call("history").then((data) => data.results)
+  open_window({ selection, formatter }) {
+    let url = formatter({ selection })
+    api.open_window(url, '_blank')
+    return new Promise(accept => accept())
   },
 
+  info_dialog({selection}) {
+    return dialogs.info({ target: selection.first })
+  },
+
+  search(params, count, cancel_source) {
+    if (count)
+      params = Object.assign({ count: true }, params, cancel_source)
+    return api.call('search', params)
+  },
+
+  // quicktask
   quicktask(task_obj) {
     return api.call('quicktask', task_obj).then(data => {
       if (
@@ -383,28 +432,37 @@ const apicalls = {
     })
   },
 
-  autotags({ deletion, apply, creation } = {}) {
-    if (creation) {
-      return api.put("plugins/autotags", creation)
-    } else if (deletion) {
-      return api.call("plugins/autotags", { delete: true, ids: deletion })
-    } else if (apply) {
-      return api.call("plugins/autotags", { apply })
-    } else {
-      return api.call("plugins/autotags").then((data) => data.results);
+  // crud opertaions
+  _crud_handlers(namespace, options = {}) {
+    namespace = namespace.replace(/\/$/, '') + '/'
+    const key = Object.keys(options)[0]
+    if (!key)
+      return api.call(namespace).then(data => data.results)
+    const val = options[key]
+    switch (key) {
+      case 'deletion':
+        return api.delete(`${namespace}${val._id || val}`)
+      case 'creation':
+        return api.put(namespace, val)
+      case 'update':
+        return api.call(`${namespace}${val._id}`, val)
+      case 'id':
+        return api.call(`${namespace}${val}`)
+      default:
+        return api.call(namespace, options)
     }
   },
 
-  tasks({ id, update, pipeline, name } = {}) {
-    if (id) {
-      return api.call(`tasks/${id}`)
-    } else if (update) {
-      return api.call(`tasks/${update._id}`, update)
-    } else if (pipeline) {
-      return api.put('tasks/', { pipeline, name })
-    } else {
-      return api.call('tasks/').then(data => data.results)
-    }
+  history(options) {
+    return this._crud_handlers('history', options)
+  },
+
+  autotags(options) {
+    return this._crud_handlers('plugins/autotags', options)
+  },
+
+  tasks(options = {}) {
+    return this._crud_handlers('tasks', options)
   },
 
   datasets({ edit, batch, rename, sources } = {}) {
@@ -421,63 +479,7 @@ const apicalls = {
     }
   },
 
-  scheduler() {
-    return api.call('scheduler').then(data => data.results)
-  },
-
-  author({selection}) {
-    var authors = new Set(
-      selection.paragraphs
-        .reduce((a, tags) => a.concat(tags.keywords), [])
-    ),
-      author = selection.first.author;
-    return dialogs
-      .prompt({
-        title: i18n.t("author"),
-        value: author ? [author] : [],
-        choices: Array.from(authors).sort(),
-        limit: 1,
-        allow_custom: true,
-        initial: authors[0] || author || "",
-      })
-      .then((authors) => {
-        const author = authors[0]
-
-        return api
-          .call(`collections/${selection.first.mongocollection || "paragraph"}/batch`, {
-            ids: selection.ids,
-            author,
-            $push: { keywords: author },
-          })
-          .then((data) => {
-            selection.all.forEach((p) => {
-              data.paragraphs[p._id] && (p.author = data.paragraphs[p._id].author);
-            });
-            return data.paragraphs
-          });
-      });
-  },
-
-  task(options) {
-    return dialogs.send_task(options);
-  },
-
-  open_window({ selection, formatter }) {
-    let url = formatter({ selection })
-    api.open_window(url, '_blank')
-    return new Promise(accept => accept())
-  },
-
-  info_dialog({selection}) {
-    return dialogs.info({ target: selection.first })
-  },
-
-  search(params, count, cancel_source) {
-    if (count)
-      params = Object.assign({ count: true }, params, cancel_source)
-    return api.call('search', params)
-  },
-
+  // queue logic
   queue_logs(id) {
     return api.call(`queue/logs/${encodeURIComponent(id)}`).then(data => data.results.map(x => ({ text: x })))
   },
@@ -486,18 +488,15 @@ const apicalls = {
     return api.call(`queue/${encodeURIComponent(id)}?offset=${offset}&limit=${limit}`)
   },
 
-  remote_json(json_path) {
-    return api.call(`image?file=${json_path}`)
+  enqueue(task_id) {
+    return api.put('queue/', {id: task_id})
   },
 
-  account({ password, old_password, otp } = {}) {
-    if (otp) {
-      return api.call('account/', { otp })
-    } else {
-      return api.call('account/', { password, old_password })
-    }
+  dequeue(key) {
+    return api.delete(`queue/${encodeURIComponent(key)}`)
   },
 
+  // storage
   storage(selected_dir, operation) {
     return api.call(`storage/${selected_dir}`, operation)
   },
@@ -506,22 +505,39 @@ const apicalls = {
     return api.call("plugins", { url })
   },
 
-  plugin_shortcuts({ key = null, value = null, apply = null }) {
+  // misc handlers
+  remote_json(json_path) {
+    return api.call(`image?file=${json_path}`)
+  },
+
+  plugin_shortcuts({ key, value, apply } = {}) {
     if (key) return api.call('plugins/shortcuts', { key, value })
     else if (apply) return api.call('plugins/shortcuts', { apply })
     else return api.call('plugins/shortctus').then(data => data.results)
   },
 
-  admin_users(new_user) {
-    if (new_user) return api.call(`users/${new_user.username}`, new_user)
-    return api.call('users/')
+  // settings and preferences
+  account({ password, old_password, otp } = {}) {
+    if (otp) {
+      return api.call('account/', { otp })
+    } else {
+      return api.call('account/', { password, old_password })
+    }
   },
 
   admin_db(command) {
     if (command.collections) {
       return api.call('admin/db/collections').then(data => data.results)
     }
-    return api.call('admin/db', command).then(data => data.bundle)
+    return api.call('admin/db', command)
+  },
+
+  admin_users(options) {
+    return this._crud_handlers('users', options)
+  },
+
+  admin_scheduler(options) {
+    return this._crud_handlers('plugins/scheduler', options)
   }
 }
 
@@ -541,6 +557,6 @@ export default Promise.all([
   api.call("help/langs").then(data => {
     Object.assign(languages, data);
   })]).then(() => {
-    Object.assign(Vue.prototype.business, apicalls)
+    Vue.prototype.business = apicalls
     return Vue.prototype.business
   })
