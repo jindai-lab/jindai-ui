@@ -193,7 +193,7 @@ const apis = {
         if (typeof ex.message === "string") {
           message = ex.message;
           if (message.match("code 502")) message = "backend-disconnected";
-          else if (message.match("Forbidden.")) {
+          else if (message.match(/forbidden|403/i)) {
             localStorage.token = "";
             message = "forbidden";
             if (!location.pathname.endsWith("/login")) location.href = "/login?target=" + encodeURIComponent(location.href);
