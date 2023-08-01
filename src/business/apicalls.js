@@ -69,8 +69,8 @@ const apicalls = {
 
     return api
       .call(
-        `collections/${selection.first.mongocollection || "paragraph"}/batch`,
-        updates
+        `collections`,
+        { ...updates, mongocollection: selection.first.mongocollection || "paragraph" }
       )
       .then((data) => {
         selection.all.forEach((p) => {
@@ -84,7 +84,7 @@ const apicalls = {
     const { selection } = options
     var objs = selection.to_objects();
     return api
-      .call("mediaitem/delete", {
+      .call("collections/remove_image", {
         para_items: objs.para_items,
       })
       .then(() => {
@@ -101,7 +101,7 @@ const apicalls = {
     const { selection, ...rating } = options
     rating.ids = selection.items.map((x) => x._id);
     if (api.config.view_mode == "gallery") {
-      return api.call("mediaitem/rating", rating).then((data) => {
+      return api.call("mediaitems/rating", rating).then((data) => {
         data = data.items || {};
         selection.all.forEach((p) =>
           p.images && p.images.forEach(
@@ -120,12 +120,13 @@ const apicalls = {
     var bundle = {
       ids: selection.ids,
       ungroup: del,
+      mongocollection: selection.first.mongocollection || "paragraph"
     };
 
     const _call = () => {
       return api
         .call(
-          `collections/${selection.first.mongocollection || "paragraph"}/group`,
+          `collections/group`,
           bundle
         )
         .then((data) => {
@@ -174,22 +175,23 @@ const apicalls = {
     var objs = selection.to_objects()
     if (!selection || !selection.length) return;
     return api
-      .call(`collections/${selection.first.mongocollection || "paragraph"}/merge`, {
+      .call(`collections/merge`, {
         paragraphs: objs.para_items,
+        mongocollection: selection.first.mongocollection || "paragraph"
       })
   },
 
   split({ selection }) {
     var objs = selection.to_objects()
     return api
-      .call(`collections/${selection.first.mongocollection || "paragraph"}/split`, {
-        paragraphs: objs.para_items,
+      .call(`collections/split`, {
+        paragraphs: objs.para_items, mongocollection: selection.first.mongocollection || "paragraph"
       })
   },
 
   reset_storage({ selection }) {
     return api
-      .call("mediaitem/reset_storage", {
+      .call("mediaitems/reset_storage", {
         ids: selection.items.map((x) => x._id),
       })
   },
@@ -245,7 +247,7 @@ const apicalls = {
       });
   },
 
-  author({selection}) {
+  author({ selection }) {
     var authors = new Set(
       selection.paragraphs
         .reduce((a, tags) => a.concat(tags.keywords), [])
@@ -264,10 +266,11 @@ const apicalls = {
         const author = authors[0]
 
         return api
-          .call(`collections/${selection.first.mongocollection || "paragraph"}/batch`, {
+          .call(`collections`, {
             ids: selection.ids,
             author,
-            $push: { keywords: author },
+            mongocollection: selection.first.mongocollection || "paragraph",
+            keywords: { $push: author }
           })
           .then((data) => {
             selection.all.forEach((p) => {
@@ -301,14 +304,13 @@ const apicalls = {
   edit_paragraph(target) {
     return api
       .call(
-        `collections/${target.mongocollection || "paragraph"}/${target._id}`,
+        `collections/${target.mongocollection || "paragraph"}:${target._id}`,
         target
       )
   },
 
-  edit_paragraph_pagenum({ mongocollection, paragraph_id, pagenum_bundle }) {
-    return api.call(`collections/${mongocollection || "paragraph"}/${paragraph_id
-      }/pagenum`, pagenum_bundle)
+  edit_paragraph_pagenum(mongocollection, paragraph_id, pagenum_bundle) {
+    return api.call(`collections/pagenum`, { ...pagenum_bundle, id: `${mongocollection || "paragraph"}:${paragraph_id}` })
   },
 
   send_task(options) {
@@ -321,7 +323,7 @@ const apicalls = {
     return new Promise(accept => accept())
   },
 
-  info_dialog({selection}) {
+  info_dialog({ selection }) {
     return dialogs.info({ target: selection.first })
   },
 
@@ -445,11 +447,14 @@ const apicalls = {
       case 'creation':
         return api.put(namespace, val)
       case 'update':
-        return api.call(`${namespace}${val._id}`, val)
+        if (val._id) // update single object
+          return api.call(`${namespace}${val._id}`, val)
+        else // update batch objects
+          return api.call(namespace, val)
       case 'id':
         return api.call(`${namespace}${val}`)
       default:
-        return api.call(namespace, options)
+        return api.call(`${namespace}${key}`, val)
     }
   },
 
@@ -465,18 +470,115 @@ const apicalls = {
     return this._crud_handlers('tasks', options)
   },
 
-  datasets({ edit, batch, rename, sources } = {}) {
-    if (edit) {
-      return api.call('datasets/edit', edit)
-    } else if (batch) {
-      return api.call('datasets/batch', batch)
-    } else if (rename) {
-      return api.call('datasets/rename', rename)
-    } else if (sources) {
-      return api.call('datasets/sources', sources)
-    } else {
-      return api.call('datasets').then(data => data.results)
+  datasets(options = {}) {
+    return this._crud_handlers('datasets', options)
+  },
+
+  get_datasets() {
+    function _segs(x) {
+      var r = [],
+        s = "";
+      for (var seg of x.name.split("--")) {
+        s += seg;
+        r.push(s);
+        s += "--";
+      }
+      return r;
     }
+
+    return this.datasets().then((data) => {
+      var weights = {},
+        colls = data.sort((x) => x.order_weight);
+      for (var c of colls) {
+        for (var s of _segs(c))
+          if (!weights[s]) weights[s] = c.order_weight;
+      }
+
+      function _comp(x, y) {
+        var s1 = _segs(x),
+          s2 = _segs(y);
+        for (var si = 0; si < s1.length && si < s2.length; ++si) {
+          let xx = s1[si],
+            yy = s2[si];
+          if (weights[xx] !== weights[yy]) return weights[xx] - weights[yy];
+        }
+        return x.name.localeCompare(y.name);
+      }
+
+      return colls.sort(_comp);
+    });
+  },
+
+  get_datasets_hierarchy() {
+    return this.get_datasets().then((data) => {
+      var bundles = {};
+
+      function Node(id, label, tags) {
+        this.id = id
+        this.label = label
+        this.tags = Array.isArray(tags) ? tags.join(', ') : (tags || '')
+        this.children = []
+
+        this.append = function (node, bundle) {
+          this.children.push(node)
+          bundles[node.id] = bundle
+        }
+
+        this.get = function (id, label, bundle) {
+          for (var child of this.children)
+            if (child.id == id)
+              return child
+          const created = new Node(id, label || '')
+          this.append(created, bundle)
+          return created
+        }
+      }
+
+      const hierarchy = new Node("ROOT", "")
+      const tagsNode = new Node("Tags", "Tags");
+
+      data.map((x) => {
+        x.segments = (x.display_name || x.name).split("--");
+        x.level = x.segments.length;
+
+        for (var tag of (x.tags || [])) {
+          var tagNode = tagsNode.get(`Tags--${tag}`, tag, {
+            name: tag,
+            tags: [],
+            mongocollection: new Set(),
+            dataset_name: new Set()
+          })
+          bundles[tagNode.id].mongocollection.add(x.mongocollection)
+          bundles[tagNode.id].dataset_name.add(x.name)
+          tagNode.append(new Node(`Tags--${tag}--${x.name}`, x.name, []), {
+            name: x.name,
+            tags: [],
+            mongocollection: x.mongocollection,
+            dataset_name: x.name
+          })
+        }
+
+        var parent_obj = hierarchy;
+        for (
+          var i = 0, segs = x.segments[0]; i < x.level; i++, segs += "--" + x.segments[i]
+        ) {
+          var cand = parent_obj.get(segs, x.segments[i], {
+            name: segs,
+            tags: [],
+            dataset_name: x.name,
+            mongocollection: x.mongocollection
+          })
+          cand.tags = ((i == x.level - 1 ? x.tags : []) || []).join(', ')
+          parent_obj = cand;
+        }
+      });
+
+      return {
+        hierarchy: hierarchy.children,
+        tags: tagsNode.children,
+        bundles: bundles,
+      };
+    });
   },
 
   // queue logic
@@ -489,7 +591,7 @@ const apicalls = {
   },
 
   enqueue(task_id) {
-    return api.put('queue/', {id: task_id})
+    return api.put('queue/', { id: task_id })
   },
 
   dequeue(key) {

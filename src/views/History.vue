@@ -44,7 +44,7 @@ export default {
           ],
           name: this.$t("search") + " " + h.queries[0],
         }
-      }).then(({task_id}) => this.$router.push("/tasks/" + task_id))
+      }).then(({_id}) => this.$router.push("/tasks/" + _id))
         .catch(() => { });
     },
     replay(h) {

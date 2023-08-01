@@ -164,8 +164,8 @@ export default {
       });
     },
     async enqueue() {
-      var task_id = await this.save()
-      var {job} = await this.business.enqueue(task_id)
+      var _id = await this.save()
+      var {job} = await this.business.enqueue(_id)
       this.$notify(this.$t("job-enqueued", { job }));
     },
     update_shortcut(shortcut_name, shortcut_description) {

@@ -60,7 +60,6 @@
 
 <script>
 import ParamInput from "../components/ParamInput";
-import api from "../api";
 
 export default {
   name: "DatasetList",
@@ -85,7 +84,7 @@ export default {
   },
   methods: {
     load_datasets() {
-      api.get_datasets().then((x) => (this.datasets = x));
+      this.business.get_datasets().then((x) => (this.datasets = x));
     },
     prompt(t, v) {
       return window.prompt(t, v);

@@ -118,7 +118,7 @@ export default {
       if (search_params[k]) this[k] = search_params[k];
     if (this.api.config.expert) this.$refs.search_code.refresh(this.q);
 
-    this.api.get_datasets_hierarchy().then((data) => {
+    this.business.get_datasets_hierarchy().then((data) => {
       this.datasets = data.hierarchy;
       this.tags = data.tags;
       this.selection_bundles = data.bundles;
@@ -302,7 +302,7 @@ export default {
     },
     export_query(format, callback) {
       if (typeof callback !== "function")
-        callback = (data) => this.$router.push("/tasks/" + data.task_id).catch(() => { });
+        callback = (data) => this.$router.push("/tasks/" + data._id).catch(() => { });
       this.business.tasks({creation:
         {
           name:
@@ -324,7 +324,7 @@ export default {
     },
     async export_file(fmt) {
       var {bundle} = await this.export_query(fmt) 
-      var {job} = await this.business.enqueue(bundle.task_id)
+      var {job} = await this.business.enqueue(bundle._id)
       this.$notify("job-enqueued", { job })
     },
     drop_json_file(e) {

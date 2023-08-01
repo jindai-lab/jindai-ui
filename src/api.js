@@ -306,7 +306,7 @@ const apis = {
       if (obj.$regex) {
         const regex = obj.$regex;
         const options = obj.$options || '';
-        return {value: ` % \`${regex}\`${options}`};
+        return { value: ` % \`${regex}\`${options}` };
       }
 
       var conds = obj.$and || obj.$or
@@ -503,120 +503,13 @@ const apis = {
       };
     }
     return this.call(
-      `collections/${r.mongocollection || "paragraph"}/${r._id}`,
+      `collections/${r.mongocollection || "paragraph"}:${r._id}`,
       bundle
     );
   },
 
   favored(r) {
     return r.keywords.includes("favored:" + this.user);
-  },
-
-  get_datasets() {
-    function _segs(x) {
-      var r = [],
-        s = "";
-      for (var seg of x.name.split("--")) {
-        s += seg;
-        r.push(s);
-        s += "--";
-      }
-      return r;
-    }
-
-    return this.call("datasets").then((data) => {
-      var weights = {},
-        colls = data.results.sort((x) => x.order_weight);
-      for (var c of colls) {
-        for (var s of _segs(c))
-          if (!weights[s]) weights[s] = c.order_weight;
-      }
-
-      function _comp(x, y) {
-        var s1 = _segs(x),
-          s2 = _segs(y);
-        for (var si = 0; si < s1.length && si < s2.length; ++si) {
-          let xx = s1[si],
-            yy = s2[si];
-          if (weights[xx] !== weights[yy]) return weights[xx] - weights[yy];
-        }
-        return x.name.localeCompare(y.name);
-      }
-
-      return colls.sort(_comp);
-    });
-  },
-
-  get_datasets_hierarchy() {
-    return this.get_datasets().then((data) => {
-      var bundles = {};
-
-      function Node(id, label, tags) {
-        this.id = id
-        this.label = label
-        this.tags = Array.isArray(tags) ? tags.join(', ') : (tags || '')
-        this.children = []
-
-        this.append = function(node, bundle) {
-          this.children.push(node)
-          bundles[node.id] = bundle
-        }
-
-        this.get = function(id, label, bundle) {
-          for (var child of this.children)
-            if (child.id == id)
-              return child
-          const created = new Node(id, label || '')
-          this.append(created, bundle)
-          return created
-        }
-      }
-
-      const hierarchy = new Node("ROOT", "")
-      const tagsNode = new Node("Tags", "Tags");
-
-      data.map((x) => {
-        x.segments = (x.display_name || x.name).split("--");
-        x.level = x.segments.length;
-        
-        for (var tag of (x.tags || [])) {
-          var tagNode = tagsNode.get(`Tags--${tag}`, tag, {
-            name: tag,
-            tags: [],
-            mongocollection: new Set(),
-            dataset_name: new Set()
-          })
-          bundles[tagNode.id].mongocollection.add(x.mongocollection)
-          bundles[tagNode.id].dataset_name.add(x.name)
-          tagNode.append(new Node(`Tags--${tag}--${x.name}`, x.name, []), {
-            name: x.name,
-            tags: [],
-            mongocollection: x.mongocollection,
-            dataset_name: x.name
-          })
-        }
-
-        var parent_obj = hierarchy;
-        for (
-          var i = 0, segs = x.segments[0]; i < x.level; i++, segs += "--" + x.segments[i]
-        ) {
-          var cand = parent_obj.get(segs, x.segments[i], {
-            name: segs,
-            tags: [],
-            dataset_name: x.name,
-            mongocollection: x.mongocollection
-          })
-          cand.tags = ((i == x.level - 1 ? x.tags : []) || []).join(', ')
-          parent_obj = cand;
-        }
-      });
-
-      return {
-        hierarchy: hierarchy.children,
-        tags: tagsNode.children,
-        bundles: bundles,
-      };
-    });
   },
 
   quote(s) {

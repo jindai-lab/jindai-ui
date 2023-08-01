@@ -45,6 +45,9 @@
 
         <!-- main view -->
         <template v-if="active_paragraph && active_paragraph.source">
+          <v-row v-if="image_type == 'pdf'">
+            <vue-pdf-embed :source="pdf_image" />
+          </v-row>
           <v-row class="main" v-if="view_mode !== 'gallery'">
             <div class="paragraphs">
               <div v-for="p in shown_paragraphs" :key="p._id">
@@ -75,7 +78,8 @@
                 {{ active_paragraph.source.page }}<br />
               </div>
             </div>
-            <div class="image" @click="show_modal = !!pdf_image">
+            <div class="image" @click="show_modal = image_type != 'pdf' && !!pdf_image"
+                v-if="image_type != 'pdf'">
               <img
                 :src="pdf_image"
                 alt=""
@@ -270,6 +274,7 @@ import ContentView from "../components/ContentView.vue";
 import ImagePlayer from "../components/ImagePlayer.vue";
 import VideoPlayer from "../components/VideoPlayer.vue";
 import GalleryContentView from "../components/GalleryContentView.vue";
+import VuePdfEmbed from 'vue-pdf-embed/dist/vue2-pdf-embed'
 
 export default {
   name: "PageView",
@@ -279,12 +284,14 @@ export default {
     ImagePlayer,
     VideoPlayer,
     GalleryContentView,
+    VuePdfEmbed
   },
   data() {
     return {
       file: "",
       page: 0,
       pdf_image: "",
+      image_type: "",
       show_modal: false,
       pagenum_edit: false,
       pagenum_editor: {
@@ -424,6 +431,7 @@ export default {
         history.pushState(null, null, path.join("/"));
       }
       this.pdf_image = this.loading_image;
+      this.image_type = 'png';
 
       if (this.view_mode == "file" && this.file) {
         this.business.quicktask({
@@ -460,11 +468,17 @@ export default {
           : this.active_paragraph.source;
       if (src && src.file && typeof src.page !== "undefined") {
         var image_url = this.api.get_image_url(src);
-        var image_element = new Image();
-        image_element.src = image_url;
-        image_element.onload = () => {
-          this.pdf_image = image_element.src;
-        };
+        if (image_url.match(/\.pdf__hash\/pdf/)) image_url = image_url.replace(/.png$/, '.pdf')
+        this.image_type = image_url.split('.').pop()
+        if (this.image_type != 'pdf') {
+          var image_element = new Image();
+          image_element.src = image_url;
+          image_element.onload = () => {
+            this.pdf_image = image_element.src;
+          };
+        } else {
+          this.pdf_image = image_url
+        }
       } else {
         this.pdf_image = "";
       }
@@ -683,5 +697,9 @@ export default {
 
 .browsing.description li > img {
   max-height: 80px;
+}
+
+.vue-pdf-embed {
+  width: 100%;
 }
 </style>

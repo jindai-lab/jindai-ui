@@ -147,7 +147,7 @@ export default {
         update: this.task
       }).then((data) => {
           var id = this.task._id;
-          this.task = data.updated;
+          this.task = data;
           this.task._id = id;
           return id;
         })

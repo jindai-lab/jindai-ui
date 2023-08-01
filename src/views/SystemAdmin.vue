@@ -164,7 +164,7 @@ export default {
   },
   async mounted() {
     this.users = (await this.business.admin_users()).results
-    this.datasets = await this.api.get_datasets_hierarchy()
+    this.datasets = await this.business.get_datasets_hierarchy()
     this.update_scheduler();
   },
 };

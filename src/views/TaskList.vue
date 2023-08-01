@@ -62,15 +62,15 @@ export default {
   },
   methods: {
     async create_task() {
-      var {task_id} = await this.business.tasks({creation: { name: this.$t("new-task") + " " + new Date() }})
-      this.$router.push("/tasks/" + task_id);
+      var {_id} = await this.business.tasks({creation: { name: this.$t("new-task") + " " + new Date() }})
+      this.$router.push("/tasks/" + _id);
     },
     async duplicate_task(task) {
       var otask = Object.assign({}, task);
       otask._id = null;
       otask.name += " " + this.$t("copy");
-      var {task_id} = await this.business.tasks({creation: otask})
-      this.$router.push("/tasks/" + task_id);
+      var {_id} = await this.business.tasks({creation: otask})
+      this.$router.push("/tasks/" + _id);
     },
     async delete_task(task) {
       await this.task.deletion(task._id);
