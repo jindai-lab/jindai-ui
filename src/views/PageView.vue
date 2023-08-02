@@ -1,285 +1,145 @@
 <template>
-  <v-dialog
-    :value="value"
-    :fullscreen="view_mode == 'file' || view_mode == 'gallery'"
-    persistent
-    class="white-bg"
-  >
-    <v-card
-      flat
-      v-touch="{
-        left: () => _event_handler('left'),
-        right: () => _event_handler('right'),
-        down: () => $emit('input', false),
-        up: () => $emit('rating', { inc: 1 }),
-      }"
-      @wheel="_wheel_handler"
-      :style="view_mode == 'gallery' ? { overflow: 'hidden', height: '100%' } : {}"
-      v-if="active_paragraph"
-    >
-      <v-card-text>
-        <!-- operation buttons -->
-        <v-row v-if="view_mode == 'file'" class="pt-3">
-          <v-col class="heading">
-            <h3>{{ file }} &nbsp;</h3>
-          </v-col>
-          <v-spacer></v-spacer>
-          <v-btn icon @click="_event_handler('right')" :enabled="page > 0">
-            <v-icon>mdi-chevron-left</v-icon>
-          </v-btn>
-          <v-text-field
-            dense
-            flat
-            type="number"
-            style="max-width: 50px"
-            :value="page"
-            @input="try_page"
-          ></v-text-field>
-          <v-btn icon @click="_event_handler('left')">
-            <v-icon>mdi-chevron-right</v-icon>
-          </v-btn>
-        </v-row>
-        <v-btn v-else icon @click="$emit('input', false)" class="close"
-          ><v-icon>mdi-close</v-icon></v-btn
-        >
+  <v-sheet v-touch="{
+    left: () => _event_handler('left'),
+    right: () => _event_handler('right'),
+    down: () => $emit('input', false),
+    up: () => $emit('rating', { inc: 1 }),
+  }" @wheel="_wheel_handler" :style="view_mode == 'gallery' ? { overflow: 'hidden', height: '100%' } : {}"
+    v-if="active_paragraph">
+    <!-- operation buttons -->
+    <v-row v-if="view_mode == 'file'" class="pt-3">
+      <v-col class="heading">
+        <h3>{{ file }} &nbsp;</h3>
+      </v-col>
+      <v-spacer></v-spacer>
+      <v-btn icon @click="_event_handler('right')" :enabled="page > 0">
+        <v-icon>mdi-chevron-left</v-icon>
+      </v-btn>
+      <v-text-field dense flat type="number" style="max-width: 50px" :value="page" @input="try_page"></v-text-field>
+      <v-btn icon @click="_event_handler('left')">
+        <v-icon>mdi-chevron-right</v-icon>
+      </v-btn>
+    </v-row>
+    <v-btn v-else icon @click="$emit('input', false)" class="close"><v-icon>mdi-close</v-icon></v-btn>
 
-        <!-- main view -->
-        <template v-if="active_paragraph && active_paragraph.source">
-          <v-row v-if="image_type == 'pdf'">
-            <vue-pdf-embed :source="pdf_image" />
-          </v-row>
-          <v-row class="main" v-if="view_mode !== 'gallery'">
-            <div class="paragraphs">
-              <div v-for="p in shown_paragraphs" :key="p._id">
-                <ContentView :paragraph="p" item_width="100%" :view_mode="view_mode" />
-              </div>
-              <div class="mt-5 meta" v-if="active_paragraph">
-                {{ $t("date") }}: {{ active_paragraph.pdate | dateSafe }}<br />
-                {{ $t("pagenum") }}: {{ active_paragraph.pagenum }}
-                <v-btn
-                  icon
-                  small
-                  @click="
-                    pagenum_editor.new_pagenum = active_paragraph.pagenum;
-                    pagenum_edit = true;
-                  "
-                  ><v-icon small>mdi-form-textbox</v-icon></v-btn
-                >
-                <br />
-                {{ $t("outline") }}: {{ active_paragraph.outline }}<br />
-                {{ $t("source") }}:
-                <a
-                  :href="active_paragraph.source.url"
-                  v-if="active_paragraph.source.url"
-                  target="_blank"
-                  >{{ active_paragraph.source.url }}</a
-                >
-                {{ active_paragraph.source.file }}
-                {{ active_paragraph.source.page }}<br />
-              </div>
-            </div>
-            <div class="image" @click="show_modal = image_type != 'pdf' && !!pdf_image"
-                v-if="image_type != 'pdf'">
-              <img
-                :src="pdf_image"
-                alt=""
-                @load="
-                  $event.target.style.height =
-                    window_height - $event.target.offsetTop - 20 + 'px'
-                "
-              />
-            </div>
-          </v-row>
-          <!-- gallery view, use image or video player -->
-          <div class="browser" v-else>
-            <video-player
-              :src="api.get_item_video(active_item)"
-              :options="{
-                muted: false,
-                autoplay: true,
-                style: {
-                  width: '100%',
-                  height: '100vh',
-                },
-              }"
-              class="video-player"
-              ref="videoPlayer"
-              v-if="
-                value && active_item && ['video', 'audio'].includes(active_item.item_type)
-              "
-            />
-            <image-player
-              :src="
-                active_item
-                  ? api.get_item_image(active_item)
-                  : (_event_handler('continue'), '')
-              "
-              :fit="api.config.fit"
-              class="image-player"
-              ref="imagePlayer"
-              v-else
-            />
-            <div class="browsing description">
-              <v-row align="end">
-                <v-col cols="2">
-                  <ol
-                    ref="thumbnails"
-                    v-show="active_paragraph && active_paragraph_images.length > 1"
-                  >
-                    <li
-                      v-for="thumbnail in active_paragraph_images"
-                      :key="thumbnail._id"
-                      :class="{ selected: active_item._id == thumbnail._id }"
-                    >
-                      <img :src="api.get_item_image(thumbnail)" alt="" />
-                    </li>
-                  </ol>
-                  <v-pagination
-                    v-model="browsing_page"
-                    :length="3"
-                    :total-visible="0"
-                    @previous="
-                      browsing_page = 2;
-                      _event_handler('arrowleft');
-                    "
-                    @next="
-                      browsing_page = 2;
-                      _event_handler('arrowright');
-                    "
-                  ></v-pagination>
-                </v-col>
-                <v-col cols="10" class="item-description" v-if="active_item">
-                  <v-row class="mt-3 mb-3">
-                    <div class="mr-3" v-if="typeof active_item.rating == 'number'">
-                      <v-rating
-                        style="display: inline-block"
-                        v-model="active_item.rating"
-                        background-color="white"
-                        color="yellow accent-4"
-                        half-increments
-                        hover
-                        size="18"
-                        @input="$emit('rating', { val: $event })"
-                      ></v-rating>
-                      <span class="grey--text text--lighten-2"
-                        >({{ active_item.rating.toFixed(1) }})
-                      </span>
-                    </div>
-                    <div>
-                      <v-btn
-                        v-for="(filter, page_name) in plugin_pages.filter(
-                          (x) => x.format
-                        )"
-                        :key="page_name"
-                        icon
-                        dense
-                        :href="
-                          '/' +
-                          api.querystring_stringify({
-                            q:
-                              api.scope(active_paragraph) +
-                              `;plugin('${format(filter.format, {
-                                mediaitem: active_item,
-                                paragraph: active_paragraph,
-                              })}');`,
-                          })
-                        "
-                        class="t_func sim"
-                        target="_blank"
-                        ><v-icon>{{ filter.icon }}</v-icon></v-btn
-                      >
-                      <v-btn
-                        icon
-                        dense
-                        @click="$emit('info', active_item)"
-                        target="_blank"
-                        data-keybind="i"
-                        ><v-icon>mdi-information</v-icon></v-btn
-                      >
-                    </div>
-                  </v-row>
-                  <GalleryContentView
-                    class="browsing-content"
-                    :paragraph="active_paragraph"
-                    view_mode="gallery-description"
-                  />
-                </v-col>
-              </v-row>
-            </div>
+    <!-- main view -->
+    <template v-if="active_paragraph && active_paragraph.source">
+      <v-row v-if="image_type == 'pdf'">
+        <vue-pdf-embed :source="pdf_image" />
+      </v-row>
+      <v-row class="main" v-if="view_mode !== 'gallery'">
+        <div class="paragraphs">
+          <div v-for="p in shown_paragraphs" :key="p._id">
+            <ContentView :paragraph="p" item_width="100%" :view_mode="view_mode" />
           </div>
+          <div class="mt-5 meta" v-if="active_paragraph">
+            {{ $t("date") }}: {{ active_paragraph.pdate | dateSafe }}<br />
+            {{ $t("pagenum") }}: {{ active_paragraph.pagenum }}
+            <v-btn icon small @click="edit_pagenum
+              "><v-icon small>mdi-form-textbox</v-icon></v-btn>
+            <br />
+            {{ $t("outline") }}: {{ active_paragraph.outline }}<br />
+            {{ $t("source") }}:
+            <a :href="active_paragraph.source.url" v-if="active_paragraph.source.url" target="_blank">{{
+              active_paragraph.source.url }}</a>
+            {{ active_paragraph.source.file }}
+            {{ active_paragraph.source.page }}<br />
+          </div>
+        </div>
+        <div class="image" @click="show_modal = image_type != 'pdf' && !!pdf_image" v-if="image_type != 'pdf'">
+          <img :src="pdf_image" alt="" @load="
+            $event.target.style.height =
+            window_height - $event.target.offsetTop - 20 + 'px'
+            " />
+        </div>
+      </v-row>
+      <!-- gallery view, use image or video player -->
+      <div class="browser" v-else>
+        <video-player :src="api.get_item_video(active_item)" :options="{
+          muted: false,
+          autoplay: true,
+          style: {
+            width: '100%',
+            height: '100vh',
+          },
+        }" class="video-player" ref="videoPlayer" v-if="value && active_item && ['video', 'audio'].includes(active_item.item_type)
+  " />
+        <image-player :src="active_item
+          ? api.get_item_image(active_item)
+          : (_event_handler('continue'), '')
+          " :fit="api.config.fit" class="image-player" ref="imagePlayer" v-else />
+        <div class="browsing description">
+          <v-row align="end">
+            <v-col cols="2">
+              <ol ref="thumbnails" v-show="active_paragraph && active_paragraph_images.length > 1">
+                <li v-for="thumbnail in active_paragraph_images" :key="thumbnail._id"
+                  :class="{ selected: active_item._id == thumbnail._id }">
+                  <img :src="api.get_item_image(thumbnail)" alt="" />
+                </li>
+              </ol>
+              <v-pagination v-model="browsing_page" :length="3" :total-visible="0" @previous="
+                browsing_page = 2;
+              _event_handler('arrowleft');
+              " @next="
+  browsing_page = 2;
+_event_handler('arrowright');
+"></v-pagination>
+            </v-col>
+            <v-col cols="10" class="item-description" v-if="active_item">
+              <v-row class="mt-3 mb-3">
+                <div class="mr-3" v-if="typeof active_item.rating == 'number'">
+                  <v-rating style="display: inline-block" v-model="active_item.rating" background-color="white"
+                    color="yellow accent-4" half-increments hover size="18"
+                    @input="$emit('rating', { val: $event })"></v-rating>
+                  <span class="grey--text text--lighten-2">({{ active_item.rating.toFixed(1) }})
+                  </span>
+                </div>
+                <div>
+                  <v-btn v-for="(filter, page_name) in plugin_pages.filter(
+                    (x) => x.format
+                  )" :key="page_name" icon dense :href="'/' +
+  api.querystring_stringify({
+    q:
+      api.scope(active_paragraph) +
+      `;plugin('${format(filter.format, {
+        mediaitem: active_item,
+        paragraph: active_paragraph,
+      })}');`,
+  })
+  " class="t_func sim" target="_blank"><v-icon>{{ filter.icon }}</v-icon></v-btn>
+                  <v-btn icon dense @click="$emit('info', active_item)" target="_blank"
+                    data-keybind="i"><v-icon>mdi-information</v-icon></v-btn>
+                </div>
+              </v-row>
+              <GalleryContentView class="browsing-content" :paragraph="active_paragraph"
+                view_mode="gallery-description" />
+            </v-col>
+          </v-row>
+        </div>
+      </div>
 
-          <!-- fullscreen image view -->
-          <v-dialog v-model="show_modal" fullscreen>
-            <v-btn
-              fab
-              fixed
-              icon
-              top
-              right
-              class="ma-10"
-              style="background-color: #fff"
-              @click="show_modal = false"
-              ><v-icon>mdi-close</v-icon></v-btn
-            >
-            <image-player
-              :src="pdf_image"
-              fit="width"
-              style="background-color: rgba(0, 0, 0, 0.5)"
-            />
-          </v-dialog>
+      <!-- fullscreen image view -->
+      <v-dialog v-model="show_modal" fullscreen>
+        <v-btn fab fixed icon top right class="ma-10" style="background-color: #fff"
+          @click="show_modal = false"><v-icon>mdi-close</v-icon></v-btn>
+        <image-player :src="pdf_image" fit="width" style="background-color: rgba(0, 0, 0, 0.5)" />
+      </v-dialog>
 
-          <!-- pagenum edit -->
-          <v-dialog v-model="pagenum_edit" width="unset">
-            <v-card>
-              <v-card-title
-                >{{ $t("edit-pagenum") }}
-                <v-spacer></v-spacer>
-                <v-btn icon @click="pagenum_edit = false"
-                  ><v-icon>mdi-close</v-icon></v-btn
-                >
-              </v-card-title>
-              <v-card-text>
-                <v-sheet>
-                  <ParamInput
-                    :arg="{ name: $t('pagenum'), type: 'int' }"
-                    v-model="pagenum_editor.new_pagenum"
-                  />
-                  <ParamInput
-                    :arg="{
-                      name: $t('modify-mode'),
-                      type: $t('pagenum-modes'),
-                    }"
-                    v-model="pagenum_editor.sequential"
-                  />
-                  <ParamInput
-                    :arg="{ name: $t('folio-mode'), type: 'bool' }"
-                    v-model="pagenum_editor.folio"
-                  />
-                </v-sheet>
-              </v-card-text>
-              <v-card-actions>
-                <v-btn color="primary" @click="save_pagenum">{{ $t("ok") }}</v-btn>
-              </v-card-actions>
-            </v-card>
-          </v-dialog>
-        </template>
-      </v-card-text>
-    </v-card>
-  </v-dialog>
+    </template>
+  </v-sheet>
 </template>
 
 <script>
-import ParamInput from "../components/ParamInput.vue";
 import ContentView from "../components/ContentView.vue";
 import ImagePlayer from "../components/ImagePlayer.vue";
 import VideoPlayer from "../components/VideoPlayer.vue";
 import GalleryContentView from "../components/GalleryContentView.vue";
 import VuePdfEmbed from 'vue-pdf-embed/dist/vue2-pdf-embed'
+import dialogs from '../dialogs'
 
 export default {
   name: "PageView",
   components: {
-    ParamInput,
     ContentView,
     ImagePlayer,
     VideoPlayer,
@@ -294,11 +154,6 @@ export default {
       image_type: "",
       show_modal: false,
       pagenum_edit: false,
-      pagenum_editor: {
-        new_pagenum: 0,
-        sequential: "all",
-        folio: false,
-      },
 
       fetched_paragraphs: [],
       mongocollection: "paragraph",
@@ -379,7 +234,6 @@ export default {
     window.addEventListener("keyup", this._event_handler);
   },
   mounted() {
-    this.$el.focus();
     if (this.path) {
       let params = window.location.href.split("/");
       if (!params.includes("view")) return;
@@ -435,15 +289,15 @@ export default {
 
       if (this.view_mode == "file" && this.file) {
         this.business.quicktask({
-            query:
-              "?" +
-              this.api.querify(
-                this.paragraph_id
-                  ? { id: this.paragraph_id }
-                  : { source: { file: this.file, page: this.page } }
-              ),
-            mongocollection: this.mongocollection,
-          })
+          query:
+            "?" +
+            this.api.querify(
+              this.paragraph_id
+                ? { id: this.paragraph_id }
+                : { source: { file: this.file, page: this.page } }
+            ),
+          mongocollection: this.mongocollection,
+        })
           .then((data) => {
             this.fetched_paragraphs = data.results;
             if (!data.results.length) {
@@ -588,9 +442,11 @@ export default {
       this.page = e;
       this.update_pdfpage();
     },
-    save_pagenum() {
-      this.business.edit_paragraph_pagenum(this.mongocollection, this.active_paragraph._id, this.pagenum_editor)
-      this.pagenum_edit = false;
+    edit_pagenum() {
+      dialogs.pagenum({ pagenum: this.active_paragraph.pagenum }).then(pagenum_editor => {
+        if (pagenum_editor)
+          this.business.edit_paragraph_pagenum(this.mongocollection, this.active_paragraph._id, pagenum_editor);
+      })
     },
     format(str, bundle) {
       function _replace(_, i) {
@@ -609,12 +465,12 @@ export default {
   line-height: 200%;
 }
 
-.main > div {
+.main>div {
   width: 100%;
 }
 
 @media screen and (min-width: 800px) {
-  .main > div {
+  .main>div {
     width: 50%;
   }
 }
@@ -640,6 +496,7 @@ export default {
 .white-bg {
   background: white;
 }
+
 .description {
   border: hidden;
   background: none;
@@ -695,11 +552,15 @@ export default {
   border: 2px solid white;
 }
 
-.browsing.description li > img {
+.browsing.description li>img {
   max-height: 80px;
 }
 
 .vue-pdf-embed {
   width: 100%;
+}
+
+.row>.paragraphs {
+  margin: 20px;
 }
 </style>

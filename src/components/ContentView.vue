@@ -13,7 +13,7 @@
       <v-row float>
         <v-card v-for="item in first_item_only
         ? paragraph.images.slice(0, 1)
-        : paragraph.images" :key="item._id" :width="item_width" style="overflow: hidden" class="ma-5">
+        : paragraph.images" :key="item._id" :width="item_width" class="ma-5">
           <v-img :contain="contain" :height="item_height" :src="api.get_item_image(item)"></v-img>
         </v-card>
       </v-row>
@@ -54,6 +54,12 @@ export default {
       return this.paragraph.content || "";
     },
   },
+  mounted() {
+    document.addEventListener('copy', this.handle_copy)
+  },
+  beforeDestroy() {
+    document.removeEventListener('copy', this.handle_copy)
+  },
   methods: {
     quote(x) {
       return JSON.stringify("" + x);
@@ -65,6 +71,11 @@ export default {
           ? "t_author"
           : tag != 'author' && tag != 'group' ?
             "t_" + tag : '';
+    },
+    handle_copy(e) {
+      var text = document.getSelection().toString().replace(/\s+/g, ' ')
+      e.clipboardData.setData('text', text)
+      e.preventDefault()
     },
   },
 };

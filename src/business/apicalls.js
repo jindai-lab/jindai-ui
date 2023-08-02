@@ -128,7 +128,7 @@ const apicalls = {
         .then((data) => {
           selection.all.forEach(
             (p) =>
-              paragraphs.includes(p._id) ?
+              selection.paragraphs.includes(p._id) ?
                 (p.keywords = data[p._id].keywords) : void (0)
           );
         });

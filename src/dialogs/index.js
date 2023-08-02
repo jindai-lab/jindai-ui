@@ -6,6 +6,7 @@ import SendTaskDialog from "./SendTaskDialog.vue"
 import EmbeddedDialog from "./EmbeddedDialog.vue"
 import EditDialog from "./EditDialog.vue"
 import AlertDialog from "./AlertDialog.vue"
+import PageNumDialog from "./PageNumDialog.vue"
 
 import Vue from "vue";
 import i18n from "@/locales";
@@ -61,6 +62,7 @@ api.dialogs = {
     embedded(options) { return this._create_dialog(EmbeddedDialog, options) },
     edit(options) { return this._create_dialog(EditDialog, options) },
     alert(options) { return this._create_dialog(AlertDialog, options) },
+    pagenum(options) {return this._create_dialog(PageNumDialog, options)},
 
     close() {
         _els.forEach(x => x.retval = false)
