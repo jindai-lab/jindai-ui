@@ -68,13 +68,13 @@ const apicalls = {
 
     return api
       .call(
-        `collections`,
+        `collections/`,
         { ...updates, mongocollection: selection.first.mongocollection || "paragraph" }
       )
       .then((data) => {
         selection.all.forEach((p) => {
-          data.paragraphs[p._id] &&
-            Object.assign(p, data.paragraphs[p._id], { images: p.images });
+          data[p._id] &&
+            Object.assign(p, data[p._id], { images: p.images });
         });
       });
   },
@@ -83,9 +83,7 @@ const apicalls = {
     const { selection } = options
     var objs = selection.to_objects();
     return api
-      .call("collections/remove_image", {
-        para_items: objs.para_items,
-      })
+      .call("collections/remove_image", objs.para_items)
       .then(() => {
         selection.all.forEach((paragraph) => {
           if (objs.visible_para_items[paragraph._id]) {
@@ -101,7 +99,6 @@ const apicalls = {
     rating.ids = selection.items.map((x) => x._id);
     if (api.config.view_mode == "gallery") {
       return api.call("mediaitems/rating", rating).then((data) => {
-        data = data.items || {};
         selection.all.forEach((p) =>
           p.images && p.images.forEach(
             (i) =>
@@ -129,11 +126,10 @@ const apicalls = {
           bundle
         )
         .then((data) => {
-          const { paragraphs } = data
           selection.all.forEach(
             (p) =>
               paragraphs.includes(p._id) ?
-                (p.keywords = paragraphs[p._id].keywords) : void (0)
+                (p.keywords = data[p._id].keywords) : void (0)
           );
         });
     };
@@ -175,7 +171,7 @@ const apicalls = {
     if (!selection || !selection.length) return;
     return api
       .call(`collections/merge`, {
-        paragraphs: objs.para_items,
+        ... objs.para_items,
         mongocollection: selection.first.mongocollection || "paragraph"
       })
   },
@@ -184,7 +180,8 @@ const apicalls = {
     var objs = selection.to_objects()
     return api
       .call(`collections/split`, {
-        paragraphs: objs.para_items, mongocollection: selection.first.mongocollection || "paragraph"
+        ... objs.para_items,
+        mongocollection: selection.first.mongocollection || "paragraph"
       })
   },
 
@@ -265,7 +262,7 @@ const apicalls = {
         const author = authors[0]
 
         return api
-          .call(`collections`, {
+          .call(`collections/`, {
             ids: selection.ids,
             author,
             mongocollection: selection.first.mongocollection || "paragraph",
@@ -273,9 +270,9 @@ const apicalls = {
           })
           .then((data) => {
             selection.all.forEach((p) => {
-              data.paragraphs[p._id] && (p.author = data.paragraphs[p._id].author);
+              data[p._id] && (p.author = data[p._id].author);
             });
-            return data.paragraphs
+            return data
           });
       });
   },

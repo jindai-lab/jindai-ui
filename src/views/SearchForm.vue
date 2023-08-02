@@ -279,7 +279,7 @@ export default {
             offset: e.offset,
           };
         }),
-      ]).then((results) => Object.assign(...results));
+      ]).then((results) => Object.assign({}, ...results));
     },
     keyword_patterns(query) {
       if (Array.isArray(query))
