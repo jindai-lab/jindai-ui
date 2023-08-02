@@ -163,7 +163,7 @@ export default {
     },
   },
   async mounted() {
-    this.users = (await this.business.admin_users()).results
+    this.users = await this.business.admin_users()
     this.datasets = await this.business.get_datasets_hierarchy()
     this.update_scheduler();
   },

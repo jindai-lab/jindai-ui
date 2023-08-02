@@ -60,8 +60,7 @@ const apicalls = {
         : Array.from(existing_tags).filter((x) => !tags.includes(x));
     var updates = {
       ids: selection.ids,
-      $push: { keywords: push },
-      $pull: { keywords: pull },
+      keywords: { $push: push, $pull: pull },
     };
     if (push.filter((x) => x.startsWith("@")))
       updates.author = push.filter((x) => x.startsWith("@"))[0];
@@ -270,7 +269,7 @@ const apicalls = {
             ids: selection.ids,
             author,
             mongocollection: selection.first.mongocollection || "paragraph",
-            keywords: { $push: author }
+            keywords: { $push: [author] }
           })
           .then((data) => {
             selection.all.forEach((p) => {
