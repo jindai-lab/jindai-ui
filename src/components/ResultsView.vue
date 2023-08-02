@@ -1,13 +1,7 @@
 <template>
   <v-sheet ref="results" :class="api.config.view_mode">
     <div class="tools">
-      <v-btn-toggle
-        mandatory
-        class="view-mode-toggler"
-        dense
-        v-model="api.config.view_mode"
-        @change="start()"
-      >
+      <v-btn-toggle mandatory class="view-mode-toggler" dense v-model="api.config.view_mode" @change="start()">
         <v-btn value="list">
           <v-icon>mdi-view-list</v-icon>
         </v-btn>
@@ -26,71 +20,37 @@
     <!-- divider -->
     <v-divider class="mt-5 mb-5"></v-divider>
     <!-- show content -->
-    <SelectableList
-      :items="value"
-      class="selectable-list"
-      ref="selectable"
-      :view_mode="api.config.view_mode"
-      :selection="selection"
-      @start-view="view_page"
-    ></SelectableList>
+    <SelectableList :items="value" class="selectable-list" ref="selectable" :view_mode="api.config.view_mode"
+      :selection="selection" @start-view="view_page"></SelectableList>
     <!-- pagination -->
     <v-row class="mt-5">
-      <v-pagination
-        v-model="page"
-        :length="pages.length"
-        @change="turn_page"
-      ></v-pagination>
+      <v-pagination v-model="page" :length="pages.length" @change="turn_page"></v-pagination>
       <div>
         <label> {{ $t("pagenum") }}</label>
-        <v-text-field
-          class="d-inline-block ml-1"
-          style="max-width: 40px"
-          type="number"
-          dense
-          :value="page"
-          @change="page = parseInt($event) || page"
-        ></v-text-field>
+        <v-text-field class="d-inline-block ml-1" style="max-width: 40px" type="number" dense :value="page"
+          @change="page = parseInt($event) || page"></v-text-field>
       </div>
       <div>
         <label>{{ $t("page-size") }}</label>
-        <v-select
-          :items="[20, 50, 100, 200]"
-          dense
-          class="d-inline-block ml-1"
-          style="max-width: 60px"
-          v-model="page_size"
-        ></v-select>
+        <v-select :items="[20, 50, 100, 200]" dense class="d-inline-block ml-1" style="max-width: 60px"
+          v-model="page_size"></v-select>
       </div>
     </v-row>
 
-    <PageView
-      v-model="page_dialog.visible"
-      class="page-view"
-      ref="page_view"
-      :paragraphs="value"
-      :view_mode="api.config.view_mode"
-      :start_index="page_dialog.start_index"
-      @browse="update_selection"
-      @next="page++"
-      @prev="page--"
-      @info="show_info_dialog($event)"
-      @rating="
-        call_business('rating', typeof $event == 'object' ? $event : { val: $event })
-      "
-    />
+    <v-dialog v-model="page_dialog.visible" persistent fullscreen>
+      <v-card>
+        <v-card-text>
+        <PageView v-model="page_dialog.visible" ref="page_view" :paragraphs="value"
+          :view_mode="api.config.view_mode" :start_index="page_dialog.start_index" @browse="update_selection"
+          @next="page++" @prev="page--" @info="show_info_dialog($event)" @rating="
+            call_business('rating', typeof $event == 'object' ? $event : { val: $event })
+            " /></v-card-text>
+      </v-card></v-dialog>
 
-    <QuickActionButtons
-      :selection_count="selection.length"
-      @call="call_business"
-      @play="play"
-      @close="
-        close_dialogs();
-        selection.clear();
-      "
-      @toggle-selection="selection.toggle(value)"
-      @toggle-fits="toggle_fits"
-    />
+    <QuickActionButtons :selection_count="selection.length" @call="call_business" @play="play" @close="
+      close_dialogs();
+    selection.clear();
+    " @toggle-selection="selection.toggle(value)" @toggle-fits="toggle_fits" />
   </v-sheet>
 </template>
 
@@ -261,8 +221,8 @@ export default {
     show_edit_dialog(target) {
       this.api.dialogs.edit({ target }).then((target) => {
         this.business.edit_paragraph(target).then(() => {
-            this.$notify(this.$t("saved"));
-          });
+          this.$notify(this.$t("saved"));
+        });
       });
     },
     view_page(index) {
@@ -327,7 +287,7 @@ export default {
   margin-right: 12px;
 }
 
-.tools > .v-btn {
+.tools>.v-btn {
   margin-right: 12px;
 }
 
@@ -356,7 +316,7 @@ export default {
   vertical-align: middle;
 }
 
-.view-mode-toggler > * {
+.view-mode-toggler>* {
   margin: 0;
 }
 
