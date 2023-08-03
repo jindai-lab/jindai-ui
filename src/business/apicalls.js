@@ -128,7 +128,7 @@ const apicalls = {
         .then((data) => {
           selection.all.forEach(
             (p) =>
-              selection.paragraphs.includes(p._id) ?
+              data[p._id] ?
                 (p.keywords = data[p._id].keywords) : void (0)
           );
         });
@@ -160,7 +160,7 @@ const apicalls = {
           return _call();
         });
     } else {
-      bundle.group = (Array.from(existing_groups)[0] || ('0' + tempgroup())).replace(/^#/, '')
+      bundle.group = (Array.from(existing_groups)[0] || '').replace(/^#/, '')
       return _call();
     }
   },

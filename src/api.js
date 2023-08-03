@@ -541,15 +541,27 @@ const apis = {
 
   get_image_url(src) {
     var path = ''
-    if (src.file.indexOf('://') >= 0) {
-      let ext = (src.url || src.orig_path || '').split('?')[0].split('.').pop()
-      let segs = src.file.split('://')
-      path = `/images/${segs[0]}/${segs[1].replace('$', src.block_id) || src.block_id}/image.${ext.length <= 4 ? ext : 'data'}`
+    if (src.file) {
+      let ext = (src.url || src.orig_path || src.file || '').split('?')[0].split('.').pop()
+      var filename = ''
+      if (src.file.indexOf('://') >= 0) {
+        let segs = src.file.split('://')
+        path = `/images/${segs[0]}/`
+        filename = segs[1]
+      } else {
+        path = `/images/file/`
+        filename = src.file
+      }
+      filename = filename.replace('$', src.block_id)
+      filename = filename.replace(/^\//, '')
+      path += filename
+      if (path.match(/\/hdf5\//)) {
+        path += `/image.${ext.length <= 4 ? ext : 'data'}`
+      }
+      if (ext == 'pdf' && typeof(src.page) !== 'undefined') {
+        path += `__hash/pdf/${src.page}/page.png`
+      }
     }
-    else if (src.file.match(/\.pdf$/) && typeof (src.page) !== 'undefined')
-      path = `/images/file/${src.file}__hash/pdf/${src.page}/page.png`
-    else if (src.file)
-      path = `/images/file/${src.file}`
     else if (src.url)
       path = src.url
     else
