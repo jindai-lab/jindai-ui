@@ -77,7 +77,7 @@
           v-else
         />
         <div class="mt-10 operations">
-          <v-btn @click="$emit('start-view', index)">
+          <v-btn @click="start_view(index)">
             <v-icon>mdi-eye</v-icon> {{ $t("view") }}
           </v-btn>
           <v-btn

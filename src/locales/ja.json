@@ -163,5 +163,6 @@
     "disabled": "無効にする",
     "fit-both": "自動适応",
     "fit-width": "幅に合わせる",
-    "fit-height": "高に合わせる"
+    "fit-height": "高に合わせる",
+    "font-size": "文字サイズ"
 }

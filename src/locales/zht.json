@@ -162,5 +162,6 @@
     "disabled": "禁用",
     "fit-both": "自動適應",
     "fit-width": "適應寬度",
-    "fit-height": "適應高度"
+    "fit-height": "適應高度",
+    "font-size": "字號"
 }

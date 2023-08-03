@@ -162,5 +162,6 @@
     "mongocollection": "数据库集合名",
     "shortcuts": "快捷方式",
     "expression": "表达式",
-    "disabled": "禁用"
+    "disabled": "禁用",
+    "font-size": "字号"
 }

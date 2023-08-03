@@ -74,6 +74,14 @@
           <v-col>
             <v-text-field
               type="number"
+              :label="$t('font-size')"
+              v-model="config.font_size"
+            ></v-text-field> </v-col
+        ></v-row>
+        <v-row>
+          <v-col>
+            <v-text-field
+              type="number"
               :label="$t('playing-interval')"
               v-model="config.playing_interval"
             ></v-text-field> </v-col

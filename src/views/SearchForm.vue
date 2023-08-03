@@ -132,11 +132,17 @@ export default {
       var selected = this.selected_datasets.map((sid) => this.selection_bundles[sid]),
         req = "";
 
-      function combine(selection, field) {
+      const combine = (selection, field) => {
         return Array.from(
-          selection.map((x) =>
-            typeof x[field] == 'string' ? new Set([x[field]]) :
-              x[field]
+          selection.map((x) => {
+            var vals = typeof x[field] == 'string' ? [x[field]] : x[field]
+            if (field == 'dataset_name') {
+              var children = Object.values(this.selection_bundles).filter(oo => typeof oo[field] == 'string' && oo[field].startsWith(x[field] + '--'))
+              if (children.length)
+                vals = vals.concat(combine(children, field))
+            }
+            return new Set(vals)
+          }
           ).reduce((prev, curr) => {
             (curr || []).forEach(y => prev.add(y))
             return prev
@@ -145,8 +151,7 @@ export default {
 
       if (selected.length > 0) {
         var datasets = combine(selected
-          .filter((x) => !x.source), 'dataset_name')
-          .map((x) => this.api.escape_regex(x)),
+          .filter((x) => !x.source), 'dataset_name'),
           sourcefiles = selected
             .filter((x) => x.source)
             .map((x) => ({
@@ -159,7 +164,7 @@ export default {
 
         if (datasets.length > 0) {
           req_datasets =
-            "dataset%`^" + datasets.map((x) => (x == "" ? "$" : x)).join("|^") + "`";
+            "dataset=in([`" + datasets.join("`,`") + "`])";
         }
         if (sourcefiles.length > 0) {
           req_sourcefiles = sourcefiles

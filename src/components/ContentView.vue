@@ -1,5 +1,5 @@
 <template>
-  <div class="paragraph mt-5">
+  <div class="paragraph mt-5" :style="{'font-size': api.config.font_size + 'px'}">
     <p v-html="content" v-if="is_html" :lang="paragraph.lang"></p>
     <p v-else>
       {{ content }}
@@ -93,5 +93,6 @@ p:hover .fav-button,
 
 .paragraph>p {
   font-family: Georgia, "Times New Roman", Times, serif;
+  line-height: 150%;
 }
 </style>

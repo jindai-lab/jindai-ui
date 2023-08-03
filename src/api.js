@@ -24,6 +24,7 @@ function LocalConfig() {
       batch_delim: ",",
       batch_prefix: "",
     },
+    font_size: 16,
     dbconsole: {
       mongocollection: 'paragraph',
       history: []

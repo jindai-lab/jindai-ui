@@ -159,8 +159,9 @@
     "mongocollection": "MongoDB Collection Name",
     "shortcuts": "Shortcuts",
     "expression": "Expression",
-    "disabled": "Disabled",    
+    "disabled": "Disabled",
     "fit-both": "Fit Both",
     "fit-width": "Fit Width",
-    "fit-height": "Fit Heihgt"
+    "fit-height": "Fit Heihgt",
+    "font-size": "Font Size"
 }
