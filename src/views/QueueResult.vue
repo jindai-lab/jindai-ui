@@ -53,7 +53,7 @@ export default {
             this.total = data.total;
             return {
               offset: e.offset,
-              result: data.results,
+              results: data.results,
               token,
             };
           }

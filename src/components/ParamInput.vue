@@ -273,8 +273,11 @@ export default {
       }
     },
     lines() {
-      return (this.value || "")
+      var newvals = []
+      if (Array.isArray(this.value)) newvals = this.value;
+      else newvals = (this.value || "")
         .split("\n")
+      return newvals
         .filter((x) => x.length)
         .map((x, i) => ({ text: x, index: i }));
     },

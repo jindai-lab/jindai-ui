@@ -124,7 +124,7 @@ export default {
       this.show_detail = false;
     },
     downloadable(task) {
-      switch (task.result_type) {
+      switch (task.result_type.split(':')[0]) {
         case "list":
         case "dict":
         case "file":
