@@ -266,8 +266,8 @@ export default {
   },
   methods: {
     _wheel_handler(e) {
-      e.preventDefault();
       if (this.view_mode !== "gallery" || e.ctrlKey) return;
+      e.preventDefault();
       if (new Date() - this.last_wheel > 100) {
         this._event_handler(e.deltaY > 0 ? "arrowright" : "arrowleft");
         this.last_wheel = new Date();
@@ -299,7 +299,7 @@ export default {
           mongocollection: this.mongocollection,
         })
           .then((data) => {
-            this.fetched_paragraphs = data.results;
+            this.fetched_paragraphs = data.results.sort((a,b)=>a._id.localeCompare(b._id));
             if (!data.results.length) {
               this.fetched_paragraphs = [
                 {

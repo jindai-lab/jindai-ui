@@ -76,8 +76,11 @@
               type="number"
               :label="$t('font-size')"
               v-model="config.font_size"
+              @input="config.font_size = Math.max(Math.min(config.font_size, 30), 12); $forceUpdate()"
             ></v-text-field> </v-col
-        ></v-row>
+        >
+        <v-col :style="{'font-size': config.font_size + 'px'}">Example 示例文本</v-col>
+      </v-row>
         <v-row>
           <v-col>
             <v-text-field
