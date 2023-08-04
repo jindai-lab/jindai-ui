@@ -43,7 +43,7 @@
             'merge',
             'split',
             'reset-storage',
-            'task',
+            { name: 'task', call: 'send_task' },
             { name: 'delete', icon: 'mdi-delete', call: 'delete' },
           ].map((x) => (typeof x === 'object' ? x : { name: x, call: x }))"
           :key="item.name"

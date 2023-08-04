@@ -7,7 +7,7 @@ import EmbeddedDialog from "./EmbeddedDialog.vue"
 import EditDialog from "./EditDialog.vue"
 import AlertDialog from "./AlertDialog.vue"
 import PageNumDialog from "./PageNumDialog.vue"
-
+import ResultsView from "../components/ResultsView.vue"
 import Vue from "vue";
 import i18n from "@/locales";
 import vuetify from "@/plugins/vuetify.js";
@@ -24,7 +24,8 @@ api.dialogs = {
             var component = new installed({
                 i18n,
                 vuetify,
-                propsData: { ...options }
+                propsData: { ...options },
+                components: { ResultsView }
             }).$mount();
             var el = document.getElementById('app').appendChild(component.$el);
             var launcher = document.createElement('button')
