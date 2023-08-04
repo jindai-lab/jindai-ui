@@ -288,15 +288,16 @@ export default {
       this.image_type = 'png';
 
       if (this.view_mode == "file" && this.file) {
-        this.business.quicktask({
-          query:
-            "?" +
+        this.business.search({
+          req:
             this.api.querify(
               this.paragraph_id
                 ? { id: this.paragraph_id }
-                : { source: { file: this.file, page: this.page } }
+                : { source: { file: '/'+this.file, page: this.page } }
             ),
-          mongocollection: this.mongocollection,
+          sort: 'id',
+          q: '',
+          mongocollections: [this.mongocollection],
         })
           .then((data) => {
             this.fetched_paragraphs = data.results.sort((a,b)=>a._id.localeCompare(b._id));

@@ -82,7 +82,7 @@
           </v-btn>
           <v-btn
             :href="`/view/${r.mongocollection}/${
-              r.source.file ? r.source.file + '/' + r.source.page : r._id
+              r.source.file ? r.source.file.replace(/^\//, '') + '/' + r.source.page : r._id
             }`"
             target="_blank"
           >
