@@ -2,18 +2,6 @@ import Vue from "vue";
 import App from "./App";
 import vuetify from "./plugins/vuetify";
 
-// patch for Blockly
-//Add unimported components to ignore list to prevent warnings.
-Vue.config.ignoredElements = [
-  "field",
-  "block",
-  "category",
-  "xml",
-  "mutation",
-  "value",
-  "sep",
-];
-
 // use vue-router
 import VueRouter from "vue-router";
 Vue.use(VueRouter);

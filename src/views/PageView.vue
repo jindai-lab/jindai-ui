@@ -263,6 +263,9 @@ export default {
           this.item_index = this.paragraphs.slice(-1)[0].images.length - 1;
       }
     },
+    start_index(val) {
+      this.paragraph_index = val;
+    }
   },
   methods: {
     _wheel_handler(e) {

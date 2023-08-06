@@ -110,9 +110,7 @@ export default {
       if (this.limit) result = result.slice(0, this.limit);
       if (!this.allow_custom) {
         const listed = this.choices.map((x) => (typeof x == "string" ? x : x.value));
-        console.log(listed, result);
         result = result.filter((x) => listed.indexOf(x) >= 0);
-        console.log(result);
       }
       this.retval = result;
       this.visible = false;

@@ -195,7 +195,6 @@ export default {
     },
     async parse() {
       var result = await this.business.qx(this.code)
-      console.log(result)
       this.task.pipeline = result
     }
   },

@@ -45,7 +45,6 @@ export default {
       if (this.queue_source) return;
       this.queue_source = this.api.get_event_source();
       this.queue_source.onmessage = (event) => {
-        console.log(event);
         var data = JSON.parse(event.data);
         if (data.log) {
           this.console_outputs.splice(0, 0, data.log);

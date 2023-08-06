@@ -89,7 +89,6 @@ export default {
       this.business.admin_db(this.get_command()).then((data) => {
         this.preview_text = this.stringify_command(data)
         this.previewed = true;
-        console.log(this.api.querify(data.query))
       });
     },
     execute() {

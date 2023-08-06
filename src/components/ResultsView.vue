@@ -226,8 +226,8 @@ export default {
       });
     },
     view_page(index) {
-      this.page_dialog.start_index = index;
       this.page_dialog.visible = true;
+      this.page_dialog.start_index = index;
       this.selection.clear();
     },
     play() {

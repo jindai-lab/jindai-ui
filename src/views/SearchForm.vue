@@ -257,7 +257,6 @@ export default {
 
         this.business.search(params, false, this.cancel_source).then((data) => {
           if (!data) {
-            console.log("WARNING: no data returned.");
             return;
           }
           if (data.query) {

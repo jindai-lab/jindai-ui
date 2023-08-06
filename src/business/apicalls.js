@@ -34,10 +34,10 @@ const apicalls = {
   },
 
   get_choices(lang_or_dataset) {
-    return api.call(lang_or_dataset.toLowerCase() + "s").then(
+    return api.call(lang_or_dataset.toLowerCase() + "s/").then(
       (data) => data.results.map((x) => ({
         text: x.display_name || x.name,
-        value: this.arg.type == "TASK" ? x._id : x.name,
+        value: lang_or_dataset == "TASK" ? x._id : x.name,
       }))
     );
   },
