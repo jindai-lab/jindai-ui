@@ -579,7 +579,7 @@ const apicalls = {
 
   // queue logic
   queue_logs(id) {
-    return api.call(`queue/logs/${encodeURIComponent(id)}`).then(data => data.results.map(x => ({ text: x })))
+    return api.call(`queue/logs/${encodeURIComponent(id)}`).then(data => data.map(x => ({ text: x })))
   },
 
   queue_results({ offset, limit, id } = {}) {
