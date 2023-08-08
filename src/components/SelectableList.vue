@@ -82,7 +82,7 @@
           </v-btn>
           <v-btn
             :href="`/view/${r.mongocollection}/${
-              r.source.file ? r.source.file.replace(/^\//, '') + '/' + r.source.page : r._id
+              r.source.file ? r.source.file.replace(/^\//, '') + '/' + (r.source.page || 0) : r._id
             }`"
             target="_blank"
           >
@@ -264,6 +264,10 @@ export default {
 .gallery .operations,
 .gallery .meta {
   display: none;
+}
+
+.operations>* {
+  margin-right: 10px;
 }
 
 .wrapper-container {

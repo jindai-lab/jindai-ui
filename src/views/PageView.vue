@@ -20,41 +20,12 @@
         <v-icon>mdi-chevron-right</v-icon>
       </v-btn>
     </v-row>
-    <v-btn v-else icon @click="$emit('input', false)" class="close"><v-icon>mdi-close</v-icon></v-btn>
+    <v-btn v-else icon @click="$emit('input', false)" class="ma-10" fab fixed top right><v-icon>mdi-close</v-icon></v-btn>
 
     <!-- main view -->
-    <template v-if="active_paragraph && active_paragraph.source">
-      <v-row v-if="image_type == 'pdf'">
-        <vue-pdf-embed :source="pdf_image" />
-      </v-row>
-      <v-row class="main" v-if="view_mode !== 'gallery'">
-        <div class="paragraphs">
-          <div v-for="p in shown_paragraphs" :key="p._id">
-            <ContentView :paragraph="p" item_width="100%" :view_mode="view_mode" />
-          </div>
-          <div class="mt-5 meta" v-if="active_paragraph">
-            {{ $t("date") }}: {{ active_paragraph.pdate | dateSafe }}<br />
-            {{ $t("pagenum") }}: {{ active_paragraph.pagenum }}
-            <v-btn icon small @click="edit_pagenum
-              "><v-icon small>mdi-form-textbox</v-icon></v-btn>
-            <br />
-            {{ $t("outline") }}: {{ active_paragraph.outline }}<br />
-            {{ $t("source") }}:
-            <a :href="active_paragraph.source.url" v-if="active_paragraph.source.url" target="_blank">{{
-              active_paragraph.source.url }}</a>
-            {{ active_paragraph.source.file }}
-            {{ active_paragraph.source.page }}<br />
-          </div>
-        </div>
-        <div class="image" @click="show_modal = image_type != 'pdf' && !!pdf_image" v-if="image_type != 'pdf'">
-          <img :src="pdf_image" alt="" @load="
-            $event.target.style.height =
-            window_height - $event.target.offsetTop - 20 + 'px'
-            " />
-        </div>
-      </v-row>
+    <template v-if="view_mode == 'gallery'">
       <!-- gallery view, use image or video player -->
-      <div class="browser" v-else>
+      <div class="browser">
         <video-player :src="api.get_item_video(active_item)" :options="{
           muted: false,
           autoplay: true,
@@ -117,14 +88,38 @@ _event_handler('arrowright');
           </v-row>
         </div>
       </div>
-
-      <!-- fullscreen image view -->
-      <v-dialog v-model="show_modal" fullscreen>
-        <v-btn fab fixed icon top right class="ma-10" style="background-color: #fff"
-          @click="show_modal = false"><v-icon>mdi-close</v-icon></v-btn>
-        <image-player :src="pdf_image" fit="width" style="background-color: rgba(0, 0, 0, 0.5)" />
-      </v-dialog>
-
+    </template>
+    <template v-else-if="active_paragraph && active_paragraph.source">
+      <v-row v-if="image_type == 'pdf'">
+        <vue-pdf-embed :source="page_image" />
+      </v-row>
+      <v-row class="main">
+        <div class="paragraphs">
+          <div v-html="html" class="original-html"></div>
+          <div v-for="p in shown_paragraphs" :key="p._id">
+            <ContentView :paragraph="p" item_width="100%" :view_mode="view_mode" />
+          </div>
+          <div class="mt-5 meta" v-if="active_paragraph">
+            {{ $t("date") }}: {{ active_paragraph.pdate | dateSafe }}<br />
+            {{ $t("pagenum") }}: {{ active_paragraph.pagenum }}
+            <v-btn icon small @click="edit_pagenum
+              "><v-icon small>mdi-form-textbox</v-icon></v-btn>
+            <br />
+            {{ $t("outline") }}: {{ active_paragraph.outline }}<br />
+            {{ $t("source") }}:
+            <a :href="active_paragraph.source.url" v-if="active_paragraph.source.url" target="_blank">{{
+              active_paragraph.source.url }}</a>
+            {{ active_paragraph.source.file }}
+            {{ active_paragraph.source.page }}<br />
+          </div>
+        </div>
+        <div class="image" @click="show_modal = image_type != 'pdf' && !!page_image" v-if="image_type != 'pdf'">
+          <img :src="page_image" alt="" @load="
+            $event.target.style.height =
+            window_height - $event.target.offsetTop - 20 + 'px'
+            " />
+        </div>
+      </v-row>
     </template>
   </v-sheet>
 </template>
@@ -136,6 +131,7 @@ import VideoPlayer from "../components/VideoPlayer.vue";
 import GalleryContentView from "../components/GalleryContentView.vue";
 import VuePdfEmbed from 'vue-pdf-embed/dist/vue2-pdf-embed'
 import dialogs from '../dialogs'
+import axios from "axios";
 
 export default {
   name: "PageView",
@@ -150,10 +146,11 @@ export default {
     return {
       file: "",
       page: 0,
-      pdf_image: "",
+      page_image: "",
       image_type: "",
       show_modal: false,
       pagenum_edit: false,
+      html: "",
 
       fetched_paragraphs: [],
       mongocollection: "paragraph",
@@ -287,7 +284,7 @@ export default {
         path.push("" + this.page);
         history.pushState(null, null, path.join("/"));
       }
-      this.pdf_image = this.loading_image;
+      this.page_image = this.loading_image;
       this.image_type = 'png';
 
       if (this.view_mode == "file" && this.file) {
@@ -296,14 +293,14 @@ export default {
             this.api.querify(
               this.paragraph_id
                 ? { id: this.paragraph_id }
-                : { source: { file: '/'+this.file, page: this.page } }
+                : { source: { file: '/' + this.file, page: this.page } }
             ),
           sort: 'id',
           q: '',
           mongocollections: [this.mongocollection],
         })
           .then((data) => {
-            this.fetched_paragraphs = data.results.sort((a,b)=>a._id.localeCompare(b._id));
+            this.fetched_paragraphs = data.results.sort((a, b) => a._id.localeCompare(b._id));
             if (!data.results.length) {
               this.fetched_paragraphs = [
                 {
@@ -324,21 +321,27 @@ export default {
         this.view_mode == "file"
           ? { file: this.file, page: this.page }
           : this.active_paragraph.source;
-      if (src && src.file && typeof src.page !== "undefined") {
+      if (src && src.file) {
         var image_url = this.api.get_image_url(src);
-        if (image_url.match(/\.pdf__hash\/pdf/)) image_url = image_url.replace(/.png$/, '.pdf')
-        this.image_type = image_url.split('.').pop()
-        if (this.image_type != 'pdf') {
-          var image_element = new Image();
-          image_element.src = image_url;
-          image_element.onload = () => {
-            this.pdf_image = image_element.src;
-          };
-        } else {
-          this.pdf_image = image_url
+        this.image_type = src.file.split('.').pop().toLowerCase()
+        switch (this.image_type) {
+          case 'pdf':
+            image_url = image_url.replace(/.png$/, '.pdf')
+            this.page_image = image_url
+            break
+          case 'htm':
+          case 'html':
+            axios.get(image_url).then(html => this.html = html.data)
+            this.page_image = ''
+            break
+          default:
+            var image_element = new Image();
+            image_element.src = image_url;
+            image_element.onload = () => {
+              this.page_image = image_element.src;
+            }
+            break
         }
-      } else {
-        this.pdf_image = "";
       }
     },
     playing(interval) {
