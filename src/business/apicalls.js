@@ -62,9 +62,11 @@ const apicalls = {
       ids: selection.ids,
       keywords: { $push: push, $pull: pull },
     };
-    if (push.filter((x) => x.startsWith("@")))
-      updates.author = push.filter((x) => x.startsWith("@"))[0];
+    var new_author = push.filter((x) => x.startsWith("@"))[0];
+    if (new_author)
+      updates.author = new_author;
     else if (pull.filter((x) => x.startsWith("@"))) updates.author = "";
+    if (updates.author === '') delete updates.author;
 
     return api
       .call(

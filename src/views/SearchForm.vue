@@ -47,10 +47,8 @@
             ]" v-model="groups" />
           </span>
           <span class="ml-5" style="line-height: 100%; vertical-align: middle">
-            <v-checkbox class="d-inline-block ml-1" style="width: 80px" dense flat
-              v-model="filter_by_tags"
-              :label="$t('tag')"
-            ></v-checkbox>
+            <v-checkbox class="d-inline-block ml-1" style="width: 80px" dense flat v-model="filter_by_tags"
+              :label="$t('tag')"></v-checkbox>
           </span>
           <v-spacer></v-spacer>
           <v-btn @click="export_query" class="exports">
@@ -67,7 +65,8 @@
           </v-btn>
         </v-row>
       </form>
-      <ResultsView class="mt-5" :page_size="page_size" :load="external_json ?? load_search" ref="results" />
+      <ResultsView class="mt-5" :page_size="page_size" :load="external_json ?? load_search"
+        :highlight_pattern="highlight_pattern" ref="results" />
     </v-card-text>
   </v-card>
 </template>
@@ -94,6 +93,7 @@ export default {
       req: "",
       selection_bundles: {},
       external_json: null,
+      highlight_pattern: '',
       page_size: 50,
       cancel_source: this.api.cancel_source(),
       expert: this.api.config.expert,
@@ -252,29 +252,20 @@ export default {
 
       return Promise.all([
         this.business.search(params, true, this.cancel_source).then((data) => {
-            if (data.total != -1) return { token, total: data.total };
-          }),
+          if (data.total != -1) return { token, total: data.total };
+        }),
 
         this.business.search(params, false, this.cancel_source).then((data) => {
           if (!data) {
             return;
           }
           if (data.query) {
-            var reg = new RegExp(
-              "(" +
+            this.highlight_pattern = 
               this.keyword_patterns(data.query)
                 .filter((x) => x)
-                .join("|") +
-              ")",
-              "gi"
-            );
+                .join("|");
+            if (this.highlight_pattern) this.highlight_pattern = '(' + this.highlight_pattern + ')'
             this.results = data.results;
-            if (reg != "/()/gi") {
-              this.results = this.results.map((x) => {
-                x.matched_content = (x.content || "").replace(reg, "<em>$1</em>");
-                return x;
-              });
-            }
           }
           this.querystr = this.api.querify(data.query).replace(/^\(|\)$/g, "");
           return {
@@ -296,9 +287,9 @@ export default {
         .map((kvpair) => {
           let key = kvpair[0],
             val = kvpair[1];
-          if (key == "keywords") {
+          if (key == "keywords" || key == 'content') {
             if (typeof val == "string") return [this.api.escape_regex(val)];
-            else if (typeof val.$regex == "string") return [val.$regex];
+            else if (typeof val.$regex == "string") return [val.$regex.replace(/^\^/, '')];
           }
           return this.keyword_patterns(val);
         })
@@ -307,7 +298,8 @@ export default {
     export_query(format, callback) {
       if (typeof callback !== "function")
         callback = (data) => this.$router.push("/tasks/" + data._id).catch(() => { });
-      this.business.tasks({creation:
+      this.business.tasks({
+        creation:
         {
           name:
             this.$t("search") + " " + new Date().toLocaleString().replace(/[^\d]/g, ""),
@@ -323,12 +315,13 @@ export default {
             ["AccumulateParagraphs", {}],
             ["Export", { output_format: format }],
           ],
-        }})
+        }
+      })
         .then(callback);
     },
     async export_file(fmt) {
-      var {bundle} = await this.export_query(fmt) 
-      var {job} = await this.business.enqueue(bundle._id)
+      var { bundle } = await this.export_query(fmt)
+      var { job } = await this.business.enqueue(bundle._id)
       this.$notify("job-enqueued", { job })
     },
     drop_json_file(e) {

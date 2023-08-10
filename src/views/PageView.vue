@@ -157,6 +157,7 @@ export default {
       loading_image: require("../../public/assets/loading.png"),
       paragraph_index: 0,
       item_index: 0,
+      highlight_pattern: '',
 
       playing_timer: 0,
       playing_interval: 1000,
@@ -232,7 +233,7 @@ export default {
   },
   mounted() {
     if (this.path) {
-      let params = window.location.href.split("/");
+      let params = window.location.pathname.split("/");
       if (!params.includes("view")) return;
       params = params.slice(params.indexOf("view") + 1);
       this.mongocollection = params[0];
@@ -241,14 +242,18 @@ export default {
         this.page = +params.slice(-1)[0];
       }
     }
-    this.update_pdfpage();
+    if (window.location.hash) {
+      Object.assign(this, this.api.querystring_parse(window.location.hash.substring(1)))
+    }
+    this.paragraph_index = this.start_index
+    this.update_image();
   },
   watch: {
     value(val) {
       if (val) {
         this.paragraph_index = this.start_index;
         this.item_index = 0;
-        this.update_pdfpage();
+        this.update_image();
       } else {
         if (this.playing_timer) window.clearInterval(this.playing_timer);
       }
@@ -277,12 +282,12 @@ export default {
       if (this.view_mode == "gallery" && this.active_item && this.$refs.imagePlayer)
         this.$refs.imagePlayer.update();
     },
-    update_pdfpage() {
+    update_image() {
       if (this.view_mode == "file" && this.file) {
         var path = location.href.split("/");
         path.pop();
         path.push("" + this.page);
-        history.pushState(null, null, path.join("/"));
+        history.pushState(null, null, path.join("/") + window.location.hash);
       }
       this.page_image = this.loading_image;
       this.image_type = 'png';
@@ -300,7 +305,9 @@ export default {
           mongocollections: [this.mongocollection],
         })
           .then((data) => {
-            this.fetched_paragraphs = data.results.sort((a, b) => a._id.localeCompare(b._id));
+            this.fetched_paragraphs = data.results.sort((a, b) => a._id.localeCompare(b._id)).map(x =>
+              ({ ...x, matched_content: this.highlight_pattern ? 
+                x.content.replace(new RegExp(this.highlight_pattern, 'gi'), '<em>$1</em>') : x.content }));
             if (!data.results.length) {
               this.fetched_paragraphs = [
                 {
@@ -331,7 +338,8 @@ export default {
             break
           case 'htm':
           case 'html':
-            axios.get(image_url).then(html => this.html = html.data)
+            axios.get(image_url).then(html => 
+              this.html = this.highlight_pattern ? html.data.replace(new RegExp(this.highlight_pattern, 'gi'), '<em>$1</em>') : html.data)
             this.page_image = ''
             break
           default:
@@ -416,13 +424,13 @@ export default {
           this.$emit(inc < 0 ? "prev" : "next");
           this.paragraph_index = inc > 0 ? 0 : -1;
         }
-        this.update_pdfpage();
+        this.update_image();
       };
 
       switch (this.view_mode) {
         case "file":
           this.page = +this.page + inc;
-          this.update_pdfpage();
+          this.update_image();
           break;
         case "gallery":
           // previous item
@@ -447,7 +455,7 @@ export default {
     try_page(e) {
       e = e | 0;
       this.page = e;
-      this.update_pdfpage();
+      this.update_image();
     },
     edit_pagenum() {
       dialogs.pagenum({ pagenum: this.active_paragraph.pagenum }).then(pagenum_editor => {

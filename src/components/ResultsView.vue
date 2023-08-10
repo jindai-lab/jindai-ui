@@ -21,7 +21,7 @@
     <v-divider class="mt-5 mb-5"></v-divider>
     <!-- show content -->
     <SelectableList :items="value" class="selectable-list" ref="selectable" :view_mode="api.config.view_mode"
-      :selection="selection" @start-view="view_page"></SelectableList>
+      :selection="selection" :highlight_pattern="highlight_pattern" @start-view="view_page"></SelectableList>
     <!-- pagination -->
     <v-row class="mt-5">
       <v-pagination v-model="page" :length="pages.length" @change="turn_page"></v-pagination>
@@ -40,11 +40,12 @@
     <v-dialog v-model="page_dialog.visible" persistent fullscreen>
       <v-card>
         <v-card-text>
-        <PageView v-model="page_dialog.visible" ref="page_view" :paragraphs="value"
-          :view_mode="api.config.view_mode" :start_index="page_dialog.start_index" @browse="update_selection"
-          @next="page++" @prev="page--" @info="show_info_dialog($event)" @rating="
-            call_business('rating', typeof $event == 'object' ? $event : { val: $event })
-            " /></v-card-text>
+          <PageView v-model="page_dialog.visible" ref="page_view" :paragraphs="value" :view_mode="api.config.view_mode"
+            :start_index="page_dialog.start_index" @browse="update_selection" @next="page++" @prev="page--"
+            @info="show_info_dialog($event)" @rating="
+              call_business('rating', typeof $event == 'object' ? $event : { val: $event })
+              " />
+        </v-card-text>
       </v-card></v-dialog>
 
     <QuickActionButtons :selection_count="selection.length" @call="call_business" @play="play" @close="
@@ -65,6 +66,7 @@ export default {
   name: "ResultsView",
   props: {
     load: {},
+    highlight_pattern: { type: String, default: '' },
   },
   components: {
     PageView,
@@ -156,7 +158,12 @@ export default {
       this.turn_page(page);
     },
     loader(options) {
-      const _mapper = (x) => Object.assign(x, { selected: false, _sel_id: nanoid() });
+      const _mapper = (x) => Object.assign(x, {
+        selected: false, _sel_id: nanoid(),
+        matched_content: this.highlight_pattern ? (x.content || "").replace(new RegExp(
+          this.highlight_pattern,
+          "gi"
+        ), "<em>$1</em>") : x.content });
       if (Array.isArray(this.load))
         return new Promise((accept) => {
           this.total = this.load.length;
@@ -228,7 +235,6 @@ export default {
     view_page(index) {
       this.page_dialog.visible = true;
       this.page_dialog.start_index = index;
-      this.$forceUpdate()
       this.selection.clear();
     },
     play() {

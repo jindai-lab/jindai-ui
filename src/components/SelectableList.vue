@@ -83,7 +83,7 @@
           <v-btn
             :href="`/view/${r.mongocollection}/${
               r.source.file ? r.source.file.replace(/^\//, '') + '/' + (r.source.page || 0) : r._id
-            }`"
+            }#highlight_pattern=${ encodeURIComponent(highlight_pattern) }`"
             target="_blank"
           >
             <v-icon>mdi-dock-window</v-icon> {{ $t("browse") }}
@@ -140,7 +140,7 @@ export default {
   data: () => ({
     select_index: -1,
   }),
-  props: ["items", "active_item", "view_mode", "selection"],
+  props: ["items", "active_item", "view_mode", "selection", "highlight_pattern"],
   computed: {
     columns() {
       var cols = new Set();
