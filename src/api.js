@@ -559,7 +559,7 @@ const apis = {
       if (path.match(/\/hdf5\//)) {
         path += `/image.${ext.length <= 4 ? ext : 'data'}`
       }
-      if (ext == 'pdf' && typeof(src.page) !== 'undefined') {
+      if (ext == 'pdf' && typeof (src.page) !== 'undefined') {
         path += `__hash/pdf/${src.page}/page.png`
       }
     }
@@ -677,6 +677,25 @@ const apis = {
   next_fit() {
     const fits = ["both", "width", "height"];
     return fits[(fits.indexOf(this.config.fit) + 1) % fits.length]
+  },
+
+  emphasize(paragraph, pattern) {
+    if (!pattern || pattern == '()') return paragraph
+    
+    var content = paragraph.content,
+      normalized_content = paragraph.content.normalize('NFD').replace(/[\u0300-\u036f]/g, "")
+    const matches = normalized_content.matchAll(new RegExp(
+      pattern,
+      "gi"
+    ))
+    var last_index = 0, replaced = ''
+    for (var match of matches) {
+      replaced += content.substring(last_index, match.index) + `<em>${content.substring(match.index, match.index + match[1].length)}</em>`
+      last_index = match.index + match[1].length
+    }
+    replaced += content.substring(last_index)
+    paragraph.matched_content = replaced
+    return paragraph
   },
 
   config: LocalConfig(),

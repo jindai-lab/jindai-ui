@@ -160,10 +160,7 @@ export default {
     loader(options) {
       const _mapper = (x) => Object.assign(x, {
         selected: false, _sel_id: nanoid(),
-        matched_content: this.highlight_pattern ? (x.content || "").replace(new RegExp(
-          this.highlight_pattern,
-          "gi"
-        ), "<em>$1</em>") : x.content });
+        matched_content: this.api.emphasize(x, this.highlight_pattern).matched_content});
       if (Array.isArray(this.load))
         return new Promise((accept) => {
           this.total = this.load.length;

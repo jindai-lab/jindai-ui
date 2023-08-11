@@ -306,8 +306,7 @@ export default {
         })
           .then((data) => {
             this.fetched_paragraphs = data.results.sort((a, b) => a._id.localeCompare(b._id)).map(x =>
-              ({ ...x, matched_content: this.highlight_pattern ? 
-                x.content.replace(new RegExp(this.highlight_pattern, 'gi'), '<em>$1</em>') : x.content }));
+              this.api.emphasize(x, this.highlight_pattern));
             if (!data.results.length) {
               this.fetched_paragraphs = [
                 {
