@@ -40,8 +40,9 @@
     <v-dialog v-model="page_dialog.visible" persistent fullscreen>
       <v-card>
         <v-card-text>
-          <PageView v-model="page_dialog.visible" ref="page_view" :paragraphs="value" :view_mode="api.config.view_mode"
-            :start_index="page_dialog.start_index" @browse="update_selection" @next="page++" @prev="page--"
+          <PageView v-model="page_dialog.paragraph_index" ref="page_view" :paragraphs="value" :view_mode="api.config.view_mode"
+            @browse="update_selection" @next="page++" @prev="page > 1 ? page-- : 0"
+            @close="page_dialog.visible = false"
             @info="show_info_dialog($event)" @rating="
               call_business('rating', typeof $event == 'object' ? $event : { val: $event })
               " />
@@ -82,7 +83,7 @@ export default {
       // page_view
       page_dialog: {
         visible: false,
-        start_index: 0,
+        paragraph_index: 0,
         item: {},
       },
       browsing: {},
@@ -231,7 +232,7 @@ export default {
     },
     view_page(index) {
       this.page_dialog.visible = true;
-      this.page_dialog.start_index = index;
+      this.page_dialog.paragraph_index = index;
       this.selection.clear();
     },
     play() {

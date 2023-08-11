@@ -2,7 +2,7 @@
   <v-sheet v-touch="{
     left: () => _event_handler('left'),
     right: () => _event_handler('right'),
-    down: () => $emit('input', false),
+    down: () => $emit('close'),
     up: () => $emit('rating', { inc: 1 }),
   }" @wheel="_wheel_handler" :style="view_mode == 'gallery' ? { overflow: 'hidden', height: '100%' } : {}"
     v-if="active_paragraph">
@@ -20,7 +20,7 @@
         <v-icon>mdi-chevron-right</v-icon>
       </v-btn>
     </v-row>
-    <v-btn v-else icon @click="$emit('input', false)" class="ma-10" fab fixed top right><v-icon>mdi-close</v-icon></v-btn>
+    <v-btn v-else icon @click="$emit('close')" class="ma-10" fab fixed top right><v-icon>mdi-close</v-icon></v-btn>
 
     <!-- main view -->
     <template v-if="view_mode == 'gallery'">
@@ -155,7 +155,6 @@ export default {
       fetched_paragraphs: [],
       mongocollection: "paragraph",
       loading_image: require("../../public/assets/loading.png"),
-      paragraph_index: 0,
       item_index: 0,
       highlight_pattern: '',
 
@@ -174,11 +173,8 @@ export default {
     paragraphs: {
       default: () => [],
     },
-    start_index: {
-      default: 0,
-    },
     value: {
-      default: true,
+      default: 0,
     },
     path: {
       default: "",
@@ -191,7 +187,7 @@ export default {
     active_paragraph() {
       var paragraph = {};
       if (this.view_mode == "file") paragraph = this.fetched_paragraphs[0];
-      else paragraph = Object.assign({}, this.paragraphs[this.paragraph_index]);
+      else paragraph = Object.assign({}, this.paragraphs[this.value]);
       this.$emit("browse", { paragraph });
       return paragraph;
     },
@@ -245,13 +241,11 @@ export default {
     if (window.location.hash) {
       Object.assign(this, this.api.querystring_parse(window.location.hash.substring(1)))
     }
-    this.paragraph_index = this.start_index
     this.update_image();
   },
   watch: {
     value(val) {
       if (val) {
-        this.paragraph_index = this.start_index;
         this.item_index = 0;
         this.update_image();
       } else {
@@ -259,15 +253,12 @@ export default {
       }
     },
     paragraphs() {
-      if (this.paragraph_index < 0) {
-        this.paragraph_index = this.paragraphs.length - 1;
+      if (this.value < 0) {
+        this.$emit('input', this.paragraphs.length - 1);
         if (this.view_mode == "gallery")
           this.item_index = this.paragraphs.slice(-1)[0].images.length - 1;
       }
     },
-    start_index(val) {
-      this.paragraph_index = val;
-    }
   },
   methods: {
     _wheel_handler(e) {
@@ -406,11 +397,13 @@ export default {
 
       const _paragraph = (inc) => {
         // paragraph
+        var newvalue = this.value
         if (
-          this.paragraph_index + inc >= 0 &&
-          this.paragraph_index + inc < this.paragraphs.length
+          this.value + inc >= 0 &&
+          this.value + inc < this.paragraphs.length
         ) {
-          this.paragraph_index += inc;
+          newvalue = this.value + inc;
+          this.$emit('input', newvalue)
           if (this.item_index < 0)
             this.item_index = this.active_paragraph_images.length - 1;
           else this.item_index = 0;
@@ -421,7 +414,8 @@ export default {
             this._event_handler(direction);
         } else {
           this.$emit(inc < 0 ? "prev" : "next");
-          this.paragraph_index = inc > 0 ? 0 : -1;
+          newvalue = inc > 0 ? 0 : -1;
+          this.$emit('input', newvalue)
         }
         this.update_image();
       };
