@@ -43,7 +43,7 @@
           <div v-for="task in data.finished" :key="task.key">
             <h4>{{ task.name }}</h4>
             <span>{{ task.key }}</span>
-            {{ $t("run-at") }}: {{ task.queued_at }}<br />
+            {{ $t("run-at") }}: {{ task.queued_at | dateSafe }}<br />
             <v-btn
               :href="download_link(task)"
               v-if="downloadable(task)"
@@ -72,7 +72,7 @@
         <v-card-text>
           <div v-for="task in data.running" :key="task.key" class="mb-5">
             <span>{{ task.key }}</span>
-            {{ $t("run-at") }}: {{ task.queued_at }}<br />
+            {{ $t("run-at") }}: {{ task.queued_at | dateSafe }}<br />
             <v-btn @click="delete_result(task)"
               ><v-icon>mdi-stop</v-icon></v-btn
             >
@@ -82,7 +82,7 @@
         <v-card-text>
           <div v-for="task in data.waiting" :key="task.key" class="mb-5">
             <span>{{ task.key }}</span>
-            {{ $t("run-at") }}: {{ task.queued_at }}<br />
+            {{ $t("run-at") }}: {{ task.queued_at | dateSafe }}<br />
             <v-btn @click="delete_result(task)"
               ><v-icon>mdi-stop</v-icon></v-btn
             >

@@ -32,7 +32,7 @@
         </template>
 
         <template v-slot:item.last_run="{ item }">
-          <span>{{ new Date(item.last_run).toLocaleString() }}</span>
+          <span>{{ item.last_run | dateSafe }}</span>
         </template>
         <template v-slot:item.actions="{ item }">
           <v-btn :to="`/tasks/${item._id}`">

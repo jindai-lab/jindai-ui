@@ -1,6 +1,7 @@
 import Vue from "vue";
 import App from "./App";
 import vuetify from "./plugins/vuetify";
+import moment from 'moment';
 
 // use vue-router
 import VueRouter from "vue-router";
@@ -10,10 +11,10 @@ Vue.filter("dateSafe", function (value) {
   if (!value) return "";
   if (
     (typeof value === "number" && value < 10000) ||
-    ("" + value).match(/^\d{4}(-\d{1,2})?$/)
+    ("" + value).match(/^\d{4}(-\d{1,2})?$|[^/\-\d:\s]/)
   )
     return value;
-  var ds = new Date(value).toLocaleString();
+  var ds = moment("" + value).format("YYYY-MM-DD HH:mm:ss");
   if (ds === "Invalid Date") return value;
   return ds;
 });
