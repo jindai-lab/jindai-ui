@@ -422,6 +422,8 @@ const apicalls = {
           }
         } else if (_replaceHook[stage.substring(1)]) {
           return _replaceHook[stage.substring(1)](params)
+        } else if (params.pipeline) {
+          params.pipeline = _replaceFC(params.pipeline)
         } else {
           return [stage.substring(1), params]
         }

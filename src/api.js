@@ -353,13 +353,18 @@ const apis = {
             ${this.querify(value.pipeline)}
           }`.replace(/^\s+/gm, '')
         default:
-          var args = ''
+          var args = ', '
+          
+          if (value.pipeline) {
+            args = 'pipeline={' + this.querify(value.pipeline) + '}, ';
+            delete value.pipeline;
+          }
+
           if (Array.isArray(value))
-            args = value.map(x => _debracket(this.querify(x))).join(', ')
-          else
-            args = _debracket(this.querify(value))
-          if (args == '()') args = ''
-          return `${oper}(${args})`
+            args += value.map(x => _debracket(this.querify(x))).join(', ')
+          else if (Object.keys(value).length > 0)
+            args += _debracket(this.querify(value))
+          return `${oper}(${args.replace(/, $|^, /, '')})`
       }
     }
 
