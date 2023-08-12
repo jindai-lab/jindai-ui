@@ -33,7 +33,7 @@
             width: '100%',
             height: '100vh',
           },
-        }" class="video-player" ref="videoPlayer" v-if="value && active_item && ['video', 'audio'].includes(active_item.item_type)
+        }" class="video-player" ref="videoPlayer" v-if="active_item && ['video', 'audio'].includes(active_item.item_type)
   " />
         <image-player :src="active_item
           ? api.get_item_image(active_item)

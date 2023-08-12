@@ -687,19 +687,9 @@ const apis = {
   emphasize(paragraph, pattern) {
     if (!pattern || pattern == '()') return paragraph
     
-    var content = paragraph.content,
-      normalized_content = paragraph.content.normalize('NFD').replace(/[\u0300-\u036f]/g, "")
-    const matches = normalized_content.matchAll(new RegExp(
-      pattern,
-      "gi"
-    ))
-    var last_index = 0, replaced = ''
-    for (var match of matches) {
-      replaced += content.substring(last_index, match.index) + `<em>${content.substring(match.index, match.index + match[1].length)}</em>`
-      last_index = match.index + match[1].length
-    }
-    replaced += content.substring(last_index)
-    paragraph.matched_content = replaced
+    pattern = pattern.replace(/([a-zA-Z])/g, '$1[\\u0300-\\u036f]?')
+    var content = paragraph.content.normalize('NFD');
+    paragraph.matched_content = content.replace(new RegExp(pattern, 'ig'), '<em>$1</em>').normalize('NFC')
     return paragraph
   },
 

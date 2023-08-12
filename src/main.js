@@ -11,7 +11,7 @@ Vue.filter("dateSafe", function (value) {
   if (!value) return "";
   if (
     (typeof value === "number" && value < 10000) ||
-    ("" + value).match(/^\d{4}(-\d{1,2})?$|[^/\-\d:\s]/)
+    ("" + value).match(/^\d{4}(-\d{1,2})?$|[^/.\-\d:\sTZ]/)
   )
     return value;
   var ds = moment("" + value).format("YYYY-MM-DD HH:mm:ss");
