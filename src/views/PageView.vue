@@ -2,7 +2,7 @@
   <v-sheet v-touch="{
     left: () => _event_handler('left'),
     right: () => _event_handler('right'),
-    down: () => $emit('close'),
+    down: () => do_close(),
     up: () => $emit('rating', { inc: 1 }),
   }" @wheel="_wheel_handler" :style="view_mode == 'gallery' ? { overflow: 'hidden', height: '100%' } : {}"
     v-if="active_paragraph">
@@ -20,7 +20,7 @@
         <v-icon>mdi-chevron-right</v-icon>
       </v-btn>
     </v-row>
-    <v-btn v-else icon @click="$emit('close')" class="ma-10" fab fixed top right><v-icon>mdi-close</v-icon></v-btn>
+    <v-btn v-else icon @click="do_close()" class="ma-10" fab fixed top right><v-icon>mdi-close</v-icon></v-btn>
 
     <!-- main view -->
     <template v-if="view_mode == 'gallery'">
@@ -32,6 +32,9 @@
           style: {
             width: '100%',
             height: '100vh',
+            overflow: 'hidden',
+            top: 0,
+            left: 0,
           },
         }" class="video-player" ref="videoPlayer" v-if="active_item && ['video', 'audio'].includes(active_item.item_type)
   " />
@@ -164,6 +167,8 @@ export default {
       last_wheel: new Date(),
       plugin_pages: this.business.plugin_pages,
       browsing_page: 2,
+
+      emphasis_index: -1,
     };
   },
   props: {
@@ -185,14 +190,16 @@ export default {
       return window.innerHeight;
     },
     active_paragraph() {
-      var paragraph = {};
-      if (this.view_mode == "file") paragraph = this.fetched_paragraphs[0];
-      else paragraph = Object.assign({}, this.paragraphs[this.value]);
+      var paragraph = { images: [] };
+      if (this.view_mode == "file") paragraph = Object.assign(paragraph, this.fetched_paragraphs[0]);
+      else paragraph = Object.assign(paragraph, this.paragraphs[this.value]);
       this.$emit("browse", { paragraph });
       return paragraph;
     },
     active_item() {
-      var item = (this.active_paragraph_images || [])[this.item_index];
+      var item = this.active_paragraph_images[this.item_index];
+      if (!item) item = this.active_paragraph_images[this.item_index >= 0 ? 0 : this.active_paragraph_images.length - 1]
+      if (!item) item = {}
       this.$emit("browse", { item });
       if (this.$refs.thumbnails && this.$refs.thumbnails.querySelector("li.selected")) {
         this.$refs.thumbnails.querySelector("li.selected").scrollIntoView();
@@ -205,20 +212,7 @@ export default {
         : this.fetched_paragraphs;
     },
     active_paragraph_images() {
-      if (
-        this.active_paragraph &&
-        this.active_paragraph.images &&
-        this.active_paragraph.images.length
-      )
-        return this.active_paragraph.images;
-      if (
-        this.active_paragraph &&
-        this.active_paragraph.source &&
-        this.active_paragraph.source.file &&
-        this.active_paragraph.source.file.endsWith(".pdf")
-      )
-        return [this.active_paragraph];
-      return [];
+      return this.active_paragraph.images.length ? this.active_paragraph.images : [this.active_paragraph]
     },
   },
   beforeDestroy() {
@@ -241,17 +235,10 @@ export default {
     if (window.location.hash) {
       Object.assign(this, this.api.querystring_parse(window.location.hash.substring(1)))
     }
+
     this.update_image();
   },
   watch: {
-    value(val) {
-      if (val) {
-        this.item_index = 0;
-        this.update_image();
-      } else {
-        if (this.playing_timer) window.clearInterval(this.playing_timer);
-      }
-    },
     paragraphs() {
       if (this.value < 0) {
         this.$emit('input', this.paragraphs.length - 1);
@@ -297,7 +284,7 @@ export default {
         })
           .then((data) => {
             this.fetched_paragraphs = data.results.sort((a, b) => a._id.localeCompare(b._id)).map(x =>
-              this.api.emphasize(x, this.highlight_pattern));
+              ({ ...x, matched_content: this.api.emphasize(x.content, this.highlight_pattern) }));
             if (!data.results.length) {
               this.fetched_paragraphs = [
                 {
@@ -328,8 +315,12 @@ export default {
             break
           case 'htm':
           case 'html':
-            axios.get(image_url).then(html => 
-              this.html = this.highlight_pattern ? html.data.replace(new RegExp(this.highlight_pattern, 'gi'), '<em>$1</em>') : html.data)
+            if (this.view_mode == 'file' || !this.active_paragraph.html) {
+              axios.get(image_url).then(html =>
+                this.html = this.api.emphasize(html.data, this.highlight_pattern))
+            } else {
+              this.html = this.api.emphasize(this.active_paragraph.html, this.highlight_pattern)
+            }
             this.page_image = ''
             break
           default:
@@ -342,6 +333,16 @@ export default {
         }
       }
     },
+    scroll_emphasis(inc = 1) {
+      const ems = document.querySelectorAll('em')
+      this.emphasis_index = (this.emphasis_index + inc) % ems.length
+      var topsum = 0, el = ems[this.emphasis_index]
+      while (el) {
+        topsum += el.offsetTop
+        el = el.parentElement
+      }
+      window.scrollTo(0, topsum)
+    },
     playing(interval) {
       if (this.view_mode !== "gallery") return;
       if (interval) this.playing_interval = interval;
@@ -350,7 +351,8 @@ export default {
       }, this.playing_interval);
     },
     _event_handler(direction) {
-      if (document.getSelection().toString().trim() || !this.value) return;
+
+      if (document.getSelection().toString().trim()) return;
 
       if (typeof direction !== "string") {
         // key stroke
@@ -383,6 +385,12 @@ export default {
         case "g":
           document.querySelector(".browsing.description a.t_group").click();
           break;
+        case "j":
+          this.scroll_emphasis(1)
+          break
+        case "k":
+          this.scroll_emphasis(-1)
+          break;
         case "enter":
           this.playing();
           break;
@@ -395,55 +403,38 @@ export default {
       if (inc == 0) return;
       this.last_inc = Math.sign(inc);
 
-      const _paragraph = (inc) => {
-        // paragraph
-        var newvalue = this.value
-        if (
-          this.value + inc >= 0 &&
-          this.value + inc < this.paragraphs.length
-        ) {
-          newvalue = this.value + inc;
-          this.$emit('input', newvalue)
-          if (this.item_index < 0)
-            this.item_index = this.active_paragraph_images.length - 1;
-          else this.item_index = 0;
-          if (
-            this.view_mode == "gallery" &&
-            (!this.active_paragraph_images || this.active_paragraph_images.length == 0)
-          )
-            this._event_handler(direction);
-        } else {
+      if (this.view_mode == 'file') {
+        this.page = +this.page + inc;
+        this.update_image();
+        return;
+      }
+
+      if (this.view_mode == 'gallery') {
+        var newvalue = this.value, newitem = this.item_index + inc
+
+        if (newitem < 0 || newitem >= this.paragraphs[newvalue].images.length) newvalue += inc;
+
+        const _valid = () => {
+          return this.paragraphs[newvalue] && this.paragraphs[newvalue].images.length
+        }
+
+        while (!_valid() && newvalue >= 0 && newvalue < this.paragraphs.length) {
+          newvalue += inc
+        }
+
+        if (newvalue < 0 || newvalue >= this.paragraphs.length) {
           this.$emit(inc < 0 ? "prev" : "next");
           newvalue = inc > 0 ? 0 : -1;
-          this.$emit('input', newvalue)
+          newitem = newvalue
+        } else if (newvalue != this.value) {
+          if (inc < 0) newitem = this.paragraphs[newvalue].images.length - 1;
+          else if (inc > 0) newitem = 0
         }
-        this.update_image();
-      };
 
-      switch (this.view_mode) {
-        case "file":
-          this.page = +this.page + inc;
-          this.update_image();
-          break;
-        case "gallery":
-          // previous item
-          if (
-            this.active_paragraph_images &&
-            this.item_index + inc >= 0 &&
-            this.item_index + inc < this.active_paragraph_images.length
-          ) {
-            this.item_index += inc;
-            break;
-          } else {
-            this.item_index = inc > 0 ? 0 : -1;
-            inc = Math.sign(inc);
-          }
-          _paragraph(inc);
-          break;
-        default:
-          _paragraph(inc);
-          break;
+        this.$emit('input', newvalue)
+        this.item_index = newitem
       }
+
     },
     try_page(e) {
       e = e | 0;
@@ -464,6 +455,9 @@ export default {
       }
       return (typeof str == "string" && str.replace(/\{([\w\d._]+)\}/g, _replace)) || "";
     },
+    do_close() {
+      this.$emit('close')
+    }
   },
 };
 </script>
@@ -570,5 +564,9 @@ export default {
 
 .row>.paragraphs {
   margin: 20px;
+}
+
+.browser {
+  overflow: hidden;
 }
 </style>

@@ -29,9 +29,9 @@
             :href="
               '/' +
               api.querystring_stringify({
-                q: `auto(${JSON.stringify(api.current_q())}),source.file=${api.quote(
+                q: `source.file=${api.quote(
                   r.source.file
-                )}`,
+                )};auto(${JSON.stringify(api.current_q())});`,
                 selected_datasets: [r.dataset],
                 groups: 'none',
               })
@@ -95,6 +95,10 @@
           <v-btn @click="show_edit_dialog(r)">
             <v-icon>mdi-file-edit-outline</v-icon>
             {{ $t("edit") }}
+          </v-btn>
+          <v-btn @click="copy_to_clipboard(r)">
+            <v-icon>mdi-content-copy</v-icon>
+            {{ $t("copy") }}
           </v-btn>
           <v-divider class="mt-5 mb-5"></v-divider>
         </div>
@@ -243,6 +247,10 @@ export default {
     },
     start_view(index) {
       this.$emit("start-view", index);
+    },
+    // copy
+    copy_to_clipboard(r) {
+      this.api.copy_to_clipboard(`${r.content} // ${this.$t('source')}: ${r.outline} ${r.pdate} ${r.source.file || r.source.url} ${r.pagenum}`)
     },
   },
 };

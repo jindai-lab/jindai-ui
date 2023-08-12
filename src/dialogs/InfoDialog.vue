@@ -2,15 +2,15 @@
   <v-dialog v-model="visible">
     <v-card>
       <v-card-title>
+        {{ $t("metadata") }}
+        <v-spacer></v-spacer>
         <v-btn icon @click="close" style="margin-right: 12px">
           <v-icon>mdi-close</v-icon>
         </v-btn>
-        {{ $t("metadata") }}
       </v-card-title>
       <v-card-text>
-        <v-data-table :items="
-          Object.entries(target || {}).map(v => ({ key: v[0], value: v[1] }))
-        " :headers="[{ value: 'key' }, { value: 'value' }]" hide-default-header>
+        <v-data-table :items="Object.entries(target || {}).map(v => ({ key: v[0], value: v[1] }))
+          " :headers="[{ value: 'key' }, { value: 'value' }]" hide-default-header>
           <template v-slot:item.value="{ item }">
             <div :class="(typeof item.value == 'object' || ('' + item.value).match(/\s/)) ? 'code' : ''">{{
               render_text(item.value)

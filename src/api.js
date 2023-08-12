@@ -684,13 +684,26 @@ const apis = {
     return fits[(fits.indexOf(this.config.fit) + 1) % fits.length]
   },
 
-  emphasize(paragraph, pattern) {
-    if (!pattern || pattern == '()') return paragraph
+  emphasize(content, pattern) {
+    if (!pattern || pattern == '()') return content
     
     pattern = pattern.replace(/([a-zA-Z])/g, '$1[\\u0300-\\u036f]?')
-    var content = paragraph.content.normalize('NFD');
-    paragraph.matched_content = content.replace(new RegExp(pattern, 'ig'), '<em>$1</em>').normalize('NFC')
-    return paragraph
+    content = content.normalize('NFD');
+    return content.replace(new RegExp(pattern, 'ig'), '<em>$1</em>').normalize('NFC')
+  },
+
+  copy_to_clipboard(text) {
+    const testingCodeToCopy = document.querySelector("#testing-code");
+    testingCodeToCopy.setAttribute("type", "text");
+    testingCodeToCopy.setAttribute("value", text);
+    testingCodeToCopy.select();
+    try {
+      document.execCommand("copy");
+    } catch (err) {
+      alert("Oops, unable to copy");
+    }
+    testingCodeToCopy.setAttribute("type", "hidden");
+    window.getSelection().removeAllRanges();
   },
 
   config: LocalConfig(),

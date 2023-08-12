@@ -58,7 +58,6 @@
       </v-sheet>
     </v-sheet>
     <v-card-actions>
-      <input type="hidden" id="testing-code" />
     </v-card-actions>
   </v-card>
 </template>
@@ -151,17 +150,7 @@ export default {
     },
     copy_file_path(f) {
       const text = 'file://' + f.fullpath;
-      const testingCodeToCopy = document.querySelector("#testing-code");
-      testingCodeToCopy.setAttribute("type", "text");
-      testingCodeToCopy.setAttribute("value", text);
-      testingCodeToCopy.select();
-      try {
-        document.execCommand("copy");
-      } catch (err) {
-        alert("Oops, unable to copy");
-      }
-      testingCodeToCopy.setAttribute("type", "hidden");
-      window.getSelection().removeAllRanges();
+      this.api.copy_to_clipboards(text)
     },
     enter(d) {
       if (d === "..")

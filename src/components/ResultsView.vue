@@ -38,7 +38,7 @@
     </v-row>
 
     <v-dialog v-model="page_dialog.visible" persistent fullscreen>
-      <v-card>
+      <v-card :class="api.config.view_mode + '-dialog'">
         <v-card-text>
           <PageView v-model="page_dialog.paragraph_index" ref="page_view" :paragraphs="value" :view_mode="api.config.view_mode"
             @browse="update_selection" @next="page++" @prev="page > 1 ? page-- : 0"
@@ -110,6 +110,7 @@ export default {
         var ele = document.querySelector(`[data-id="${this.browsing._id}"]`);
         window.scrollTo(0, ele.offsetTop);
       }
+      document.querySelectorAll('video').forEach(v => v.pause())
     },
     page_size(val) {
       this.paging.page_size = val;
@@ -161,7 +162,7 @@ export default {
     loader(options) {
       const _mapper = (x) => Object.assign(x, {
         selected: false, _sel_id: nanoid(),
-        matched_content: this.api.emphasize(x, this.highlight_pattern).matched_content});
+        matched_content: this.api.emphasize(x.content, this.highlight_pattern)});
       if (Array.isArray(this.load))
         return new Promise((accept) => {
           this.total = this.load.length;
@@ -333,5 +334,10 @@ export default {
 
 .v-chip {
   overflow: initial;
+}
+
+.gallery-dialog > div {
+  overflow: hidden;
+  max-height: 100vh;
 }
 </style>

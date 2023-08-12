@@ -139,6 +139,7 @@
         </v-footer>
       </template>
     </v-main>
+    <input type="hidden" name="" id="testing-code">
   </v-app>
 </template>
 
