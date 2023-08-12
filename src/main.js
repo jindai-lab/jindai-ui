@@ -15,7 +15,7 @@ Vue.filter("dateSafe", function (value) {
   )
     return value;
   var ds = moment("" + value).format("YYYY-MM-DD HH:mm:ss");
-  if (ds === "Invalid Date") return value;
+  if (ds === "Invalid date") return value;
   return ds;
 });
 

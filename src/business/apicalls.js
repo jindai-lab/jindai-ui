@@ -615,7 +615,7 @@ const apicalls = {
   plugin_shortcuts({ key, value, apply } = {}) {
     if (key) return api.call('plugins/shortcuts', { key, value })
     else if (apply) return api.call('plugins/shortcuts', { apply })
-    else return api.call('plugins/shortctus').then(data => data.results)
+    else return api.call('plugins/shortcuts').then(data => data.results)
   },
 
   // settings and preferences

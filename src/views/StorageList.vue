@@ -38,9 +38,8 @@
             {{ item.name == ".." ? $t("parent-dir") : item.name }}
             <div class="description" v-if="item.type == 'file'">
               {{ $t("size") }}: {{ (item.size / 1024 / 1024).toFixed(2) }} MB
-              {{ $t("created-at") }}: {{ (item.ctime * 1000) | dateSafe }}
-              {{ $t("modified-at") }}:
-              {{ (item.mtime * 1000) | dateSafe }}
+              {{ $t("created-at") }}: {{ new Date(item.ctime * 1000).toISOString() | dateSafe }}
+              {{ $t("modified-at") }}: {{ new Date(item.mtime * 1000).toISOString() | dateSafe }}
             </div>
           </template>
           <template v-slot:item.actions="{item}">

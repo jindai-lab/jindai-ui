@@ -244,8 +244,17 @@ export default {
         this.$emit('input', this.paragraphs.length - 1);
         if (this.view_mode == "gallery")
           this.item_index = this.paragraphs.slice(-1)[0].images.length - 1;
+      } else {
+        this.item_index = 0;
       }
     },
+    value(val) {
+      if (typeof val === 'string') {
+        val = +val
+        this.item_index = 0
+        this.$emit('input', val)
+      }
+    }
   },
   methods: {
     _wheel_handler(e) {
@@ -255,6 +264,10 @@ export default {
         this._event_handler(e.deltaY > 0 ? "arrowright" : "arrowleft");
         this.last_wheel = new Date();
       }
+    },
+    reset_item_index() {
+      this.item_index = -1;
+      this._event_handler('right')
     },
     apply_fit() {
       if (this.view_mode == "gallery" && this.active_item && this.$refs.imagePlayer)
@@ -336,12 +349,7 @@ export default {
     scroll_emphasis(inc = 1) {
       const ems = document.querySelectorAll('em')
       this.emphasis_index = (this.emphasis_index + inc) % ems.length
-      var topsum = 0, el = ems[this.emphasis_index]
-      while (el) {
-        topsum += el.offsetTop
-        el = el.parentElement
-      }
-      window.scrollTo(0, topsum)
+      ems[this.emphasis_index].scrollIntoView()
     },
     playing(interval) {
       if (this.view_mode !== "gallery") return;
@@ -410,9 +418,11 @@ export default {
       }
 
       if (this.view_mode == 'gallery') {
-        var newvalue = this.value, newitem = this.item_index + inc
+        var newvalue = +this.value, newitem = this.item_index + inc
 
-        if (newitem < 0 || newitem >= this.paragraphs[newvalue].images.length) newvalue += inc;
+        if (newitem < 0 || newitem >= this.paragraphs[newvalue].images.length) {
+          newvalue += inc;
+        }
 
         const _valid = () => {
           return this.paragraphs[newvalue] && this.paragraphs[newvalue].images.length
