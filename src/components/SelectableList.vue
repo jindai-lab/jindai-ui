@@ -82,7 +82,7 @@
           </v-btn>
           <v-btn
             :href="`/view/${r.mongocollection}/${
-              r.source.file ? r.source.file.replace(/^\//, '') + '/' + (r.source.page || 0) : r._id
+              r.source.file ? r.source.file.replace(/^\//, '').replace('#', '__hash/') + '/' + (r.source.page || 0) : r._id
             }#highlight_pattern=${ encodeURIComponent(highlight_pattern) }`"
             target="_blank"
           >
