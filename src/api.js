@@ -238,7 +238,7 @@ const apis = {
   },
 
   escape_regex(x) {
-    return x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/([a-zA-Z])/g, '$2[\\u0300-\\u036f]?');
   },
 
   querify(obj) {
@@ -354,7 +354,7 @@ const apis = {
           }`.replace(/^\s+/gm, '')
         default:
           var args = ', '
-          
+
           if (value.pipeline) {
             args = 'pipeline={' + this.querify(value.pipeline) + '}, ';
             delete value.pipeline;
@@ -685,9 +685,7 @@ const apis = {
   },
 
   emphasize(content, pattern) {
-    if (!pattern || pattern == '()') return content
-    
-    pattern = pattern.replace(/([a-zA-Z])/g, '$1[\\u0300-\\u036f]?')
+    if (!pattern || pattern == '()') return content;
     content = content.normalize('NFD');
     return content.replace(new RegExp(pattern, 'ig'), '<em>$1</em>').normalize('NFC')
   },
