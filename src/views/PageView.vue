@@ -198,8 +198,6 @@ export default {
     },
     active_item() {
       var item = this.active_paragraph_images[this.item_index];
-      if (!item) item = this.active_paragraph_images[this.item_index >= 0 ? 0 : this.active_paragraph_images.length - 1]
-      if (!item) item = {}
       this.$emit("browse", { item });
       if (this.$refs.thumbnails && this.$refs.thumbnails.querySelector("li.selected")) {
         this.$refs.thumbnails.querySelector("li.selected").scrollIntoView();
@@ -284,13 +282,17 @@ export default {
       this.image_type = 'png';
 
       if (this.view_mode == "file" && this.file) {
+        let source = {}
+        if (this.file.startsWith('remote-')) {
+          this.file = this.file.replace(/^remote-/, '').replace('/', '://').replace('__ends', '/')
+          source.url = this.file
+        } else {
+          source.file = '/' + this.file
+          source.page = this.page
+        }
         this.business.search({
           req:
-            this.api.querify(
-              this.paragraph_id
-                ? { id: this.paragraph_id }
-                : { source: { file: '/' + this.file, page: this.page } }
-            ),
+            this.api.querify({ source }),
           sort: 'id',
           q: '',
           mongocollections: [this.mongocollection],
@@ -440,7 +442,7 @@ export default {
           if (inc < 0) newitem = this.paragraphs[newvalue].images.length - 1;
           else if (inc > 0) newitem = 0
         }
-
+        
         this.$emit('input', newvalue)
         this.item_index = newitem
       }

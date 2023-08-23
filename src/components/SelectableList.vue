@@ -81,9 +81,7 @@
             <v-icon>mdi-eye</v-icon> {{ $t("view") }}
           </v-btn>
           <v-btn
-            :href="`/view/${r.mongocollection}/${
-              r.source.file ? r.source.file.replace(/^\//, '').replace('#', '__hash/') + '/' + (r.source.page || 0) : r._id
-            }#highlight_pattern=${ encodeURIComponent(highlight_pattern) }`"
+            :href="view_source_url(r)"
             target="_blank"
           >
             <v-icon>mdi-dock-window</v-icon> {{ $t("browse") }}
@@ -248,7 +246,22 @@ export default {
     start_view(index) {
       this.$emit("start-view", index);
     },
-    // copy
+    view_source_url(r) {
+      var src_url = r.id;
+      if (r.source) {
+        // select from file style or url style
+        if (r.source.file) 
+          src_url = r.source.file.replace(/^\//, '').replace('#', '__hash/')
+        else if (r.source.url)
+          src_url = 'remote-' + r.source.url.replace('://', '/').replace(/\/$/, '__ends')
+        // page
+        if (r.source.page)
+          src_url += '/' + r.source.page
+        else
+          src_url += '/0'
+      }
+      return `/view/${r.mongocollection}/${src_url}#highlight_pattern=${ encodeURIComponent(this.highlight_pattern) }`
+    },
     copy_to_clipboard(r) {
       this.api.copy_to_clipboard(`${r.content} // ${this.$t('source')}: ${r.outline} ${r.pdate} ${r.source.file || r.source.url} ${r.pagenum}`)
     },
@@ -311,5 +324,12 @@ export default {
 
 .spacer {
   margin-right: 100%;
+}
+
+.meta a {
+  display: inline-flex;
+  max-width: 300px;
+  overflow: hidden;
+  white-space: nowrap;
 }
 </style>

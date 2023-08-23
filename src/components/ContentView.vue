@@ -73,7 +73,7 @@ export default {
             "t_" + tag : '';
     },
     handle_copy(e) {
-      var text = document.getSelection().toString().replace(/\s+/g, ' ')
+      var text = document.getSelection().toString().replace(/\s+|\[\d+\]/g, ' ')
       e.clipboardData.setData('text', text)
       e.preventDefault()
     },
