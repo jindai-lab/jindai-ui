@@ -198,6 +198,8 @@ export default {
     },
     active_item() {
       var item = this.active_paragraph_images[this.item_index];
+      if (!item)
+        this._event_handler('continue')
       this.$emit("browse", { item });
       if (this.$refs.thumbnails && this.$refs.thumbnails.querySelector("li.selected")) {
         this.$refs.thumbnails.querySelector("li.selected").scrollIntoView();
@@ -210,7 +212,7 @@ export default {
         : this.fetched_paragraphs;
     },
     active_paragraph_images() {
-      return this.active_paragraph.images.length ? this.active_paragraph.images : [this.active_paragraph]
+      return this.active_paragraph.images
     },
   },
   beforeDestroy() {
@@ -243,6 +245,7 @@ export default {
         if (this.view_mode == "gallery")
           this.item_index = this.paragraphs.slice(-1)[0].images.length - 1;
       } else {
+        this.$emit('input', 0)
         this.item_index = 0;
       }
     },
@@ -252,7 +255,7 @@ export default {
         this.item_index = 0
         this.$emit('input', val)
       }
-    }
+    },
   },
   methods: {
     _wheel_handler(e) {

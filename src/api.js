@@ -238,7 +238,7 @@ const apis = {
   },
 
   escape_regex(x) {
-    return x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/([a-zA-Z])/g, '$2[\\u0300-\\u036f]?');
+    return x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   },
 
   querify(obj) {

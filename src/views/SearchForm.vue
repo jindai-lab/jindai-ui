@@ -288,7 +288,7 @@ export default {
           let key = kvpair[0],
             val = kvpair[1];
           if (key == "keywords" || key == 'content') {
-            if (typeof val == "string") return [this.api.escape_regex(val)];
+            if (typeof val == "string") return [this.api.escape_regex(val).replace(/([a-zA-Z])/g, '$1[\\u0300-\\u036f]?')];
             else if (typeof val.$regex == "string") return [val.$regex.replace(/^\^/, '')];
           }
           return this.keyword_patterns(val);
