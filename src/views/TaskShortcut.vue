@@ -105,7 +105,9 @@ export default {
         const mapped_to = k.split(".");
         var target = this.task.pipeline;
         for (var seg of mapped_to.slice(1, -1)) {
-          target = seg.match(/^\d+$/) ? target[+seg][1] : target[seg];
+          target = seg.match(/^\d+$/) ? target[+seg] : target[seg];
+          if (Array.isArray(target) && target.length == 2 && typeof target[0] == 'string' && typeof target[1] == 'object')
+            target = target[1]
         }
         target[mapped_to.slice(-1)[0]] = v;
       }

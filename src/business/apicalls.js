@@ -173,7 +173,7 @@ const apicalls = {
     if (!selection || !selection.length) return;
     return api
       .call(`collections/merge`, {
-        ... objs.para_items,
+        ...objs.para_items,
         mongocollection: selection.first.mongocollection || "paragraph"
       })
   },
@@ -182,7 +182,7 @@ const apicalls = {
     var objs = selection.to_objects()
     return api
       .call(`collections/split`, {
-        ... objs.para_items,
+        ...objs.para_items,
         mongocollection: selection.first.mongocollection || "paragraph"
       })
   },
@@ -600,7 +600,19 @@ const apicalls = {
 
   // storage
   storage(selected_dir, operation) {
-    return api.call(`storage/${selected_dir}`, operation)
+    return api.call(`storage/`, { path: selected_dir, ...operation })
+  },
+
+  search_file(search_input) {
+    var promise = new Promise((resolve,) => resolve([]));
+    if (!search_input || search_input.match(/^(?!file):\/\//))
+      return promise
+
+    const path_segs = search_input.split('/')
+    const search = path_segs.pop() + '*'
+    const path = path_segs.join('/') + '/'
+    promise = api.call(`storage/`, { path, search, recursive: false }).then(data => data.results.map(x => x.fullpath)).catch(() => [search_input])
+    return promise
   },
 
   install_plugin(url) {

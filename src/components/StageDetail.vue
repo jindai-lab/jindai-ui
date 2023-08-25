@@ -20,6 +20,8 @@
                 {{ arg.description.replace("%1", arg.name)
                 }}<ParamInput
                   :arg="arg"
+                  :map_id="map_id"
+                  @shortcut="e => $emit('shortcut', e)"
                   v-model="value[1][arg.name]"
                   @validation="update_valid('stage_' + arg.name, $event)"
                 />
@@ -27,10 +29,10 @@
               <div class="asterisk">
                 <v-btn
                   @click="
-                    update_shortcut(
-                      map_id + '.' + arg.name,
-                      arg.description || arg.name
-                    )
+                    $emit('shortcut', {
+                      name: map_id + '.' + arg.name,
+                      description: arg.description || arg.name
+                    });
                   "
                   icon
                 >
@@ -47,7 +49,7 @@
             v-model="value[1][arg.name]"
             :map_id="map_id + '.' + arg.name"
             @validation="update_valid('pipeline_' + arg.name, $event)"
-            @shortcut="update_shortcut"
+            @shortcut="e => $emit('shortcut', e)"
           />
         </div>
       </div>
@@ -71,9 +73,6 @@ export default {
   methods: {
     update_input() {
       this.$emit("input", this.value);
-    },
-    update_shortcut(map_name, map_description) {
-      this.$emit("shortcut", map_name, map_description);
     },
     update_valid(name, valid) {
       var l = this.valid.indexOf(name);

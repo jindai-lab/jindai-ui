@@ -79,7 +79,7 @@
       </v-card-text>
       <v-card-actions>
         <v-btn
-          @click="save().then(() => notify($t('saved')))"
+          @click="save().then(() => $notify($t('saved')))"
           class="ml-5"
           color="primary"
         >
@@ -168,9 +168,8 @@ export default {
       var {job} = await this.business.enqueue(_id)
       this.$notify(this.$t("job-enqueued", { job }));
     },
-    update_shortcut(shortcut_name, shortcut_description) {
-      this.task.shortcut_map[shortcut_name] =
-        shortcut_description || shortcut_name.split(".").slice(-1)[0];
+    update_shortcut({name, description} = {}) {
+      this.task.shortcut_map[name] = description || name.split(".").slice(-1)[0];
       this.$forceUpdate();
     },
     querify() {

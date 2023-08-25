@@ -128,8 +128,7 @@ export default {
     rename_file(f) {
       var new_name = prompt(this.$t("raname-to"), f.name);
       if (!new_name) return;
-      this.business.storage('move', 
-        { source: f.fullpath, destination: new_name }).then(() =>
+      this.business.storage('', { move: true, source: f.fullpath, destination: new_name }).then(() =>
           this.update_files()
         )
     },

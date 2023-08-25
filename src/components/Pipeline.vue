@@ -13,7 +13,7 @@
         :map_id="map_id + '.' + index"
         v-model="value[index]"
         @validation="update_valid(map_id + '.' + index, $event)"
-        @shortcut="update_shortcut"
+        @shortcut="e => $emit('shortcut', e)"
       />
       <div class="opers">
         <v-btn icon @click="remove_stage(index)" >
@@ -61,15 +61,18 @@ export default {
     }
   },
   props: ["value", "map_id"],
+  watch: {
+    value(val) {
+      if (!val)
+        this.$emit('input', [])
+    }
+  },
   methods: {
     update_valid(name, valid) {
       var l = this.valid.indexOf(name);
       if (l >= 0) this.valid.splice(l, 1);
       if (!valid) this.valid.push(name);
       this.$emit("validation", this.valid.length == 0)
-    },
-    update_shortcut(shortcut_name, arg_description) {
-      this.$emit("shortcut", shortcut_name, arg_description)
     },
     append_stage(index) {
       if (typeof index === 'undefined')
