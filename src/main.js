@@ -48,23 +48,22 @@ Vue.component("treeselect", Treeselect);
 import "@riophae/vue-treeselect/dist/vue-treeselect.css";
 
 // load components
-import SearchForm from "./views/SearchForm.vue";
-import TaskDetail from "./views/TaskDetail.vue";
-import TaskShortcut from "./views/TaskShortcut.vue";
-import TaskList from "./views/TaskList.vue";
-import PageView from "./views/PageView.vue";
-import DatasetList from "./views/DatasetList.vue";
-import History from "./views/History.vue";
-import Login from "./views/Login.vue";
-import QueueResult from "./views/QueueResult.vue";
-import QueueLog from "./views/QueueLog.vue";
-import StorageList from "./views/StorageList.vue";
-import SystemAdmin from "./views/SystemAdmin.vue";
-import Preferences from "./views/Preferences.vue";
-import DbConsole from "./views/DbConsole.vue";
-import AutoTags from "./views/AutoTags.vue";
-import Shortcuts from "./views/Shortcuts.vue";
-import QueryFormTest from "./views/QueryFormTest.vue";
+const SearchForm = () => import( "./views/SearchForm.vue" );
+const TaskDetail = () => import( "./views/TaskDetail.vue" );
+const TaskShortcut = () => import( "./views/TaskShortcut.vue" );
+const TaskList = () => import( "./views/TaskList.vue" );
+const PageView = () => import( "./views/PageView.vue" );
+const DatasetList = () => import( "./views/DatasetList.vue" );
+const History = () => import( "./views/History.vue" );
+const Login = () => import( "./views/Login.vue" );
+const QueueResult = () => import( "./views/QueueResult.vue" );
+const QueueLog = () => import( "./views/QueueLog.vue" );
+const StorageList = () => import( "./views/StorageList.vue" );
+const SystemAdmin = () => import( "./views/SystemAdmin.vue" );
+const Preferences = () => import( "./views/Preferences.vue" );
+const DbConsole = () => import( "./views/DbConsole.vue" );
+const AutoTags = () => import( "./views/AutoTags.vue" );
+const Shortcuts = () => import( "./views/Shortcuts.vue" );
 
 // install api and dialogs
 import api from "./api"
@@ -143,11 +142,7 @@ const routes = [{
 {
   path: "/shortcuts",
   component: Shortcuts,
-},
-{
-  path: "/querytest",
-  component: QueryFormTest,
-},
+}
 ];
 
 const router = new VueRouter({

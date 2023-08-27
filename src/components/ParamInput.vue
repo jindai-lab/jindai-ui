@@ -72,9 +72,11 @@
           </v-icon>
         </template>
         <template v-slot:item.text="{ item }">
-          <ParamInput :arg="{ type: singular_type, name: '' }" v-model="item.text"
-          @shortcut="e => $emit('shortcut', e)"
-            :map_id="map_id + '.' + arg.name + '.' + item.index" ref="new_line_input" @input="emit_lines"></ParamInput>
+          <ParamInput :arg="{ type: singular_type, name: '' }"
+            v-model="item.text"
+            @shortcut="e => $emit('shortcut', e)"
+            :map_id="map_id + '.' + arg.name + '.' + item.index"
+            @input="emit_lines"></ParamInput>
         </template>
         <template v-slot:body.append>
           <tr>
@@ -82,8 +84,9 @@
               <v-icon small @click="append_line">mdi-plus</v-icon>
             </td>
             <td>
-              <ParamInput :arg="{ type: singular_type, name: '' }" v-model="new_line" ref="new_line_input"></ParamInput>
-            </td>
+              <ParamInput :arg="{ type: singular_type, name: '' }"
+                v-model="new_line"></ParamInput>
+          </td>
           </tr>
         </template>
       </v-data-table>
@@ -190,14 +193,7 @@ export default {
       }
     },
     lines() {
-      var newvals = []
-      if (Array.isArray(this.value)) newvals = this.value;
-      if (['FILES', 'LINES'].includes(this.arg.type)) {
-        if (typeof newvals == 'string') newvals = (this.value || "").split("\n")
-        newvals = newvals
-          .filter((x) => x.length)
-      }
-      return newvals.map((x, i) => ({ text: x, index: i }));
+      return this.validate(this.value).map((x, i) => ({ text: x, index: i }));
     },
     file_search: {
       get() {
@@ -240,9 +236,8 @@ export default {
           this.arg.default === null
         ) {
           this.prompt = this.$t("required");
-          return;
+          return null;
         }
-        return null;
       }
       switch (this.arg.type) {
         case "bool":
@@ -255,6 +250,15 @@ export default {
           if (val.match(/^[+-]?\d?\.?\d+[eE]?[+-]?\d*$/))
             return parseFloat(val);
           break;
+        case "FILES":
+        case "LINES":
+          if (!Array.isArray(val))
+            return (val || '').toString().split('\n')
+          break
+        case "PIPELINES":
+          if (!Array.isArray(val))
+            return []
+          break
         default:
           return val;
       }
@@ -336,18 +340,10 @@ export default {
       reader.readAsDataURL(file);
     },
     emit_lines(lines) {
-      switch (this.arg.type) {
-        case "FILES":
-        case "LINES":
-          lines = lines.map(x => x.text).join('\n')
-          break
-        default:
-          break
-      }
       this.$emit('input', lines);
     },
     move_line(item_id, inc) {
-      var lines = this.lines.map((x) => x.text);
+      var lines = [...this.value];
       var deleted = lines.splice(item_id, 1);
       switch (inc) {
         case -1:
@@ -366,11 +362,8 @@ export default {
       return this.move_line(item_id, 0);
     },
     append_line() {
-      if (this.new_line) {
-        var lines = [... this.lines.map(x => x.text), this.new_line]
-        this.emit_lines(lines)
-      }
-      this.new_line = null;
+      var lines = [... this.lines, {'text': this.new_line}]
+      this.emit_lines(lines)
     },
   },
   mounted() {
