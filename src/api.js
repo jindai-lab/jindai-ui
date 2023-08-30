@@ -209,13 +209,13 @@ const apis = {
       });
   },
 
-  _axios_config(other) {
+  _axios_config(other = {}) {
     return {
       headers: {
         "X-Authentication-Token": _token,
         "X-Preferred-Language": i18n.locale,
       },
-      ...(other || {})
+      ...other
     }
   },
 

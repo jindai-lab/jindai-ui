@@ -241,7 +241,7 @@ export default {
       }
       switch (this.arg.type) {
         case "bool":
-          return val;
+          return !!val;
         case "int":
           if (val.match(/^[+-]?\d+$/)) return parseInt(val);
           break;
@@ -254,11 +254,11 @@ export default {
         case "LINES":
           if (!Array.isArray(val))
             return (val || '').toString().split('\n')
-          break
+          return val
         case "PIPELINES":
           if (!Array.isArray(val))
             return []
-          break
+          return val
         default:
           return val;
       }
