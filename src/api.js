@@ -545,34 +545,8 @@ const apis = {
     return ''
   },
 
-  get_image_url(src) {
-    var path = ''
-    if (src.file) {
-      let ext = (src.url || src.orig_path || src.file || '').split('?')[0].split('.').pop()
-      var filename = ''
-      if (src.file.indexOf('://') >= 0) {
-        let segs = src.file.split('://')
-        path = `/images/${segs[0]}/`
-        filename = segs[1]
-      } else {
-        path = `/images/file/`
-        filename = src.file
-      }
-      filename = filename.replace('$', src.block_id)
-      filename = filename.replace(/^\//, '')
-      path += filename
-      if (path.match(/\/hdf5\//)) {
-        path += `/image.${ext.length <= 4 ? ext : 'data'}`
-      }
-      if (ext == 'pdf' && typeof (src.page) !== 'undefined') {
-        path += `__hash/pdf/${src.page}/page.png`
-      }
-    }
-    else if (src.url)
-      path = src.url
-    else
-      path = `/images/object/${Buffer.from(JSON.stringify(src)).toString('base64')}`;
-
+  get_image_url(path) {
+    path = path.replace('#', '__hash/')
     return this._generate_domain(path, 'img', this.meta.domain_delimiter) + path;
   },
 
@@ -593,7 +567,7 @@ const apis = {
     var args = "";
     if (item && item.item_type == "video") {
       if (item.thumbnail)
-        return this.get_image_url({ file: item.thumbnail, url: '.jpg' });
+        return this.get_image_url(item.thumbnail);
       return _prompt_video;
     }
 
@@ -604,7 +578,7 @@ const apis = {
 
     if (item.source.file) {
       if (item.source.file.indexOf('://') >= 0) item.source.block_id = item._id;
-      return this.get_image_url(item.source) + args;
+      return this.get_image_url(item.src) + args;
     }
     return item.source.url;
   },
@@ -612,7 +586,7 @@ const apis = {
   get_item_video(item) {
     if (item.source.file) {
       if (item.source.file.indexOf('://') >= 0) item.source.block_id = item._id;
-      return this.get_image_url(item.source);
+      return this.get_image_url(item.src);
     }
     return item.source.url;
   },

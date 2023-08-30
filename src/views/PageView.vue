@@ -321,14 +321,13 @@ export default {
 
       var src =
         this.view_mode == "file"
-          ? { file: this.file, page: this.page }
-          : this.active_paragraph.source;
-      if (src && src.file) {
+          ? '/images/file/' + this.file + `#pdf/${this.page}/page.pdf`
+          : this.active_paragraph.src;
+      if (src) {
         var image_url = this.api.get_image_url(src);
-        this.image_type = src.file.split('.').pop().toLowerCase()
+        this.image_type = src.split('.').pop().toLowerCase()
         switch (this.image_type) {
           case 'pdf':
-            image_url = image_url.replace(/.png$/, '.pdf')
             this.page_image = image_url
             break
           case 'htm':

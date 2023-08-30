@@ -265,6 +265,7 @@ export default {
     toggle_fits() {
       this.api.config.fit = this.api.next_fit();
       this.$refs.page_view.apply_fit();
+      this.$forceUpdate();
     },
     call_business(name, options) {
       if (typeof name == "object") {
