@@ -566,7 +566,7 @@ const apis = {
     var args = "";
     if (item && item.item_type == "video") {
       if (item.thumbnail)
-        return this.get_image_url('/images/' + item.thumbnail);
+        return this.get_image_url('/images/' + item.thumbnail.replace('://', '/'));
       return _prompt_video;
     }
 
