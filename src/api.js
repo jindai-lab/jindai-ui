@@ -546,7 +546,6 @@ const apis = {
   },
 
   get_image_url(path) {
-    path = path.replace('#', '__hash/')
     return this._generate_domain(path, 'img', this.meta.domain_delimiter) + path;
   },
 

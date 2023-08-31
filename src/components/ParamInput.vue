@@ -239,6 +239,8 @@ export default {
           return null;
         }
       }
+      if (typeof val == 'string' && val.match(/^CONST:.+$/))
+        return val;
       switch (this.arg.type) {
         case "bool":
           return !!val;
