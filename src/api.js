@@ -295,18 +295,26 @@ const apis = {
 
       const dollars = Object.keys(obj).filter(x => x.startsWith('$'))
 
-      if (!dollars.length)
+      if (!dollars.length) {
         return '(' + Object.entries(obj).map(([key, value]) => {
+          var prefix = '', suffix = ''
+          if (value.$not) {
+            value = value.$not
+            prefix = '~('
+            suffix = ')'
+          }
           value = this.querify(value)
           if (typeof value == 'string')
-            return `${key}=${value}`
+            return `${prefix}${key}=${value}${suffix}`
           else
-            return `${key}${value.value}`
+            return `${prefix}${key}${value.value}${suffix}`
         }).join(', ') + ')'
+      }
 
       if (obj.$regex) {
         const regex = obj.$regex;
-        const options = obj.$options || '';
+        var options = obj.$options || '';
+        if (!options.match(/i/)) options += 'I';
         return { value: ` % \`${regex}\`${options}` };
       }
 
