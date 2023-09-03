@@ -75,10 +75,10 @@ _event_handler('arrowright');
   api.querystring_stringify({
     q:
       api.scope(active_paragraph) +
-      `;plugin('${format(filter.format, {
+      `;plugin(${format(filter.format, {
         mediaitem: active_item,
         paragraph: active_paragraph,
-      })}');`,
+      })});`,
   })
   " class="t_func sim" target="_blank"><v-icon>{{ filter.icon }}</v-icon></v-btn>
                   <v-btn icon dense @click="$emit('info', active_item)" target="_blank"
@@ -160,6 +160,7 @@ export default {
       loading_image: require("../../public/assets/loading.png"),
       item_index: 0,
       highlight_pattern: '',
+      pending_status: 0,
 
       playing_timer: 0,
       playing_interval: 1000,
@@ -240,7 +241,7 @@ export default {
   },
   watch: {
     paragraphs() {
-      if (this.value < 0) {
+      if (this.pending_status == -1) {
         this.$emit('input', this.paragraphs.length - 1);
         if (this.view_mode == "gallery")
           this.item_index = this.paragraphs.slice(-1)[0].images.length - 1;
@@ -248,6 +249,7 @@ export default {
         this.$emit('input', 0)
         this.item_index = 0;
       }
+      this.pending_status = 0;
     },
     value(val) {
       if (typeof val === 'string') {
@@ -438,8 +440,9 @@ export default {
 
         if (newvalue < 0 || newvalue >= this.paragraphs.length) {
           this.$emit(inc < 0 ? "prev" : "next");
-          newvalue = inc > 0 ? 0 : -1;
+          newvalue = 0;
           newitem = newvalue
+          this.pending_status = inc
         } else if (newvalue != this.value) {
           if (inc < 0) newitem = this.paragraphs[newvalue].images.length - 1;
           else if (inc > 0) newitem = 0

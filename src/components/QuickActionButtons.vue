@@ -190,13 +190,13 @@ export default {
                 const { selection } = options;
                 return {
                   archive: true,
-                  q: `${this.api.scope(selection.first)};plugin('${this.format(
+                  q: `${this.api.scope(selection.first)};plugin(${this.format(
                     pages[0].format,
                     {
                       mediaitem: selection.first.images[0],
                       paragraph: selection.first,
                     }
-                  )}');`,
+                  )});`,
                 };
               },
             });
