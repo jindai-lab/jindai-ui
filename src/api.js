@@ -187,7 +187,7 @@ const apis = {
         }
       })
       .catch((ex) => {
-        console.log(ex)
+        console.error(ex)
         _stack.pop()
 
         var message = ex.toString()

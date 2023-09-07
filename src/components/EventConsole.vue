@@ -33,7 +33,7 @@ export default {
       try {
         this.queue_event();
       } catch (error) {
-        console.log("[eventsource]", error);
+        console.error("[eventsource]", error);
       }
     };
     this.queue_event();

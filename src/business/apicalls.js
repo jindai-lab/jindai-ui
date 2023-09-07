@@ -235,7 +235,7 @@ const apicalls = {
               })
               .catch((err) => {
                 vm.cancel = null;
-                console.log(err);
+                console.error(err);
               });
           });
         } // end of search tag
@@ -565,7 +565,7 @@ const apicalls = {
           var cand = parent_obj.get(segs, x.segments[i], {
             name: segs,
             tags: [],
-            dataset_name: x.name,
+            dataset_name: segs,
             mongocollection: x.mongocollection
           })
           cand.tags = ((i == x.level - 1 ? x.tags : []) || []).join(', ')

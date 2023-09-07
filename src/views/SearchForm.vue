@@ -136,11 +136,10 @@ export default {
         return Array.from(
           selection.map((x) => {
             var vals = typeof x[field] == 'string' ? [x[field]] : x[field]
-            if (field == 'dataset_name') {
-              var children = Object.values(this.selection_bundles).filter(oo => typeof oo[field] == 'string' && oo[field].startsWith(x[field] + '--'))
-              if (children.length)
-                vals = vals.concat(combine(children, field))
-            }
+            var children = Object.values(this.selection_bundles)
+              .filter(oo => typeof oo[field] == 'string' && oo[field].startsWith(x[field] + '--'))
+            if (children.length)
+              vals = vals.concat(combine(children, field))
             return new Set(vals)
           }
           ).reduce((prev, curr) => {

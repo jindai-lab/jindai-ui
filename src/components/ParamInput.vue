@@ -338,7 +338,7 @@ export default {
         this.$emit("input", e.target.result);
         this.file_prompt = file.name;
       };
-      reader.onerror = (e) => console.log("Error : " + e.type);
+      reader.onerror = (e) => console.error("Error : " + e.type);
       reader.readAsDataURL(file);
     },
     emit_lines(lines) {
