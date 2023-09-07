@@ -323,7 +323,7 @@ export default {
 
       var src =
         this.view_mode == "file"
-          ? '/images/file/' + this.file + `#pdf/${this.page}/page.pdf`
+          ? '/images/file/' + this.file + `__hash/pdf/${this.page}/page.pdf`
           : this.active_paragraph.src;
       if (src) {
         var image_url = this.api.get_image_url(src);
