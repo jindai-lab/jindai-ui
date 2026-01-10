@@ -6,10 +6,12 @@ import {
 import { Table, Button, Input, Space, Tag, message, Popconfirm, Modal, Upload } from 'antd';
 import { useState, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
-
+import {useApiClient} from '../api';
 
 
 const FileManager = ({ folderPath }) => {
+  const api = useApiClient()
+
   // 状态管理：当前目录ID、当前目录列表、面包屑导航、搜索关键词
   const [currentFileList, setCurrentFileList] = useState([]);
   const [searchValue, setSearchValue] = useState('');
@@ -20,8 +22,7 @@ const FileManager = ({ folderPath }) => {
   const navigate = useNavigate();
 
   async function listFiles(folderPath) {
-    const resp = await fetch(`/api/files${encodeURI(folderPath)}?metadata=true`);
-    const data = await resp.json();
+    const data = await api.callAPI(`files${encodeURI(folderPath)}?metadata=true`);
     const list = data.items || [];
     list.sort((a, b) => {
       if (a.is_directory && !b.is_directory) return -1;
@@ -60,10 +61,7 @@ const FileManager = ({ folderPath }) => {
   const handleDelete = (record) => {
     // 请求后台接口 DELETE /api/files/<文件/文件夹id> 删除资源
     console.log('删除文件/文件夹：', record.relative_path);
-    fetch(`/api/files/${record.relative_path}`, { method: 'DELETE' }).then(response => {
-      if (!response.ok) {
-        throw new Error('删除失败，服务器返回错误');
-      }
+    api.callAPI(`files/${record.relative_path}`, null, { method: 'DELETE' }).then(response => {
       message.success(`${record.is_directory ? '文件夹' : '文件'}删除成功`);
       handleRefresh(); // 刷新目录列表，实时更新删除结果
     }).catch(err => {
@@ -177,7 +175,7 @@ const FileManager = ({ folderPath }) => {
   };
 
   return (
-    <div style={{ width: '100%', maxWidth: 1400, margin: '20px auto', padding: '0 16px' }}>
+    <>
       {/* 顶部导航区：返回 + 刷新 */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <Space size="small">
@@ -194,13 +192,7 @@ const FileManager = ({ folderPath }) => {
         onOk={async () => {
           try {
             // 请求后台接口 PUT /api/files/<文件/文件夹id> 修改名称
-            await fetch(`/api/files/${editingRecord.relative_path}`, {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                name: newName.trim()
-              })
-            });
+            await api.fileRename({ original: editingRecord.relative_path, newName: newName.trim() })
             message.success(`${editingRecord.is_directory ? '文件夹' : '文件'}重命名成功`);
             handleRefresh(); // 刷新目录列表，实时展示新名称
             setEditingRecord(null);
@@ -221,14 +213,10 @@ const FileManager = ({ folderPath }) => {
         onOk={async () => {
           try {
             // 请求后台接口 POST /api/files/<当前目录path> 新建文件夹
-            await fetch(`/api/files${folderPath}`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                name: folderName.trim(),
-                is_directory: true
-              })
-            });
+            await api.callAPI(`files${folderPath}`, {
+              name: folderName.trim(),
+              is_directory: true
+            })
             message.success('文件夹创建成功');
             handleRefresh(); // 刷新目录列表，实时展示新增结果
             setCreatingDir(false);
@@ -269,7 +257,7 @@ const FileManager = ({ folderPath }) => {
 
       {/* 文件列表核心展示区 */}
       <Table {...tableProps} />
-    </div>
+    </>
   );
 };
 
@@ -284,4 +272,4 @@ export default function FileListPage({ folderPath }) {
     <FileManager folderPath={folderPath} />
   );
 
-}    
+}

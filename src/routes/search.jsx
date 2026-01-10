@@ -1,9 +1,13 @@
 import { useEffect, useState } from 'react';
-import { TreeSelect, Pagination } from 'antd';
+import { TreeSelect, Pagination, message } from 'antd';
 import { useSearchParams } from 'react-router-dom';
+import DatasetSelector from '../components/dataset-selector';
+import FileSourceSelector from '../components/filesource-selector';
+import { useApiClient } from '../api';
 
 function SearchPage() {
 
+  const api = useApiClient()
   const [searchParams, setSearchParams] = useSearchParams();
   // 搜索信息和状态
   const [searchText, setSearchText] = useState('');
@@ -17,10 +21,14 @@ function SearchPage() {
     results: [], offset: -pageSize
   });
   // 数据集和文件源列表
-  const [datasets, setDatasets] = useState([]);
   const [datasetSelection, setDatasetSelection] = useState([]);
-  const [sources, setSources] = useState([]);
   const [sourceFileSelection, setSourceFileSelection] = useState([]);
+
+  function showLoading(loading) {
+    setIsLoading(loading)
+    if (loading) message.loading('正在加载...', 0)
+    else message.destroy()
+  }
 
   function applySearchParams() {
     const q = searchParams.get('q') || '';
@@ -46,13 +54,13 @@ function SearchPage() {
     setSearchParams(params);
   }
 
-  async function searchParagraphs(offset=0, query=searchText, ds=datasetSelection, fs=sourceFileSelection) {
+  async function searchParagraphs(offset = 0, query = searchText, ds = datasetSelection, fs = sourceFileSelection) {
     try {
       if (searchText)
         syncSearchParams(offset / pageSize + 1);
 
       if (query == prefetched.query && ds == prefetched.datasets && fs == prefetched.sources &&
-         prefetched.offset <= offset && prefetched.offset + prefetched.results.length > offset) {
+        prefetched.offset <= offset && prefetched.offset + prefetched.results.length > offset) {
         // 使用预取数据
         const start = offset - prefetched.offset;
         const end = start + pageSize;
@@ -67,22 +75,12 @@ function SearchPage() {
       console.log('发送新请求', offset);
 
       setSearchResult({ results: [], total: 0 }); // 清空旧结果
-      setIsLoading(true);
+      showLoading(true);
 
-      const response = await fetch(`/api/paragraphs?offset=${offset}&limit=${pageSize * 5}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json', // 必须指定 JSON 格式
-        },
-        body: JSON.stringify({ search: query.trim(), datasets: ds, sources: fs }), // 构造请求体
-      });
-      // 校验响应状态
-      if (!response.ok) {
-        throw new Error(`请求失败：${response.status} ${response.statusText}`);
-      }
-
-      // 解析响应结果
-      const data = await response.json();
+      const data = await api.callAPI(
+        `paragraphs?offset=${offset}&limit=${pageSize * 5}`,
+        { search: query.trim(), datasets: ds, sources: fs }
+      );
       setPrefetched({
         results: data.results,
         offset: offset,
@@ -95,21 +93,14 @@ function SearchPage() {
         results: data.results.slice(0, pageSize),
         total: data.total
       });
-      setIsLoading(false)
     } catch (err) {
       // 捕获所有错误并展示
       setError(err.message);
     } finally {
       // 无论成功/失败，结束加载状态
-      setIsLoading(false);
+      showLoading(false);
     }
 
-  }
-
-  if (datasets.length === 0) {
-    fetch('/api/datasets')
-      .then(response => response.json())
-      .then(data => setDatasets(data.results));
   }
 
   // 核心搜索函数：处理接口调用逻辑
@@ -121,7 +112,6 @@ function SearchPage() {
     }
 
     // 重置状态
-    setIsLoading(true);
     setError('');
     setSearchResult(null);
 
@@ -130,7 +120,6 @@ function SearchPage() {
     // 发送 POST 请求
     setPrefetched({ results: [], offset: -pageSize });
     searchParagraphs(); // 存储结果供展示
-
   };
 
   // 处理回车触发搜索
@@ -144,23 +133,13 @@ function SearchPage() {
     setCurrentPage(newPage);
     setPageSize(newPageSize);
     searchParagraphs(newPageSize * (newPage - 1));
+    localStorage.pageSize = newPageSize
   };
 
-  async function fetchSources(folderPath = '') {
-    const response = await fetch('/api/files' + folderPath);
-    const data = await response.json();
-    setSources(sources.concat(data.items.map(item => ({
-      title: item.name,
-      value: '/' + item.relative_path,
-      isLeaf: !item.is_directory,
-      id: '/' + item.relative_path,
-      pId: folderPath || null,
-    }))));
-  }
-
   useEffect(() => {
-    fetchSources();
+    setPageSize(+localStorage.pageSize || 20)
     applySearchParams();
+    document.title = '搜索'
   }, [])
 
   return (
@@ -187,46 +166,22 @@ function SearchPage() {
       </div>
       <div className="filter-bar">
         <label htmlFor="datasets">数据集</label>
-        <TreeSelect
-          id="datasets"
-          showSearch
-          style={{ width: '100%' }}
+        <DatasetSelector
+          multiple={true}
           value={datasetSelection}
-          styles={{ popup: { root: { maxHeight: 400, overflow: 'auto' } } }}
-          multiple
-          placeholder="数据集"
-          allowClear
-          treeData={datasets}
-          onChange={e => {
-            setDatasetSelection(e)
-          }}
+          onChange={setDatasetSelection}
         />
-        </div><div className="filter-bar">
+      </div><div className="filter-bar">
         <label htmlFor="sources">文件源</label>
-        <TreeSelect
-          id="sources"
-          showSearch
-          style={{ width: '100%' }}
+        <FileSourceSelector
           value={sourceFileSelection}
-          styles={{ popup: { root: { maxHeight: 400, overflow: 'auto' } } }}
-          multiple treeDataSimpleMode
-          placeholder="文件源"
-          allowClear
-          treeData={sources}
-          onChange={e => {
-            setSourceFileSelection(e)
-          }}
-          loadData={({ id }) => {
-            return fetchSources(id)
-          }}
-        ></TreeSelect>
+          multiple={true}
+          onChange={setSourceFileSelection}
+        />
       </div>
 
       {/* 错误提示 */}
       {error && <div className="error-alert">{error}</div>}
-
-      {/* 加载提示 */}
-      {isLoading && <div className="loading-hint">正在搜索，请稍候...</div>}
 
       {/* 搜索结果展示区（分元数据和文本） */}
       {!isLoading && searchResult && (
@@ -255,10 +210,12 @@ function SearchPage() {
                       {ele.pagenum ? `:${ele.pagenum}` : ''}</a>
                   </span>
                 </div>
-                <div className="metadata-item">
-                  <span className="metadata-label">大纲</span>
-                  <span className="metadata-value">{ele.outline || ''}</span>
-                </div>
+                {ele.outline && (
+                  <div className="metadata-item">
+                    <span className="metadata-label">大纲</span>
+                    <span className="metadata-value">{ele.outline || ''}</span>
+                  </div>
+                )}
                 {ele.author && (
                   <div className="metadata-item">
                     <span className="metadata-label">作者</span>
