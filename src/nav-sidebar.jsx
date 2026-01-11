@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { DatabaseOutlined, FileSearchOutlined, FolderOpenOutlined, HistoryOutlined, ImportOutlined, SettingOutlined } from '@ant-design/icons';
+import { DatabaseOutlined, FileSearchOutlined, FolderOpenOutlined, HistoryOutlined, ScheduleOutlined, SettingOutlined } from '@ant-design/icons';
 import { useState } from 'react';
 import { useEffect } from 'react';
 
@@ -34,6 +34,9 @@ export default function NavSidebar() {
         </NavLink>
         <NavLink to="/datasets"><DatabaseOutlined />
           <span className="menu-text">数据集</span>
+        </NavLink>
+        <NavLink to="/tasks"><ScheduleOutlined />
+          <span className="menu-text">任务</span>
         </NavLink>
       </nav>
     </aside>

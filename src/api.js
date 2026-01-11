@@ -1,17 +1,21 @@
 import { message } from "antd";
-import localeCodes from "locale-codes";
-import { useAuth } from "react-oidc-context";
-import { useEffect } from "react";
 import axios from "axios";
+import localeCodes from "locale-codes";
+import { useEffect } from "react";
+import { useAuth } from "react-oidc-context";
 
-const apiClient = axios.create({
-  baseURL: "/api", // Your Flask Backend
-});
+class InterceptorsError extends Error {}
 
-function APICaller(apiClient) {
-  return {
+export const apiClient = Object.assign(
+  axios.create({
+    baseURL: "/api", // Your Flask Backend
+  }),
+  {
     async callAPI(name, data, { method, ...options } = { method: "" }) {
       try {
+        if (!this.interceptors.request.handlers.filter(x=>x).length)
+          throw new InterceptorsError()
+
         name = name.replace(/^\/+|\/+$/g, "");
         if (!method) method = data ? "POST" : "GET";
         method = method.toUpperCase();
@@ -38,21 +42,25 @@ function APICaller(apiClient) {
             throw new Error(`Invalid "data" for method ${method}`);
         }
 
-        const resp = await apiClient[method.toLowerCase()](
-          name,
-          data
-        );
+        const resp = await this[method.toLowerCase()](name, data);
         return resp?.data;
       } catch (e) {
+        if (e instanceof InterceptorsError) return;
         message.error(`错误的请求: ${e}`);
         console.error(e, { name, data, method });
       }
+    },
+    async search(query, datasets, sources, offset, limit, options = {}) {
+      return await this.callAPI(
+        `paragraphs?offset=${offset}&limit=${limit}`,
+        { search: query.trim(), datasets, sources, ...options }
+      )
     },
     async datasets() {
       return (await this.callAPI("datasets"))?.results;
     },
     async download(src) {
-      const resp = await apiClient.get(src, {responseType: "blob"});
+      const resp = await this.get(src, { responseType: "blob" });
       const href = URL.createObjectURL(resp.data);
       return href;
     },
@@ -69,7 +77,7 @@ function APICaller(apiClient) {
         path: newPath || null,
       });
     },
-    async datasetRename({ id, original, newName }) {
+    async datasetRename({ id = "", original = "", newName }) {
       return await this.callAPI(`datasets/${id}`, { name: newName });
     },
     async datasetCreate({ name }) {
@@ -109,8 +117,8 @@ function APICaller(apiClient) {
       label: name,
       value: code,
     })),
-  };
-}
+  }
+);
 
 export const useApiClient = () => {
   const auth = useAuth();
@@ -118,14 +126,18 @@ export const useApiClient = () => {
   useEffect(() => {
     const requestIntercept = apiClient.interceptors.request.use(
       (config) => {
-        if (auth.isAuthenticated && auth.user?.access_token) {
+        if (auth.user?.access_token) {
           config.headers.Authorization = `Bearer ${auth.user.access_token}`;
         }
+        console.log("拦截器调用", auth.user?.access_token?.substring(0, 10));
         return config;
       },
       (error) => Promise.reject(error)
     );
-  }, [auth.isAuthenticated, auth.user]);
+    return () => {
+      apiClient.interceptors.request.eject(requestIntercept);
+    };
+  }, [auth.user]);
 
-  return APICaller(apiClient);
+  return apiClient;
 };

@@ -8,10 +8,9 @@ import {
 import { Button, Input, message, Modal, Popconfirm, Space, Table } from 'antd';
 import { useEffect, useState } from "react";
 import { useNavigate } from 'react-router-dom';
-import {useApiClient} from '../api';
+import { apiClient as api } from '../api'
 
 export default function DatasetPage() {
-  const api = useApiClient()
 
   const [datasets, setDatasets] = useState([]);
   const [newName, setNewName] = useState('');

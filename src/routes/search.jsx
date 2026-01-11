@@ -1,19 +1,17 @@
 import { useEffect, useState } from 'react';
-import { TreeSelect, Pagination, message } from 'antd';
+import { Pagination, message } from 'antd';
 import { useSearchParams } from 'react-router-dom';
 import DatasetSelector from '../components/dataset-selector';
 import FileSourceSelector from '../components/filesource-selector';
-import { useApiClient } from '../api';
+import { apiClient as api } from '../api'
 
 function SearchPage() {
 
-  const api = useApiClient()
   const [searchParams, setSearchParams] = useSearchParams();
   // 搜索信息和状态
   const [searchText, setSearchText] = useState('');
   const [searchResult, setSearchResult] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
   // 分页信息
   const [pageSize, setPageSize] = useState(20);
   const [currentPage, setCurrentPage] = useState(1);
@@ -77,10 +75,9 @@ function SearchPage() {
       setSearchResult({ results: [], total: 0 }); // 清空旧结果
       showLoading(true);
 
-      const data = await api.callAPI(
-        `paragraphs?offset=${offset}&limit=${pageSize * 5}`,
-        { search: query.trim(), datasets: ds, sources: fs }
-      );
+      const data = await api.search(query, ds, fs, offset, pageSize * 5);
+      if (!data) return
+
       setPrefetched({
         results: data.results,
         offset: offset,
@@ -94,8 +91,7 @@ function SearchPage() {
         total: data.total
       });
     } catch (err) {
-      // 捕获所有错误并展示
-      setError(err.message);
+      message.error(err.message)
     } finally {
       // 无论成功/失败，结束加载状态
       showLoading(false);
@@ -107,14 +103,12 @@ function SearchPage() {
   const handleSearch = async () => {
     // 输入校验
     if (!searchText.trim()) {
-      setError('请输入搜索内容');
+      message.error('请输入搜索内容');
       return;
     }
 
     // 重置状态
-    setError('');
     setSearchResult(null);
-
     setCurrentPage(1);
 
     // 发送 POST 请求
@@ -180,9 +174,6 @@ function SearchPage() {
         />
       </div>
 
-      {/* 错误提示 */}
-      {error && <div className="error-alert">{error}</div>}
-
       {/* 搜索结果展示区（分元数据和文本） */}
       {!isLoading && searchResult && (
         <div className="result-wrapper">
@@ -228,6 +219,7 @@ function SearchPage() {
                     <span className="metadata-value">{ele.pdate}</span>
                   </div>
                 )}
+                <div className="" style={{ display: 'none' }}>{ele.id}</div>
               </div>
               <div className="text-content">
                 {ele.content || '无文本内容'}
@@ -254,10 +246,6 @@ function SearchPage() {
         </div>
       )}
 
-      {/* 无结果提示 */}
-      {searchResult?.total === 0 && !error && !isLoading && searchText.trim() && (
-        <div className="empty-result">暂无搜索结果，请输入关键词重试</div>
-      )}
     </>
   );
 }

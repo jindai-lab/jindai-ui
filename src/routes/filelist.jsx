@@ -6,11 +6,10 @@ import {
 import { Table, Button, Input, Space, Tag, message, Popconfirm, Modal, Upload } from 'antd';
 import { useState, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
-import {useApiClient} from '../api';
+import { apiClient as api } from '../api'
 
 
 const FileManager = ({ folderPath }) => {
-  const api = useApiClient()
 
   // 状态管理：当前目录ID、当前目录列表、面包屑导航、搜索关键词
   const [currentFileList, setCurrentFileList] = useState([]);

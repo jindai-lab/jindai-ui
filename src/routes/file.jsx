@@ -1,20 +1,20 @@
-import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { FolderOpenOutlined, LeftOutlined, RightOutlined } from "@ant-design/icons";
 import { InputNumber } from 'antd';
-import { Document, Page, pdfjs } from 'react-pdf';
-import { LeftOutlined, RightOutlined, FolderOpenOutlined } from "@ant-design/icons";
+import { useEffect, useState } from "react";
 import { ThreeDots } from 'react-loader-spinner';
+import { Document, Page, pdfjs } from 'react-pdf';
+import { Link, useParams } from "react-router-dom";
+import { apiClient as api } from '../api';
 
 import FileListPage from "./filelist.jsx";
+
+import 'react-pdf/dist/Page/AnnotationLayer.css';
+import 'react-pdf/dist/Page/TextLayer.css';
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   'pdfjs-dist/build/pdf.worker.min.mjs',
   import.meta.url
 ).toString()
-
-import 'react-pdf/dist/Page/AnnotationLayer.css';
-import 'react-pdf/dist/Page/TextLayer.css';
-import { useApiClient } from "../api.js";
 
 const SinglePagePDFViewer = ({ fileUrl, pdfWidth }) => {
   const pageNumber = 1; // Always display the first page
@@ -42,7 +42,6 @@ const PdfViewer = ({ splat }) => {
   const [pdfPage, setPdfPage] = useState(+(new URLSearchParams(window.location.search).get('page') || '0') + 1);
   const [pdfMaxPages, setPdfMaxPages] = useState(0);
   const [blobUrl, setBlobUrl] = useState('')
-  const api = useApiClient()
 
   useEffect(() => {
     api.callAPI(`files/${encodeURIComponent(splat)}?metadata=true`)
@@ -81,7 +80,6 @@ const PdfViewer = ({ splat }) => {
 }
 
 function FileViewer({ splat }) {
-  const api = useApiClient()
   const ext = splat.split('.').pop().toLowerCase();
   const [blobUrl, setBlobUrl] = useState('')
   useEffect(() => {

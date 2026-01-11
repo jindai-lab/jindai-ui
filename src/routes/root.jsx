@@ -10,7 +10,7 @@ export default function Root() {
 
   useEffect(() => {
     console.log("当前用户状态:", auth.user, "是否已认证:", auth.isAuthenticated, "正在载入", auth.isLoading);
-  }, [auth.isAuthenticated, auth.user, auth.isLoading]);
+  }, [auth.isAuthenticated, auth.user, auth.isLoading, auth.user?.access_token]);
 
   return (
     <div className="app-container">

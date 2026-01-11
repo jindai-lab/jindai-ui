@@ -1,4 +1,4 @@
-import {useApiClient} from '../api'
+import { apiClient as api } from '../api'
 import { TreeSelect } from 'antd'
 import { useEffect, useState } from 'react'
 
@@ -7,11 +7,11 @@ export default function FileSourceSelector({
   multiple,
   value
 }) {
-  const api = useApiClient()
   const [sourceFiles, setSourceFiles] = useState([])
   
   async function fetchFileSources(folderPath = '') {
     const data = await api.fileSources(folderPath);
+    if (!data) return
     setSourceFiles(sourceFiles.concat(data.items.map(item => ({
       title: item.name,
       value: '/' + item.relative_path,
