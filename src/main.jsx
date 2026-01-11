@@ -1,37 +1,37 @@
 import * as React from "react";
-import * as ReactDOM from 'react-dom/client';
+import * as ReactDOM from "react-dom/client";
 import { AuthProvider } from "react-oidc-context";
-import { WebStorageStateStore } from 'oidc-client-ts';
+import { WebStorageStateStore } from "oidc-client-ts";
+import { ConfigProvider } from "antd";
 
-import {
-  createBrowserRouter,
-  RouterProvider,
-} from "react-router-dom";
-import './index.css';
-import oidc_settings from "./oidc-client-ids.js"
-import Root from './routes/root.jsx';
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import "./index.css";
+import oidc_settings from "./oidc-client-ids.js";
+import Root from "./routes/root.jsx";
 import DatasetPage from "./routes/dataset.jsx";
-import ErrorPage from './routes/errors.jsx';
-import FilePage from './routes/file.jsx';
+import ErrorPage from "./routes/errors.jsx";
+import FilePage from "./routes/file.jsx";
 import HistoryPage from "./routes/history.jsx";
 import ImportPage from "./routes/import.jsx";
-import SearchPage from './routes/search.jsx';
+import SearchPage from "./routes/search.jsx";
 import TaskPage from "./routes/task.jsx";
 import SettingsPage from "./routes/settings.jsx";
-
 
 const oidcConfig = {
   onSigninCallback: () => {
     // Clear URL fragments after login
     window.history.replaceState({}, document.title, window.location.pathname);
   },
-  redirect_uri: window.location.origin + '/',
+  redirect_uri: window.location.origin + "/",
   automaticSilentRenew: true,
   validate_services: true,
   useRefreshToken: true,
-  userStore: new WebStorageStateStore({ store: window.localStorage, prefix: 'jindai' }),
-  scope: 'openid profile email offline_access',
-  ...oidc_settings
+  userStore: new WebStorageStateStore({
+    store: window.localStorage,
+    prefix: "jindai",
+  }),
+  scope: "openid profile email offline_access",
+  ...oidc_settings,
 };
 const router = createBrowserRouter([
   {
@@ -40,48 +40,60 @@ const router = createBrowserRouter([
     errorElement: <ErrorPage />,
     children: [
       {
-        path: '/silent-renew',
-        element: <></>
+        path: "/silent-renew",
+        element: <></>,
       },
       {
-        path: '*',
+        path: "*",
         element: <SearchPage />,
       },
       {
-        path: '/',
+        path: "/",
         element: <SearchPage />,
       },
       {
-        path: 'files/*',
+        path: "files/*",
         element: <FilePage />,
       },
       {
-        path: 'histories',
+        path: "histories",
         element: <HistoryPage />,
       },
       {
-        path: 'settings',
+        path: "settings",
         element: <SettingsPage />,
       },
       {
-        path: 'datasets',
-        element: <DatasetPage />
+        path: "datasets",
+        element: <DatasetPage />,
       },
       {
-        path: 'import',
-        element: <ImportPage />
+        path: "import",
+        element: <ImportPage />,
       },
       {
-        path: 'tasks',
-        element: <TaskPage />
-      }
-    ]
+        path: "tasks",
+        element: <TaskPage />,
+      },
+    ],
   },
 ]);
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <AuthProvider {...oidcConfig}>
-      <RouterProvider router={router} />
+      <ConfigProvider
+        theme={{
+          token: {
+            colorPrimary: "#1AB394",
+            colorText: "var(--text)",
+            colorBgBase: "var(--bg)",
+            colorBorder: "var(--border)",
+            colorBgContainer: "var(--panel-bg)",
+          },
+        }}
+      >
+        <RouterProvider router={router} />
+      </ConfigProvider>
     </AuthProvider>
   </React.StrictMode>
 );

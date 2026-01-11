@@ -39,9 +39,9 @@ export default function DatasetPage() {
       align: 'center',
       render: (_, record) => (
         <Space size="small">
-          <Button icon={<PlusOutlined />} size="small" onClick={() => handleAdd(record.value + '--')} type="link">添加</Button>
-          <Button icon={<EditOutlined />} size="small" onClick={() => handleEdit(record)} type="link">编辑</Button>
-          <Button icon={<ImportOutlined />} size="small" onClick={() => navigate(`/import?dataset=${record.value}`)} type="link">导入</Button>
+          <Button style={{color: 'var(--primary)'}} icon={<PlusOutlined />} size="small" onClick={() => handleAdd(record.value + '--')} type="link">添加</Button>
+          <Button style={{color: 'var(--primary)'}} icon={<EditOutlined />} size="small" onClick={() => handleEdit(record)} type="link">编辑</Button>
+          <Button style={{color: 'var(--primary)'}} icon={<ImportOutlined />} size="small" onClick={() => navigate(`/import?dataset=${record.value}`)} type="link">导入</Button>
           <Popconfirm
             title={`确定删除【${record.name}】吗？`}
             onConfirm={() => handleDelete(record)}

@@ -33,7 +33,7 @@ const SinglePagePDFViewer = ({ fileUrl, pdfWidth }) => {
 
 const CustomDocumentLoader = () => (
   <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100px' }}>
-    <ThreeDots color="#3b82f6" height={50} width={50} />
+    <ThreeDots color="var(--primary)" height={50} width={50} />
   </div>
 )
 

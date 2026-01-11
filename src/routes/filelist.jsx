@@ -109,9 +109,9 @@ const FileManager = ({ folderPath }) => {
       width: '40%',
       render: (text, record) => (
         <div style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }} onClick={() => handleView(record)}>
-          {record.is_directory ? <FolderOutlined className="mr-2" style={{ color: '#165DFF' }} /> : <FileOutlined className="mr-2" style={{ color: '#666' }} />}
-          <span style={{ marginLeft: 5 }}>{text}</span>
-          {record.is_directory && <Tag color="blue" size="small" className="ml-2">文件夹</Tag>}
+          {record.is_directory ? <FolderOutlined className="mr-2" style={{ color: 'var(--primary)' }} /> : <FileOutlined className="mr-2" style={{ color: '#666' }} />}
+          <span style={{ marginLeft: 5, marginRight: 5 }}>{text}</span>
+          {record.is_directory && <Tag color="var(--primary)" size="small" className="ml-2">文件夹</Tag>}
         </div>
       ),
     },
@@ -146,7 +146,7 @@ const FileManager = ({ folderPath }) => {
       align: 'center',
       render: (_, record) => (
         <Space size="small">
-          <Button icon={<EditOutlined />} size="small" onClick={() => handleEdit(record)} type="link">编辑</Button>
+          <Button icon={<EditOutlined />} size="small" onClick={() => handleEdit(record)} type="link" style={{color: 'var(--primary)'}}>编辑</Button>
           <Popconfirm
             title={`确定删除【${record.name}】吗？`}
             onConfirm={() => handleDelete(record)}
@@ -238,7 +238,7 @@ const FileManager = ({ folderPath }) => {
           style={{ width: 300 }}
         />
         <Space size="small">
-          <Button icon={<PlusOutlined />} size="middle" onClick={() => handleAdd(true)} type="primary">新建文件夹</Button>
+          <Button icon={<PlusOutlined />} size="middle" onClick={() => handleAdd(true)} color="primary">新建文件夹</Button>
           <Upload
             name="file"
             action={`/api/files${folderPath}`}
