@@ -1,12 +1,12 @@
 import { FolderOpenOutlined, LeftOutlined, RightOutlined } from "@ant-design/icons";
 import { InputNumber } from 'antd';
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense, lazy } from "react";
 import { ThreeDots } from 'react-loader-spinner';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { Link, useParams } from "react-router-dom";
 import { apiClient as api } from '../api';
 
-import FileListPage from "./filelist.jsx";
+const FileListPage = lazy(() => import("./filelist.jsx"));
 
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
@@ -131,7 +131,7 @@ function FileViewer({ splat }) {
 export default function FilePage() {
   const { "*": splat } = useParams();
   if (!splat || splat.endsWith('/')) {
-    return <FileListPage folderPath={splat || ''} />;
+    return <Suspense><FileListPage folderPath={splat || ''} /></Suspense>;
   } else {
     return (
       <>

@@ -1,44 +1,38 @@
 :root {
-
-  --primary: #1AB394;    /* 主色：按钮、激活态 */
-  --text: #2F4050;       /* 文字主色 */
-  --bg: #F5F7FA;         /* 页面背景色 */
-  --panel-bg: #FFFFFF;   /* 卡片/侧边栏/内容区背景 */
-  --border: #E6E6E6;     /* 边框色 */
-
+  --primary: #1ab394;
+  --text: #2f4050;
+  --bg: #f5f7fa;
+  --panel-bg: #ffffff;
+  --border: #e6e6e6;
   line-height: 1.5;
   color-scheme: light dark;
   -webkit-font-smoothing: antialiased;
-  font-family: system-ui,Avenir,Helvetica,Arial,sans-serif;
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   font-weight: 400;
   font-synthesis: none;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
 }
-
 @media (prefers-color-scheme: dark) {
   :root {
-    --primary: #16A387;   /* 主色加深，适配深色背景 */
-    --text: #E2E8F0;      /* 浅色文字，提高可读性 */
-    --bg: #181818;        /* 页面深灰背景 */
-    --panel-bg: #1F2937;  /* 卡片/侧边栏深色背景 */
-    --border: #374151;    /* 深色边框，弱化对比 */
+    --primary: #16a387;
+    --text: #e2e8f0;
+    --bg: #181818;
+    --panel-bg: #1f2937;
+    --border: #374151;
     --ant-primary-color: var(--primary);
   }
 }
-
 a {
   color: var(--primary);
   font-weight: 500;
   text-decoration: inherit;
 }
-
 a:hover {
   color: var(--primary);
   opacity: 0.9;
   text-decoration: none;
 }
-
 body {
   display: flex;
   margin: 0;
@@ -50,15 +44,13 @@ body {
   color: var(--text);
   overflow: hidden;
 }
-
 h1 {
   line-height: 1.1;
   font-size: 3.2em;
   color: var(--text);
 }
-
 button {
-  padding: .6em 1.2em;
+  padding: 0.6em 1.2em;
   border: 1px solid transparent;
   background-color: var(--panel-bg);
   color: var(--text);
@@ -67,70 +59,56 @@ button {
   font-family: inherit;
   cursor: pointer;
   border-radius: 8px;
-  transition: border-color .25s;
+  transition: border-color 0.25s;
 }
-
 button:hover {
   border-color: var(--primary);
 }
-
 * {
   margin: 0;
   padding: 0;
-  font-family: Arial,sans-serif;
+  font-family: Arial, sans-serif;
   box-sizing: border-box;
 }
-
 .app-container {
   display: flex;
   width: 100vw;
   height: 100vh;
 }
-
 .sidebar {
   display: flex;
   width: 240px;
   background-color: var(--panel-bg);
   color: var(--text);
-  box-shadow: 2px 0 5px rgba(0,0,0,.1);
+  box-shadow: 2px 0 5px #0000001a;
   flex-direction: column;
   border-right: 1px solid var(--border);
 }
-
 .sidebar-menu {
   padding: 1rem 0;
 }
-
 .sidebar-menu > a {
   display: flex;
   padding: 1rem 1.5rem;
   cursor: pointer;
-  transition: background-color .2s;
+  transition: background-color 0.2s;
   align-items: center;
-  gap: .8rem;
+  gap: 0.8rem;
   color: var(--text);
 }
-
 .sidebar-menu > a.active,
 .menu-item.active {
   background-color: var(--primary);
-  color: #FFFFFF;
+  color: #fff;
 }
-
 .sidebar-menu > a:hover:not(.active),
 .menu-item:hover:not(.active) {
   background-color: var(--border);
 }
-
-.menu-icon {
-  font-size: 1.1rem;
-}
-
 .menu-text {
   font-size: 1rem;
-  margin-left: .5rem;
+  margin-left: 0.5rem;
 }
-
 .main-content {
   height: 100vh;
   margin: auto;
@@ -140,121 +118,69 @@ button:hover {
   flex: 1;
   max-width: 1200px;
 }
-
 .search-bar {
   display: flex;
   width: 100%;
   margin-bottom: 2rem;
-  gap: .8rem;
+  gap: 0.8rem;
 }
-
 .search-input {
-  padding: .9rem 1.2rem;
+  padding: 0.9rem 1.2rem;
   border: 1px solid var(--border);
   background-color: var(--panel-bg);
   color: var(--text);
   font-size: 1rem;
   border-radius: 4px;
-  transition: border-color .2s;
+  transition: border-color 0.2s;
   flex: 1;
   outline: 0;
 }
-
 .search-input:focus {
   border-color: var(--primary);
 }
-
 .search-button {
   width: 100px;
-  padding: .9rem 1.8rem;
+  padding: 0.9rem 1.8rem;
   border: none;
   background-color: var(--primary);
-  color: #FFFFFF;
+  color: #fff;
   font-size: 1rem;
   cursor: pointer;
   border-radius: 4px;
-  transition: opacity .2s;
+  transition: opacity 0.2s;
 }
-
 .search-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
-
-/* 错误提示复用主色对比，不新增颜色 */
-.error-alert {
-  margin-bottom: 1.5rem;
-  padding: 1rem;
-  border-left: 4px solid var(--primary);
-  background-color: var(--panel-bg);
-  color: var(--text);
-  opacity: 0.9;
-  border-radius: 4px;
-  max-width: 800px;
-}
-
-.loading-hint {
-  margin: auto;
-  padding: 1rem;
-  color: var(--primary);
-  font-size: 1rem;
-  max-width: 800px;
-}
-
 .result-wrapper {
   margin-top: 1rem;
   padding-bottom: 4rem;
   max-width: 100%;
 }
-
-.result-title {
-  margin-bottom: 1.5rem;
-  padding-bottom: .8rem;
-  border-bottom: 1px solid var(--border);
-  color: var(--text);
-  font-size: 1.3rem;
-}
-
 .metadata-section {
-  padding: .5rem;
+  padding: 0.5rem;
   border-top: 1px solid var(--border);
   background-color: var(--panel-bg);
   border-radius: 4px;
 }
-
-.section-subtitle {
-  margin-bottom: 1rem;
-  color: var(--text);
-  font-size: 1.1rem;
-  font-weight: 600;
-}
-
-.metadata-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill,minmax(200px,1fr));
-  gap: 1rem;
-}
-
 .metadata-item {
   display: inline-block;
   margin-right: 1rem;
   color: var(--text);
   flex-direction: column;
 }
-
-.metadata-item>span {
+.metadata-item > span {
   text-overflow: ellipsis;
   display: inline-block;
   white-space: nowrap;
   overflow: hidden;
 }
-
 .metadata-label {
-  margin-right: .3rem;
+  margin-right: 0.3rem;
   color: var(--text);
   display: inline-block;
 }
-
 .metadata-value {
   color: var(--text);
   font-size: 1rem;
@@ -262,14 +188,6 @@ button:hover {
   opacity: 1;
   max-width: 250px;
 }
-
-.text-section {
-  margin-bottom: 1.5rem;
-  border: 1px solid var(--border);
-  background-color: var(--panel-bg);
-  border-radius: 4px;
-}
-
 .text-content {
   padding: 1rem;
   line-height: 1.6;
@@ -278,25 +196,10 @@ button:hover {
   white-space: pre-wrap;
   word-wrap: break-word;
 }
-
-.empty-text,
-.empty-result {
-  padding: 1rem;
-  border: 1px solid var(--border);
-  background-color: var(--panel-bg);
-  color: var(--text);
-  opacity: 0.6;
-  font-size: 1rem;
-  text-align: center;
-  border-radius: 4px;
-  max-width: 800px;
-}
-
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
-
 .sidebar-header {
   display: flex;
   padding: 1rem;
@@ -304,59 +207,45 @@ button:focus-visible {
   cursor: pointer;
   color: var(--text);
 }
-
 .sidebar-header span {
   margin-left: 1rem;
   margin-top: 5px;
 }
-
 .sidebar.hide-text {
   width: 4rem;
 }
-
 .sidebar.hide-text span.menu-text {
   display: none;
 }
-
 .menu-item {
   display: flex;
   padding: 1rem 1.5rem;
   cursor: pointer;
-  transition: background-color .2s;
+  transition: background-color 0.2s;
   align-items: center;
-  gap: .8rem;
+  gap: 0.8rem;
   color: var(--text);
 }
-
-.metadata-key {
-  margin-bottom: .3rem;
-  color: var(--text);
-  opacity: 0.8;
-  font-size: .9rem;
-}
-
 .pagination {
   position: fixed;
   bottom: 0;
   width: inherit;
   margin: 0 auto;
   padding: 1rem;
-  background-color: rgba(255,255,255,.3);
+  background-color: #ffffff4d;
+  -webkit-backdrop-filter: blur(3px);
   backdrop-filter: blur(3px);
   border-top: 1px solid var(--border);
 }
-
 .file-info {
   display: flex;
   color: var(--text);
 }
-
 span.pagenum {
   margin-left: auto;
   color: var(--text);
   opacity: 0.8;
 }
-
 .pdf-viewer {
   display: flex;
   align-items: center;
@@ -364,12 +253,6 @@ span.pagenum {
   justify-content: space-between;
   color: var(--text);
 }
-
-.file-list {
-  list-style: none;
-  color: var(--text);
-}
-
 .filter-bar {
   display: flex;
   margin-top: 1rem;
@@ -377,14 +260,12 @@ span.pagenum {
   gap: 1rem;
   color: var(--text);
 }
-
 .filter-bar > label {
   width: 60px;
-  margin-right: .5rem;
+  margin-right: 0.5rem;
   color: var(--text);
   opacity: 0.8;
 }
-/* 侧边栏底部关于按钮 样式 */
 .sidebar-footer {
   margin-top: auto;
   border-top: 1px solid var(--border);
@@ -395,22 +276,18 @@ span.pagenum {
 .about-btn:hover {
   background-color: var(--border);
 }
-
-/* 关于弹窗遮罩层 */
 .about-modal-mask {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0,0,0,0.5);
+  background: #00000080;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 9999;
 }
-
-/* 关于弹窗主体 - 适配深浅色主题、复用你的精简配色 */
 .about-modal {
   width: 380px;
   background: var(--panel-bg);

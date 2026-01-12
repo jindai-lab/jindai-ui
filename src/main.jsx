@@ -7,15 +7,16 @@ import { ConfigProvider } from "antd";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import "./index.css";
 import oidc_settings from "./oidc-client-ids.js";
-import Root from "./routes/root.jsx";
-import DatasetPage from "./routes/dataset.jsx";
-import ErrorPage from "./routes/errors.jsx";
-import FilePage from "./routes/file.jsx";
-import HistoryPage from "./routes/history.jsx";
-import ImportPage from "./routes/import.jsx";
-import SearchPage from "./routes/search.jsx";
-import TaskPage from "./routes/task.jsx";
-import SettingsPage from "./routes/settings.jsx";
+
+const Root = React.lazy(() => import("./routes/root.jsx"));
+const DatasetPage = React.lazy(() => import("./routes/dataset.jsx"));
+const ErrorPage = React.lazy(() => import("./routes/errors.jsx"));
+const FilePage = React.lazy(() => import("./routes/file.jsx"));
+const HistoryPage = React.lazy(() => import("./routes/history.jsx"));
+const ImportPage = React.lazy(() => import("./routes/import.jsx"));
+const SearchPage = React.lazy(() => import("./routes/search.jsx"));
+const TaskPage = React.lazy(() => import("./routes/task.jsx"));
+const SettingsPage = React.lazy(() => import("./routes/settings.jsx"));
 
 const oidcConfig = {
   onSigninCallback: () => {
@@ -84,15 +85,12 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       <ConfigProvider
         theme={{
           token: {
-            colorPrimary: "#1AB394",
-            colorText: "var(--text)",
-            colorBgBase: "var(--bg)",
-            colorBorder: "var(--border)",
-            colorBgContainer: "var(--panel-bg)",
+            colorPrimary: "#1AB394"
           },
         }}
-      >
+      > <React.Suspense fallback={<div>页面加载中...</div>}>
         <RouterProvider router={router} />
+        </React.Suspense>
       </ConfigProvider>
     </AuthProvider>
   </React.StrictMode>

@@ -5,13 +5,16 @@ import { useEffect, useState } from 'react'
 export default function FileSourceSelector({
   onChange,
   multiple,
-  value
+  value,
 }) {
   const [sourceFiles, setSourceFiles] = useState([])
   
   async function fetchFileSources(folderPath = '') {
     const data = await api.fileSources(folderPath);
-    if (!data) return
+    if (!data) {
+      fetchFileSources(folderPath)
+      return
+    }
     setSourceFiles(sourceFiles.concat(data.items.map(item => ({
       title: item.name,
       value: '/' + item.relative_path,

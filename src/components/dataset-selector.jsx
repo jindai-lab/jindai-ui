@@ -2,17 +2,24 @@ import { apiClient as api } from '../api'
 import { TreeSelect } from 'antd'
 import { useEffect, useState } from 'react'
 
-export default function DatasetSelector({ 
+export default function DatasetSelector({
   onChange,
   multiple,
   value
- }) {
+}) {
   const [datasets, setDatasets] = useState([])
-
   useEffect(() => {
-    api.datasets().then(setDatasets)
+    async function fetchDatasets() {
+      const data = await api.datasets()
+      if (!data) {
+        fetchDatasets()
+        return
+      }
+      setDatasets(data)
+    }
+    fetchDatasets()
   }, [])
-
+  
   return (
     <TreeSelect
       id="datasets"

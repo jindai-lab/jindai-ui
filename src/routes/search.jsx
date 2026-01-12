@@ -177,7 +177,6 @@ function SearchPage() {
       {/* 搜索结果展示区（分元数据和文本） */}
       {!isLoading && searchResult && (
         <div className="result-wrapper">
-          <h3 className="result-title">搜索结果</h3>
           {searchResult.results.map(ele => {
             ele.href = ele.source_url.match(/https?:\/\//) ?
               ele.source_url :

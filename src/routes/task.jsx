@@ -1,16 +1,23 @@
-import { useState, useEffect } from "react";
+import { CheckCircleOutlined, ClockCircleOutlined, CloseCircleOutlined, SyncOutlined } from '@ant-design/icons';
+import { Button, Card, Col, message, Row, Statistic } from "antd";
+import { useEffect, useState } from "react";
 import { apiClient as api } from "../api";
-import { message, Button } from "antd";
 
 export default function TaskPage() {
 
   const [stats, setStats] = useState({})
-  useEffect(() => {
+  const [loading, setLoading] = useState(false)
 
-    const refreshStats = async () => {
-      const res = await api.callAPI('worker')
-      if (res) setStats(res)
+  const refreshStats = async () => {
+    setLoading(true)
+    const res = await api.callAPI('worker')
+    if (res) {
+      setStats(res)
+      setLoading(false)
     }
+  }
+
+  useEffect(() => {
 
     const interval =
       setInterval(refreshStats, 5000);;
@@ -27,11 +34,69 @@ export default function TaskPage() {
   }
 
   return (<>
-    <h2>任务运行状态</h2>
-    <div>挂起：{stats.pending}</div>
-    <div>运行：{stats.processing}</div>
-    <div>结束：{stats.completed}</div>
-    <div>失败：{stats.failed}</div>
-    <Button onClick={updateEmbeddings}>更新Embeddings</Button>
-  </>)
+    <Card
+      title="任务运行状态"
+      extra={
+        <Button
+          type="primary"
+          icon={<SyncOutlined spin={loading} />}
+          onClick={refreshStats}
+        >
+          手动刷新
+        </Button>
+      }
+      style={{ marginBottom: 24, borderRadius: 8, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}
+    >
+      {typeof stats.processing === 'undefined' && '正在加载...'}
+      {typeof stats.processing !== 'undefined' && (
+      <Row gutter={16} >
+        <Col span={6}>
+          <Card variant="soft" color="warning">
+            <Statistic
+              title="挂起"
+              value={stats.pending}
+              prefix={<ClockCircleOutlined />}
+              valueStyle={{ color: '#faad14' }}
+            />
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card variant="soft" color="primary">
+            <Statistic
+              title="运行中"
+              value={stats.processing}
+              prefix={<SyncOutlined />}
+              valueStyle={{ color: '#1890ff' }}
+            />
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card variant="soft" color="success">
+            <Statistic
+              title="已结束"
+              value={stats.completed}
+              prefix={<CheckCircleOutlined />}
+              valueStyle={{ color: '#52c41a' }}
+            />
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card variant="soft" color="error">
+            <Statistic
+              title="失败"
+              value={stats.failed}
+              prefix={<CloseCircleOutlined />}
+              valueStyle={{ color: '#f5222d' }}
+            />
+
+          </Card>
+        </Col>
+      </Row>
+      )}
+    </Card>
+    <Card title="任务操作">
+      <Button onClick={updateEmbeddings}>更新 Embeddings</Button>
+    </Card>
+  </>
+  );
 }
