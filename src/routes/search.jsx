@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Pagination, message } from 'antd';
+import { Pagination, Checkbox, message } from 'antd';
 import { useSearchParams } from 'react-router-dom';
 import DatasetSelector from '../components/dataset-selector';
 import FileSourceSelector from '../components/filesource-selector';
@@ -11,6 +11,7 @@ function SearchPage() {
   // 搜索信息和状态
   const [searchText, setSearchText] = useState('');
   const [searchResult, setSearchResult] = useState(null);
+  const [embeddingSearch, setEmbeddingSearch] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   // 分页信息
   const [pageSize, setPageSize] = useState(20);
@@ -32,14 +33,16 @@ function SearchPage() {
     const q = searchParams.get('q') || '';
     const ds = JSON.parse(searchParams.get('datasets') || '[]');
     const fs = JSON.parse(searchParams.get('sources') || '[]');
+    const eb = JSON.parse(searchParams.get('embeddingSearch') || '[]');
     if (q) setSearchText(q);
     if (ds.length > 0) setDatasetSelection(ds);
     if (fs.length > 0) setSourceFileSelection(fs);
+    setEmbeddingSearch(eb);
 
     const page = +(searchParams.get('page') || '0');
     if (page > 0) {
       setCurrentPage(page);
-      searchParagraphs((page - 1) * pageSize, q, ds, fs);
+      searchParagraphs((page - 1) * pageSize, q, ds, fs, eb);
     }
   }
 
@@ -49,10 +52,11 @@ function SearchPage() {
     if (datasetSelection.length > 0) params.datasets = JSON.stringify(datasetSelection);
     if (sourceFileSelection.length > 0) params.sources = JSON.stringify(sourceFileSelection);
     if (newPage) params.page = newPage;
+    params.embeddingSearch = embeddingSearch;
     setSearchParams(params);
   }
 
-  async function searchParagraphs(offset = 0, query = searchText, ds = datasetSelection, fs = sourceFileSelection) {
+  async function searchParagraphs(offset = 0, query = searchText, ds = datasetSelection, fs = sourceFileSelection, eb = embeddingSearch) {
     try {
       if (searchText)
         syncSearchParams(offset / pageSize + 1);
@@ -75,7 +79,7 @@ function SearchPage() {
       setSearchResult({ results: [], total: 0 }); // 清空旧结果
       showLoading(true);
 
-      const data = await api.search(query, ds, fs, offset, pageSize * 5);
+      const data = await api.search(query, ds, fs, offset, pageSize * 5, {embeddings: eb || undefined});
       if (!data) return
 
       setPrefetched({
@@ -85,6 +89,7 @@ function SearchPage() {
         query: query,
         datasets: ds,
         sources: fs,
+        embeddingSearch: eb,
       });
       setSearchResult({
         results: data.results.slice(0, pageSize),
@@ -150,6 +155,8 @@ function SearchPage() {
           className="search-input"
           style={{ clear: 'both' }}
         />
+        <Checkbox id='semantic' checked={embeddingSearch} onChange={e => setEmbeddingSearch(e.target.checked)} />
+        <label htmlFor="semantic">语义匹配</label>
         <button
           onClick={handleSearch}
           disabled={isLoading}
@@ -178,6 +185,7 @@ function SearchPage() {
       {!isLoading && searchResult && (
         <div className="result-wrapper">
           {searchResult.results.map(ele => {
+            ele.source_url = ele.source_url || ''
             ele.href = ele.source_url.match(/https?:\/\//) ?
               ele.source_url :
               `/files/${ele.source_url.replace(/^\//, '')}?page=${ele.source_page}`

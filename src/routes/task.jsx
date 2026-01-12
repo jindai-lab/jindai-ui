@@ -7,6 +7,7 @@ export default function TaskPage() {
 
   const [stats, setStats] = useState({})
   const [loading, setLoading] = useState(false)
+  const [embeddingsCount, setEmbeddingsCount] = useState(0)
 
   const refreshStats = async () => {
     setLoading(true)
@@ -15,21 +16,24 @@ export default function TaskPage() {
       setStats(res)
       setLoading(false)
     }
+    if (embeddingsCount === 0) refreshEmbeddingsCount()
+  }
+
+  const refreshEmbeddingsCount = async () => {
+    const res = await api.callAPI('embeddings')
+    if (res) {
+      setEmbeddingsCount(res)
+    }
   }
 
   useEffect(() => {
-
-    const interval =
-      setInterval(refreshStats, 5000);;
-
+    const interval = setInterval(refreshStats, 5000);
     refreshStats()
-
-    // 必须清除定时器，防止组件销毁后继续运行或重复创建
     return () => clearInterval(interval);
   }, []);
 
   const updateEmbeddings = async () => {
-    await api.callAPI('worker', { task_type: 'text_embedding', params: {} }, { method: 'POST' });
+    await api.callAPI('worker', { task_type: 'text_embedding', params: {} });
     message.info('成功添加任务')
   }
 
@@ -49,52 +53,53 @@ export default function TaskPage() {
     >
       {typeof stats.processing === 'undefined' && '正在加载...'}
       {typeof stats.processing !== 'undefined' && (
-      <Row gutter={16} >
-        <Col span={6}>
-          <Card variant="soft" color="warning">
-            <Statistic
-              title="挂起"
-              value={stats.pending}
-              prefix={<ClockCircleOutlined />}
-              valueStyle={{ color: '#faad14' }}
-            />
-          </Card>
-        </Col>
-        <Col span={6}>
-          <Card variant="soft" color="primary">
-            <Statistic
-              title="运行中"
-              value={stats.processing}
-              prefix={<SyncOutlined />}
-              valueStyle={{ color: '#1890ff' }}
-            />
-          </Card>
-        </Col>
-        <Col span={6}>
-          <Card variant="soft" color="success">
-            <Statistic
-              title="已结束"
-              value={stats.completed}
-              prefix={<CheckCircleOutlined />}
-              valueStyle={{ color: '#52c41a' }}
-            />
-          </Card>
-        </Col>
-        <Col span={6}>
-          <Card variant="soft" color="error">
-            <Statistic
-              title="失败"
-              value={stats.failed}
-              prefix={<CloseCircleOutlined />}
-              valueStyle={{ color: '#f5222d' }}
-            />
+        <Row gutter={16} >
+          <Col span={6}>
+            <Card variant="soft" color="warning">
+              <Statistic
+                title="挂起"
+                value={stats.pending}
+                prefix={<ClockCircleOutlined />}
+                valueStyle={{ color: '#faad14' }}
+              />
+            </Card>
+          </Col>
+          <Col span={6}>
+            <Card variant="soft" color="primary">
+              <Statistic
+                title="运行中"
+                value={stats.processing}
+                prefix={<SyncOutlined />}
+                valueStyle={{ color: '#1890ff' }}
+              />
+            </Card>
+          </Col>
+          <Col span={6}>
+            <Card variant="soft" color="success">
+              <Statistic
+                title="已结束"
+                value={stats.completed}
+                prefix={<CheckCircleOutlined />}
+                valueStyle={{ color: '#52c41a' }}
+              />
+            </Card>
+          </Col>
+          <Col span={6}>
+            <Card variant="soft" color="error">
+              <Statistic
+                title="失败"
+                value={stats.failed}
+                prefix={<CloseCircleOutlined />}
+                valueStyle={{ color: '#f5222d' }}
+              />
 
-          </Card>
-        </Col>
-      </Row>
+            </Card>
+          </Col>
+        </Row>
       )}
     </Card>
-    <Card title="任务操作">
+    <Card title="Embeddings">
+      <Row>总数：{embeddingsCount}</Row>
       <Button onClick={updateEmbeddings}>更新 Embeddings</Button>
     </Card>
   </>
