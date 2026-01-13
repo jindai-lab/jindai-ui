@@ -8,17 +8,11 @@ export default function DatasetSelector({
   value
 }) {
   const [datasets, setDatasets] = useState([])
-  useEffect(() => {
-    async function fetchDatasets() {
-      const data = await api.datasets()
-      if (!data) {
-        fetchDatasets()
-        return
-      }
-      setDatasets(data)
-    }
-    fetchDatasets()
-  }, [])
+  
+  async function fetchDatasets() {
+    const data = await api.datasets()
+    setDatasets(data)
+  }
   
   return (
     <TreeSelect
@@ -30,6 +24,9 @@ export default function DatasetSelector({
       multiple={multiple}
       placeholder="数据集"
       allowClear
+      onOpenChange={() => {
+        if (!datasets?.length) fetchDatasets()
+      }}
       treeData={datasets}
       onChange={onChange}
     />

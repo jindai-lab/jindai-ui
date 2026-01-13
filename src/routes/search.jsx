@@ -33,7 +33,7 @@ function SearchPage() {
     const q = searchParams.get('q') || '';
     const ds = JSON.parse(searchParams.get('datasets') || '[]');
     const fs = JSON.parse(searchParams.get('sources') || '[]');
-    const eb = JSON.parse(searchParams.get('embeddingSearch') || '[]');
+    const eb = JSON.parse(searchParams.get('embeddingSearch') || 'false');
     if (q) setSearchText(q);
     if (ds.length > 0) setDatasetSelection(ds);
     if (fs.length > 0) setSourceFileSelection(fs);

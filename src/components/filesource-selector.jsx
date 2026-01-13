@@ -11,10 +11,6 @@ export default function FileSourceSelector({
   
   async function fetchFileSources(folderPath = '') {
     const data = await api.fileSources(folderPath);
-    if (!data) {
-      fetchFileSources(folderPath)
-      return
-    }
     setSourceFiles(sourceFiles.concat(data.items.map(item => ({
       title: item.name,
       value: '/' + item.relative_path,
@@ -23,10 +19,6 @@ export default function FileSourceSelector({
       pId: folderPath || null,
     }))));
   }
-
-  useEffect(() => {
-    fetchFileSources()
-  }, [])
 
   return (
     <TreeSelect
@@ -40,6 +32,9 @@ export default function FileSourceSelector({
       allowClear
       treeData={sourceFiles}
       onChange={onChange}
+      onOpenChange={() =>{
+        if (!sourceFiles?.length) fetchFileSources()
+      }}
       loadData={({ id }) => {
         return fetchFileSources(id)
       }}
