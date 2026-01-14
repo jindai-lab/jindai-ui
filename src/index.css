@@ -13,8 +13,18 @@
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
 }
+
+:root.dark {
+  --primary: #16a387;
+  --text: #e2e8f0;
+  --bg: #181818;
+  --panel-bg: #1f2937;
+  --border: #374151;
+  --ant-primary-color: var(--primary);
+}
+
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not(.light) {
     --primary: #16a387;
     --text: #e2e8f0;
     --bg: #181818;

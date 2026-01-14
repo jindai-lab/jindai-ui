@@ -8,7 +8,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import "./index.css";
 import oidc_settings from "./oidc-client-ids.js";
 
-const Root = React.lazy(() => import("./routes/root.jsx"));
+import Root from "./routes/root.jsx";
 const DatasetPage = React.lazy(() => import("./routes/dataset.jsx"));
 const ErrorPage = React.lazy(() => import("./routes/errors.jsx"));
 const FilePage = React.lazy(() => import("./routes/file.jsx"));
@@ -88,9 +88,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             colorPrimary: "#1AB394"
           },
         }}
-      > <React.Suspense fallback={<div>页面加载中...</div>}>
+      > 
         <RouterProvider router={router} />
-        </React.Suspense>
       </ConfigProvider>
     </AuthProvider>
   </React.StrictMode>

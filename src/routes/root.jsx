@@ -1,7 +1,8 @@
 import { Outlet, useLocation } from "react-router-dom";
 import NavSidebar from "../nav-sidebar";
+import { ThreeDots } from 'react-loader-spinner';
 import { useAuth } from "react-oidc-context";
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import ProtectedRoute from './protected.jsx'
 
 export default function Root() {
@@ -17,7 +18,9 @@ export default function Root() {
       <NavSidebar />
       <main className="main-content">
         <ProtectedRoute>
-        <Outlet />
+          <Suspense fallback={<ThreeDots color="var(--primary)" height={50} width={50} />}>
+            <Outlet />
+          </Suspense>
         </ProtectedRoute>
       </main>
     </div>

@@ -11,7 +11,7 @@ export default function FileSourceSelector({
   
   async function fetchFileSources(folderPath = '') {
     const data = await api.fileSources(folderPath);
-    setSourceFiles(sourceFiles.concat(data.items.map(item => ({
+    setSourceFiles(prev => prev.concat(data.items.map(item => ({
       title: item.name,
       value: '/' + item.relative_path,
       isLeaf: !item.is_directory,

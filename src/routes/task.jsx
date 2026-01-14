@@ -7,7 +7,7 @@ export default function TaskPage() {
 
   const [stats, setStats] = useState({})
   const [loading, setLoading] = useState(false)
-  const [embeddingsCount, setEmbeddingsCount] = useState(0)
+  const [embeddingsStats, setEmbeddingsStats] = useState({})
 
   const refreshStats = async () => {
     setLoading(true)
@@ -16,13 +16,13 @@ export default function TaskPage() {
       setStats(res)
       setLoading(false)
     }
-    if (embeddingsCount === 0) refreshEmbeddingsCount()
+    if (!embeddingsStats.count) refreshEmbeddingsCount()
   }
 
   const refreshEmbeddingsCount = async () => {
     const res = await api.callAPI('embeddings')
     if (res) {
-      setEmbeddingsCount(res)
+      setEmbeddingsStats(prev => {prev.count = res; return prev})
     }
   }
 
@@ -99,7 +99,7 @@ export default function TaskPage() {
       )}
     </Card>
     <Card title="Embeddings">
-      <Row>总数：{embeddingsCount}</Row>
+      <Row>总数：{embeddingsStats.count}</Row>
       <Button onClick={updateEmbeddings}>更新 Embeddings</Button>
     </Card>
   </>
