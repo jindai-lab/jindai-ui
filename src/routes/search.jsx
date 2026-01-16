@@ -191,7 +191,7 @@ function SearchPage() {
             ele.source_url = ele.source_url || ''
             ele.href = ele.source_url.match(/https?:\/\//) ?
               ele.source_url :
-              `/files/${ele.source_url.replace(/^\//, '')}?page=${ele.source_page}`
+              `/files/${ele.source_url.replace(/^\//, '')}?page=${ele.source_page+1}`
             ele.pdate = ele.pdate?.toString().split('T')[0] || ''
             if (ele.pdate.endsWith('-01')) ele.pdate = ele.pdate.substring(0, ele.pdate.length - 3)
             if (ele.pdate.endsWith('-01')) ele.pdate = ele.pdate.substring(0, ele.pdate.length - 3)
