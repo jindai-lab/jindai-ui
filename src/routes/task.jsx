@@ -1,4 +1,4 @@
-import { CheckCircleOutlined, ClockCircleOutlined, CloseCircleOutlined, SyncOutlined } from '@ant-design/icons';
+import { CheckCircleOutlined, ClockCircleOutlined, CloseCircleOutlined, DeleteOutlined, SyncOutlined } from '@ant-design/icons';
 import { Button, Card, Col, message, Row, Statistic } from "antd";
 import { useEffect, useState } from "react";
 import { apiClient as api } from "../api";
@@ -37,17 +37,27 @@ export default function TaskPage() {
     message.info('成功添加任务')
   }
 
+  const clearTasks = async () => {
+    await api.callAPI('worker', null, {method: 'DELETE'})
+    message.info('已清除任务')
+  }
+
   return (<>
     <Card
       title="任务运行状态"
-      extra={
-        <Button
-          type="primary"
-          icon={<SyncOutlined spin={loading} />}
-          onClick={refreshStats}
-        >
-          手动刷新
-        </Button>
+      extra={<>
+          <Button
+            type="primary"
+            icon={<SyncOutlined spin={loading} />}
+            onClick={refreshStats}
+          >
+            手动刷新
+          </Button>
+          &nbsp;
+          <Button onClick={clearTasks} danger icon={<DeleteOutlined />}>
+            清空任务
+          </Button>
+        </>
       }
       style={{ marginBottom: 24, borderRadius: 8, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}
     >

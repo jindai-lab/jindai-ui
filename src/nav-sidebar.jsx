@@ -83,9 +83,9 @@ export default function NavSidebar() {
               />
             </div>
             <div className="about-modal-content">
-              <p>文献利用平台 v1.0.5</p>
+              <p>文献利用平台 v2.0.5</p>
               <p>检索/管理文献资源工具</p>
-              <p>© 2018-2026 Jindai-Lab</p>
+              <p>© 2018-{new Date().getFullYear()} Jindai-Lab</p>
               <p>本软件已取得软件著作权登记。</p>
             </div>
           </div>

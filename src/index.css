@@ -265,6 +265,9 @@ span.pagenum {
   justify-content: space-between;
   color: var(--text);
 }
+.pdf-viewer span[disabled] {
+  opacity: 0;
+}
 .filter-bar {
   display: flex;
   margin-top: 1rem;

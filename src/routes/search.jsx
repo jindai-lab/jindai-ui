@@ -81,19 +81,22 @@ function SearchPage() {
 
       const data = await api.search(query, ds, fs, offset, pageSize * 5, {embeddings: eb || undefined});
       if (!data) return
+      api.search(query, ds, fs, offset, pageSize * 5, {embeddings: eb || undefined, total: true}).then(({total}) => {
+        setPrefetched(prev => {prev.total = total; return Object.assign({}, prev);})
+        setSearchResult(prev => {prev.total = total; return Object.assign({}, prev);})
+      });
 
       setPrefetched({
         results: data.results,
-        offset: offset,
+        offset, query,
         total: data.total,
-        query: query,
         datasets: ds,
         sources: fs,
         embeddingSearch: eb,
       });
       setSearchResult({
         results: data.results.slice(0, pageSize),
-        total: data.total
+        total: data.total < 0 ? data.results.length + offset : data.total
       });
     } catch (err) {
       message.error(err.message)

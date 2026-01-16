@@ -1,9 +1,9 @@
 import { FolderOpenOutlined, LeftOutlined, RightOutlined } from "@ant-design/icons";
 import { InputNumber } from 'antd';
-import { useEffect, useState, Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import { ThreeDots } from 'react-loader-spinner';
 import { Document, Page, pdfjs } from 'react-pdf';
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { apiClient as api } from '../api';
 
 const FileListPage = lazy(() => import("./filelist.jsx"));
@@ -37,35 +37,48 @@ const CustomDocumentLoader = () => (
   </div>
 )
 
-const PdfViewer = ({ splat }) => {
+const PdfViewer = ({ path }) => {
 
-  const [pdfPage, setPdfPage] = useState(+(new URLSearchParams(window.location.search).get('page') || '0') + 1);
+  const [params, setParams] = useSearchParams();
+  const [pdfPage, setPdfPage] = useState(+(params.get('page') || '1'));
   const [pdfMaxPages, setPdfMaxPages] = useState(0);
-  const [blobUrl, setBlobUrl] = useState('')
+  const [blobUrl, setBlobUrl] = useState('');
 
   useEffect(() => {
-    api.callAPI(`files/${encodeURIComponent(splat)}?metadata=true`)
+    api.callAPI(`files/${encodeURIComponent(path)}?metadata=true`)
       .then(data => {
         setPdfMaxPages(data.page_count);
+        
+        document.onkeydown = function (e) {
+          switch (e.key) {
+            case 'ArrowLeft':
+            case 'a':
+              setPdfPage(prev => prev - 1 || prev);
+              break
+            case 'ArrowRight':
+            case 'd':
+              setPdfPage(prev => prev < data.page_count ? prev + 1 : data.page_count);
+              break;
+          }
+        }
       });
-  }, [splat])
-  useEffect(() => {
-    const srcUrl = `files/${encodeURIComponent(splat)}?page=${pdfPage - 1}`
-    api.download(srcUrl).then(setBlobUrl)
+    
+    document.title = `查看文件 - ${path}`;
+  }, [path])
 
-    document.title = `查看文件 - ${splat}`;
-    document.onkeydown = (e) => {
-      if (e.key === 'ArrowLeft' || e.key === 'a') {
-        setPdfPage(pdfPage > 1 ? pdfPage - 1 : 1);
-      } else if (e.key === 'ArrowRight' || e.key === 'd') {
-        setPdfPage(pdfPage < pdfMaxPages ? pdfPage + 1 : pdfMaxPages);
-      }
+  useEffect(() => {
+    const srcUrl = `files/${encodeURIComponent(path)}?page=${pdfPage - 1}`
+    console.log(pdfPage, srcUrl)
+    api.download(srcUrl).then(setBlobUrl)
+    if (pdfPage != +params.get('page')) {
+      params.set('page', pdfPage)
+      setParams(params)
     }
-  }, [splat, pdfPage]);
+  }, [path, pdfPage]);
 
   return (
     <>
-      <div className="file-info"><span>/{splat}</span><span className="pagenum">
+      <div className="file-info"><span>/{path}</span><span className="pagenum">
         <InputNumber value={pdfPage} onChange={setPdfPage} min={1} max={pdfMaxPages} />
       </span></div>
       {!!blobUrl && (
@@ -79,23 +92,23 @@ const PdfViewer = ({ splat }) => {
   )
 }
 
-function FileViewer({ splat }) {
-  const ext = splat.split('.').pop().toLowerCase();
+function FileViewer({ path }) {
+  const ext = path.split('.').pop().toLowerCase();
   const [blobUrl, setBlobUrl] = useState('')
   useEffect(() => {
-    api.download(`files/${splat}`).then(setBlobUrl)
-  }, [splat])
+    api.download(`files/${path}`).then(setBlobUrl)
+  }, [path])
   switch (ext) {
     case 'pdf':
-      return <PdfViewer splat={splat} />;
+      return <PdfViewer path={path} />;
     case 'txt':
     case 'html':
     case 'htm':
       return (
         <div>
-          <h2>文件预览 - {splat}</h2>
+          <h2>文件预览 - {path}</h2>
           <iframe
-            title={splat}
+            title={path}
             src={blobUrl}
             style={{ width: '100%', height: '80vh', border: 'none' }}
           />
@@ -109,10 +122,10 @@ function FileViewer({ splat }) {
     case 'webp':
       return (
         <div>
-          <h2>图片预览 - {splat}</h2>
+          <h2>图片预览 - {path}</h2>
           <img
             src={blobUrl}
-            alt={splat}
+            alt={path}
             style={{ maxWidth: '100%', maxHeight: '80vh' }}
           />
         </div>
@@ -122,21 +135,21 @@ function FileViewer({ splat }) {
         <div>
           <h2>无法预览该文件类型</h2>
           <p>如需下载该文件，请点击以下链接：</p>
-          <a href={`/api/files/${encodeURIComponent(splat)}`} download>下载 {splat}</a>
+          <a href={`/api/files/${encodeURIComponent(path)}`} download>下载 {path}</a>
         </div>
       );
   }
 }
 
 export default function FilePage() {
-  const { "*": splat } = useParams();
-  if (!splat || splat.endsWith('/')) {
-    return <Suspense><FileListPage folderPath={splat || ''} /></Suspense>;
+  const { "*": path } = useParams();
+  if (!path || path.endsWith('/')) {
+    return <Suspense><FileListPage folderPath={path || ''} /></Suspense>;
   } else {
     return (
       <>
-        <Link to={'/files/' + splat.split('/').slice(0, -1).join('/') + '/'}><FolderOpenOutlined /> 返回上级目录</Link>
-        <FileViewer splat={splat} />
+        <Link to={'/files/' + path.split('/').slice(0, -1).join('/') + '/'}><FolderOpenOutlined /> 返回上级目录</Link>
+        <FileViewer path={path} />
       </>
     )
   }

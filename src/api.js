@@ -129,7 +129,6 @@ export const useApiClient = () => {
         if (auth.user?.access_token) {
           config.headers.Authorization = `Bearer ${auth.user.access_token}`;
         }
-        console.log("拦截器调用", auth.user?.access_token?.substring(0, 10));
         return config;
       },
       (error) => Promise.reject(error)
