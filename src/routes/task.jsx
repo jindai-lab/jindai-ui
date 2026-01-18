@@ -1,7 +1,91 @@
-import { CheckCircleOutlined, ClockCircleOutlined, CloseCircleOutlined, DeleteOutlined, SyncOutlined } from '@ant-design/icons';
-import { Button, Card, Col, message, Row, Statistic } from "antd";
+import { CheckCircleOutlined, ClockCircleOutlined, CloseCircleOutlined, DeleteOutlined, SyncOutlined, UserOutlined } from '@ant-design/icons';
+import { Alert, Button, Card, Col, Empty, message, Row, Space, Spin, Statistic, Table, Tag } from "antd";
 import { useEffect, useState } from "react";
 import { apiClient as api } from "../api";
+
+// 数据库taskdbo列表展示组件
+const TaskDboList = () => {
+  // 状态管理：任务列表、加载中、请求异常
+  const [taskList, setTaskList] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState('');
+
+  // 从数据库/后端接口 获取taskdbo数据
+  const getTaskDboData = async () => {
+    const {results} = (await api.callAPI('tasks'))
+    setTaskList(results)
+    setLoading(false);
+  };
+
+  // 组件挂载时加载数据，空数组依赖仅执行一次
+  useEffect(() => {
+    getTaskDboData();
+  }, []);
+
+  // 表格列配置 - 完全适配taskdbo数据库表字段
+  const tableColumns = [
+    {
+      title: '任务名称',
+      dataIndex: 'name',
+      key: 'name',
+      width: 200
+    },
+    {
+      title: '并发数',
+      dataIndex: 'concurrent',
+      key: 'concurrent',
+      width: 100,
+      align: 'center',
+      render: (num) => <span style={{ color: '#165DFF' }}>{num}</span>
+    },
+    {
+      title: '最后执行时间',
+      dataIndex: 'last_run_time',
+      key: 'last_run_time',
+      width: 200,
+      render: (time) => (
+        <Space>
+          <ClockCircleOutlined />
+          <span>{time || '暂无执行记录'}</span>
+        </Space>
+      )
+    },
+    {
+      title: '是否续跑',
+      dataIndex: 'resume_next',
+      key: 'resume_next',
+      width: 120,
+      align: 'center',
+      render: (isResume) => isResume ? <Tag color="processing">是</Tag> : <Tag color="gray">否</Tag>
+    }
+  ];
+
+  return (
+    <div style={{ padding: '20px', background: '#fff', minHeight: 'calc(100vh - 120px)' }}>
+      {/* 加载中状态 */}
+      <Spin spinning={loading} tip="正在从数据库加载任务数据...">
+        {/* 异常提示 */}
+        {errorMsg && <Alert message={errorMsg} type="error" showIcon style={{ marginBottom: 16 }} />}
+        
+        {/* 核心表格展示 */}
+        <Table
+          columns={tableColumns}
+          dataSource={taskList}
+          rowKey="id"
+          bordered
+          pagination={{ 
+            pageSize: 10, 
+            showSizeChanger: true, 
+            showTotal: (total) => `共 ${total} 条任务数据` 
+          }}
+          scroll={{ x: 'max-content' }}
+          // 空数据兜底
+          locale={{ emptyText: <Empty description="暂无任务数据" /> }}
+        />
+      </Spin>
+    </div>
+  );
+};
 
 export default function TaskPage() {
 
@@ -107,6 +191,11 @@ export default function TaskPage() {
           </Col>
         </Row>
       )}
+    </Card>
+    <Card title="任务列表">
+      <Row>
+        <TaskDboList />
+      </Row>
     </Card>
     <Card title="Embeddings">
       <Row>总数：{embeddingsStats.count}</Row>

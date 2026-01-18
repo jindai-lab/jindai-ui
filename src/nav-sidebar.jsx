@@ -7,12 +7,13 @@ import {
   ScheduleOutlined,
   InfoCircleOutlined,
   SettingOutlined,
+  LogoutOutlined,
   CloseOutlined
 } from "@ant-design/icons";
 import { useState } from "react";
 import { useEffect } from "react";
 
-export default function NavSidebar() {
+export default function NavSidebar({user, logout}) {
   const [showNavbar, setShowNavbar] = useState(true);
   const [showAbout, setShowAbout] = useState(false);
 
@@ -61,6 +62,13 @@ export default function NavSidebar() {
           </NavLink>
         </nav>
         <div className="sidebar-footer">
+          <div
+            className="menu-item"
+            onClick={() => logout()}
+          >
+            <LogoutOutlined />
+            <span className="menu-text">注销 {user?.profile.preferred_username}</span>
+          </div>
           <div
             className="menu-item about-btn"
             onClick={() => setShowAbout(true)}

@@ -17,6 +17,7 @@ const ImportPage = React.lazy(() => import("./routes/import.jsx"));
 const SearchPage = React.lazy(() => import("./routes/search.jsx"));
 const TaskPage = React.lazy(() => import("./routes/task.jsx"));
 const SettingsPage = React.lazy(() => import("./routes/settings.jsx"));
+const Workflow = React.lazy(() => import("./routes/workflow.jsx"));
 
 const oidcConfig = {
   onSigninCallback: () => {
@@ -76,6 +77,10 @@ const router = createBrowserRouter([
         path: "tasks",
         element: <TaskPage />,
       },
+      {
+        path: "tasks/*",
+        element: <Workflow />
+      }
     ],
   },
 ]);

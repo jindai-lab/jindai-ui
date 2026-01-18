@@ -1,8 +1,6 @@
 import { message } from "antd";
 import axios from "axios";
 import localeCodes from "locale-codes";
-import { useEffect } from "react";
-import { useAuth } from "react-oidc-context";
 
 class InterceptorsError extends Error {}
 
@@ -119,24 +117,3 @@ export const apiClient = Object.assign(
     })),
   }
 );
-
-export const useApiClient = () => {
-  const auth = useAuth();
-
-  useEffect(() => {
-    const requestIntercept = apiClient.interceptors.request.use(
-      (config) => {
-        if (auth.user?.access_token) {
-          config.headers.Authorization = `Bearer ${auth.user.access_token}`;
-        }
-        return config;
-      },
-      (error) => Promise.reject(error)
-    );
-    return () => {
-      apiClient.interceptors.request.eject(requestIntercept);
-    };
-  }, [auth.user]);
-
-  return apiClient;
-};

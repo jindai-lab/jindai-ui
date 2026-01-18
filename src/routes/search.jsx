@@ -76,7 +76,7 @@ function SearchPage() {
 
       console.log('发送新请求', offset);
 
-      setSearchResult({ results: [], total: 0 }); // 清空旧结果
+      setSearchResult({ results: [], total: -1 }); // 清空旧结果
       showLoading(true);
 
       const data = await api.search(query, ds, fs, offset, pageSize * 5, {embeddings: eb || undefined});
@@ -96,7 +96,7 @@ function SearchPage() {
       });
       setSearchResult({
         results: data.results.slice(0, pageSize),
-        total: data.total < 0 ? data.results.length + offset : data.total
+        total: data.total <= 0 ? data.results.length + offset : data.total
       });
     } catch (err) {
       message.error(err.message)

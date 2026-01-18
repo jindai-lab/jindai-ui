@@ -1,13 +1,7 @@
-import { useAuth } from "react-oidc-context";
 import { Navigate, Outlet } from "react-router-dom";
-import { useApiClient } from "../api"; // 之前创建的 Axios Hook
 import { useEffect } from "react";
 
-const ProtectedRoute = () => {
-  const auth = useAuth();
-  // 在此处调用拦截器 Hook，确保子页面发请求时 Token 已挂载
-  useApiClient();
-
+const ProtectedRoute = ({auth}) => {
   if (auth.isLoading) {
     console.log('正在验证登录状态')
     return ('');
