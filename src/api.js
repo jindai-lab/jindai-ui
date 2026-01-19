@@ -9,6 +9,7 @@ export const apiClient = Object.assign(
     baseURL: "/api", // Your Flask Backend
   }),
   {
+    bearer: '',
     async callAPI(name, data, { method, ...options } = { method: "" }) {
       try {
         if (!this.interceptors.request.handlers.filter(x=>x).length)

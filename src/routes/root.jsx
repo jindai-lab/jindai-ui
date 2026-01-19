@@ -15,6 +15,7 @@ export default function Root() {
       (config) => {
         if (auth.user?.access_token) {
           config.headers.Authorization = `Bearer ${auth.user.access_token}`;
+          apiClient.bearer = auth.user.access_token
         }
         return config;
       },
