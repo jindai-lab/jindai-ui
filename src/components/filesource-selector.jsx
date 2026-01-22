@@ -13,9 +13,9 @@ export default function FileSourceSelector({
     const data = await api.fileSources(folderPath);
     setSourceFiles(prev => prev.concat(data.items.map(item => ({
       title: item.name,
-      value: '/' + item.relative_path,
+      value: item.relative_path,
       isLeaf: !item.is_directory,
-      id: '/' + item.relative_path,
+      id: item.relative_path,
       pId: folderPath || null,
     }))));
   }

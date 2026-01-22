@@ -2,6 +2,7 @@ import { CheckCircleOutlined, ClockCircleOutlined, CloseCircleOutlined, DeleteOu
 import { Alert, Button, Card, Col, Empty, message, Row, Space, Spin, Statistic, Table, Tag } from "antd";
 import { useEffect, useState } from "react";
 import { apiClient as api } from "../api";
+import './task.css'
 
 // 数据库taskdbo列表展示组件
 const TaskDboList = () => {
@@ -143,10 +144,9 @@ export default function TaskPage() {
           </Button>
         </>
       }
-      style={{ marginBottom: 24, borderRadius: 8, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}
     >
       {typeof stats.processing === 'undefined' && '正在加载...'}
-      {typeof stats.processing !== 'undefined' && (
+      {typeof stats.processing !== 'undefined' && (<>
         <Row gutter={16} >
           <Col span={6}>
             <Card variant="soft" color="warning">
@@ -154,7 +154,7 @@ export default function TaskPage() {
                 title="挂起"
                 value={stats.pending}
                 prefix={<ClockCircleOutlined />}
-                valueStyle={{ color: '#faad14' }}
+                styles={{ content : { color: '#faad14' }}}
               />
             </Card>
           </Col>
@@ -164,7 +164,7 @@ export default function TaskPage() {
                 title="运行中"
                 value={stats.processing}
                 prefix={<SyncOutlined />}
-                valueStyle={{ color: '#1890ff' }}
+                styles={{ content : { color: '#1890ff' }}}
               />
             </Card>
           </Col>
@@ -174,7 +174,7 @@ export default function TaskPage() {
                 title="已结束"
                 value={stats.completed}
                 prefix={<CheckCircleOutlined />}
-                valueStyle={{ color: '#52c41a' }}
+                styles={{content: { color: '#52c41a' }}}
               />
             </Card>
           </Col>
@@ -184,13 +184,12 @@ export default function TaskPage() {
                 title="失败"
                 value={stats.failed}
                 prefix={<CloseCircleOutlined />}
-                valueStyle={{ color: '#f5222d' }}
+                styles={{content: { color: '#f5222d' }}}
               />
-
             </Card>
           </Col>
         </Row>
-      )}
+      </>)}
     </Card>
     <Card title="任务列表">
       <Row>

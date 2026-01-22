@@ -202,7 +202,7 @@ function SearchPage() {
               <div className="metadata-section">
                 <div className="metadata-item">
                   <span className="metadata-label">数据集</span>
-                  <span className="metadata-value">{ele.dataset || ''}</span>
+                  <span className="metadata-value" data-id={ele.dataset}>{ele.dataset_name || ''}</span>
                 </div>
                 <div className="metadata-item">
                   <span className="metadata-label">出处</span>

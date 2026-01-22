@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Modal, Button, Select, Space, Input } from 'antd';
+import { Modal, Button, Select, Space, Input, Checkbox } from 'antd';
 
 // 核心：OCR语言对照表（完全映射你提供的表格，包含所有字段）
 const OCR_LANGUAGE_LIST = [
@@ -29,7 +29,8 @@ const OcrLanguageSelectModal = ({ submit, filename, ...props }) => {
   const [modalVisible, setModalVisible] = useState(false);
   // 选中的语言项（绑定完整对象）
   const [selectedLang, setSelectedLang] = useState(DEFAULT_SELECT);
-  const [newName, setNewName] = useState(filename.split('.').slice(0, -1).join('.') + '_ocred.pdf');
+  const [monochrome, setMonochrome] = useState(true);
+  const [newName, setNewName] = useState((filename.indexOf('.') > 0 ? filename.split('.').slice(0, -1).join('.') : filename) + '_ocred.pdf');
 
   // 切换选中的语言
   const handleLangChange = (value) => {
@@ -45,11 +46,11 @@ const OcrLanguageSelectModal = ({ submit, filename, ...props }) => {
       tesseractCode: selectedLang.tesseractCode,
       paddleCode: selectedLang.paddleCode,
       language: selectedLang.language,
-      newName
+      newName,
+      monochrome
     }
     submit(result)
     setModalVisible(false)
-    setNewName('')
   };
 
   // 点击取消按钮
@@ -84,6 +85,7 @@ const OcrLanguageSelectModal = ({ submit, filename, ...props }) => {
             style={{ width: 120 }}
           ></Select>
         </Space>
+        <br/>
         <Space>
           输出文件名
           <Input
@@ -91,6 +93,11 @@ const OcrLanguageSelectModal = ({ submit, filename, ...props }) => {
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
           />
+        </Space>
+        <br/>
+        <Space>
+          转换为黑白两色
+          <Checkbox checked={monochrome} onChange={e => setMonochrome(e.target.checked)}></Checkbox>
         </Space>
       </Modal>
     </>

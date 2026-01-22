@@ -9,11 +9,11 @@ export const apiClient = Object.assign(
     baseURL: "/api", // Your Flask Backend
   }),
   {
-    bearer: '',
+    bearer: "",
     async callAPI(name, data, { method, ...options } = { method: "" }) {
       try {
-        if (!this.interceptors.request.handlers.filter(x=>x).length)
-          throw new InterceptorsError()
+        if (!this.interceptors.request.handlers.filter((x) => x).length)
+          throw new InterceptorsError();
 
         name = name.replace(/^\/+|\/+$/g, "");
         if (!method) method = data ? "POST" : "GET";
@@ -50,10 +50,12 @@ export const apiClient = Object.assign(
       }
     },
     async search(query, datasets, sources, offset, limit, options = {}) {
-      return await this.callAPI(
-        `paragraphs?offset=${offset}&limit=${limit}`,
-        { search: query.trim(), datasets, sources, ...options }
-      )
+      return await this.callAPI(`paragraphs?offset=${offset}&limit=${limit}`, {
+        search: query.trim(),
+        datasets,
+        sources,
+        ...options,
+      });
     },
     async datasets() {
       return (await this.callAPI("datasets"))?.results;
@@ -103,7 +105,14 @@ export const apiClient = Object.assign(
           message.error(`未知的任务类型 ${type}`);
           return;
       }
-      message.info("添加任务到队列（未实现）");
+      this.callAPI("worker", {
+        task_type: type,
+        params: {
+          source,
+          dataset,
+          lang,
+        },
+      });
     },
     localeCodes: Object.entries(
       Object.fromEntries([
@@ -111,10 +120,10 @@ export const apiClient = Object.assign(
         ["zhs", "简体中文"],
         ["zht", "繁体中文"],
         ...localeCodes.all.map((lang) => [lang["iso639-1"], lang.name]),
-      ])
+      ]),
     ).map(([code, name]) => ({
       label: name,
       value: code,
     })),
-  }
+  },
 );

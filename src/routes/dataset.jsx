@@ -43,7 +43,7 @@ export default function DatasetPage() {
           <Button style={{color: 'var(--primary)'}} icon={<EditOutlined />} size="small" onClick={() => handleEdit(record)} type="link">编辑</Button>
           <Button style={{color: 'var(--primary)'}} icon={<ImportOutlined />} size="small" onClick={() => navigate(`/import?dataset=${record.value}`)} type="link">导入</Button>
           <Popconfirm
-            title={`确定删除【${record.name}】吗？`}
+            title={`确定删除【${record.value}】吗？`}
             onConfirm={() => handleDelete(record)}
             okText="确定"
             cancelText="取消"
@@ -83,7 +83,11 @@ export default function DatasetPage() {
   }
 
   const handleDelete = (record) => {
-    message.info(`删除数据集【${record.title}】功能待实现`);
+    api.delete(`datasets/${record.record_id}`).then((e) => {
+      console.log(e)
+      message.info('删除成功')
+      handleRefresh()
+    })
   }
 
   const handleRefresh = () => {

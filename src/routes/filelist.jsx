@@ -9,6 +9,7 @@ import {
   ReloadOutlined,
   UploadOutlined,
   FileTextOutlined,
+  DownloadOutlined,
 } from "@ant-design/icons";
 import {
   Table,
@@ -97,6 +98,7 @@ const FileManager = ({ folderPath }) => {
         output:
           record.relative_path.split("/").slice(0, -1).join("/") + "/" + ocrModalResult.newName,
         lang: ocrModalResult.tesseractCode,
+        monochrome: ocrModalResult.monochrome
       },
     });
   };
@@ -183,16 +185,36 @@ const FileManager = ({ folderPath }) => {
       dataIndex: "created_at",
       key: "created_at",
       width: "25%",
-      align: "center",
+      align: "left",
       render: (text) => new Date(text).toLocaleString("zh-CN"),
     },
     {
       title: "操作",
       key: "action",
       width: "20%",
-      align: "center",
+      align: "left",
       render: (_, record) => (
         <Space size="small">
+          {!record.is_directory && (<Button
+            onClick={() =>
+              api
+                .download(`files/${encodeURIComponent(record.relative_path)}`)
+                .then((url) => { 
+                  const link =  document.createElement('a'); 
+                  link.href = url;
+                  link.download = record.relative_path.split('/').pop()
+                  link.click();
+                  link.remove();
+                 })
+            }
+            size="small"
+            icon={<DownloadOutlined />}
+            type="link"
+            style={{ color: "var(--primary)" }}
+          >
+            下载
+          </Button>
+          )}
           <Button
             icon={<EditOutlined />}
             size="small"
@@ -202,7 +224,7 @@ const FileManager = ({ folderPath }) => {
           >
             编辑
           </Button>
-          { record.name.endsWith('.pdf') && (
+          { (record.name.endsWith('.pdf') || record.is_directory) && (
           <OcrLanguageSelectModal
             icon={<FileTextOutlined />}
             size="small"
