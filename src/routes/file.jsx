@@ -45,7 +45,7 @@ const CustomDocumentLoader = () => (
   </div>
 );
 
-const PdfViewer = ({ path }) => {
+const PdfViewer = ({ path, asImage }) => {
   const [params, setParams] = useSearchParams();
   const [pdfPage, setPdfPage] = useState(+(params.get("page") || "1"));
   const [pdfMaxPages, setPdfMaxPages] = useState(0);
@@ -77,14 +77,14 @@ const PdfViewer = ({ path }) => {
   }, [path]);
 
   useEffect(() => {
-    const srcUrl = `files/${encodeURIComponent(path)}?page=${pdfPage - 1}`;
+    const srcUrl = `files/${encodeURIComponent(path)}?page=${pdfPage - 1}&format=${asImage ? 'png' : ''}`;
     console.log(pdfPage, srcUrl);
     api.download(srcUrl).then(setBlobUrl);
     if (pdfPage != +params.get("page")) {
       params.set("page", pdfPage);
       setParams(params);
     }
-  }, [path, pdfPage]);
+  }, [path, pdfPage, asImage]);
 
   return (
     <>
@@ -105,13 +105,25 @@ const PdfViewer = ({ path }) => {
             onClick={() => pdfPage > 1 && setPdfPage(pdfPage - 1)}
             disabled={pdfPage <= 1}
           />
-          <SinglePagePDFViewer
-            fileUrl={blobUrl}
-            width={
-              document.getElementsByClassName(".single-page-pdf-viewer")[0]
-                ?.clientWidth
-            }
-          />
+          {asImage && (
+            <img
+              src={blobUrl}
+              width={
+                document.getElementsByClassName("pdf-viewer")[0]
+                  ?.clientWidth - 80
+              }
+              height="auto"
+            />
+          )}
+          {!asImage && (
+            <SinglePagePDFViewer
+              fileUrl={blobUrl}
+              width={
+                document.getElementsByClassName("single-page-pdf-viewer")[0]
+                  ?.clientWidth
+              }
+            />
+          )}
           <RightOutlined
             onClick={() => pdfPage < pdfMaxPages && setPdfPage(pdfPage + 1)}
             disabled={pdfPage >= pdfMaxPages}
@@ -130,7 +142,7 @@ function FileViewer({ path }) {
   }, [path]);
   switch (ext) {
     case "pdf":
-      return <PdfViewer path={path} />;
+      return <PdfViewer path={path} asImage={!!localStorage.viewPdfAsImage} />;
     case "txt":
     case "html":
     case "htm":
@@ -170,13 +182,13 @@ function FileViewer({ path }) {
             onClick={() =>
               api
                 .download(`files/${encodeURIComponent(path)}`)
-                .then((url) => { 
-                  const link =  document.createElement('a'); 
+                .then((url) => {
+                  const link = document.createElement('a');
                   link.href = url;
                   link.download = path.split('/').pop()
                   link.click();
                   link.remove();
-                 })
+                })
             }
           >
             下载 {path}

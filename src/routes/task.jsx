@@ -1,6 +1,7 @@
-import { CheckCircleOutlined, ClockCircleOutlined, CloseCircleOutlined, DeleteOutlined, SyncOutlined, UserOutlined } from '@ant-design/icons';
+import { CheckCircleOutlined, ClockCircleOutlined, CloseCircleOutlined, DeleteOutlined, EditOutlined, SyncOutlined, UserOutlined } from '@ant-design/icons';
 import { Alert, Button, Card, Col, Empty, message, Row, Space, Spin, Statistic, Table, Tag } from "antd";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { apiClient as api } from "../api";
 import './task.css'
 
@@ -10,6 +11,8 @@ const TaskDboList = () => {
   const [taskList, setTaskList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
+
+  const navigate = useNavigate()
 
   // 从数据库/后端接口 获取taskdbo数据
   const getTaskDboData = async () => {
@@ -58,6 +61,13 @@ const TaskDboList = () => {
       width: 120,
       align: 'center',
       render: (isResume) => isResume ? <Tag color="processing">是</Tag> : <Tag color="gray">否</Tag>
+    },
+    {
+      title: '操作',
+      key: 'operation',
+      render: (record) => {
+        return (<Button size="small" icon={<EditOutlined />} onClick={() => navigate(`/tasks/${record.id}`)}>编辑</Button>)
+      }
     }
   ];
 

@@ -183,7 +183,6 @@ button:hover {
   flex-direction: column;
 }
 .metadata-item > span {
-  text-overflow: ellipsis;
   display: inline-block;
   white-space: nowrap;
   overflow: hidden;

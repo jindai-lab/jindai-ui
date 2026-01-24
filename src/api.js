@@ -6,7 +6,7 @@ class InterceptorsError extends Error {}
 
 export const apiClient = Object.assign(
   axios.create({
-    baseURL: "/api", // Your Flask Backend
+    baseURL: "/api/v2", // Your Flask Backend
   }),
   {
     bearer: "",
@@ -30,8 +30,8 @@ export const apiClient = Object.assign(
           case "DELETE":
             if (data) {
               const params = new URLSearchParams();
-              for ([key, val] of Object.entries(data)) params.append(key, val);
-              name += params.toString();
+              for (var [key, val] of Object.entries(data)) params.append(key, val);
+              name += '?' + params.toString();
             }
             break;
           case "PUT":
@@ -65,11 +65,15 @@ export const apiClient = Object.assign(
       const href = URL.createObjectURL(resp.data);
       return href;
     },
-    async fileSources(folderPath = "") {
+    async fileSources(folderPath = "", search = "") {
       folderPath = folderPath || "";
       folderPath = folderPath.replace(/^\/+/, "");
       if (folderPath) folderPath = "/" + folderPath;
-      const files = await this.callAPI(`files${folderPath}`);
+      const files = await this.callAPI(
+        `files${folderPath}`,
+        { search },
+        { method: "GET" },
+      );
       return files;
     },
     async fileRename({ original, newName, newPath }) {

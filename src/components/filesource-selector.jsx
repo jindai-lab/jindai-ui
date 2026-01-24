@@ -1,6 +1,6 @@
-import { apiClient as api } from '../api'
-import { TreeSelect } from 'antd'
-import { useEffect, useState } from 'react'
+import { TreeSelect } from 'antd';
+import { useState } from 'react';
+import { apiClient as api } from '../api';
 
 export default function FileSourceSelector({
   onChange,
@@ -8,7 +8,7 @@ export default function FileSourceSelector({
   value,
 }) {
   const [sourceFiles, setSourceFiles] = useState([])
-  
+
   async function fetchFileSources(folderPath = '') {
     const data = await api.fileSources(folderPath);
     setSourceFiles(prev => prev.concat(data.items.map(item => ({
@@ -20,9 +20,19 @@ export default function FileSourceSelector({
     }))));
   }
 
+  async function fetchSearch(value) {
+    const data = await api.fileSources('/', value)
+    setSourceFiles(prev => prev.concat(data.items.map(item => ({
+      title: item.name,
+      value: item.relative_path,
+      isLeaf: !item.is_directory,
+      id: item.relative_path,
+      pId: item.relative_path.split('/').slice(0, -1).join('/') || null,
+    }))));
+  }
+
   return (
     <TreeSelect
-      showSearch
       style={{ width: '100%' }}
       value={value}
       styles={{ popup: { root: { maxHeight: 400, overflow: 'auto' } } }}
@@ -32,12 +42,11 @@ export default function FileSourceSelector({
       allowClear
       treeData={sourceFiles}
       onChange={onChange}
-      onOpenChange={() =>{
+      onOpenChange={() => {
         if (!sourceFiles?.length) fetchFileSources()
       }}
-      loadData={({ id }) => {
-        return fetchFileSources(id)
-      }}
+      showSearch={{ onSearch (value) { return fetchSearch(value) } }}
+      loadData={({id}) => { return fetchFileSources(id) }}
     />
   )
 }

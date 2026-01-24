@@ -78,7 +78,7 @@ const router = createBrowserRouter([
         element: <TaskPage />,
       },
       {
-        path: "tasks/*",
+        path: "tasks/:taskId",
         element: <Workflow />
       }
     ],
