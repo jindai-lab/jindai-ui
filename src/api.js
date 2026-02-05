@@ -15,7 +15,7 @@ export const apiClient = Object.assign(
         if (!this.interceptors.request.handlers.filter((x) => x).length)
           throw new InterceptorsError();
 
-        name = name.replace(/^\/+|\/+$/g, "");
+        name = name.replace(/^\/+/g, "");
         if (!method) method = data ? "POST" : "GET";
         method = method.toUpperCase();
 
@@ -70,14 +70,14 @@ export const apiClient = Object.assign(
       folderPath = folderPath.replace(/^\/+/, "");
       if (folderPath) folderPath = "/" + folderPath;
       const files = await this.callAPI(
-        `files${folderPath}`,
+        `files/${folderPath}`,
         { search },
         { method: "GET" },
       );
       return files;
     },
     async fileRename({ original, newName, newPath }) {
-      return await this.callAPI(`files${original}`, {
+      return await this.callAPI(`files/${original}`, {
         name: newName || null,
         path: newPath || null,
       });

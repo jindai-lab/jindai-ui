@@ -16,7 +16,7 @@ const TaskDboList = () => {
 
   // 从数据库/后端接口 获取taskdbo数据
   const getTaskDboData = async () => {
-    const {results} = (await api.callAPI('tasks'))
+    const {results} = (await api.callAPI('tasks/'))
     setTaskList(results)
     setLoading(false);
   };

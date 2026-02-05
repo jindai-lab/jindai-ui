@@ -236,6 +236,7 @@ function SearchPage() {
               </div>
             </div>
           ))}
+          { searchResult.total > 0 && (
           <div className="pagination">
             <Pagination
               // 核心属性
@@ -252,7 +253,7 @@ function SearchPage() {
               size="middle" // 分页组件尺寸：small | middle | large
             />
           </div>
-
+          )}
         </div>
       )}
 

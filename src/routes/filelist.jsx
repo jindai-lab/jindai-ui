@@ -39,7 +39,7 @@ const FileManager = ({ folderPath }) => {
 
   async function listFiles(folderPath) {
     const data = await api.callAPI(
-      `files${encodeURI(folderPath)}?metadata=true`,
+      `files/${encodeURI(folderPath)}?metadata=true`,
     );
     const list = data.items || [];
     list.sort((a, b) => {
@@ -123,7 +123,7 @@ const FileManager = ({ folderPath }) => {
   const handleGoBack = () => {
     if (folderPath === "" || folderPath === "/") return;
     const parentPath = folderPath.split("/").slice(0, -2).join("/") + "/";
-    navigate(`/files${parentPath === "/" ? "" : parentPath}`);
+    navigate(`/files/${parentPath}`);
   };
 
   /** 刷新当前目录 */
