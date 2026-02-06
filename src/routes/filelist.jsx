@@ -91,7 +91,7 @@ const FileManager = ({ folderPath }) => {
   };
 
   const submitOcr = (record, ocrModalResult) => {
-    api.callAPI("worker", {
+    api.callAPI("worker/", {
       task_type: "ocr",
       params: {
         input: record.relative_path,

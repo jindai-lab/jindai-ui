@@ -68,7 +68,7 @@ const YamlEditor = ({ initialValue = '', onSave, onMount, onValidate }) => {
       title={
         <Space>
           <FileCode size={18} className="text-blue-500" />
-          <span>YAML 编辑器</span>
+          <span>任务详情辑器</span>
           {isDirty && <Tag color="gold">未保存</Tag>}
         </Space>
       }
@@ -136,7 +136,7 @@ const YamlEditor = ({ initialValue = '', onSave, onMount, onValidate }) => {
             automaticLayout: true,
             tabSize: 2,
             padding: { top: 16, bottom: 16 },
-            fontFamily: "Consolas, monospace",
+            fofontFamily: "'Fira Code', 'Cascadia Code', Consolas, 'Courier New', monospace",
             renderLineHighlight: 'all',
             cursorSmoothCaretAnimation: 'on'
           }}

@@ -106,7 +106,7 @@ export default function TaskPage() {
 
   const refreshStats = async () => {
     setLoading(true)
-    const res = await api.callAPI('worker')
+    const res = await api.callAPI('worker/')
     if (res) {
       setStats(res)
       setLoading(false)
@@ -128,12 +128,12 @@ export default function TaskPage() {
   }, []);
 
   const updateEmbeddings = async () => {
-    await api.callAPI('worker', { task_type: 'text_embedding', params: {} });
+    await api.callAPI('worker/', { task_type: 'text_embedding', params: {} });
     message.info('成功添加任务')
   }
 
   const clearTasks = async () => {
-    await api.callAPI('worker', null, {method: 'DELETE'})
+    await api.callAPI('worker/', null, {method: 'DELETE'})
     message.info('已清除任务')
   }
 

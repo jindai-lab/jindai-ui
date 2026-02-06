@@ -33,7 +33,7 @@ const LogsViewer = ({ taskId }) => {
 
     const connect = () => {
       setStatus('connecting');
-      const es = new EventSource(`/api/v2/worker/logs/${taskId}`);
+      const es = new EventSource(`/api/v2/worker/logs/${taskId}`); // TODO: THIS IS OBSOLETE
       eventSourceRef.current = es;
 
       es.onopen = () => setStatus('connected');

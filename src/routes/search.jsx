@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Pagination, Checkbox, message } from 'antd';
+import { Pagination, Checkbox, Select, message } from 'antd';
 import { useSearchParams } from 'react-router-dom';
 import DatasetSelector from '../components/dataset-selector';
 import FileSourceSelector from '../components/filesource-selector';
 import { apiClient as api } from '../api'
+import ParagraphItem from '../components/paragraph-item';
 
 function SearchPage() {
 
@@ -12,8 +13,9 @@ function SearchPage() {
   const [searchText, setSearchText] = useState('');
   const [searchResult, setSearchResult] = useState(null);
   const [embeddingSearch, setEmbeddingSearch] = useState(false);
+  const [sortType, setSortType] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  // 分页信息
+// 分页信息
   const [pageSize, setPageSize] = useState(20);
   const [currentPage, setCurrentPage] = useState(1);
   const [prefetched, setPrefetched] = useState({
@@ -34,9 +36,11 @@ function SearchPage() {
     const ds = JSON.parse(searchParams.get('datasets') || '[]');
     const fs = JSON.parse(searchParams.get('sources') || '[]');
     const eb = JSON.parse(searchParams.get('embeddingSearch') || 'false');
+    const sort = searchParams.get('sort') || '';
     if (q) setSearchText(q);
     if (ds.length > 0) setDatasetSelection(ds);
     if (fs.length > 0) setSourceFileSelection(fs);
+    if (sort) setSortType(sort);
     setEmbeddingSearch(eb);
 
     const page = +(searchParams.get('page') || '0');
@@ -52,6 +56,7 @@ function SearchPage() {
     if (datasetSelection.length > 0) params.datasets = JSON.stringify(datasetSelection);
     if (sourceFileSelection.length > 0) params.sources = JSON.stringify(sourceFileSelection);
     if (newPage) params.page = newPage;
+    if (sortType) params.sort = sortType;
     params.embeddingSearch = embeddingSearch;
     setSearchParams(params);
   }
@@ -61,7 +66,8 @@ function SearchPage() {
       if (searchText)
         syncSearchParams(offset / pageSize + 1);
 
-      if (query == prefetched.query && ds == prefetched.datasets && fs == prefetched.sources &&
+      if (query == prefetched.query && ds == prefetched.datasets && 
+        fs == prefetched.sources && sortType == prefetched.sortType &&
         prefetched.offset <= offset && prefetched.offset + prefetched.results.length > offset) {
         // 使用预取数据
         const start = offset - prefetched.offset;
@@ -79,7 +85,7 @@ function SearchPage() {
       setSearchResult({ results: [], total: -1 }); // 清空旧结果
       showLoading(true);
 
-      const data = await api.search(query, ds, fs, offset, pageSize * 5, {embeddings: eb || undefined});
+      const data = await api.search(query, ds, fs, offset, pageSize * 5, {embeddings: eb || undefined, sort: sortType});
       if (!data) return
       api.search(query, ds, fs, offset, pageSize * 5, {embeddings: eb || undefined, total: true}).then(({total}) => {
         setPrefetched(prev => {prev.total = total; return Object.assign({}, prev);})
@@ -93,6 +99,7 @@ function SearchPage() {
         datasets: ds,
         sources: fs,
         embeddingSearch: eb,
+        sort: sortType,
       });
       setSearchResult({
         results: data.results.slice(0, pageSize),
@@ -183,6 +190,21 @@ function SearchPage() {
           onChange={setSourceFileSelection}
         />
       </div>
+      <div className="filter-bar">
+        <label htmlFor="sortType">排序</label>
+        <Select
+          id="sortType"
+          value={sortType}
+          onChange={setSortType}
+          disabled={isLoading}
+          style={{ width: 180, marginLeft: 8 }}
+        >
+          <Option value="">相关度</Option>
+          <Option value="pdate">日期（正序）</Option>
+          <Option value="-pdate">日期（逆序）</Option>
+        </Select>
+      </div>
+
 
       {/* 搜索结果展示区（分元数据和文本） */}
       {!isLoading && searchResult && (
@@ -198,43 +220,7 @@ function SearchPage() {
 
             return ele
           }).map((ele) => (
-            <div className="result" key={ele.id}>
-              <div className="metadata-section">
-                <div className="metadata-item">
-                  <span className="metadata-label">数据集</span>
-                  <span className="metadata-value" data-id={ele.dataset}>{ele.dataset_name || ''}</span>
-                </div>
-                <div className="metadata-item">
-                  <span className="metadata-label">出处</span>
-                  <span className="metadata-value">
-                    <a href={ele.href} target='_blank'>{ele.source_url || ''}
-                      {ele.pagenum ? `:${ele.pagenum}` : ''}</a>
-                  </span>
-                </div>
-                {ele.outline && (
-                  <div className="metadata-item">
-                    <span className="metadata-label">大纲</span>
-                    <span className="metadata-value">{ele.outline || ''}</span>
-                  </div>
-                )}
-                {ele.author && (
-                  <div className="metadata-item">
-                    <span className="metadata-label">作者</span>
-                    <span className="metadata-value">{ele.author}</span>
-                  </div>
-                )}
-                {ele.pdate && (
-                  <div className="metadata-item">
-                    <span className="metadata-label">日期</span>
-                    <span className="metadata-value">{ele.pdate}</span>
-                  </div>
-                )}
-                <div className="" style={{ display: 'none' }}>{ele.id}</div>
-              </div>
-              <div className="text-content">
-                {ele.content || '无文本内容'}
-              </div>
-            </div>
+            <ParagraphItem key={ele.id} data={ele} />
           ))}
           { searchResult.total > 0 && (
           <div className="pagination">
