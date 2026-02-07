@@ -3,10 +3,11 @@ import {
   LeftOutlined,
   RightOutlined,
 } from "@ant-design/icons";
-import { InputNumber } from "antd";
+import { InputNumber, Spin } from "antd";
 import { Suspense, lazy, useEffect, useState } from "react";
 import { ThreeDots } from "react-loader-spinner";
 import { Document, Page, pdfjs } from "react-pdf";
+import { ReactReader } from 'react-reader'
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { apiClient as api } from "../api";
 
@@ -79,7 +80,7 @@ const PdfViewer = ({ path, asImage }) => {
   useEffect(() => {
     const srcUrl = `files/${encodeURIComponent(path)}?page=${pdfPage - 1}&format=${asImage ? 'png' : ''}`;
     console.log(pdfPage, srcUrl);
-    api.download(srcUrl).then(setBlobUrl);
+    api.download(srcUrl).then(({url}) => setBlobUrl(url));
     if (pdfPage != +params.get("page")) {
       params.set("page", pdfPage);
       setParams(params);
@@ -135,11 +136,16 @@ const PdfViewer = ({ path, asImage }) => {
 };
 
 function FileViewer({ path }) {
-  const ext = path.split(".").pop().toLowerCase();
   const [blobUrl, setBlobUrl] = useState("");
+  const [blob, setBlob] = useState(null);
   useEffect(() => {
-    api.download(`files/${path}`).then(setBlobUrl);
+    api.download(`files/${path}`).then(({url, blob}) => {
+      setBlobUrl(url);
+      setBlob(blob);
+    });
   }, [path]);
+
+  const ext = path.split(".").pop().toLowerCase();
   switch (ext) {
     case "pdf":
       return <PdfViewer path={path} asImage={!!localStorage.viewPdfAsImage} />;
@@ -172,31 +178,29 @@ function FileViewer({ path }) {
           />
         </div>
       );
+    case "epub":
+      return (
+        <ReactReader
+          url={blob}
+        />
+      )
     default:
       return (
         <div>
           <h2>无法预览该文件类型</h2>
-          <p>如需下载该文件，请点击以下链接：</p>
-          <a
-            href="#"
-            onClick={() =>
-              api
-                .download(`files/${encodeURIComponent(path)}`)
-                .then((url) => {
-                  const link = document.createElement('a');
-                  link.href = url;
-                  link.download = path.split('/').pop()
-                  link.click();
-                  link.remove();
-                })
-            }
-          >
-            下载 {path}
-          </a>
+          { blobUrl && (
+          <><p>点击以下链接下载文件：</p><a
+              href={blobUrl}
+              download={path.split('/').pop()}
+            >
+              下载 {path}
+            </a></> )}
+          { !blobUrl && (<>下载链接正在生成中...<CustomDocumentLoader /></>) }
         </div>
       );
+    }
   }
-}
+
 
 export default function FilePage() {
   const { "*": path } = useParams();

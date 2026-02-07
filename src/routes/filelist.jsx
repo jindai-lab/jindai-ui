@@ -199,7 +199,7 @@ const FileManager = ({ folderPath }) => {
             onClick={() =>
               api
                 .download(`files/${encodeURIComponent(record.relative_path)}`)
-                .then((url) => { 
+                .then(({url}) => { 
                   const link =  document.createElement('a'); 
                   link.href = url;
                   link.download = record.relative_path.split('/').pop()

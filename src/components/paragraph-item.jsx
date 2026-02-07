@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button, Modal, Typography, Space } from 'antd';
-import {TableOutlined} from '@ant-design/icons'
+import { TableOutlined, TranslationOutlined } from '@ant-design/icons'
+import { apiClient } from '../api';
 
 const { Title, Text } = Typography;
 
@@ -8,6 +9,7 @@ const { Title, Text } = Typography;
 const ParagraphItem = ({ data }) => {
   // 控制元数据弹窗显示/隐藏的状态
   const [metadataVisible, setMetadataVisible] = useState(false);
+  const [translatedText, setTranslatedText] = useState('');
 
   const FIELD_NAMES = {
     keywords: '关键词',
@@ -22,8 +24,8 @@ const ParagraphItem = ({ data }) => {
     lang: '语言',
     extdata: '额外数据',
     id: 'ID',
-    href: '链接',
-    dataset_name: '数据集名称'
+    dataset_name: '数据集名称',
+    count: '计数'
   }
 
   const formatValue = (value) => {
@@ -45,7 +47,7 @@ const ParagraphItem = ({ data }) => {
 
   // 格式化元数据展示（处理空值、对象等情况）
   const formatMetadata = (data) => {
-    return Object.entries(data).sort((a, b) => (FIELD_NAMES[a] || '').localeCompare(FIELD_NAMES[b])).map(([key, value], index) => {
+    return Object.entries(data).filter(([key, _]) => FIELD_NAMES[key]).sort((a, b) => (FIELD_NAMES[a] || '').localeCompare(FIELD_NAMES[b])).map(([key, value], index) => {
       // 处理空值
       // 处理数组
       const displayValue = formatValue(value)
@@ -64,6 +66,29 @@ const ParagraphItem = ({ data }) => {
       );
     });
   };
+
+  useEffect(() => {
+    (async () => {
+      const languageIdentify = (lang1, lang2) => {
+        lang1 = lang1.split('-')[0].substring(0, 2); lang2 = lang2.split('-')[0].substring(0, 2);
+        return lang1 == lang2;
+      }
+      if (localStorage.translatorLang && !languageIdentify(data.lang, localStorage.translatorLang) && 'Translator' in window) {
+        try {
+          console.log('init translator')
+          const translator = await Translator.create({
+            sourceLanguage: data.lang.substring(0, 2),
+            targetLanguage: localStorage.translatorLang,
+          });
+          setTranslatedText(await translator.translate(data.content))
+        } catch (err) {
+          console.error(err)
+        }
+      } else {
+        console.debug('Translator not available')
+      }
+    })();
+  }, [data])
 
   return (
     <div className="result" key={data.id}>
@@ -110,6 +135,11 @@ const ParagraphItem = ({ data }) => {
         {data.content || '无文本内容'}
       </div>
 
+      {translatedText && (<div className="text-content text-translated" lang={localStorage.translatorLang}>
+        <TranslationOutlined /><hr style={{ border: 'none' }} />
+        {translatedText}
+      </div>)}
+
       <div style={{ marginBottom: '8px' }}>
         <Button
           type="text"
@@ -131,7 +161,7 @@ const ParagraphItem = ({ data }) => {
           </Button>
         ]}
         width={600}
-        destroyOnClose={true} // 关闭时销毁弹窗内容，避免内存占用
+        destroyOnHidden={true}
       >
         <div style={{
           maxHeight: '400px',

@@ -77,7 +77,6 @@ button:hover {
 * {
   margin: 0;
   padding: 0;
-  font-family: Arial, sans-serif;
   box-sizing: border-box;
 }
 .app-container {
@@ -206,6 +205,16 @@ button:hover {
   font-size: 1rem;
   white-space: pre-wrap;
   word-wrap: break-word;
+}
+.text-translated {
+  margin-left: 1rem;
+}
+.text-translated span[role="img"] {
+  margin-left: -1rem;
+  display: block;
+  clear: both;
+  width: 100%;
+  text-align: left;
 }
 button:focus,
 button:focus-visible {

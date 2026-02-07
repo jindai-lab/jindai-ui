@@ -10,6 +10,7 @@ import {
   AlertCircle,
   RefreshCw
 } from 'lucide-react';
+import "@fontsource/roboto-mono"
 
 const { Text } = Typography;
 
@@ -136,7 +137,7 @@ const YamlEditor = ({ initialValue = '', onSave, onMount, onValidate }) => {
             automaticLayout: true,
             tabSize: 2,
             padding: { top: 16, bottom: 16 },
-            fofontFamily: "'Fira Code', 'Cascadia Code', Consolas, 'Courier New', monospace",
+            fontFamily: "Roboto Mono",
             renderLineHighlight: 'all',
             cursorSmoothCaretAnimation: 'on'
           }}

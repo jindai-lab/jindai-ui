@@ -1,249 +1,230 @@
-import { useEffect, useState } from 'react';
-import { Pagination, Checkbox, Select, message } from 'antd';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import { Pagination, Checkbox, Select, message, Spin } from 'antd';
 import { useSearchParams } from 'react-router-dom';
+import { apiClient as api } from '../api';
 import DatasetSelector from '../components/dataset-selector';
 import FileSourceSelector from '../components/filesource-selector';
-import { apiClient as api } from '../api'
 import ParagraphItem from '../components/paragraph-item';
+import RemoteFilterSelector from "../components/remote-filter-selector"
+
+const { Option } = Select;
 
 function SearchPage() {
-
   const [searchParams, setSearchParams] = useSearchParams();
-  // 搜索信息和状态
-  const [searchText, setSearchText] = useState('');
-  const [searchResult, setSearchResult] = useState(null);
-  const [embeddingSearch, setEmbeddingSearch] = useState(false);
-  const [sortType, setSortType] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-// 分页信息
-  const [pageSize, setPageSize] = useState(20);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [prefetched, setPrefetched] = useState({
-    results: [], offset: -pageSize
+
+  // UI/Filter State (What the user sees in the inputs)
+  const [filters, setFilters] = useState({
+    q: '',
+    datasets: [],
+    sources: [],
+    embeddings: false,
+    sort: '',
+    groupBy: '',
+    outline: '',
+    page: 1,
+    pageSize: 20
   });
-  // 数据集和文件源列表
-  const [datasetSelection, setDatasetSelection] = useState([]);
-  const [sourceFileSelection, setSourceFileSelection] = useState([]);
 
-  function showLoading(loading) {
-    setIsLoading(loading)
-    if (loading) message.loading('正在加载...', 0)
-    else message.destroy()
-  }
+  // Data/Result State (What came back from the server)
+  const [isLoading, setIsLoading] = useState(false);
+  const [dataContext, setDataContext] = useState({
+    results: [],     // The "chunk" of data currently held in memory
+    total: 0,        // Total count from DB
+    offset: -1,      // The starting point of the current memory chunk
+    lastQuery: null  // Stringified version of filters used for the last fetch
+  });
 
-  function applySearchParams() {
+  // Helper: Update individual filter fields
+  const updateFilter = (updates) => {
+    setFilters(prev => ({ ...prev, ...updates }));
+  };
+
+  // Sync UI state with URL on mount
+  useEffect(() => {
     const q = searchParams.get('q') || '';
-    const ds = JSON.parse(searchParams.get('datasets') || '[]');
-    const fs = JSON.parse(searchParams.get('sources') || '[]');
-    const eb = JSON.parse(searchParams.get('embeddingSearch') || 'false');
+    const datasets = JSON.parse(searchParams.get('datasets') || '[]');
+    const sources = JSON.parse(searchParams.get('sources') || '[]');
+    const outline = JSON.parse(searchParams.get('outline') || '[]');
+    const embeddings = JSON.parse(searchParams.get('embeddings') || 'false');
     const sort = searchParams.get('sort') || '';
-    if (q) setSearchText(q);
-    if (ds.length > 0) setDatasetSelection(ds);
-    if (fs.length > 0) setSourceFileSelection(fs);
-    if (sort) setSortType(sort);
-    setEmbeddingSearch(eb);
+    const page = parseInt(searchParams.get('page') || '1', 10);
+    const pageSize = parseInt(localStorage.getItem('pageSize') || '20', 10);
+    const groupBy = searchParams.get('group_by') || '';
 
-    const page = +(searchParams.get('page') || '0');
-    if (page > 0) {
-      setCurrentPage(page);
-      searchParagraphs((page - 1) * pageSize, q, ds, fs, eb);
+    const initialFilters = { q, datasets, sources, embeddings, sort, page, pageSize, groupBy, outline };
+    setFilters(initialFilters);
+
+    if (q) {
+      executeSearch(initialFilters, true);
     }
-  }
+    document.title = '搜索';
+  }, []);
 
-  function syncSearchParams(newPage) {
-    const params = {};
-    if (searchText.trim()) params.q = searchText.trim();
-    if (datasetSelection.length > 0) params.datasets = JSON.stringify(datasetSelection);
-    if (sourceFileSelection.length > 0) params.sources = JSON.stringify(sourceFileSelection);
-    if (newPage) params.page = newPage;
-    if (sortType) params.sort = sortType;
-    params.embeddingSearch = embeddingSearch;
+  // Sync URL with Filters
+  const syncParamsToUrl = (currentFilters) => {
+    const params = { ...currentFilters };
+    params.datasets = JSON.stringify(params.datasets);
+    params.sources = JSON.stringify(params.sources);
+    params.outline = JSON.stringify(params.outline);
     setSearchParams(params);
-  }
+  };
 
-  async function searchParagraphs(offset = 0, query = searchText, ds = datasetSelection, fs = sourceFileSelection, eb = embeddingSearch) {
-    try {
-      if (searchText)
-        syncSearchParams(offset / pageSize + 1);
+  const executeSearch = async (targetFilters, forceRefresh = false) => {
 
-      if (query == prefetched.query && ds == prefetched.datasets && 
-        fs == prefetched.sources && sortType == prefetched.sortType &&
-        prefetched.offset <= offset && prefetched.offset + prefetched.results.length > offset) {
-        // 使用预取数据
-        const start = offset - prefetched.offset;
-        const end = start + pageSize;
-        setSearchResult({
-          results: prefetched.results.slice(start, end),
-          total: prefetched.total
-        });
-        console.log('使用预取数据', start, end, prefetched.offset);
-        return;
-      }
+    console.log(targetFilters)
 
-      console.log('发送新请求', offset);
+    const { page, pageSize } = targetFilters;
+    const targetOffset = (page - 1) * pageSize;
+    const fetchSize = pageSize * 5;
 
-      setSearchResult({ results: [], total: -1 }); // 清空旧结果
-      showLoading(true);
+    // Build query params
+    const queryParams = {limit: fetchSize, ...targetFilters}
+    delete queryParams.page
+    delete queryParams.pageSize
+    if (!queryParams.embeddings) delete queryParams.embeddings
 
-      const data = await api.search(query, ds, fs, offset, pageSize * 5, {embeddings: eb || undefined, sort: sortType});
-      if (!data) return
-      api.search(query, ds, fs, offset, pageSize * 5, {embeddings: eb || undefined, total: true}).then(({total}) => {
-        setPrefetched(prev => {prev.total = total; return Object.assign({}, prev);})
-        setSearchResult(prev => {prev.total = total; return Object.assign({}, prev);})
-      });
+    // Check if we can use cached/pre-fetched data
+    const currentQueryKey = JSON.stringify(queryParams);
+    const isSameQuery = currentQueryKey === dataContext.lastQuery;
+    const isInBuffer = targetOffset >= dataContext.offset &&
+      (targetOffset + pageSize) <= (dataContext.offset + dataContext.results.length);
 
-      setPrefetched({
-        results: data.results,
-        offset, query,
-        total: data.total,
-        datasets: ds,
-        sources: fs,
-        embeddingSearch: eb,
-        sort: sortType,
-      });
-      setSearchResult({
-        results: data.results.slice(0, pageSize),
-        total: data.total <= 0 ? data.results.length + offset : data.total
-      });
-    } catch (err) {
-      message.error(err.message)
-    } finally {
-      // 无论成功/失败，结束加载状态
-      showLoading(false);
-    }
-
-  }
-
-  // 核心搜索函数：处理接口调用逻辑
-  const handleSearch = async () => {
-    // 输入校验
-    if (!searchText.trim()) {
-      message.error('请输入搜索内容');
+    if (!forceRefresh && isSameQuery && isInBuffer) {
+      // Just update the page in URL, no network request needed
+      syncParamsToUrl(targetFilters);
       return;
     }
 
-    // 重置状态
-    setSearchResult(null);
-    setCurrentPage(1);
+    // Otherwise, fetch a large chunk (5 pages worth)
+    try {
+      setIsLoading(true);
+      const loadingMsg = message.loading('正在加载...', 0);
 
-    // 发送 POST 请求
-    setPrefetched({ results: [], offset: -pageSize });
-    searchParagraphs(); // 存储结果供展示
-  };
+      const response = await api.search(queryParams);
 
-  // 处理回车触发搜索
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
-      handleSearch();
+      if (response) {
+        // Secondary call for total count if not provided in first response
+        let total = response.total;
+        if (total === undefined || total <= 0) {
+          const totalData = await api.search(q, datasets, sources, targetOffset, fetchSize, { total: true });
+          total = totalData.total;
+        }
+
+        setDataContext({
+          results: response.results,
+          total: total || response.results.length,
+          offset: targetOffset,
+          lastQuery: currentQueryKey
+        });
+
+        syncParamsToUrl(targetFilters);
+      }
+
+      loadingMsg();
+    } catch (err) {
+      message.error(err.message || '搜索失败');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handlePageChange = (newPage, newPageSize) => {
-    setCurrentPage(newPage);
-    setPageSize(newPageSize);
-    searchParagraphs(newPageSize * (newPage - 1));
-    localStorage.pageSize = newPageSize
+  // Compute the visible slice of results
+  const visibleResults = useMemo(() => {
+    const relativeOffset = ((filters.page - 1) * filters.pageSize) - dataContext.offset;
+    if (relativeOffset < 0 || !dataContext.results.length) return [];
+
+    return dataContext.results.slice(relativeOffset, relativeOffset + filters.pageSize).map(ele => {
+      const source_url = ele.source_url || '';
+      return {
+        ...ele,
+        href: source_url.match(/https?:\/\//) ? source_url : `/files/${source_url.replace(/^\//, '')}?page=${ele.source_page + 1}`,
+        displayDate: ele.pdate?.toString().split('T')[0].replace(/-01-01$/, '').replace(/-01$/, '') || ''
+      };
+    });
+  }, [dataContext, filters.page, filters.pageSize]);
+
+  const handlePageChange = (page, pageSize) => {
+    const newFilters = { ...filters, page, pageSize };
+    setFilters(newFilters);
+    localStorage.setItem('pageSize', pageSize);
+    executeSearch(newFilters);
   };
 
-  useEffect(() => {
-    setPageSize(+localStorage.pageSize || 20)
-    applySearchParams();
-    document.title = '搜索'
-  }, [])
-
   return (
-    <>
-      {/* 搜索栏 */}
+    <div className="search-page-container">
+      {/* Search Input Section */}
       <div className="search-bar">
         <input
-          type="text"
-          value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
-          onKeyUp={handleKeyPress}
-          placeholder="请输入搜索内容..."
-          disabled={isLoading}
           className="search-input"
-          style={{ clear: 'both' }}
+          value={filters.q}
+          onChange={(e) => updateFilter({ q: e.target.value })}
+          onKeyUp={(e) => e.key === 'Enter' && executeSearch({ ...filters, page: 1 }, true)}
+          placeholder="请输入搜索内容..."
         />
-        <Checkbox id='semantic' checked={embeddingSearch} onChange={e => setEmbeddingSearch(e.target.checked)} />
+        <Checkbox
+          id="semantic"
+          checked={filters.embeddings}
+          onChange={e => updateFilter({ embeddings: e.target.checked })}
+        />
         <label htmlFor="semantic">语义匹配</label>
-        <button
-          onClick={handleSearch}
-          disabled={isLoading}
-          className="search-button"
-        >
+        <button className="search-button" onClick={() => executeSearch({ ...filters, page: 1 }, true)}>
           搜索
         </button>
       </div>
-      <div className="filter-bar">
-        <label htmlFor="datasets">数据集</label>
-        <DatasetSelector
-          multiple={true}
-          value={datasetSelection}
-          onChange={setDatasetSelection}
-        />
-      </div><div className="filter-bar">
-        <label htmlFor="sources">文件源</label>
-        <FileSourceSelector
-          value={sourceFileSelection}
-          multiple={true}
-          onChange={setSourceFileSelection}
-        />
-      </div>
-      <div className="filter-bar">
-        <label htmlFor="sortType">排序</label>
-        <Select
-          id="sortType"
-          value={sortType}
-          onChange={setSortType}
-          disabled={isLoading}
-          style={{ width: 180, marginLeft: 8 }}
-        >
-          <Option value="">相关度</Option>
-          <Option value="pdate">日期（正序）</Option>
-          <Option value="-pdate">日期（逆序）</Option>
-        </Select>
+
+      {/* Selectors Section */}
+      <div className="filter-group">
+        <div className="filter-bar">
+          <label>数据集</label>
+          <DatasetSelector multiple value={filters.datasets} onChange={v => updateFilter({ datasets: v })} />
+        </div>
+        <div className="filter-bar">
+          <label>文件源</label>
+          <FileSourceSelector multiple value={filters.sources} onChange={v => updateFilter({ sources: v })} />
+        </div>
+        <div className="filter-bar">
+          <label>排序</label>
+          <Select value={filters.sort} onChange={v => updateFilter({ sort: v })} style={{ width: 120 }}>
+            <Option value="">相关度</Option>
+            <Option value="pdate">日期 (↑)</Option>
+            <Option value="-pdate">日期 (↓)</Option>
+            <Option value="outline">大纲</Option>
+          </Select>
+          <label>分组</label>
+          <Select value={filters.groupBy} onChange={v => updateFilter({ groupBy: v })} style={{ width: 120 }}>
+            <Option value="">无</Option>
+            <Option value="author">作者</Option>
+            <Option value="source_url">来源</Option>
+            <Option value="pdate">日期</Option>
+          </Select>
+          <label>大纲</label>
+          <RemoteFilterSelector filters={filters} column="outline" onChange={v => updateFilter({outline: v})} value={filters.outline} />
+        </div>
       </div>
 
-
-      {/* 搜索结果展示区（分元数据和文本） */}
-      {!isLoading && searchResult && (
+      {/* Results Section */}
+      <Spin spinning={isLoading}>
         <div className="result-wrapper">
-          {searchResult.results.map(ele => {
-            ele.source_url = ele.source_url || ''
-            ele.href = ele.source_url.match(/https?:\/\//) ?
-              ele.source_url :
-              `/files/${ele.source_url.replace(/^\//, '')}?page=${ele.source_page+1}`
-            ele.pdate = ele.pdate?.toString().split('T')[0] || ''
-            if (ele.pdate.endsWith('-01')) ele.pdate = ele.pdate.substring(0, ele.pdate.length - 3)
-            if (ele.pdate.endsWith('-01')) ele.pdate = ele.pdate.substring(0, ele.pdate.length - 3)
-
-            return ele
-          }).map((ele) => (
+          {visibleResults.map((ele) => (
             <ParagraphItem key={ele.id} data={ele} />
           ))}
-          { searchResult.total > 0 && (
-          <div className="pagination">
-            <Pagination
-              // 核心属性
-              current={currentPage} // 当前页码
-              pageSize={pageSize}   // 每页显示条数
-              total={searchResult.total}         // 总数据条数（必传）
-              // 回调函数
-              onChange={handlePageChange} // 页码/每页条数改变时触发
-              // 可选配置
-              showSizeChanger // 显示“每页条数”下拉框
-              showQuickJumper // 显示快速跳页输入框
-              showTotal={(total) => `共 ${total} 条数据`} // 显示总条数文案
-              pageSizeOptions={['10', '20', '50', '100']} // 每页条数可选值
-              size="middle" // 分页组件尺寸：small | middle | large
-            />
-          </div>
+
+          {dataContext.total > 0 && (
+            <div className="pagination">
+              <Pagination
+                current={filters.page}
+                pageSize={filters.pageSize}
+                total={dataContext.total}
+                onChange={handlePageChange}
+                showSizeChanger
+                showTotal={(total) => `共 ${total} 条数据`}
+                pageSizeOptions={['10', '20', '50', '100']}
+              />
+            </div>
           )}
         </div>
-      )}
-
-    </>
+      </Spin>
+    </div>
   );
 }
 

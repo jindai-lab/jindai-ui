@@ -10,7 +10,7 @@ export const apiClient = Object.assign(
   }),
   {
     bearer: "",
-    async callAPI(name, data, { method, ...options } = { method: "" }) {
+    async callAPI(name, data = null, { method, ...options } = { method: "" }) {
       try {
         if (!this.interceptors.request.handlers.filter((x) => x).length)
           throw new InterceptorsError();
@@ -20,7 +20,7 @@ export const apiClient = Object.assign(
         method = method.toUpperCase();
 
         if (data?.id) {
-          name += "/" + data.id;
+          name += data.id;
           data.id = undefined;
           if (Object.entries(data).length == 0) data = null;
         }
@@ -32,6 +32,7 @@ export const apiClient = Object.assign(
               const params = new URLSearchParams();
               for (var [key, val] of Object.entries(data)) params.append(key, val);
               name += '?' + params.toString();
+              data = null;
             }
             break;
           case "PUT":
@@ -49,13 +50,8 @@ export const apiClient = Object.assign(
         console.error(e, { name, data, method });
       }
     },
-    async search(query, datasets, sources, offset, limit, options = {}) {
-      return await this.callAPI(`paragraphs?offset=${offset}&limit=${limit}`, {
-        search: query.trim(),
-        datasets,
-        sources,
-        ...options,
-      });
+    async search(options) {
+      return await this.callAPI(`paragraphs/search`, options);
     },
     async datasets() {
       return (await this.callAPI("datasets"))?.results;
@@ -63,14 +59,13 @@ export const apiClient = Object.assign(
     async download(src) {
       const resp = await this.get(src, { responseType: "blob" });
       const href = URL.createObjectURL(resp.data);
-      return href;
+      return {blob: resp.data, url: href}
     },
     async fileSources(folderPath = "", search = "") {
       folderPath = folderPath || "";
-      folderPath = folderPath.replace(/^\/+/, "");
-      if (folderPath) folderPath = "/" + folderPath;
+      folderPath = folderPath.replace(/^\/*/, "/");
       const files = await this.callAPI(
-        `files/${folderPath}`,
+        `files${folderPath}`,
         { search },
         { method: "GET" },
       );
