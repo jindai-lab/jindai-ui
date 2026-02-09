@@ -1,11 +1,11 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { Pagination, Checkbox, Select, message, Spin } from 'antd';
-import { useSearchParams } from 'react-router-dom';
-import { apiClient as api } from '../api';
-import DatasetSelector from '../components/dataset-selector';
-import FileSourceSelector from '../components/filesource-selector';
-import ParagraphItem from '../components/paragraph-item';
-import RemoteFilterSelector from "../components/remote-filter-selector"
+import React, { useEffect, useState, useCallback, useMemo } from "react";
+import { Pagination, Checkbox, Select, message, Spin } from "antd";
+import { useSearchParams } from "react-router-dom";
+import { apiClient as api } from "../api";
+import DatasetSelector from "../components/dataset-selector";
+import FileSourceSelector from "../components/filesource-selector";
+import ParagraphItem from "../components/paragraph-item";
+import RemoteFilterSelector from "../components/remote-filter-selector";
 
 const { Option } = Select;
 
@@ -14,80 +14,99 @@ function SearchPage() {
 
   // UI/Filter State (What the user sees in the inputs)
   const [filters, setFilters] = useState({
-    q: '',
+    q: "",
     datasets: [],
     sources: [],
     embeddings: false,
-    sort: '',
-    groupBy: '',
-    outline: '',
+    sort: "",
+    groupBy: "",
+    outline: "",
     page: 1,
-    pageSize: 20
+    pageSize: 20,
   });
 
   // Data/Result State (What came back from the server)
   const [isLoading, setIsLoading] = useState(false);
   const [dataContext, setDataContext] = useState({
-    results: [],     // The "chunk" of data currently held in memory
-    total: 0,        // Total count from DB
-    offset: -1,      // The starting point of the current memory chunk
-    lastQuery: null  // Stringified version of filters used for the last fetch
+    results: [], // The "chunk" of data currently held in memory
+    total: 0, // Total count from DB
+    offset: -1, // The starting point of the current memory chunk
+    lastQuery: null, // Stringified version of filters used for the last fetch
   });
 
   // Helper: Update individual filter fields
   const updateFilter = (updates) => {
-    setFilters(prev => ({ ...prev, ...updates }));
+    let newFilters = {}
+    setFilters((prev) => {
+      newFilters ={ ...prev, ...updates }
+      return newFilters;
+    });
+    return newFilters
   };
 
   // Sync UI state with URL on mount
   useEffect(() => {
-    const q = searchParams.get('q') || '';
-    const datasets = JSON.parse(searchParams.get('datasets') || '[]');
-    const sources = JSON.parse(searchParams.get('sources') || '[]');
-    const outline = JSON.parse(searchParams.get('outline') || '[]');
-    const embeddings = JSON.parse(searchParams.get('embeddings') || 'false');
-    const sort = searchParams.get('sort') || '';
-    const page = parseInt(searchParams.get('page') || '1', 10);
-    const pageSize = parseInt(localStorage.getItem('pageSize') || '20', 10);
-    const groupBy = searchParams.get('group_by') || '';
+    const q = searchParams.get("q") || "";
+    const datasets = JSON.parse(searchParams.get("datasets") || "[]");
+    const sources = JSON.parse(searchParams.get("sources") || "[]");
+    const outline = JSON.parse(searchParams.get("outline") || "[]");
+    const embeddings = JSON.parse(searchParams.get("embeddings") || "false");
+    const sort = searchParams.get("sort") || "";
+    const page = parseInt(searchParams.get("page") || "1", 10);
+    const pageSize = parseInt(localStorage.getItem("pageSize") || "20", 10);
+    const groupBy = searchParams.get("group_by") || "";
 
-    const initialFilters = { q, datasets, sources, embeddings, sort, page, pageSize, groupBy, outline };
+    const initialFilters = {
+      ...filters,
+      q,
+      datasets,
+      sources,
+      embeddings,
+      sort,
+      page,
+      pageSize,
+      groupBy,
+      outline,
+    };
     setFilters(initialFilters);
 
     if (q) {
       executeSearch(initialFilters, true);
     }
-    document.title = '搜索';
+    document.title = "搜索";
   }, []);
 
   // Sync URL with Filters
   const syncParamsToUrl = (currentFilters) => {
     const params = { ...currentFilters };
-    params.datasets = JSON.stringify(params.datasets);
-    params.sources = JSON.stringify(params.sources);
-    params.outline = JSON.stringify(params.outline);
-    setSearchParams(params);
+    params.datasets = JSON.stringify(params.datasets || []);
+    params.sources = JSON.stringify(params.sources || []);
+    params.outline = JSON.stringify(params.outline || []);
+    const url = new URL(window.location)
+    url.search = new URLSearchParams(Object.entries(params))
+    window.history.replaceState(null, '', url);
   };
 
   const executeSearch = async (targetFilters, forceRefresh = false) => {
-
-    console.log(targetFilters)
-
+    console.log('executeSearch:', targetFilters)
+    
     const { page, pageSize } = targetFilters;
     const targetOffset = (page - 1) * pageSize;
     const fetchSize = pageSize * 5;
 
     // Build query params
-    const queryParams = {limit: fetchSize, ...targetFilters}
-    delete queryParams.page
-    delete queryParams.pageSize
-    if (!queryParams.embeddings) delete queryParams.embeddings
+    const queryParams = { limit: fetchSize, ...targetFilters };
+    // delete queryParams.page;
+    // delete queryParams.pageSize;
+    if (!queryParams.embeddings) delete queryParams.embeddings;
 
     // Check if we can use cached/pre-fetched data
     const currentQueryKey = JSON.stringify(queryParams);
     const isSameQuery = currentQueryKey === dataContext.lastQuery;
-    const isInBuffer = targetOffset >= dataContext.offset &&
-      (targetOffset + pageSize) <= (dataContext.offset + dataContext.results.length);
+    const isInBuffer =
+      targetOffset >= dataContext.offset &&
+      targetOffset + pageSize <=
+        dataContext.offset + dataContext.results.length;
 
     if (!forceRefresh && isSameQuery && isInBuffer) {
       // Just update the page in URL, no network request needed
@@ -98,15 +117,18 @@ function SearchPage() {
     // Otherwise, fetch a large chunk (5 pages worth)
     try {
       setIsLoading(true);
-      const loadingMsg = message.loading('正在加载...', 0);
-
       const response = await api.search(queryParams);
 
       if (response) {
         // Secondary call for total count if not provided in first response
         let total = response.total;
         if (total === undefined || total <= 0) {
-          const totalData = await api.search(q, datasets, sources, targetOffset, fetchSize, { total: true });
+          const totalData = await api.search({
+            q: embeddings ? "*" : q,
+            datasets,
+            sources,
+            total: true,
+          });
           total = totalData.total;
         }
 
@@ -114,15 +136,13 @@ function SearchPage() {
           results: response.results,
           total: total || response.results.length,
           offset: targetOffset,
-          lastQuery: currentQueryKey
+          lastQuery: currentQueryKey,
         });
 
         syncParamsToUrl(targetFilters);
       }
-
-      loadingMsg();
     } catch (err) {
-      message.error(err.message || '搜索失败');
+      message.error(err.message || "搜索失败");
     } finally {
       setIsLoading(false);
     }
@@ -130,23 +150,33 @@ function SearchPage() {
 
   // Compute the visible slice of results
   const visibleResults = useMemo(() => {
-    const relativeOffset = ((filters.page - 1) * filters.pageSize) - dataContext.offset;
+    const relativeOffset =
+      (filters.page - 1) * filters.pageSize - dataContext.offset;
     if (relativeOffset < 0 || !dataContext.results.length) return [];
+    console.log("visible results get", dataContext, relativeOffset);
 
-    return dataContext.results.slice(relativeOffset, relativeOffset + filters.pageSize).map(ele => {
-      const source_url = ele.source_url || '';
-      return {
-        ...ele,
-        href: source_url.match(/https?:\/\//) ? source_url : `/files/${source_url.replace(/^\//, '')}?page=${ele.source_page + 1}`,
-        displayDate: ele.pdate?.toString().split('T')[0].replace(/-01-01$/, '').replace(/-01$/, '') || ''
-      };
-    });
+    return dataContext.results
+      .slice(relativeOffset, relativeOffset + filters.pageSize)
+      .map((ele) => {
+        const source_url = ele.source_url || "";
+        return {
+          ...ele,
+          href: source_url.match(/https?:\/\//)
+            ? source_url
+            : `/files/${source_url.replace(/^\//, "")}?page=${ele.source_page + 1}`,
+          displayDate:
+            ele.pdate
+              ?.toString()
+              .split("T")[0]
+              .replace(/-01-01$/, "")
+              .replace(/-01$/, "") || "",
+        };
+      });
   }, [dataContext, filters.page, filters.pageSize]);
 
   const handlePageChange = (page, pageSize) => {
-    const newFilters = { ...filters, page, pageSize };
-    setFilters(newFilters);
-    localStorage.setItem('pageSize', pageSize);
+    const newFilters = updateFilter({page, pageSize});
+    localStorage.setItem("pageSize", pageSize);
     executeSearch(newFilters);
   };
 
@@ -158,16 +188,23 @@ function SearchPage() {
           className="search-input"
           value={filters.q}
           onChange={(e) => updateFilter({ q: e.target.value })}
-          onKeyUp={(e) => e.key === 'Enter' && executeSearch({ ...filters, page: 1 }, true)}
+          onKeyUp={(e) =>
+            e.key === "Enter" && executeSearch(updateFilter({ page: 1 }), true)
+          }
           placeholder="请输入搜索内容..."
         />
         <Checkbox
           id="semantic"
           checked={filters.embeddings}
-          onChange={e => updateFilter({ embeddings: e.target.checked })}
+          onChange={(e) => updateFilter({ embeddings: e.target.checked })}
         />
         <label htmlFor="semantic">语义匹配</label>
-        <button className="search-button" onClick={() => executeSearch({ ...filters, page: 1 }, true)}>
+        <button
+          className="search-button"
+          onClick={() => {
+            executeSearch(updateFilter({ page: 1 }), true);
+          }}
+        >
           搜索
         </button>
       </div>
@@ -176,29 +213,51 @@ function SearchPage() {
       <div className="filter-group">
         <div className="filter-bar">
           <label>数据集</label>
-          <DatasetSelector multiple value={filters.datasets} onChange={v => updateFilter({ datasets: v })} />
+          <DatasetSelector
+            multiple
+            value={filters.datasets}
+            onChange={(v) => updateFilter({ datasets: v })}
+          />
         </div>
         <div className="filter-bar">
           <label>文件源</label>
-          <FileSourceSelector multiple value={filters.sources} onChange={v => updateFilter({ sources: v })} />
+          <FileSourceSelector
+            multiple
+            value={filters.sources}
+            onChange={(v) => updateFilter({ sources: v })}
+          />
         </div>
         <div className="filter-bar">
           <label>排序</label>
-          <Select value={filters.sort} onChange={v => updateFilter({ sort: v })} style={{ width: 120 }}>
+          <Select
+            value={filters.sort}
+            onChange={(v) => updateFilter({ sort: v })}
+            style={{ width: 120 }}
+          >
             <Option value="">相关度</Option>
             <Option value="pdate">日期 (↑)</Option>
             <Option value="-pdate">日期 (↓)</Option>
             <Option value="outline">大纲</Option>
+            <Option value="source_url">出处</Option>
           </Select>
           <label>分组</label>
-          <Select value={filters.groupBy} onChange={v => updateFilter({ groupBy: v })} style={{ width: 120 }}>
+          <Select
+            value={filters.groupBy}
+            onChange={(v) => updateFilter({ groupBy: v })}
+            style={{ width: 120 }}
+          >
             <Option value="">无</Option>
             <Option value="author">作者</Option>
             <Option value="source_url">来源</Option>
             <Option value="pdate">日期</Option>
           </Select>
           <label>大纲</label>
-          <RemoteFilterSelector filters={filters} column="outline" onChange={v => updateFilter({outline: v})} value={filters.outline} />
+          <RemoteFilterSelector
+            filters={filters}
+            column="outline"
+            onChange={(v) => updateFilter({ outline: v })}
+            value={filters.outline}
+          />
         </div>
       </div>
 
@@ -218,7 +277,7 @@ function SearchPage() {
                 onChange={handlePageChange}
                 showSizeChanger
                 showTotal={(total) => `共 ${total} 条数据`}
-                pageSizeOptions={['10', '20', '50', '100']}
+                pageSizeOptions={["10", "20", "50", "100"]}
               />
             </div>
           )}

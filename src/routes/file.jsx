@@ -78,6 +78,7 @@ const PdfViewer = ({ path, asImage }) => {
   }, [path]);
 
   useEffect(() => {
+    setBlobUrl('')
     const srcUrl = `files/${encodeURIComponent(path)}?page=${pdfPage - 1}&format=${asImage ? 'png' : ''}`;
     console.log(pdfPage, srcUrl);
     api.download(srcUrl).then(({url}) => setBlobUrl(url));
@@ -100,6 +101,9 @@ const PdfViewer = ({ path, asImage }) => {
           />
         </span>
       </div>
+      {!blobUrl && 
+        (<CustomDocumentLoader />)
+      }
       {!!blobUrl && (
         <div className="pdf-viewer">
           <LeftOutlined
@@ -148,7 +152,7 @@ function FileViewer({ path }) {
   const ext = path.split(".").pop().toLowerCase();
   switch (ext) {
     case "pdf":
-      return <PdfViewer path={path} asImage={!!localStorage.viewPdfAsImage} />;
+      return <PdfViewer path={path} asImage={localStorage.viewPdfAsImage === 'true'} />;
     case "txt":
     case "html":
     case "htm":
