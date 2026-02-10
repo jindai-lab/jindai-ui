@@ -73,12 +73,12 @@ const ParagraphItem = ({ data }) => {
         lang1 = lang1.split('-')[0].substring(0, 2); lang2 = lang2.split('-')[0].substring(0, 2);
         return lang1 == lang2;
       }
-      if (localStorage.translatorLang && !languageIdentify(data.lang, localStorage.translatorLang) && 'Translator' in window) {
+      if (apiClient.localConfig.translatorLang && !languageIdentify(data.lang, apiClient.localConfig.translatorLang) && 'Translator' in window) {
         try {
           console.log('init translator')
           const translator = await Translator.create({
             sourceLanguage: data.lang.substring(0, 2),
-            targetLanguage: localStorage.translatorLang,
+            targetLanguage: apiClient.localConfig.translatorLang,
           });
           setTranslatedText(await translator.translate(data.content))
         } catch (err) {
@@ -135,7 +135,7 @@ const ParagraphItem = ({ data }) => {
         {data.content || '无文本内容'}
       </div>
 
-      {translatedText && (<div className="text-content text-translated" lang={localStorage.translatorLang}>
+      {translatedText && (<div className="text-content text-translated" lang={apiClient.localConfig.translatorLang}>
         <TranslationOutlined /><hr style={{ border: 'none' }} />
         {translatedText}
       </div>)}
@@ -146,6 +146,7 @@ const ParagraphItem = ({ data }) => {
           size="small"
           onClick={() => setMetadataVisible(true)}
           icon={<TableOutlined />}
+          color='var(--text)'
         >
           元数据
         </Button>

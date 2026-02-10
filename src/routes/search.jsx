@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { Pagination, Checkbox, Select, message, Spin } from "antd";
 import { useSearchParams } from "react-router-dom";
-import { apiClient as api } from "../api";
+import { apiClient } from "../api";
 import DatasetSelector from "../components/dataset-selector";
 import FileSourceSelector from "../components/filesource-selector";
 import ParagraphItem from "../components/paragraph-item";
@@ -53,7 +53,7 @@ function SearchPage() {
     const embeddings = JSON.parse(searchParams.get("embeddings") || "false");
     const sort = searchParams.get("sort") || "";
     const page = parseInt(searchParams.get("page") || "1", 10);
-    const pageSize = parseInt(localStorage.getItem("pageSize") || "20", 10);
+    const pageSize = apiClient.localConfig.pageSize || 20;
     const groupBy = searchParams.get("group_by") || "";
 
     const initialFilters = {
@@ -117,13 +117,13 @@ function SearchPage() {
     // Otherwise, fetch a large chunk (5 pages worth)
     try {
       setIsLoading(true);
-      const response = await api.search(queryParams);
+      const response = await apiClient.search(queryParams);
 
       if (response) {
         // Secondary call for total count if not provided in first response
         let total = response.total;
         if (total === undefined || total <= 0) {
-          const totalData = await api.search({
+          const totalData = await apiClient.search({
             q: embeddings ? "*" : q,
             datasets,
             sources,
@@ -176,7 +176,7 @@ function SearchPage() {
 
   const handlePageChange = (page, pageSize) => {
     const newFilters = updateFilter({page, pageSize});
-    localStorage.setItem("pageSize", pageSize);
+    apiClient.localConfig.pageSize = pageSize;
     executeSearch(newFilters);
   };
 

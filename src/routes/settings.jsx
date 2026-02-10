@@ -1,5 +1,7 @@
 import { Card, Col, Row, Select, Checkbox, Input } from "antd";
 import { useEffect, useState } from "react";
+import { apiClient } from "../api";
+
 
 export default function SettingsPage() {
 
@@ -11,25 +13,12 @@ export default function SettingsPage() {
   })
 
   useEffect(() => {
-    const localSettings = {}
-    const converter = {
-      'object': x => x,
-      "string": x => x,
-      "boolean": x => Boolean(x),
-      "number": x => +x      
-    }
-    Object.keys(settings).forEach(key => {
-      if (key in localStorage)
-        localSettings[key] = (converter[typeof settings[key]])(window.localStorage[key])
-      else
-        localSettings[key] = settings[key]
-    })
-    setSettings(localSettings)
+    setSettings(apiClient.localConfig)
   }, [])
 
   const updateSettings = (update) => {
     setSettings({ ...settings, ...update })
-    Object.entries(update).forEach(([key, value]) => window.localStorage[key] = value)
+    Object.entries(update).forEach(([key, value]) => apiClient.localConfig[key] = value)
   }
 
   return (

@@ -12,14 +12,14 @@ import {
 } from "@ant-design/icons";
 import { useState } from "react";
 import { useEffect } from "react";
+import { apiClient } from "./api";
 
 export default function NavSidebar({user, logout}) {
   const [showNavbar, setShowNavbar] = useState(true);
   const [showAbout, setShowAbout] = useState(false);
 
   useEffect(() => {
-    if (["true", "false"].indexOf(localStorage.showNavbar) >= 0)
-      setShowNavbar(localStorage.showNavbar == "true");
+    setShowNavbar(apiClient.localConfig.showNavbar === true);
   }, []);
 
   return (
@@ -28,7 +28,7 @@ export default function NavSidebar({user, logout}) {
         <div
           className="sidebar-header"
           onClick={() => {
-            localStorage.showNavbar = !showNavbar;
+            localConfig.showNavbar = !showNavbar;
             setShowNavbar(!showNavbar);
           }}
         >

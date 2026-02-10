@@ -152,7 +152,7 @@ function FileViewer({ path }) {
   const ext = path.split(".").pop().toLowerCase();
   switch (ext) {
     case "pdf":
-      return <PdfViewer path={path} asImage={localStorage.viewPdfAsImage === 'true'} />;
+      return <PdfViewer path={path} asImage={apiClient.localConfig.viewPdfAsImage === true} />;
     case "txt":
     case "html":
     case "htm":
