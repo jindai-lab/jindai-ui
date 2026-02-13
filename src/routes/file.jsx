@@ -9,7 +9,7 @@ import { ThreeDots } from "react-loader-spinner";
 import { Document, Page, pdfjs } from "react-pdf";
 import { ReactReader } from 'react-reader'
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import { apiClient as api } from "../api";
+import { apiClient } from "../api";
 
 const FileListPage = lazy(() => import("./filelist.jsx"));
 
@@ -53,7 +53,7 @@ const PdfViewer = ({ path, asImage }) => {
   const [blobUrl, setBlobUrl] = useState("");
 
   useEffect(() => {
-    api
+    apiClient
       .callAPI(`files/${encodeURIComponent(path)}?metadata=true`)
       .then((data) => {
         setPdfMaxPages(data.page_count);
@@ -81,7 +81,7 @@ const PdfViewer = ({ path, asImage }) => {
     setBlobUrl('')
     const srcUrl = `files/${encodeURIComponent(path)}?page=${pdfPage - 1}&format=${asImage ? 'png' : ''}`;
     console.log(pdfPage, srcUrl);
-    api.download(srcUrl).then(({url}) => setBlobUrl(url));
+    apiClient.download(srcUrl).then(({url}) => setBlobUrl(url));
     if (pdfPage != +params.get("page")) {
       params.set("page", pdfPage);
       setParams(params);
@@ -143,7 +143,7 @@ function FileViewer({ path }) {
   const [blobUrl, setBlobUrl] = useState("");
   const [blob, setBlob] = useState(null);
   useEffect(() => {
-    api.download(`files/${path}`).then(({url, blob}) => {
+    apiClient.download(`files/${path}`).then(({url, blob}) => {
       setBlobUrl(url);
       setBlob(blob);
     });

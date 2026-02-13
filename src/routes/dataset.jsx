@@ -8,7 +8,7 @@ import {
 import { Button, Input, message, Modal, Popconfirm, Space, Table } from 'antd';
 import { useEffect, useState } from "react";
 import { useNavigate } from 'react-router-dom';
-import { apiClient as api } from '../api'
+import { apiClient } from '../api'
 
 export default function DatasetPage() {
 
@@ -83,7 +83,7 @@ export default function DatasetPage() {
   }
 
   const handleDelete = (record) => {
-    api.delete(`datasets/${record.record_id}`).then((e) => {
+    apiClient.delete(`datasets/${record.record_id}`).then((e) => {
       console.log(e)
       message.info('删除成功')
       handleRefresh()
@@ -92,7 +92,7 @@ export default function DatasetPage() {
 
   const handleRefresh = () => {
     message.loading('刷新数据集列表', 0);
-    api.datasets()
+    apiClient.datasets()
       .then(setDatasets)
       .finally(() => { message.destroy() });
   }
@@ -114,7 +114,7 @@ export default function DatasetPage() {
         open={!!editingRecord}
         onOk={async () => {
           try {
-            await api.datasetRename({
+            await apiClient.datasetRename({
               id: editingRecord.record_id,
               original: editingRecord.title,
               newName: newName.trim()
@@ -138,7 +138,7 @@ export default function DatasetPage() {
         open={creatingDataset}
         onOk={async () => {
           try {
-            api.datasetCreate({
+            apiClient.datasetCreate({
               name: creatingDatasetName.trim()
             })
             message.success('文件夹创建成功');

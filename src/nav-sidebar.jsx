@@ -28,7 +28,7 @@ export default function NavSidebar({user, logout}) {
         <div
           className="sidebar-header"
           onClick={() => {
-            localConfig.showNavbar = !showNavbar;
+            apiClient.localConfig.showNavbar = !showNavbar;
             setShowNavbar(!showNavbar);
           }}
         >

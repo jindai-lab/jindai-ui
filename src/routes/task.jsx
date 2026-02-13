@@ -30,8 +30,8 @@ import {
 } from "antd";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { apiClient as api, apiClient } from "../api";
 import "./task.css";
+import { apiClient } from "../api.js"
 
 const { Panel } = Collapse;
 const { Text, Title, Paragraph } = Typography;
@@ -47,13 +47,13 @@ const TaskDboList = () => {
 
   // 从数据库/后端接口 获取taskdbo数据
   const getTaskDboData = async () => {
-    const { results } = (await api.callAPI("tasks/")) || { results: [] };
+    const { results } = (await apiClient.callAPI("tasks/")) || { results: [] };
     setTaskList(results);
     setLoading(false);
   };
 
   const runTask = async (task_id) => {
-    const jobId = await api.callAPI(
+    const jobId = await apiClient.callAPI(
       "worker/custom",
       { task_id },
       { method: "POST" },
@@ -332,12 +332,12 @@ function JobsList() {
 
   const loadDetailedStats = async (expanded) => {
     if (!expanded) return;
-    const { results } = await api.callAPI("worker/jobs");
+    const { results } = await apiClient.callAPI("worker/jobs");
     setJobs(results);
   };
 
   const removeJob = async (jobId) => {
-    await api.callAPI(`worker/${jobId}`, null, { method: "DELETE" });
+    await apiClient.callAPI(`worker/${jobId}`, null, { method: "DELETE" });
     await loadDetailedStats(true);
   };
 
@@ -434,7 +434,7 @@ export default function TaskPage() {
 
   const refreshStats = async () => {
     setLoading(true);
-    const res = await api.callAPI("worker/");
+    const res = await apiClient.callAPI("worker/");
     if (res) {
       setStats(res);
       setLoading(false);
@@ -442,7 +442,7 @@ export default function TaskPage() {
   };
 
   const refreshEmbeddingsCount = async () => {
-    const res = await api.callAPI("embeddings");
+    const res = await apiClient.callAPI("embeddings");
     if (res) {
       setEmbeddingsStats((prev) => {
         prev.count = res;
@@ -459,12 +459,12 @@ export default function TaskPage() {
   }, []);
 
   const updateEmbeddings = async () => {
-    await api.callAPI("worker/text_embedding", {});
+    await apiClient.callAPI("worker/text_embedding", {});
     message.info("成功添加任务");
   };
 
   const clearTasks = async () => {
-    await api.callAPI("worker/", null, { method: "DELETE" });
+    await apiClient.callAPI("worker/", null, { method: "DELETE" });
     message.info("已清除任务");
   };
 

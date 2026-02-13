@@ -20,7 +20,7 @@ function SearchPage() {
     embeddings: false,
     sort: "",
     groupBy: "",
-    outline: "",
+    outline: [],
     page: 1,
     pageSize: 20,
   });
@@ -124,9 +124,8 @@ function SearchPage() {
         let total = response.total;
         if (total === undefined || total <= 0) {
           const totalData = await apiClient.search({
-            q: embeddings ? "*" : q,
-            datasets,
-            sources,
+            q: targetFilters.embeddings ? "*" : targetFilters.q,
+            ...targetFilters,
             total: true,
           });
           total = totalData.total;

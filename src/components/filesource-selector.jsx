@@ -1,6 +1,6 @@
 import { TreeSelect } from 'antd';
 import { useState } from 'react';
-import { apiClient as api } from '../api';
+import { apiClient } from '../api';
 
 export default function FileSourceSelector({
   onChange,
@@ -10,7 +10,7 @@ export default function FileSourceSelector({
   const [sourceFiles, setSourceFiles] = useState([])
 
   async function fetchFileSources(folderPath = '') {
-    const data = await api.fileSources(folderPath);
+    const data = await apiClient.fileSources(folderPath);
     setSourceFiles(prev => prev.concat(data.items.map(item => ({
       title: item.name,
       value: item.relative_path,
@@ -21,7 +21,7 @@ export default function FileSourceSelector({
   }
 
   async function fetchSearch(value) {
-    const data = await api.fileSources('/', value)
+    const data = await apiClient.fileSources('/', value)
     setSourceFiles(prev => prev.concat(data.items.map(item => ({
       title: item.name,
       value: item.relative_path,

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { apiClient as api } from '../api'
+import { apiClient } from '../api'
 import { Button, message, Select } from "antd";
 import DatasetSelector from "../components/dataset-selector";
 import FileSourceSelector from "../components/filesource-selector";
@@ -18,7 +18,7 @@ export default function ImportPage() {
   }, [])
 
   async function startImport() {
-    api.newJob({type: 'import', dataset, source, lang})
+    apiClient.newJob({type: 'import', dataset, source, lang})
   }
 
   return (
@@ -32,7 +32,7 @@ export default function ImportPage() {
       <Select id="lang"
         showSearch
         style={{width: 120}}
-        value={lang} options={api.localeCodes} onChange={setLang}>语言</Select>
+        value={lang} options={apiClient.localeCodes} onChange={setLang}>语言</Select>
       <Button onClick={startImport}>开始</Button>
     </>
   )

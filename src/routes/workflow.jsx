@@ -2,9 +2,9 @@ import { ReactFlow, addEdge, applyEdgeChanges, applyNodeChanges } from '@xyflow/
 import '@xyflow/react/dist/style.css';
 import { message } from 'antd';
 import yaml from 'js-yaml';
-import { useCallback, useEffect, useState, useRef } from 'react';
+import { useCallback, useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import { apiClient as api } from '../api';
+import { apiClient } from '../api';
 import YamlEditor from '../components/yaml-editor';
 
 const initialNodes = [
@@ -55,7 +55,7 @@ export default function Workflow({ }) {
 
   const fetchSource = async () => {
     try {
-      const data = await api.callAPI(`tasks/${taskId}`);
+      const data = await apiClient.callAPI(`tasks/${taskId}`);
       const yaml_src = yaml.dump(validateData(data))
       setYamlContent(yaml_src);
       editorRef.current.setValue(yaml_src)
@@ -72,7 +72,7 @@ export default function Workflow({ }) {
     const hide = message.loading('正在保存配置...', 0);
     try {
       let data = validateData(yaml.load(updatedYaml))
-      await api.callAPI(`tasks/${taskId}`, data, { method: 'PUT' });
+      await apiClient.callAPI(`tasks/${taskId}`, data, { method: 'PUT' });
       message.success('配置更新成功');
       setYamlContent(updatedYaml); // 更新本地缓存的内容
     } catch (err) {

@@ -24,7 +24,7 @@ import {
 } from "antd";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { apiClient as api } from "../api";
+import { apiClient } from "../api";
 import OcrLanguageSelectModal from "../components/ocr-selector";
 
 const FileManager = ({ folderPath }) => {
@@ -38,7 +38,7 @@ const FileManager = ({ folderPath }) => {
   const navigate = useNavigate();
 
   async function listFiles(folderPath) {
-    const data = await api.callAPI(
+    const data = await apiClient.callAPI(
       `files/${encodeURI(folderPath)}?metadata=true`,
     );
     const list = data.items || [];
@@ -79,7 +79,7 @@ const FileManager = ({ folderPath }) => {
   const handleDelete = (record) => {
     // 请求后台接口 DELETE /api/files/<文件/文件夹id> 删除资源
     console.log("删除文件/文件夹：", record.relative_path);
-    api
+    apiClient
       .callAPI(`files/${record.relative_path}`, null, { method: "DELETE" })
       .then((response) => {
         message.success(`${record.is_directory ? "文件夹" : "文件"}删除成功`);
@@ -91,7 +91,7 @@ const FileManager = ({ folderPath }) => {
   };
 
   const submitOcr = (record, ocrModalResult) => {
-    api.callAPI("worker/", {
+    apiClient.callAPI("worker/", {
       task_type: "ocr",
       params: {
         input: record.relative_path,
@@ -197,7 +197,7 @@ const FileManager = ({ folderPath }) => {
         <Space size="small">
           {!record.is_directory && (<Button
             onClick={() =>
-              api
+              apiClient
                 .download(`files/${encodeURIComponent(record.relative_path)}`)
                 .then(({url}) => { 
                   const link =  document.createElement('a'); 
@@ -301,7 +301,7 @@ const FileManager = ({ folderPath }) => {
         onOk={async () => {
           try {
             // 请求后台接口 PUT /api/files/<文件/文件夹id> 修改名称
-            await api.fileRename({
+            await apiClient.fileRename({
               original: editingRecord.relative_path,
               newName: newName.trim(),
             });
@@ -331,7 +331,7 @@ const FileManager = ({ folderPath }) => {
         onOk={async () => {
           try {
             // 请求后台接口 POST /api/files/<当前目录path> 新建文件夹
-            await api.callAPI(`files${folderPath}`, {
+            await apiClient.callAPI(`files${folderPath}`, {
               name: folderName.trim(),
               is_directory: true,
             });
@@ -379,7 +379,7 @@ const FileManager = ({ folderPath }) => {
           <Upload
             name="file"
             action={`/api/files${folderPath}`}
-            headers={{Authorization: 'Bearer '+ api.bearer}}
+            headers={{Authorization: 'Bearer '+ apiClient.bearer}}
             onChange={(info) => {
               if (info.file.status === "done") {
                 message.success(`${info.file.name} 上传成功`);
