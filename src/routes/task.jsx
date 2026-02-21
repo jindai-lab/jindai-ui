@@ -27,9 +27,11 @@ import {
   Tag,
   Typography,
   Popconfirm,
+  Select,
 } from "antd";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import ParamPanel from "../components/param-panel.jsx";
 import "./task.css";
 import { apiClient } from "../api.js"
 
@@ -427,6 +429,9 @@ export default function TaskPage() {
   const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(false);
   const [embeddingsStats, setEmbeddingsStats] = useState({});
+  const [taskTypes, setTaskTypes] = useState({});
+  const [activeTaskType, setActiveTaskType] = useState('');
+  const [activeTaskParams, setActiveTaskParams] = useState({});
 
   const refreshStats = async () => {
     setLoading(true);
@@ -445,6 +450,8 @@ export default function TaskPage() {
         return prev;
       });
     }
+    const tasks = await apiClient.taskTypes();
+    setTaskTypes(tasks);
   };
 
   useEffect(() => {
@@ -540,10 +547,22 @@ export default function TaskPage() {
           <TaskDboList />
         </Row>
       </Card>
-      <Card title="Embeddings">
+      <Card title="维护任务">
         <Row>总数：{embeddingsStats.count}</Row>
-        <Button onClick={updateEmbeddings}>更新 Embeddings</Button>
+        <Select style={{width: 200}} options={Object.entries(taskTypes).map(([name, params]) => {
+            return {value: name, display: name}
+          })} onChange={(val) => setActiveTaskType(val)}></Select>
+        { activeTaskType && taskTypes[activeTaskType] && (
+          <ParamPanel scheme={taskTypes[activeTaskType]} value={activeTaskParams} onChange={setActiveTaskParams} />
+        ) }
+        <Button type="primary" onClick={async () => {
+          if (activeTaskType) {
+            const jobId = await apiClient.workerSubmitTask(activeTaskType, activeTaskParams);
+            message.info(`创建了维护任务 ${jobId}`)
+          }
+        }}>运行</Button>
       </Card>
+      <div style={{paddingBottom: 50}}></div>
     </>
   );
 }

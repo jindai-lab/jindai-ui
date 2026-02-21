@@ -195,6 +195,9 @@ export const apiClient = Object.assign(
     async embeddingStats() {
       return await this.makeCall("embeddings/");
     },
+    async taskTypes() {
+      return await this.makeCall("worker/tasks")
+    },
     async taskDBO(id = "", updated = null) {
       return await this.makeCall(`tasks/${id}`, updated, {
         method: updated ? "PUT" : "GET",
