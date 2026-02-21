@@ -8,6 +8,7 @@ import { Suspense, lazy, useEffect, useState } from "react";
 import { ThreeDots } from "react-loader-spinner";
 import { Document, Page, pdfjs } from "react-pdf";
 import { ReactReader } from 'react-reader'
+import ParagaphItem from '../components/paragraph-item.jsx'
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { apiClient } from "../api";
 
@@ -51,10 +52,11 @@ const PdfViewer = ({ path, asImage }) => {
   const [pdfPage, setPdfPage] = useState(+(params.get("page") || "1"));
   const [pdfMaxPages, setPdfMaxPages] = useState(0);
   const [blobUrl, setBlobUrl] = useState("");
+  const [paragraphs, setParagraphs] = useState([]);
 
   useEffect(() => {
     apiClient
-      .callAPI(`files/${encodeURIComponent(path)}?metadata=true`)
+      .getFileMetadata(path)
       .then((data) => {
         setPdfMaxPages(data.page_count);
 
@@ -79,13 +81,15 @@ const PdfViewer = ({ path, asImage }) => {
 
   useEffect(() => {
     setBlobUrl('')
+    setParagraphs([])
     const srcUrl = `files/${encodeURIComponent(path)}?page=${pdfPage - 1}&format=${asImage ? 'png' : ''}`;
     console.log(pdfPage, srcUrl);
-    apiClient.download(srcUrl).then(({url}) => setBlobUrl(url));
+    apiClient.download(srcUrl).then(({ url }) => setBlobUrl(url));
     if (pdfPage != +params.get("page")) {
       params.set("page", pdfPage);
       setParams(params);
     }
+    apiClient.search({ sources: [path], sourcePage: pdfPage - 1}).then(resp => setParagraphs(resp.results))
   }, [path, pdfPage, asImage]);
 
   return (
@@ -101,7 +105,7 @@ const PdfViewer = ({ path, asImage }) => {
           />
         </span>
       </div>
-      {!blobUrl && 
+      {!blobUrl &&
         (<CustomDocumentLoader />)
       }
       {!!blobUrl && (
@@ -110,7 +114,7 @@ const PdfViewer = ({ path, asImage }) => {
             onClick={() => pdfPage > 1 && setPdfPage(pdfPage - 1)}
             disabled={pdfPage <= 1}
           />
-          {asImage && (
+          {asImage && (<>
             <img
               src={blobUrl}
               width={
@@ -119,6 +123,7 @@ const PdfViewer = ({ path, asImage }) => {
               }
               height="auto"
             />
+          </>
           )}
           {!asImage && (
             <SinglePagePDFViewer
@@ -135,6 +140,9 @@ const PdfViewer = ({ path, asImage }) => {
           />
         </div>
       )}
+      {asImage && paragraphs.map(ele => (
+        <ParagaphItem key={ele.id} data={ele} />
+      ))}
     </>
   );
 };
@@ -143,7 +151,7 @@ function FileViewer({ path }) {
   const [blobUrl, setBlobUrl] = useState("");
   const [blob, setBlob] = useState(null);
   useEffect(() => {
-    apiClient.download(`files/${path}`).then(({url, blob}) => {
+    apiClient.download(`files/${path}`).then(({ url, blob }) => {
       setBlobUrl(url);
       setBlob(blob);
     });
@@ -192,18 +200,18 @@ function FileViewer({ path }) {
       return (
         <div>
           <h2>无法预览该文件类型</h2>
-          { blobUrl && (
-          <><p>点击以下链接下载文件：</p><a
+          {blobUrl && (
+            <><p>点击以下链接下载文件：</p><a
               href={blobUrl}
               download={path.split('/').pop()}
             >
               下载 {path}
-            </a></> )}
-          { !blobUrl && (<>下载链接正在生成中...<CustomDocumentLoader /></>) }
+            </a></>)}
+          {!blobUrl && (<>下载链接正在生成中...<CustomDocumentLoader /></>)}
         </div>
       );
-    }
   }
+}
 
 
 export default function FilePage() {

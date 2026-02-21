@@ -47,17 +47,13 @@ const TaskDboList = () => {
 
   // 从数据库/后端接口 获取taskdbo数据
   const getTaskDboData = async () => {
-    const { results } = (await apiClient.callAPI("tasks/")) || { results: [] };
+    const { results } = (await apiClient.taskDBO()) || { results: [] };
     setTaskList(results);
     setLoading(false);
   };
 
   const runTask = async (task_id) => {
-    const jobId = await apiClient.callAPI(
-      "worker/custom",
-      { task_id },
-      { method: "POST" },
-    );
+    const jobId = await apiClient.workerSubmitTask('custom', { task_id });
     console.log(jobId);
     message.info(`已创建任务 ${jobId}`);
   };
@@ -332,12 +328,12 @@ function JobsList() {
 
   const loadDetailedStats = async (expanded) => {
     if (!expanded) return;
-    const { results } = await apiClient.callAPI("worker/jobs");
+    const { results } = await apiClient.workerJobsList();
     setJobs(results);
   };
 
   const removeJob = async (jobId) => {
-    await apiClient.callAPI(`worker/${jobId}`, null, { method: "DELETE" });
+    await apiClient.workerJobDelete(jobId);
     await loadDetailedStats(true);
   };
 
@@ -397,7 +393,7 @@ function JobsList() {
 
     try {
       // 调用 API 获取 job 详情
-      const result = await apiClient.callAPI(`worker/${jobId}`);
+      const result = await apiClient.workerJob(jobId);
       setJobDetail(result);
     } catch (err) {
       // 捕获 API 调用错误
@@ -434,7 +430,7 @@ export default function TaskPage() {
 
   const refreshStats = async () => {
     setLoading(true);
-    const res = await apiClient.callAPI("worker/");
+    const res = await apiClient.workerStats();
     if (res) {
       setStats(res);
       setLoading(false);
@@ -442,7 +438,7 @@ export default function TaskPage() {
   };
 
   const refreshEmbeddingsCount = async () => {
-    const res = await apiClient.callAPI("embeddings");
+    const res = await apiClient.embeddingStats();
     if (res) {
       setEmbeddingsStats((prev) => {
         prev.count = res;
@@ -459,12 +455,12 @@ export default function TaskPage() {
   }, []);
 
   const updateEmbeddings = async () => {
-    await apiClient.callAPI("worker/text_embedding", {});
+    await apiClient.workerSubmitTask("text_embedding", {});
     message.info("成功添加任务");
   };
 
   const clearTasks = async () => {
-    await apiClient.callAPI("worker/", null, { method: "DELETE" });
+    await apiClient.workerClearJobs();
     message.info("已清除任务");
   };
 

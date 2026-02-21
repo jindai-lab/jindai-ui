@@ -21,6 +21,7 @@ function SearchPage() {
     sort: "",
     groupBy: "",
     outline: [],
+    authors: [],
     page: 1,
     pageSize: 20,
   });
@@ -38,7 +39,7 @@ function SearchPage() {
   const updateFilter = (updates) => {
     let newFilters = {}
     setFilters((prev) => {
-      newFilters ={ ...prev, ...updates }
+      newFilters = { ...prev, ...updates }
       return newFilters;
     });
     return newFilters
@@ -89,15 +90,15 @@ function SearchPage() {
 
   const executeSearch = async (targetFilters, forceRefresh = false) => {
     console.log('executeSearch:', targetFilters)
-    
+
     const { page, pageSize } = targetFilters;
     const targetOffset = (page - 1) * pageSize;
     const fetchSize = pageSize * 5;
 
     // Build query params
-    const queryParams = { limit: fetchSize, ...targetFilters };
-    // delete queryParams.page;
-    // delete queryParams.pageSize;
+    const queryParams = { ...targetFilters };
+    delete queryParams.page;
+    delete queryParams.pageSize;
     if (!queryParams.embeddings) delete queryParams.embeddings;
 
     // Check if we can use cached/pre-fetched data
@@ -106,7 +107,7 @@ function SearchPage() {
     const isInBuffer =
       targetOffset >= dataContext.offset &&
       targetOffset + pageSize <=
-        dataContext.offset + dataContext.results.length;
+      dataContext.offset + dataContext.results.length;
 
     if (!forceRefresh && isSameQuery && isInBuffer) {
       // Just update the page in URL, no network request needed
@@ -117,12 +118,12 @@ function SearchPage() {
     // Otherwise, fetch a large chunk (5 pages worth)
     try {
       setIsLoading(true);
-      const response = await apiClient.search(queryParams);
+      const response = await apiClient.search({ limit: fetchSize, offset: targetOffset, ...queryParams });
 
       if (response) {
         // Secondary call for total count if not provided in first response
         let total = response.total;
-        if (total === undefined || total <= 0) {
+        if (total === undefined || total < 0) {
           const totalData = await apiClient.search({
             q: targetFilters.embeddings ? "*" : targetFilters.q,
             ...targetFilters,
@@ -152,7 +153,7 @@ function SearchPage() {
     const relativeOffset =
       (filters.page - 1) * filters.pageSize - dataContext.offset;
     if (relativeOffset < 0 || !dataContext.results.length) return [];
-    console.log("visible results get", dataContext, relativeOffset);
+    console.log("use prefetched data", relativeOffset);
 
     return dataContext.results
       .slice(relativeOffset, relativeOffset + filters.pageSize)
@@ -164,17 +165,13 @@ function SearchPage() {
             ? source_url
             : `/files/${source_url.replace(/^\//, "")}?page=${ele.source_page + 1}`,
           displayDate:
-            ele.pdate
-              ?.toString()
-              .split("T")[0]
-              .replace(/-01-01$/, "")
-              .replace(/-01$/, "") || "",
+            ele.pdate?.toString().replace(/(-01){0,2}T.+$/, "") || "",
         };
       });
-  }, [dataContext, filters.page, filters.pageSize]);
+  }, [dataContext, filters]);
 
   const handlePageChange = (page, pageSize) => {
-    const newFilters = updateFilter({page, pageSize});
+    const newFilters = updateFilter({ page, pageSize });
     apiClient.localConfig.pageSize = pageSize;
     executeSearch(newFilters);
   };
@@ -256,6 +253,16 @@ function SearchPage() {
             column="outline"
             onChange={(v) => updateFilter({ outline: v })}
             value={filters.outline}
+            style={{ width: 240 }}
+          />
+
+          <label>作者</label>
+          <RemoteFilterSelector
+            filters={filters}
+            column="author"
+            onChange={(v) => updateFilter({ authors: v })}
+            value={filters.authors}
+            style={{ width: 120 }}
           />
         </div>
       </div>

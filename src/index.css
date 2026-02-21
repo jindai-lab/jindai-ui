@@ -12,6 +12,7 @@
   font-synthesis: none;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  --ant-color-text: var(--text);
 }
 
 :root.dark {

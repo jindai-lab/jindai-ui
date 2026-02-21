@@ -14,7 +14,7 @@ import "@fontsource/roboto-mono"
 
 const { Text } = Typography;
 
-const YamlEditor = ({ initialValue = '', onSave, onMount, onValidate }) => {
+const YamlEditor = ({ initialValue = '', onSave, onMount, beforeMount, onValidate }) => {
   const [value, setValue] = useState(initialValue);
   const [error, setError] = useState(null);
   const [isDirty, setIsDirty] = useState(false);
@@ -130,16 +130,19 @@ const YamlEditor = ({ initialValue = '', onSave, onMount, onValidate }) => {
           value={value}
           onChange={handleEditorChange}
           onMount={(editor) => { editorRef.current = editor; if (onMount) onMount(editor); }}
+          beforeMount={beforeMount}
           options={{
             fontSize: 14,
-            minimap: { enabled: false },
             scrollBeyondLastLine: false,
             automaticLayout: true,
             tabSize: 2,
             padding: { top: 16, bottom: 16 },
             fontFamily: "Roboto Mono",
             renderLineHighlight: 'all',
-            cursorSmoothCaretAnimation: 'on'
+            cursorSmoothCaretAnimation: 'on',
+            minimap: { enabled: false },
+            suggestOnTriggerCharacters: true,
+            wordBasedSuggestions: false,
           }}
         />
       </div>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Modal, Typography, Space } from 'antd';
+import { Button, Modal, Typography, Descriptions } from 'antd';
 import { TableOutlined, TranslationOutlined } from '@ant-design/icons'
 import { apiClient } from '../api';
 
@@ -17,14 +17,14 @@ const ParagraphItem = ({ data }) => {
     author: '作者',
     outline: '大纲',
     content: '内容',
-    dataset: '数据集',
+    dataset: '数据集#',
     source_url: '出处',
     source_page: '页号',
     pagenum: '页码',
     lang: '语言',
     extdata: '额外数据',
     id: 'ID',
-    dataset_name: '数据集名称',
+    dataset_name: '数据集',
     count: '计数'
   }
 
@@ -53,16 +53,9 @@ const ParagraphItem = ({ data }) => {
       const displayValue = formatValue(value)
 
       return (
-        <div key={index} style={{
-          padding: '8px 0',
-          borderBottom: '1px solid #f0f0f0',
-          marginBottom: '4px'
-        }}>
-          <Text strong style={{ width: '120px', display: 'inline-block' }}>
-            {FIELD_NAMES[key] || key}
-          </Text>
-          <Text>{displayValue}</Text>
-        </div>
+          <Descriptions.Item key={index} label={FIELD_NAMES[key] || key}>
+            {displayValue}
+          </Descriptions.Item>
       );
     });
   };
@@ -121,10 +114,10 @@ const ParagraphItem = ({ data }) => {
             <span className="metadata-value">{data.author}</span>
           </div>
         )}
-        {data.pdate && (
+        {data.displayDate && (
           <div className="metadata-item">
             <span className="metadata-label">日期</span>
-            <span className="metadata-value">{data.pdate}</span>
+            <span className="metadata-value">{data.displayDate}</span>
           </div>
         )}
         <div className="" style={{ display: 'none' }}>{data.id}</div>
@@ -169,11 +162,14 @@ const ParagraphItem = ({ data }) => {
           overflowY: 'auto',
           padding: '8px'
         }}>
-          {formatMetadata(data).length > 0 ? (
-            formatMetadata(data)
-          ) : (
-            <Text type="secondary">暂无元数据信息</Text>
-          )}
+          <Descriptions
+            column={1}
+            bordered
+            size="middle"
+            labelStyle={{ fontWeight: "bold" }}
+          >
+          {formatMetadata(data)}
+          </Descriptions>
         </div>
       </Modal>
     </div>

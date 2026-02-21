@@ -38,17 +38,7 @@ const FileManager = ({ folderPath }) => {
   const navigate = useNavigate();
 
   async function listFiles(folderPath) {
-    const data = await apiClient.callAPI(
-      `files/${encodeURI(folderPath)}?metadata=true`,
-    );
-    const list = data.items || [];
-    list.sort((a, b) => {
-      if (a.is_directory && !b.is_directory) return -1;
-      if (!a.is_directory && b.is_directory) return 1;
-      return a.name.localeCompare(b.name);
-    });
-    message.destroy();
-    return list;
+    return await apiClient.listFiles(folderPath);
   }
 
   // 初始化 + 切换目录时，筛选当前目录下的文件/文件夹
@@ -80,7 +70,7 @@ const FileManager = ({ folderPath }) => {
     // 请求后台接口 DELETE /api/files/<文件/文件夹id> 删除资源
     console.log("删除文件/文件夹：", record.relative_path);
     apiClient
-      .callAPI(`files/${record.relative_path}`, null, { method: "DELETE" })
+      .deleteFile(record.relative_path)
       .then((response) => {
         message.success(`${record.is_directory ? "文件夹" : "文件"}删除成功`);
         handleRefresh(); // 刷新目录列表，实时更新删除结果
@@ -91,15 +81,13 @@ const FileManager = ({ folderPath }) => {
   };
 
   const submitOcr = (record, ocrModalResult) => {
-    apiClient.callAPI("worker/", {
-      task_type: "ocr",
-      params: {
-        input: record.relative_path,
-        output:
-          record.relative_path.split("/").slice(0, -1).join("/") + "/" + ocrModalResult.newName,
-        lang: ocrModalResult.tesseractCode,
-        monochrome: ocrModalResult.monochrome
-      },
+    apiClient.workerSubmitTask({
+      type: "ocr",
+      input: record.relative_path,
+      output:
+        record.relative_path.split("/").slice(0, -1).join("/") + "/" + ocrModalResult.newName,
+      lang: ocrModalResult.tesseractCode,
+      monochrome: ocrModalResult.monochrome
     });
   };
 
@@ -199,13 +187,13 @@ const FileManager = ({ folderPath }) => {
             onClick={() =>
               apiClient
                 .download(`files/${encodeURIComponent(record.relative_path)}`)
-                .then(({url}) => { 
-                  const link =  document.createElement('a'); 
+                .then(({ url }) => {
+                  const link = document.createElement('a');
                   link.href = url;
                   link.download = record.relative_path.split('/').pop()
                   link.click();
                   link.remove();
-                 })
+                })
             }
             size="small"
             icon={<DownloadOutlined />}
@@ -224,15 +212,15 @@ const FileManager = ({ folderPath }) => {
           >
             编辑
           </Button>
-          { (record.name.endsWith('.pdf') || record.is_directory) && (
-          <OcrLanguageSelectModal
-            icon={<FileTextOutlined />}
-            size="small"
-            type="link"
-            style={{ color: "var(--primary)" }}
-            filename={record.name}
-            submit={(lang) => submitOcr(record, lang)}
-          />
+          {(record.name.endsWith('.pdf') || record.is_directory) && (
+            <OcrLanguageSelectModal
+              icon={<FileTextOutlined />}
+              size="small"
+              type="link"
+              style={{ color: "var(--primary)" }}
+              filename={record.name}
+              submit={(lang) => submitOcr(record, lang)}
+            />
           )}
           <Popconfirm
             title={`确定删除【${record.name}】吗？`}
@@ -330,11 +318,7 @@ const FileManager = ({ folderPath }) => {
         open={creatingDir}
         onOk={async () => {
           try {
-            // 请求后台接口 POST /api/files/<当前目录path> 新建文件夹
-            await apiClient.callAPI(`files${folderPath}`, {
-              name: folderName.trim(),
-              is_directory: true,
-            });
+            await apiClient.createFolder(folderPath, folderName);
             message.success("文件夹创建成功");
             handleRefresh(); // 刷新目录列表，实时展示新增结果
             setCreatingDir(false);
@@ -379,7 +363,7 @@ const FileManager = ({ folderPath }) => {
           <Upload
             name="file"
             action={`/api/files${folderPath}`}
-            headers={{Authorization: 'Bearer '+ apiClient.bearer}}
+            headers={{ Authorization: 'Bearer ' + apiClient.bearer }}
             onChange={(info) => {
               if (info.file.status === "done") {
                 message.success(`${info.file.name} 上传成功`);
