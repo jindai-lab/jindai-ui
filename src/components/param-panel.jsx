@@ -124,7 +124,6 @@ const ParamPanel = ({ scheme, value = {}, onChange }) => {
 
       // 处理 Dict 类型 (递归)
       if (type === 'dict' || (typeof type === 'object' && !type.isArray)) {
-        console.log(type)
         const subScheme = typeof type === 'object' ? type : {};
         return (
           <Card key={key} title={key} size="small" style={{ marginBottom: 16, borderLeft: '4px solid var(--primary)' }}>

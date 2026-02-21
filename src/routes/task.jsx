@@ -28,6 +28,7 @@ import {
   Typography,
   Popconfirm,
   Select,
+  Form,
 } from "antd";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -549,20 +550,24 @@ export default function TaskPage() {
       </Card>
       <Card title="维护任务">
         <Row>总数：{embeddingsStats.count}</Row>
-        <Select style={{width: 200}} options={Object.entries(taskTypes).map(([name, params]) => {
-            return {value: name, display: name}
-          })} onChange={(val) => setActiveTaskType(val)}></Select>
-        { activeTaskType && taskTypes[activeTaskType] && (
-          <ParamPanel scheme={taskTypes[activeTaskType]} value={activeTaskParams} onChange={setActiveTaskParams} />
-        ) }
-        <Button type="primary" onClick={async () => {
-          if (activeTaskType) {
-            const jobId = await apiClient.workerSubmitTask(activeTaskType, activeTaskParams);
-            message.info(`创建了维护任务 ${jobId}`)
-          }
-        }}>运行</Button>
+        <Form>
+          <Form.Item label="任务类型">
+            <Select style={{ width: 200 }} options={Object.keys(taskTypes).filter(name => name != 'custom').map(name => {
+              return { value: name, display: name }
+            })} onChange={(val) => setActiveTaskType(val)}></Select>
+          </Form.Item>
+          {activeTaskType && taskTypes[activeTaskType] && (
+            <ParamPanel scheme={taskTypes[activeTaskType]} value={activeTaskParams} onChange={setActiveTaskParams} />
+          )}
+          <Button type="primary" onClick={async () => {
+            if (activeTaskType) {
+              const jobId = await apiClient.workerSubmitTask(activeTaskType, activeTaskParams);
+              message.info(`创建了维护任务 ${jobId}`)
+            }
+          }}>运行</Button>
+        </Form>
       </Card>
-      <div style={{paddingBottom: 50}}></div>
+      <div style={{ paddingBottom: 50 }}></div>
     </>
   );
 }
