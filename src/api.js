@@ -121,7 +121,7 @@ export const apiClient = Object.assign(
       return (await this.makeCall("datasets"))?.results;
     },
     async datasetRename({ id = "", original = "", newName }) {
-      return await this.makeCall(`datasets/${id}`, { name: newName });
+      return await this.makeCall(`datasets/${id}`, { name: newName }, {method: 'PUT'});
     },
     async datasetCreate({ name }) {
       return await this.makeCall(`datasets`, { name });
@@ -177,12 +177,6 @@ export const apiClient = Object.assign(
     async workerSubmitTask(type, params) {
       return await this.makeCall(`worker/${type}`, params);
     },
-    async workerStats() {
-      return await this.makeCall("worker/");
-    },
-    async workerJobsList() {
-      return await this.makeCall("worker/jobs");
-    },
     async workerClearJobs() {
       return await this.makeCall("worker/", null, { method: "DELETE" });
     },
@@ -196,7 +190,7 @@ export const apiClient = Object.assign(
       return await this.makeCall("embeddings/");
     },
     async taskTypes() {
-      return await this.makeCall("worker/tasks")
+      return await this.makeCall("worker/")
     },
     async taskDBO(id = "", updated = null) {
       return await this.makeCall(`tasks/${id}`, updated, {

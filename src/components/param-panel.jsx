@@ -3,6 +3,7 @@ import { Form, Input, InputNumber, Switch, Card, Button, Space, Divider, Select 
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import DatasetSelector from './dataset-selector'
 import FileSourceSelector from './filesource-selector'
+import { apiClient } from '../api';
 
 const ParamPanel = ({ scheme, value = {}, onChange }) => {
 
@@ -76,6 +77,10 @@ const ParamPanel = ({ scheme, value = {}, onChange }) => {
           { value: 'outline', label: '大纲' }
         ]} />
       ),
+      lang: (
+        <Select value={currentVal} onChange={(e) => handleFieldChange(key, e)}
+         options={apiClient.langCodes} />
+      )
     };
 
     if (!components[key]) {
@@ -137,7 +142,7 @@ const ParamPanel = ({ scheme, value = {}, onChange }) => {
       }
 
       if (typeof type === 'object' && type.options) {
-        return (<Select multiple value={currentVal} onChange={(e) => handleFieldChange(key, e)} options={type.options.map(x => ({label: x, value: x}))} />)
+        return (<Select multiple value={currentVal} onChange={(e) => handleFieldChange(key, e)} options={type.options.map(x => ({ label: x, value: x }))} />)
       }
 
     }

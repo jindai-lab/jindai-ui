@@ -14,8 +14,8 @@ export default function Root() {
     const requestIntercept = apiClient.interceptors.request.use(
       (config) => {
         if (auth.user?.access_token) {
-          config.headers.Authorization = `Bearer ${auth.user.access_token}`;
           apiClient.bearer = auth.user.access_token
+          config.headers.Authorization = `Bearer ${auth.user.access_token}`;
         }
         return config;
       },

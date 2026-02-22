@@ -1,37 +1,25 @@
-import {
-  ReactFlow,
-  addEdge,
-  applyEdgeChanges,
-  applyNodeChanges,
-} from "@xyflow/react";
-import "@xyflow/react/dist/style.css";
-import { message } from "antd";
+import { message, Form, Button, Space } from "antd";
+import {PlayCircleOutlined} from "@ant-design/icons";
 import yaml from "js-yaml";
-import { useCallback, useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { apiClient } from "../api";
+import ParamPanel from "../components/param-panel";
 import YamlEditor from "../components/yaml-editor";
 
-const initialNodes = [
-  { id: "n1", position: { x: 0, y: 0 }, data: { label: "Node 1" } },
-  { id: "n2", position: { x: 0, y: 100 }, data: { label: "Node 2" } },
-];
-const initialEdges = [{ id: "n1-n2", source: "n1", target: "n2" }];
-
-export default function Workflow({}) {
-  const [nodes, setNodes] = useState(initialNodes);
-  const [edges, setEdges] = useState(initialEdges);
-  const [yamlContent, setYamlContent] = useState("");
-  const [source, setSource] = useState(true);
-  const editorRef = useRef(null);
+export default function Workflow({ }) {
   const { taskId } = useParams();
+  const editorRef = useRef(null);
+  const [shortcutMap, setShortcutMap] = useState(null);
+  const [yamlContent, setYamlContent] = useState("");
+  const [pipelineSchema, setPipelineSchema] = useState([]);
 
-  function handleEditorDidMount(editor, monaco) {
+  const handleEditorDidMount = async (editor, monaco) => {
     editorRef.current = editor;
-    fetchSource();
+    fetchPipelineSchema().then((schema) => fetchSource(schema))
   }
 
-  function handleValidate(data) {
+  const handleValidate = (data) => {
     const validated = validateData(data);
     const undefFields = Object.keys(data)
       .filter((x) => typeof validated[x] === "undefined")
@@ -46,7 +34,7 @@ export default function Workflow({}) {
       throw new Error("Pipeline 应为数组，且各元素为一个对象。");
   }
 
-  function validateData(data) {
+  const validateData = (data, schema) => {
     let { name, pipeline, shared, resume_next, concurrent, shortcut_map } =
       data;
     pipeline = pipeline.map((x) => {
@@ -56,37 +44,24 @@ export default function Workflow({}) {
         };
       else return x;
     });
+    setShortcutMap(buildShortcuts(shortcut_map, pipeline, schema))
     return { name, pipeline, shared, resume_next, concurrent, shortcut_map };
   }
 
-  const onNodesChange = useCallback(
-    (changes) =>
-      setNodes((nodesSnapshot) => applyNodeChanges(changes, nodesSnapshot)),
-    [],
-  );
-  const onEdgesChange = useCallback(
-    (changes) =>
-      setEdges((edgesSnapshot) => applyEdgeChanges(changes, edgesSnapshot)),
-    [],
-  );
-  const onConnect = useCallback(
-    (params) => setEdges((edgesSnapshot) => addEdge(params, edgesSnapshot)),
-    [],
-  );
-
-  const handleEditorWillMount = async (monaco) => {
+  const fetchPipelineSchema = async () => {
     const schemaData = await apiClient.getPipelines();
-    const suggestions = [];
 
-    // 1. Iterate through categories (e.g., Sentiment Analysis)
+    const flattened = [];
+
+    // Iterate through categories (e.g., Sentiment Analysis)
     for (const category in schemaData) {
       const components = schemaData[category];
 
-      // 2. Iterate through components in that category (e.g., AutoSentimentAnalysis)
+      // Iterate through components in that category (e.g., AutoSentimentAnalysis)
       for (const componentKey in components) {
         const component = components[componentKey];
 
-        // 3. Create a Snippet for the YAML body
+        // Create a Snippet for the YAML body
         // This creates:
         // ComponentName:
         //   arg1: default
@@ -97,34 +72,47 @@ export default function Workflow({}) {
           snippet += `    ${arg.name}: \${${index + 1}:${defaultValue}}\n`;
         });
 
-        suggestions.push({
+        flattened.push({
           label: component.name,
-          kind: monaco.languages.CompletionItemKind.Class,
           documentation: {
             value: `**Category:** ${category}\n\n${component.doc}`,
           },
           insertText: snippet,
-          insertTextRules:
-            monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
           detail: category.split("\n")[0], // Shows the first line of category as detail
+          args: component.args
         });
       }
     }
+    setPipelineSchema(flattened);
+    return flattened;
+  }
+
+  const handleEditorWillMount = async (monaco) => {
 
     monaco.languages.registerCompletionItemProvider("*", {
       provideCompletionItems: (model, position) => {
-        return { suggestions };
+        return {
+          suggestions: pipelineSchema.map(scheme => ({
+            kind: monaco.languages.CompletionItemKind.Class,
+            insertTextRules:
+              monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+            ...scheme
+          }))
+        };
       },
       triggerCharacters: ['-']
     });
   };
 
-  const fetchSource = async () => {
+  useEffect(() => {
+    editorRef?.current?.setValue(yamlContent);
+  }, [yamlContent])
+
+  const fetchSource = async (schema) => {
     try {
       const data = await apiClient.taskDBO(taskId);
-      const yaml_src = yaml.dump(validateData(data));
+      const yaml_src = yaml.dump(validateData(data, schema));
       setYamlContent(yaml_src);
-      editorRef.current.setValue(yaml_src);
     } catch (err) {
       console.error("获取配置失败:", err);
       message.error("无法加载配置文件，请检查任务 ID 或网络连接。");
@@ -147,29 +135,79 @@ export default function Workflow({}) {
     }
   };
 
+  const findShrotcutKey = (key, context, schema, setval) => {
+    const segs = key.split('.');
+    let contextType = ''
+    for (let seg of segs) {
+      if (context == null) break;
+      if (Array.isArray(context)) {
+        // current seg should represent a specific pipeline stage
+        let [_, stageName, __, index] = seg.match(/(.+?)(@(\d+))?$/) || ['', '', '', +seg + 1]
+        index = index ? index - 1 : 0;
+        if (stageName) {
+          context = context.filter(x => !!x[stageName])
+        }
+        context = context[index];
+        contextType = Object.keys(context)[0];
+      }
+      else if (typeof context === 'object') {
+        // current seg should represent a set of params
+        const arg = schema.filter(x => x.label == contextType)[0]?.args.filter(x => x.name == seg)[0] || {};
+        context = context[contextType]
+        if (setval !== undefined) {
+          context[seg] = setval
+          context = setval
+        } else {
+          context = context[seg] || arg.default?.replace(/^["']|['"]$/g, '') || null;
+        }
+        contextType = arg.type?.toLowerCase() || '';
+      }
+    }
+    return [context, contextType]
+  }
+
+  const buildShortcuts = (stale_shortcut_map, pipeline, schema) => {
+    const vEntries = Object.entries(stale_shortcut_map).map(([key, name]) => [name, findShrotcutKey(key, pipeline, schema ?? pipelineSchema)])
+    const value = Object.fromEntries(vEntries.map(([key, [val, type]]) => [key, val]))
+    const scheme = Object.fromEntries(vEntries.map(([key, [val, type]]) => [key, type]))
+    return { value, scheme }
+  }
+
+  const updateShortcuts = async () => {
+    const data = yaml.load(yamlContent)
+    Object.entries(shortcutMap.value).forEach(([name, val]) => {
+      const key = Object.entries(data.shortcut_map).filter(([k, n]) => n == name)[0]?.[0]
+      findShrotcutKey(key, data.pipeline, pipelineSchema, val)
+    })
+    const yaml_src = yaml.dump(data)
+    setYamlContent(yaml_src);
+    await handleSave(yaml_src)
+  }
+
   return (
     <>
-      {!source && (
-        <div style={{ width: "100vw", height: "100vh", color: "black" }}>
-          <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            fitView
-          />
-        </div>
-      )}
-      {source && (
-        <YamlEditor
-          initialValue={yamlContent}
-          onSave={handleSave}
-          onMount={handleEditorDidMount}
-          beforeMount={handleEditorWillMount}
-          onValidate={handleValidate}
-        />
-      )}
+      {(<YamlEditor
+        initialValue={yamlContent}
+        onSave={handleSave}
+        onMount={handleEditorDidMount}
+        beforeMount={handleEditorWillMount}
+        onValidate={handleValidate}
+      />)}
+      {(shortcutMap && <Form>
+        <ParamPanel scheme={shortcutMap.scheme || {}} value={shortcutMap.value || {}}
+          onChange={e => {
+            setShortcutMap({
+              scheme: shortcutMap.scheme,
+              value: e
+            })
+          }} />
+        <Button type="primary" onClick={updateShortcuts}>更新</Button><Space></Space>
+        <Button icon={<PlayCircleOutlined />} onClick={async () => {
+          await updateShortcuts()
+          const jobId = await apiClient.workerSubmitTask('custom', { task_id: taskId })
+          message.info(`已提交任务 ${jobId}`)
+        }}>运行</Button>
+      </Form>)}
     </>
   );
 }
