@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
 import { Select, Spin } from 'antd';
+import { useEffect, useState } from 'react';
 import { apiClient } from '../api';
 
-const RemoteFilterSelector = ({ filters, column, value, onChange, ...props }) => {
+const RemoteFilterSelector = ({ filters, column, value, onChange, multiple, ...props }) => {
 	const [options, setOptions] = useState([]);
 	const [loading, setLoading] = useState(false);
 	const [hasLoaded, setHasLoaded] = useState(false);
@@ -34,7 +34,7 @@ const RemoteFilterSelector = ({ filters, column, value, onChange, ...props }) =>
 
 	return (
 		<Select
-			mode="multiple"           // 开启多选模式
+			mode={multiple ? 'multiple' : ''}           // 开启多选模式
 			style={{ width: '100%' }}
 			placeholder="点击加载选项"
 			onOpenChange={handleOpenChange}
@@ -44,6 +44,7 @@ const RemoteFilterSelector = ({ filters, column, value, onChange, ...props }) =>
 			allowClear
 			onChange={onChange}
 			value={value}
+			popupMatchSelectWidth={false}
 			{...props}
 		/>
 	);

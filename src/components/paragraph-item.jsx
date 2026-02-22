@@ -96,7 +96,7 @@ const ParagraphItem = ({ data }) => {
         <div className="metadata-item">
           <span className="metadata-label">{FIELD_NAMES.source_url}</span>
           <span className="metadata-value">
-            <a href={data.href} target='_blank' rel="noopener noreferrer">
+            <a href={data.href} title={data.source_url} target='_blank' rel="noopener noreferrer">
               {data.source_url || ''}
               {data.pagenum ? `:${data.pagenum}` : ''}
             </a>

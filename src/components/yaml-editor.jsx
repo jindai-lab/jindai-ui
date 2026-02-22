@@ -10,7 +10,6 @@ import {
   AlertCircle,
   RefreshCw
 } from 'lucide-react';
-import "@fontsource/roboto-mono"
 
 const { Text } = Typography;
 

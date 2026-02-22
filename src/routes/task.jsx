@@ -190,7 +190,19 @@ export default function TaskPage() {
   useEffect(() => {
     refreshEmbeddingsCount();
     startWorkerStats();
-    return () => stopWorkerStats();
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        stopWorkerStats();
+      } else {
+        startWorkerStats();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      stopWorkerStats();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    }
   }, []);
 
   const clearTasks = async () => {

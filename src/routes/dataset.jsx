@@ -65,7 +65,7 @@ export default function DatasetPage() {
     dataSource: datasets,
     rowKey: 'value',
     bordered: false,
-    pagination: false,
+    pagination: true,
     size: 'middle',
     scroll: { x: 'max-content' },
     style: { marginTop: 16, borderRadius: 8, overflow: 'hidden' },

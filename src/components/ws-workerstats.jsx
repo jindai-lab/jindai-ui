@@ -10,6 +10,8 @@ export const useWorkerStats = () => {
   const startWorkerStats = () => {
     const bearer = auth.user?.access_token;
     const socketUrl = `wss://${location.hostname}/api/ws/jobs/stats?token=${bearer}`;
+
+    if (ws.current != null) return;
     ws.current = new WebSocket(socketUrl);
 
     // 连接成功
@@ -31,6 +33,7 @@ export const useWorkerStats = () => {
     // 错误处理
     ws.current.onerror = (err) => {
       console.error(err);
+      ws.current = null;
     };
 
     // 关闭处理
@@ -44,6 +47,7 @@ export const useWorkerStats = () => {
   const stopWorkerStats = () => {
     if (ws.current) {
       ws.current.close();
+      ws.current = null;
     }
   };
 

@@ -1,13 +1,136 @@
-import React, { useEffect, useState, useCallback, useMemo } from "react";
-import { Pagination, Checkbox, Select, message, Spin } from "antd";
+import { Card, Checkbox, Input, message, Pagination, Select, Space, Spin, Typography } from "antd";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { apiClient } from "../api";
 import DatasetSelector from "../components/dataset-selector";
-import FileSourceSelector from "../components/filesource-selector";
 import ParagraphItem from "../components/paragraph-item";
 import RemoteFilterSelector from "../components/remote-filter-selector";
 
+const { Text } = Typography;
 const { Option } = Select;
+
+const SearchFilterBar = ({filters, updateFilter, executeSearch}) => {
+  return (
+    <Card size="small" style={{ marginBottom: 16 }}>
+      <Space orientation="vertical" size="middle" style={{ display: 'flex' }}>
+        
+        {/* 第一行：核心搜索栏 */}
+        <Space size="large">
+          <Input.Search
+            placeholder="请输入搜索内容..."
+            value={filters.q}
+            onChange={(e) => updateFilter({ q: e.target.value })}
+            onSearch={() => executeSearch(updateFilter({ page: 1 }), true)}
+            enterButton="搜索"
+            style={{ width: 400 }}
+          />
+          <Checkbox
+            checked={filters.embeddings}
+            onChange={(e) => updateFilter({ embeddings: e.target.checked })}
+          >
+            语义匹配
+          </Checkbox>
+        </Space>
+
+        {/* 第二行：主要过滤器 */}
+        <Space wrap size="middle">
+          <FilterItem label="数据集">
+            <DatasetSelector
+              multiple
+              value={filters.datasets}
+              onChange={(v) => updateFilter({ datasets: v })}
+              style={{ width: 500 }}
+            />
+          </FilterItem>
+
+          <FilterItem label="文件源">
+            <RemoteFilterSelector
+              multiple
+              filters={filters}
+              column="sources"
+              onChange={(v) => updateFilter({ sources: v })}
+              value={filters.sources}
+              style={{ width: 500 }}
+              disabled={!filters.datasets?.length}
+            />
+          </FilterItem>
+        </Space>
+
+        <Space wrap size="middle">
+          <FilterItem label="大纲">
+            <RemoteFilterSelector
+              filters={filters}
+              column="outline"
+              onChange={(v) => updateFilter({ outline: v })}
+              value={filters.outline}
+              style={{ width: 200 }}
+            />
+          </FilterItem>
+        
+          <FilterItem label="排序">
+            <Select
+              value={filters.sort}
+              onChange={(v) => updateFilter({ sort: v })}
+              style={{ width: 120 }}
+              disabled={filters.embeddings}
+            >
+              <Option value="">相关度</Option>
+              <Option value="pdate">日期 (↑)</Option>
+              <Option value="-pdate">日期 (↓)</Option>
+              <Option value="outline">大纲</Option>
+              <Option value="source_url">出处</Option>
+            </Select>
+          </FilterItem>
+
+          <FilterItem label="分组">
+            <Select
+              value={filters.groupBy}
+              onChange={(v) => updateFilter({ groupBy: v })}
+              style={{ width: 120 }}
+            >
+              <Option value="">无</Option>
+              <Option value="author">作者</Option>
+              <Option value="source_url">来源</Option>
+              <Option value="pdate">日期</Option>
+            </Select>
+          </FilterItem>
+
+          <FilterItem label="作者">
+            <RemoteFilterSelector
+              filters={filters}
+              column="author"
+              onChange={(v) => updateFilter({ authors: v })}
+              value={filters.authors}
+              style={{ width: 120 }}
+            />
+          </FilterItem>
+
+          <FilterItem label="语言">
+            <RemoteFilterSelector
+              filters={filters}
+              column="lang"
+              onChange={(v) => updateFilter({ lang: v })}
+              value={filters.lang}
+              style={{ width: 100 }}
+            />
+          </FilterItem>
+        </Space>
+      </Space>
+    </Card>
+  );
+};
+
+/**
+ * 辅助组件：统一标签和输入框的排布
+ */
+const FilterItem = ({ label, children }) => (
+  <Space size={8}>
+    <Text type="secondary" strong style={{ whiteSpace: 'nowrap' }}>
+      {label}:
+    </Text>
+    {children}
+  </Space>
+);
 
 function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -175,97 +298,13 @@ function SearchPage() {
     apiClient.localConfig.pageSize = pageSize;
     executeSearch(newFilters);
   };
+  
 
   return (
     <div className="search-page-container">
+    
       {/* Search Input Section */}
-      <div className="search-bar">
-        <input
-          className="search-input"
-          value={filters.q}
-          onChange={(e) => updateFilter({ q: e.target.value })}
-          onKeyUp={(e) =>
-            e.key === "Enter" && executeSearch(updateFilter({ page: 1 }), true)
-          }
-          placeholder="请输入搜索内容..."
-        />
-        <Checkbox
-          id="semantic"
-          checked={filters.embeddings}
-          onChange={(e) => updateFilter({ embeddings: e.target.checked })}
-        />
-        <label htmlFor="semantic">语义匹配</label>
-        <button
-          className="search-button"
-          onClick={() => {
-            executeSearch(updateFilter({ page: 1 }), true);
-          }}
-        >
-          搜索
-        </button>
-      </div>
-
-      {/* Selectors Section */}
-      <div className="filter-group">
-        <div className="filter-bar">
-          <label>数据集</label>
-          <DatasetSelector
-            multiple
-            value={filters.datasets}
-            onChange={(v) => updateFilter({ datasets: v })}
-          />
-        </div>
-        <div className="filter-bar">
-          <label>文件源</label>
-          <FileSourceSelector
-            multiple
-            value={filters.sources}
-            onChange={(v) => updateFilter({ sources: v })}
-          />
-        </div>
-        <div className="filter-bar">
-          <label>排序</label>
-          <Select
-            value={filters.sort}
-            onChange={(v) => updateFilter({ sort: v })}
-            style={{ width: 120 }}
-          >
-            <Option value="">相关度</Option>
-            <Option value="pdate">日期 (↑)</Option>
-            <Option value="-pdate">日期 (↓)</Option>
-            <Option value="outline">大纲</Option>
-            <Option value="source_url">出处</Option>
-          </Select>
-          <label>分组</label>
-          <Select
-            value={filters.groupBy}
-            onChange={(v) => updateFilter({ groupBy: v })}
-            style={{ width: 120 }}
-          >
-            <Option value="">无</Option>
-            <Option value="author">作者</Option>
-            <Option value="source_url">来源</Option>
-            <Option value="pdate">日期</Option>
-          </Select>
-          <label>大纲</label>
-          <RemoteFilterSelector
-            filters={filters}
-            column="outline"
-            onChange={(v) => updateFilter({ outline: v })}
-            value={filters.outline}
-            style={{ width: 240 }}
-          />
-
-          <label>作者</label>
-          <RemoteFilterSelector
-            filters={filters}
-            column="author"
-            onChange={(v) => updateFilter({ authors: v })}
-            value={filters.authors}
-            style={{ width: 120 }}
-          />
-        </div>
-      </div>
+      <SearchFilterBar filters={filters} updateFilter={updateFilter} executeSearch={executeSearch} />
 
       {/* Results Section */}
       <Spin spinning={isLoading}>
