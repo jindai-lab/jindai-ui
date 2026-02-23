@@ -5,7 +5,8 @@ import { useEffect, useState } from 'react'
 export default function DatasetSelector({
   onChange,
   multiple,
-  value
+  value,
+  ...props
 }) {
   const [datasets, setDatasets] = useState([])
   
@@ -29,6 +30,7 @@ export default function DatasetSelector({
       }}
       treeData={datasets}
       onChange={onChange}
+      {...props}
     />
   )
 }

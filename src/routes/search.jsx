@@ -60,6 +60,7 @@ const SearchFilterBar = ({filters, updateFilter, executeSearch}) => {
           <FilterItem label="大纲">
             <RemoteFilterSelector
               filters={filters}
+              multiple
               column="outline"
               onChange={(v) => updateFilter({ outline: v })}
               value={filters.outline}
@@ -97,6 +98,7 @@ const SearchFilterBar = ({filters, updateFilter, executeSearch}) => {
 
           <FilterItem label="作者">
             <RemoteFilterSelector
+              multiple
               filters={filters}
               column="author"
               onChange={(v) => updateFilter({ authors: v })}
@@ -107,6 +109,7 @@ const SearchFilterBar = ({filters, updateFilter, executeSearch}) => {
 
           <FilterItem label="语言">
             <RemoteFilterSelector
+              multiple
               filters={filters}
               column="lang"
               onChange={(v) => updateFilter({ lang: v })}

@@ -6,6 +6,7 @@ export default function FileSourceSelector({
   onChange,
   multiple,
   value,
+  ...props
 }) {
   const [sourceFiles, setSourceFiles] = useState([])
 
@@ -47,6 +48,7 @@ export default function FileSourceSelector({
       }}
       showSearch={{ onSearch (value) { return fetchSearch(value) } }}
       loadData={({id}) => { return fetchFileSources(id) }}
+      {...props}
     />
   )
 }

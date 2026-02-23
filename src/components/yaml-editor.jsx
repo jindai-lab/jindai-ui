@@ -43,7 +43,6 @@ const YamlEditor = ({ initialValue = '', onSave, onMount, beforeMount, onValidat
     if (onSave) {
       onSave(value);
       setIsDirty(false);
-      message.success('配置已保存');
     }
   };
 

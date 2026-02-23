@@ -44,7 +44,12 @@ export default function Workflow({ }) {
         };
       else return x;
     });
-    setShortcutMap(buildShortcuts(shortcut_map, pipeline, schema))
+    try {
+      setShortcutMap(buildShortcuts(shortcut_map, pipeline, schema))
+    } catch (err) {
+      console.log(err)
+      throw new Error("快捷方式有误: " + err)
+    }
     return { name, pipeline, shared, resume_next, concurrent, shortcut_map };
   }
 
@@ -136,10 +141,11 @@ export default function Workflow({ }) {
   };
 
   const findShrotcutKey = (key, context, schema, setval) => {
+
     const segs = key.split('.');
     let contextType = ''
     for (let seg of segs) {
-      if (context == null) break;
+      if (context == null || context === undefined) throw new Error(`处理 ${key} 时出错`);
       if (Array.isArray(context)) {
         // current seg should represent a specific pipeline stage
         let [_, stageName, __, index] = seg.match(/(.+?)(@(\d+))?$/) || ['', '', '', +seg + 1]
@@ -148,7 +154,7 @@ export default function Workflow({ }) {
           context = context.filter(x => !!x[stageName])
         }
         context = context[index];
-        contextType = Object.keys(context)[0];
+        contextType = Object.keys(context || {})[0];
       }
       else if (typeof context === 'object') {
         // current seg should represent a set of params

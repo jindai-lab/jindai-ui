@@ -2,7 +2,7 @@ import { Select, Spin } from 'antd';
 import { useEffect, useState } from 'react';
 import { apiClient } from '../api';
 
-const RemoteFilterSelector = ({ filters, column, value, onChange, multiple, ...props }) => {
+const RemoteFilterSelector = ({ filters, column, multiple, ...props }) => {
 	const [options, setOptions] = useState([]);
 	const [loading, setLoading] = useState(false);
 	const [hasLoaded, setHasLoaded] = useState(false);
@@ -34,16 +34,13 @@ const RemoteFilterSelector = ({ filters, column, value, onChange, multiple, ...p
 
 	return (
 		<Select
-			mode={multiple ? 'multiple' : ''}           // 开启多选模式
-			style={{ width: '100%' }}
+			mode={multiple ? 'multiple' : ''}     
 			placeholder="点击加载选项"
 			onOpenChange={handleOpenChange}
 			options={options}
-			loading={loading}         // 显示加载状态（小菊花）
+			loading={loading} 
 			notFoundContent={loading ? <Spin size="small" /> : null}
 			allowClear
-			onChange={onChange}
-			value={value}
 			popupMatchSelectWidth={false}
 			{...props}
 		/>
