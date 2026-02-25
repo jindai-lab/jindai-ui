@@ -203,7 +203,7 @@ export const apiClient = Object.assign(
     },
     // histories
     async histories() {
-      return await this.makeCall('histories/')
+      return await this.makeCall('histories/', {sort: '-created_at'}, {method: 'GET'})
     },
     // other
     langCodes: Object.entries(

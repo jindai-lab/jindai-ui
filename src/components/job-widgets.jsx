@@ -76,14 +76,6 @@ export function JobDetail({ job, jobId, visible, onCancel }) {
                 <Text type="secondary">无返回值</Text>
               )}
             </Descriptions.Item>
-            <Descriptions.Item label="参数" span={2}>
-              <pre className="json">
-                kwargs: {JSON.stringify(job.kwargs, null, 2)}
-              </pre>
-              <pre className="json">
-                args: {JSON.stringify(job.args, null, 2)}
-              </pre>
-            </Descriptions.Item>
             <Descriptions.Item label="返回值" span={2}>
               {job.return_value ? (
                 <pre className="json">
@@ -153,11 +145,11 @@ export function JobStatusTag({ status }) {
         </Tag>
       );
     case "PENDING":
-      return <Tag>挂起</Tag>;
+      return <Tag color="gold">挂起</Tag>;
     case "PROCESSING":
     case "STARTED":
     case "RUNNING":
-      return <Tag>运行中</Tag>;
+      return <Tag color="blue">运行中</Tag>;
     default:
       return (
         <Tag icon={<ExclamationCircleOutlined />} color="error">

@@ -16,7 +16,7 @@ export default function Workflow({ }) {
 
   const handleEditorDidMount = async (editor, monaco) => {
     editorRef.current = editor;
-    fetchPipelineSchema().then((schema) => fetchSource(schema))
+    fetchSource();
   }
 
   const handleValidate = (data) => {
@@ -45,7 +45,7 @@ export default function Workflow({ }) {
       else return x;
     });
     try {
-      setShortcutMap(buildShortcuts(shortcut_map, pipeline, schema))
+      setShortcutMap(buildShortcuts(shortcut_map, pipeline))
     } catch (err) {
       console.log(err)
       throw new Error("快捷方式有误: " + err)
@@ -88,20 +88,21 @@ export default function Workflow({ }) {
         });
       }
     }
-    setPipelineSchema(flattened);
     return flattened;
   }
 
   const handleEditorWillMount = async (monaco) => {
+    const schema = await fetchPipelineSchema()
+    setPipelineSchema(schema);
 
     monaco.languages.registerCompletionItemProvider("*", {
       provideCompletionItems: (model, position) => {
         return {
-          suggestions: pipelineSchema.map(scheme => ({
+          suggestions: schema.map(dat => ({
             kind: monaco.languages.CompletionItemKind.Class,
             insertTextRules:
               monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-            ...scheme
+            ...dat
           }))
         };
       },
@@ -113,10 +114,10 @@ export default function Workflow({ }) {
     editorRef?.current?.setValue(yamlContent);
   }, [yamlContent])
 
-  const fetchSource = async (schema) => {
+  const fetchSource = async () => {
     try {
       const data = await apiClient.taskDBO(taskId);
-      const yaml_src = yaml.dump(validateData(data, schema));
+      const yaml_src = yaml.dump(validateData(data, pipelineSchema));
       setYamlContent(yaml_src);
     } catch (err) {
       console.error("获取配置失败:", err);
@@ -140,8 +141,8 @@ export default function Workflow({ }) {
     }
   };
 
-  const findShrotcutKey = (key, context, schema, setval) => {
-
+  const findShrotcutKey = (key, context, setval) => {
+    const schema = pipelineSchema;
     const segs = key.split('.');
     let contextType = ''
     for (let seg of segs) {
@@ -172,8 +173,8 @@ export default function Workflow({ }) {
     return [context, contextType]
   }
 
-  const buildShortcuts = (stale_shortcut_map, pipeline, schema) => {
-    const vEntries = Object.entries(stale_shortcut_map).map(([key, name]) => [name, findShrotcutKey(key, pipeline, schema ?? pipelineSchema)])
+  const buildShortcuts = (stale_shortcut_map, pipeline) => {
+    const vEntries = Object.entries(stale_shortcut_map).map(([key, name]) => [name, findShrotcutKey(key, pipeline)])
     const value = Object.fromEntries(vEntries.map(([key, [val, type]]) => [key, val]))
     const scheme = Object.fromEntries(vEntries.map(([key, [val, type]]) => [key, type]))
     return { value, scheme }
@@ -183,7 +184,7 @@ export default function Workflow({ }) {
     const data = yaml.load(yamlContent)
     Object.entries(shortcutMap.value).forEach(([name, val]) => {
       const key = Object.entries(data.shortcut_map).filter(([k, n]) => n == name)[0]?.[0]
-      findShrotcutKey(key, data.pipeline, pipelineSchema, val)
+      findShrotcutKey(key, data.pipeline, val)
     })
     const yaml_src = yaml.dump(data)
     setYamlContent(yaml_src);

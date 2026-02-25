@@ -46,16 +46,11 @@ const FileManager = ({ folderPath }) => {
     async function updateFolderInfo() {
       const data = await listFiles(folderPath);
       let list = data;
-      // 搜索过滤：名称包含关键词
-      if (searchValue) {
-        list = list.filter((item) => item.name.includes(searchValue));
-      }
       // 排序规则：文件夹优先展示，名称正序排列
       setCurrentFileList(list);
     }
-    message.loading("正在加载目录...", 0);
     updateFolderInfo();
-  }, [folderPath, searchValue]);
+  }, [folderPath]);
 
   // ========== 预留空实现 - 增删改查核心方法 ==========
   /** 新增文件/文件夹 */
@@ -81,10 +76,9 @@ const FileManager = ({ folderPath }) => {
   };
 
   const submitOcr = (record, ocrModalResult) => {
-    apiClient.workerSubmitTask({
-      type: "ocr",
-      input: record.relative_path,
-      output:
+    apiClient.workerSubmitTask("ocr", {
+      input_path: record.relative_path,
+      output_path:
         record.relative_path.split("/").slice(0, -1).join("/") + "/" + ocrModalResult.newName,
       lang: ocrModalResult.tesseractCode,
       monochrome: ocrModalResult.monochrome
@@ -116,7 +110,6 @@ const FileManager = ({ folderPath }) => {
 
   /** 刷新当前目录 */
   const handleRefresh = () => {
-    console.log("触发刷新目录操作");
     listFiles(folderPath).then((data) => {
       setCurrentFileList(data);
     });
@@ -243,7 +236,7 @@ const FileManager = ({ folderPath }) => {
     dataSource: currentFileList,
     rowKey: "path",
     bordered: false,
-    pagination: false,
+    pagination: true,
     size: "middle",
     scroll: { x: "max-content" },
     style: { marginTop: 16, borderRadius: 8, overflow: "hidden" },

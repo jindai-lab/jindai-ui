@@ -178,10 +178,7 @@ export default function TaskPage() {
   const refreshEmbeddingsCount = async () => {
     const res = await apiClient.embeddingStats();
     if (res) {
-      setEmbeddingsStats((prev) => {
-        prev.count = res;
-        return prev;
-      });
+      setEmbeddingsStats(res);
     }
     const tasks = await apiClient.taskTypes();
     setTaskTypes(tasks);
@@ -279,7 +276,7 @@ export default function TaskPage() {
         </Row>
       </Card>
       <Card title="维护任务">
-        <Row>总数：{embeddingsStats.count}</Row>
+        <Row>Embeddings 总数：{embeddingsStats.finished} / 列队：{embeddingsStats.queued}</Row>
         <Form>
           <Form.Item label="任务类型">
             <Select style={{ width: 200 }} options={Object.keys(taskTypes).filter(name => name != 'custom').map(name => {

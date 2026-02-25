@@ -351,6 +351,6 @@ pre.json {
   padding: 8px;
   border-radius: 4px;
   max-height: 150px;
-  overflow-y: auto;
+  overflow: auto;
   margin: 0;
 }
