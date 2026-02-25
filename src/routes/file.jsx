@@ -54,11 +54,11 @@ const PdfViewer = ({ path, asImage }) => {
   const [blobUrl, setBlobUrl] = useState("");
   const [paragraphs, setParagraphs] = useState([]);
 
-  useEffect(() => {
-    apiClient
-      .getFileMetadata(path)
-      .then((data) => {
-        setPdfMaxPages(data.page_count);
+  const getMedata = async () => {
+    try {
+      const data = await apiClient.getFileMetadata(path)
+      if (data.page_count) {
+        setPdfMaxPages(data.page_count)
 
         document.onkeydown = function (e) {
           switch (e.key) {
@@ -73,9 +73,15 @@ const PdfViewer = ({ path, asImage }) => {
               );
               break;
           }
-        };
-      });
+        }
+      }
+    } catch (err) {
+      console.log(err)
+    }
+  }
 
+  useEffect(() => {
+    getMedata();
     document.title = `查看文件 - ${path}`;
   }, [path]);
 
@@ -150,17 +156,19 @@ const PdfViewer = ({ path, asImage }) => {
 function FileViewer({ path }) {
   const [blobUrl, setBlobUrl] = useState("");
   const [blob, setBlob] = useState(null);
+
   useEffect(() => {
-    apiClient.download(`files/${path}`).then(({ url, blob }) => {
-      setBlobUrl(url);
-      setBlob(blob);
-    });
+    if (!path.endsWith('.pdf'))
+      apiClient.download(`files/${path}`).then(({ url, blob }) => {
+        setBlobUrl(url);
+        setBlob(blob);
+      });
   }, [path]);
 
   const ext = path.split(".").pop().toLowerCase();
   switch (ext) {
     case "pdf":
-      return <PdfViewer path={path} asImage={apiClient.localConfig.viewPdfAsImage === true} />;
+      return (<PdfViewer path={path} asImage={apiClient.localConfig.viewPdfAsImage} />);
     case "txt":
     case "html":
     case "htm":

@@ -42,10 +42,6 @@ const router = createBrowserRouter([
     errorElement: <ErrorPage />,
     children: [
       {
-        path: "/silent-renew",
-        element: <></>,
-      },
-      {
         path: "*",
         element: <SearchPage />,
       },

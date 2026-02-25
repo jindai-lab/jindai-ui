@@ -1,10 +1,11 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useEffect } from "react";
+import { ThreeDots } from "react-loader-spinner";
 
 const ProtectedRoute = ({auth}) => {
   if (auth.isLoading) {
     console.log('正在验证登录状态')
-    return ('');
+    return null;
   }
 
   if (!auth.isAuthenticated) {

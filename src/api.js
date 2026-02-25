@@ -3,8 +3,6 @@ import axios from "axios";
 import localeCodes from "locale-codes";
 import dayjs from "dayjs";
 
-class InterceptorsError extends Error {}
-
 class SmartStorage {
   constructor(prefix = "jindai_local_config") {
     this._prefix = prefix;
@@ -53,9 +51,6 @@ export const apiClient = Object.assign(
     bearer: "",
     async makeCall(name, data = null, { method, ...options } = { method: "" }) {
       try {
-        if (!this.interceptors.request.handlers.filter((x) => x).length)
-          throw new InterceptorsError();
-
         name = name.replace(/^\/+/g, "");
         if (!method) method = data ? "POST" : "GET";
         method = method.toUpperCase();
@@ -87,7 +82,6 @@ export const apiClient = Object.assign(
         const resp = await this[method.toLowerCase()](name, data);
         return resp?.data;
       } catch (e) {
-        if (e instanceof InterceptorsError) return;
         message.error(`错误的请求: ${e}`);
         console.error(e, { name, data, method });
       }
@@ -168,10 +162,7 @@ export const apiClient = Object.assign(
       return list;
     },
     async getFileMetadata(path) {
-      const data = await this.makeCall(
-        `files/${encodeURI(path)}?metadata=true`,
-      );
-      return data;
+      return await this.makeCall(`files/${encodeURI(path)}?metadata=true`);
     },
     // tasks & worker
     async workerSubmitTask(type, params) {
@@ -226,3 +217,10 @@ export const apiClient = Object.assign(
     localConfig: SmartStorage.create(),
   },
 );
+
+apiClient.interceptors.request.use((config) => {
+  if (apiClient.bearer) {
+    config.headers.Authorization = `Bearer ${apiClient.bearer}`;
+  }
+  return config;
+});

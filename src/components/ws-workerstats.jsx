@@ -1,15 +1,12 @@
-import { useState, useEffect, useRef } from 'react';
-import { message } from 'antd';
-import { useAuth } from 'react-oidc-context';
+import { useState, useRef } from 'react';
+import { apiClient } from '../api';
 
 export const useWorkerStats = () => {
   const [stats, setData] = useState([]);
-  const auth = useAuth();
   const ws = useRef(null); 
 
   const startWorkerStats = () => {
-    const bearer = auth.user?.access_token;
-    const socketUrl = `wss://${location.hostname}/api/ws/jobs/stats?token=${bearer}`;
+    const socketUrl = `wss://${location.hostname}/api/ws/jobs/stats?token=${apiClient.bearer}`;
 
     if (ws.current != null) return;
     ws.current = new WebSocket(socketUrl);
