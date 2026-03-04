@@ -1,6 +1,5 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Card, Tag, Button, Space, Typography, message, Tooltip, Alert } from 'antd';
-import Editor from '@monaco-editor/react';
 import yaml from 'js-yaml';
 import {
   FileCode,
@@ -10,14 +9,22 @@ import {
   AlertCircle,
   RefreshCw
 } from 'lucide-react';
+import Editor from 'react-simple-code-editor';
+import { highlight, languages } from 'prismjs/components/prism-core';
+import 'prismjs/components/prism-clike';
+import 'prismjs/components/prism-javascript';
+// Import a PrismJS theme for styling, e.g., 'prism.css' or another theme
+import 'prismjs/themes/prism.css'; 
+import 'prismjs/components/prism-yaml';
 
 const { Text } = Typography;
 
-const YamlEditor = ({ initialValue = '', onSave, onMount, beforeMount, onValidate }) => {
+const YamlEditor = ({ initialValue = '', onSave, onValidate }) => {
   const [value, setValue] = useState(initialValue);
   const [error, setError] = useState(null);
   const [isDirty, setIsDirty] = useState(false);
-  const editorRef = useRef(null);
+
+  useEffect(() => setValue(initialValue), [initialValue])
 
   // 实时校验 YAML 格式
   const handleEditorChange = (newValue) => {
@@ -120,36 +127,26 @@ const YamlEditor = ({ initialValue = '', onSave, onMount, beforeMount, onValidat
       )}
 
       {/* Monaco 编辑器 */}
-      <div style={{ height: '500px' }}>
-        <Editor
-          height="100%"
-          defaultLanguage="yaml"
-          theme="vs-dark" // 也可以使用 "light"
-          value={value}
-          onChange={handleEditorChange}
-          onMount={(editor) => { editorRef.current = editor; if (onMount) onMount(editor); }}
-          beforeMount={beforeMount}
-          options={{
-            fontSize: 14,
-            scrollBeyondLastLine: false,
-            automaticLayout: true,
-            tabSize: 2,
-            padding: { top: 16, bottom: 16 },
-            fontFamily: "monospace",
-            renderLineHighlight: 'all',
-            cursorSmoothCaretAnimation: 'on',
-            minimap: { enabled: false },
-            suggestOnTriggerCharacters: true,
-            wordBasedSuggestions: false,
-          }}
-        />
-      </div>
-
-      {/* 底部信息栏 */}
-      <div className="bg-slate-50 px-4 py-1 text-[11px] text-slate-400 border-t flex justify-between">
-        <span>字符数: {value.length}</span>
-        <span>制表符: 2 Spaces</span>
-      </div>
+     <div style={{ 
+      height: '500px', 
+      border: '1px solid #fff', 
+      borderRadius: '4px',
+      overflow: 'auto',
+    }}>
+      <Editor
+        value={value}
+        onValueChange={handleEditorChange}
+        highlight={code => highlight(code, languages.yaml)}
+        placeholder="Enter YAML here..."
+        padding={16}
+        style={{
+          fontFamily: '"Fira Code", "Fira Mono", monospace',
+          fontSize: 14,
+          minHeight: '100%',
+          backgroundColor: 'transparent',
+        }}
+      />
+    </div>
     </Card>
   );
 };

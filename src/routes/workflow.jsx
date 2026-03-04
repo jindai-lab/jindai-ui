@@ -1,5 +1,5 @@
 import { message, Form, Button, Space } from "antd";
-import {PlayCircleOutlined} from "@ant-design/icons";
+import { PlayCircleOutlined } from "@ant-design/icons";
 import yaml from "js-yaml";
 import { useState, useRef, useEffect } from "react";
 import { useParams } from "react-router-dom";
@@ -13,11 +13,6 @@ export default function Workflow({ }) {
   const [shortcutMap, setShortcutMap] = useState(null);
   const [yamlContent, setYamlContent] = useState("");
   const [pipelineSchema, setPipelineSchema] = useState([]);
-
-  const handleEditorDidMount = async (editor, monaco) => {
-    editorRef.current = editor;
-    fetchSource();
-  }
 
   const handleValidate = (data) => {
     const validated = validateData(data);
@@ -52,6 +47,20 @@ export default function Workflow({ }) {
     }
     return { name, pipeline, shared, resume_next, concurrent, shortcut_map };
   }
+
+  useEffect(() => {
+    (async function () {
+      const schema = await fetchPipelineSchema();
+      setPipelineSchema(schema);
+      const data = await fetchSource();
+      if (data) {
+        const validated = validateData(data, schema);
+        setYamlContent(yaml.dump(validated.pipeline))
+      }
+    })();
+  }
+    , []
+  )
 
   const fetchPipelineSchema = async () => {
     const schemaData = await apiClient.getPipelines();
@@ -90,29 +99,6 @@ export default function Workflow({ }) {
     }
     return flattened;
   }
-
-  const handleEditorWillMount = async (monaco) => {
-    const schema = await fetchPipelineSchema()
-    setPipelineSchema(schema);
-
-    monaco.languages.registerCompletionItemProvider("*", {
-      provideCompletionItems: (model, position) => {
-        return {
-          suggestions: schema.map(dat => ({
-            kind: monaco.languages.CompletionItemKind.Class,
-            insertTextRules:
-              monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-            ...dat
-          }))
-        };
-      },
-      triggerCharacters: ['-']
-    });
-  };
-
-  useEffect(() => {
-    editorRef?.current?.setValue(yamlContent);
-  }, [yamlContent])
 
   const fetchSource = async () => {
     try {
@@ -196,8 +182,6 @@ export default function Workflow({ }) {
       {(<YamlEditor
         initialValue={yamlContent}
         onSave={handleSave}
-        onMount={handleEditorDidMount}
-        beforeMount={handleEditorWillMount}
         onValidate={handleValidate}
       />)}
       {(shortcutMap && <Form>

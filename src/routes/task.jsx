@@ -192,6 +192,7 @@ export default function TaskPage() {
         stopWorkerStats();
       } else {
         startWorkerStats();
+        refreshEmbeddingsCount();
       }
     };
 
