@@ -85,9 +85,6 @@ const ParagraphItem = ({ data }) => {
 
   return (
     <div className="result" key={data.id}>
-      {/* 操作按钮区域 - 新增查看元数据按钮 */}
-
-      {/* 原有元数据展示区域 */}
       <div className="metadata-section">
         <div className="metadata-item">
           <span className="metadata-label">{FIELD_NAMES.dataset}</span>
@@ -139,7 +136,7 @@ const ParagraphItem = ({ data }) => {
           size="small"
           onClick={() => setMetadataVisible(true)}
           icon={<TableOutlined />}
-          color='var(--text)'
+          style={{color: 'var(--text)'}}
         >
           元数据
         </Button>

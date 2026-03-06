@@ -409,7 +409,9 @@ function SearchPage() {
     <div className="search-page-container">
 
       {/* Search Input Section */}
-      <SearchFilterBar filters={filters} updateFilter={updateFilter} executeSearch={executeSearch} />
+      <SearchFilterBar
+       style={{background: 'var(--bg)', color: 'var(--text)'}}
+       filters={filters} updateFilter={updateFilter} executeSearch={executeSearch} />
 
       {/* Results Section */}
       <Spin spinning={isLoading}>
