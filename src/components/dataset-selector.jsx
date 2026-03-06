@@ -1,11 +1,13 @@
 import { apiClient } from '../api'
-import { TreeSelect } from 'antd'
-import { useEffect, useState } from 'react'
+import { TreeSelect, Tag, Space } from 'antd'
+import { useEffect, useState, useMemo } from 'react'
+import { CheckOutlined } from '@ant-design/icons'
 
 export default function DatasetSelector({
   onChange,
   multiple,
   value,
+  style,
   ...props
 }) {
   const [datasets, setDatasets] = useState([])
@@ -15,21 +17,63 @@ export default function DatasetSelector({
     setDatasets(data)
   }
   
+  // Render selected values with tags
+  const renderValue = (selectedKeys, selectedNodes) => {
+    if (!selectedKeys || selectedKeys.length === 0) {
+      return <span style={{ color: '#bfbfbf' }}>数据集</span>
+    }
+    
+    if (multiple && selectedKeys.length > 3) {
+      return (
+        <Tag color="blue" style={{ margin: 0 }}>
+          选择 {selectedKeys.length} 个数据集
+        </Tag>
+      )
+    }
+    
+    if (multiple) {
+      return (
+        <Space size={4}>
+          {selectedKeys.map((key, index) => {
+            const node = selectedNodes?.[index]
+            const title = node?.title || key
+            return (
+              <Tag key={key} color="blue" style={{ margin: 0 }}>
+                {title}
+              </Tag>
+            )
+          })}
+        </Space>
+      )
+    }
+    
+    const node = selectedNodes?.[0]
+    return node?.title || selectedKeys?.[0] || '数据集'
+  }
+
   return (
     <TreeSelect
       id="datasets"
       showSearch
-      style={{ width: '100%' }}
-      value={value}
-      styles={{ popup: { root: { maxHeight: 400, overflow: 'auto' } } }}
       multiple={multiple}
-      placeholder="数据集"
+      style={{
+        width: '100%',
+        minWidth: 200,
+        ...style
+      }}
+      value={value}
+      styles={{
+        popup: { root: { maxHeight: 400, overflow: 'auto' } }
+      }}
+      placeholder="选择数据集"
       allowClear
+      maxTagCount="responsive"
+      treeDefaultExpandAll
+      treeData={datasets}
+      onChange={onChange}
       onOpenChange={() => {
         if (!datasets?.length) fetchDatasets()
       }}
-      treeData={datasets}
-      onChange={onChange}
       {...props}
     />
   )
