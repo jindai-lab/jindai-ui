@@ -131,8 +131,9 @@ const TaskDboList = () => {
     <div
       style={{
         padding: "20px",
-        background: "#fff",
+        background: "var(--panel-bg)",
         minHeight: "calc(100vh - 120px)",
+        color: "var(--text)",
       }}
     >
       {/* 加载中状态 */}
@@ -219,6 +220,11 @@ export default function TaskPage() {
             </Button>
           </>
         }
+        style={{
+          background: "var(--panel-bg)",
+          color: "var(--text)",
+          borderColor: "var(--border)",
+        }}
       >
         {typeof stats.running === "undefined" && "正在加载..."}
         {typeof stats.running !== "undefined" && (
@@ -271,12 +277,12 @@ export default function TaskPage() {
           <JobsList jobs={stats.results || []} />
         </Row>
       </Card>
-      <Card title="任务列表">
+      <Card title="任务列表" style={{ background: "var(--panel-bg)", color: "var(--text)", borderColor: "var(--border)" }}>
         <Row>
           <TaskDboList />
         </Row>
       </Card>
-      <Card title="维护任务">
+      <Card title="维护任务" style={{ background: "var(--panel-bg)", color: "var(--text)", borderColor: "var(--border)" }}>
         <Row>Embeddings 总数：{embeddingsStats.finished} / 列队：{embeddingsStats.queued}</Row>
         <Form>
           <Form.Item label="任务类型">

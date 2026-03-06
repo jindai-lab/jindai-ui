@@ -47,7 +47,9 @@ const SearchFilterBar = ({ filters, updateFilter, executeSearch }) => {
         marginBottom: 24,
         borderRadius: 12,
         boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-        border: '1px solid #f0f0f0'
+        border: '1px solid var(--border)',
+        background: 'var(--panel-bg)',
+        color: 'var(--text)'
       }}
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -64,7 +66,7 @@ const SearchFilterBar = ({ filters, updateFilter, executeSearch }) => {
             position: 'relative'
           }}>
             <Input.Search
-              placeholder="搜索海量数据..."
+              placeholder="搜索..."
               allowClear
               enterButton={<SearchOutlined />}
               size="large"
@@ -128,10 +130,11 @@ const SearchFilterBar = ({ filters, updateFilter, executeSearch }) => {
           flexWrap: 'wrap',
           gap: 12,
           alignItems: 'flex-start',
-          background: '#fafafa',
+          background: 'var(--panel-bg)',
           padding: '16px 20px',
           borderRadius: 8,
-          border: '1px solid #f0f0f0'
+          border: '1px solid var(--border)',
+          color: 'var(--text)'
         }}>
           <FilterItem label="大纲">
             <RemoteFilterSelector

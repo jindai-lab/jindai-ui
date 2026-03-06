@@ -1,4 +1,4 @@
-import { Outlet, useLocation } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 import NavSidebar from "../nav-sidebar";
 import { ThreeDots } from 'react-loader-spinner';
 import { useAuth } from "react-oidc-context";
