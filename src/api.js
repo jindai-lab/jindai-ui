@@ -112,7 +112,7 @@ export const apiClient = Object.assign(
     },
     // datasets
     async datasets() {
-      return (await this.makeCall("datasets"))?.results;
+      return (await this.makeCall("datasets"))?.results.filter(ds => ds.title);      
     },
     async datasetRename({ id = "", original = "", newName }) {
       return await this.makeCall(`datasets/${id}`, { name: newName }, {method: 'PUT'});
