@@ -31,10 +31,12 @@ import { useWorkerStats } from "../components/ws-workerstats.jsx";
 import "./task.css";
 
 import { JobsList } from "../components/jobs-list.jsx";
+import { useTranslation } from "react-i18next";
 
 
 // 数据库taskdbo列表展示组件
 const TaskDboList = () => {
+  const { t } = useTranslation();
   // 状态管理：任务列表、加载中、请求异常
   const [taskList, setTaskList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -63,13 +65,13 @@ const TaskDboList = () => {
   // 表格列配置 - 完全适配taskdbo数据库表字段
   const tableColumns = [
     {
-      title: "任务名称",
+      title: t("任务名称"),
       dataIndex: "name",
       key: "name",
       width: 200,
     },
     {
-      title: "并发数",
+      title: t("并发数"),
       dataIndex: "concurrent",
       key: "concurrent",
       width: 100,
@@ -77,19 +79,19 @@ const TaskDboList = () => {
       render: (num) => <span style={{ color: "#165DFF" }}>{num}</span>,
     },
     {
-      title: "最后执行时间",
+      title: t("最后执行时间"),
       dataIndex: "last_run_time",
       key: "last_run_time",
       width: 200,
       render: (time) => (
         <Space>
           <ClockCircleOutlined />
-          <span>{time || "暂无执行记录"}</span>
+          <span>{time || t("暂无执行记录")}</span>
         </Space>
       ),
     },
     {
-      title: "是否续跑",
+      title: t("是否续跑"),
       dataIndex: "resume_next",
       key: "resume_next",
       width: 120,
@@ -102,7 +104,7 @@ const TaskDboList = () => {
         ),
     },
     {
-      title: "操作",
+      title: t("操作"),
       key: "operation",
       render: (record) => {
         return (
@@ -137,7 +139,7 @@ const TaskDboList = () => {
       }}
     >
       {/* 加载中状态 */}
-      <Spin spinning={loading} tip="正在从数据库加载任务数据...">
+      <Spin spinning={loading} tip={t("正在从数据库加载任务数据")}>
         {/* 异常提示 */}
         {errorMsg && (
           <Alert
@@ -161,7 +163,7 @@ const TaskDboList = () => {
           }}
           scroll={{ x: "max-content" }}
           // 空数据兜底
-          locale={{ emptyText: <Empty description="暂无任务数据" /> }}
+          locale={{ emptyText: <Empty description={t("暂无任务数据")} /> }}
         />
       </Spin>
     </div>
@@ -169,6 +171,7 @@ const TaskDboList = () => {
 };
 
 export default function TaskPage() {
+  const { t } = useTranslation();
   const [embeddingsStats, setEmbeddingsStats] = useState({});
   const [taskTypes, setTaskTypes] = useState({});
   const [activeTaskType, setActiveTaskType] = useState('');
@@ -206,7 +209,7 @@ export default function TaskPage() {
 
   const clearTasks = async () => {
     await apiClient.workerClearJobs();
-    message.info("已清除任务");
+    message.info(t("已清除任务"));
   };
 
   return (
@@ -226,7 +229,7 @@ export default function TaskPage() {
           borderColor: "var(--border)",
         }}
       >
-        {typeof stats.running === "undefined" && "正在加载..."}
+        {typeof stats.running === "undefined" && t("正在加载")}
         {typeof stats.running !== "undefined" && (
           <>
             <Row gutter={16}>
@@ -285,7 +288,7 @@ export default function TaskPage() {
       <Card title="维护任务" style={{ background: "var(--panel-bg)", color: "var(--text)", borderColor: "var(--border)" }}>
         <Row>Embeddings 总数：{embeddingsStats.finished} / 列队：{embeddingsStats.queued}</Row>
         <Form>
-          <Form.Item label="任务类型">
+          <Form.Item label={t("任务类型")}>
             <Select style={{ width: 200 }} options={Object.keys(taskTypes).filter(name => name != 'custom').map(name => {
               return { value: name, display: name }
             })} onChange={(val) => setActiveTaskType(val)}></Select>

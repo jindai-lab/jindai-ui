@@ -1,6 +1,7 @@
 import { TreeSelect, Tag, Space } from 'antd'
 import { useEffect, useState, useMemo } from 'react'
 import { apiClient } from '../api'
+import { useTranslation } from "react-i18next";
 
 export default function FileSourceSelector({
   onChange,
@@ -9,6 +10,7 @@ export default function FileSourceSelector({
   style,
   ...props
 }) {
+  const { t } = useTranslation();
   const [sourceFiles, setSourceFiles] = useState([])
 
   async function fetchFileSources(folderPath = '') {
@@ -64,7 +66,7 @@ export default function FileSourceSelector({
     }
     
     const node = selectedNodes?.[0]
-    return node?.title || selectedKeys?.[0] || '文件源'
+    return node?.title || selectedKeys?.[0] || t("文件源")
   }
 
   return (
@@ -81,7 +83,7 @@ export default function FileSourceSelector({
       styles={{
         popup: { root: { maxHeight: 400, overflow: 'auto' } }
       }}
-      placeholder="选择文件源"
+      placeholder={t("选择文件源")}
       allowClear
       maxTagCount="responsive"
       treeData={sourceFiles}

@@ -1,30 +1,32 @@
 import { useState } from 'react';
 import { Modal, Button, Select, Space, Input, Checkbox } from 'antd';
+import { useTranslation } from "react-i18next";
 
 // 核心：OCR语言对照表（完全映射你提供的表格，包含所有字段）
 const OCR_LANGUAGE_LIST = [
-  { tesseractCode: 'eng', paddleCode: 'en', language: '英文' },
-  { tesseractCode: 'chi_sim', paddleCode: 'ch', language: '简体中文' },
-  { tesseractCode: 'chi_tra', paddleCode: 'chinese_cht', language: '繁体中文' },
-  { tesseractCode: 'fra', paddleCode: 'fr', language: '法文' },
-  { tesseractCode: 'deu', paddleCode: 'german', language: '德文' },
-  { tesseractCode: 'spa', paddleCode: 'spanish', language: '西班牙文' },
-  { tesseractCode: 'rus', paddleCode: 'ru', language: '俄文' },
-  { tesseractCode: 'jpn', paddleCode: 'japan', language: '日文' },
-  { tesseractCode: 'kor', paddleCode: 'korean', language: '韩文' },
-  { tesseractCode: 'ara', paddleCode: 'ar', language: '阿拉伯文' },
-  { tesseractCode: 'hin', paddleCode: 'hi', language: '印地文' },
-  { tesseractCode: 'por', paddleCode: 'pt', language: '葡萄牙文' },
-  { tesseractCode: 'ita', paddleCode: 'it', language: '意大利文' },
-  { tesseractCode: 'tur', paddleCode: 'tr', language: '土耳其文' },
-  { tesseractCode: 'vie', paddleCode: 'vi', language: '越南文' },
-  { tesseractCode: 'tha', paddleCode: 'th', language: '泰文' },
+  { tesseractCode: 'eng', paddleCode: 'en', language: t("英文") },
+  { tesseractCode: 'chi_sim', paddleCode: 'ch', language: t("简体中文") },
+  { tesseractCode: 'chi_tra', paddleCode: 'chinese_cht', language: t("繁体中文") },
+  { tesseractCode: 'fra', paddleCode: 'fr', language: t("法文") },
+  { tesseractCode: 'deu', paddleCode: 'german', language: t("德文") },
+  { tesseractCode: 'spa', paddleCode: 'spanish', language: t("西班牙文") },
+  { tesseractCode: 'rus', paddleCode: 'ru', language: t("俄文") },
+  { tesseractCode: 'jpn', paddleCode: 'japan', language: t("日文") },
+  { tesseractCode: 'kor', paddleCode: 'korean', language: t("韩文") },
+  { tesseractCode: 'ara', paddleCode: 'ar', language: t("阿拉伯文") },
+  { tesseractCode: 'hin', paddleCode: 'hi', language: t("印地文") },
+  { tesseractCode: 'por', paddleCode: 'pt', language: t("葡萄牙文") },
+  { tesseractCode: 'ita', paddleCode: 'it', language: t("意大利文") },
+  { tesseractCode: 'tur', paddleCode: 'tr', language: t("土耳其文") },
+  { tesseractCode: 'vie', paddleCode: 'vi', language: t("越南文") },
+  { tesseractCode: 'tha', paddleCode: 'th', language: t("泰文") },
 ];
 
 // 默认选中：简体中文
 const DEFAULT_SELECT = OCR_LANGUAGE_LIST.find(item => item.tesseractCode === 'chi_sim');
 
 const OcrLanguageSelectModal = ({ submit, filename, ...props }) => {
+const { t } = useTranslation();
   // 弹窗显隐状态
   const [modalVisible, setModalVisible] = useState(false);
   // 选中的语言项（绑定完整对象）
@@ -89,7 +91,7 @@ const OcrLanguageSelectModal = ({ submit, filename, ...props }) => {
         <Space>
           输出文件名
           <Input
-            placeholder="请输入新名称"
+            placeholder={t("请输入新名称")}
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
           />

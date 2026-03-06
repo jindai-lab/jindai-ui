@@ -2,34 +2,36 @@ import React, { useEffect, useState } from 'react';
 import { Button, Modal, Typography, Descriptions } from 'antd';
 import { TableOutlined, TranslationOutlined } from '@ant-design/icons'
 import { apiClient } from '../api';
+import { useTranslation } from "react-i18next";
 
 const { Title, Text } = Typography;
 
 // 搜索结果项组件
 const ParagraphItem = ({ data }) => {
+const { t } = useTranslation();
   // 控制元数据弹窗显示/隐藏的状态
   const [metadataVisible, setMetadataVisible] = useState(false);
   const [translatedText, setTranslatedText] = useState('');
 
   const FIELD_NAMES = {
-    keywords: '关键词',
-    pdate: '日期',
-    author: '作者',
-    outline: '大纲',
-    content: '内容',
-    dataset: '数据集#',
-    source_url: '出处',
-    source_page: '页号',
-    pagenum: '页码',
-    lang: '语言',
-    extdata: '额外数据',
+    keywords: t("关键词"),
+    pdate: t("日期"),
+    author: t("作者"),
+    outline: t("大纲"),
+    content: t("内容"),
+    dataset: t("数据集"),
+    source_url: t("出处"),
+    source_page: t("页号"),
+    pagenum: t("页码"),
+    lang: t("语言"),
+    extdata: t("额外数据"),
     id: 'ID',
-    dataset_name: '数据集',
-    count: '计数'
+    dataset_name: t("数据集"),
+    count: t("计数")
   }
 
   const formatValue = (value) => {
-    let displayValue = value ?? '无数据';
+    let displayValue = value ?? t("无数据");
     // 处理数组类型
     if (Array.isArray(displayValue)) {
       displayValue = displayValue.map(x => formatValue(x)).join(', ')
@@ -40,7 +42,7 @@ const ParagraphItem = ({ data }) => {
     }
     // 处理布尔值
     if (typeof displayValue === 'boolean') {
-      displayValue = displayValue ? '是' : '否';
+      displayValue = displayValue ? t("是") : t("否");
     }
     return displayValue;
   }
@@ -122,7 +124,7 @@ const ParagraphItem = ({ data }) => {
 
       {/* 文本内容区域 */}
       <div className="text-content" lang={data.lang}>
-        {data.content || '无文本内容'}
+        {data.content || t("无文本内容")}
       </div>
 
       {translatedText && (<div className="text-content text-translated" lang={apiClient.localConfig.translatorLang}>

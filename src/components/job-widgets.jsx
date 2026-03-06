@@ -12,11 +12,13 @@ import {
   Typography
 } from "antd";
 import { apiClient } from "../api.js";
+import { useTranslation } from "react-i18next";
 
 const { Text, Paragraph } = Typography;
 
 
 export function JobDetail({ job, jobId, visible, onCancel }) {
+const { t } = useTranslation();
   return (
     <Modal
       title={`详情 - ${jobId}`}
@@ -44,16 +46,16 @@ export function JobDetail({ job, jobId, visible, onCancel }) {
             size="middle"
             labelStyle={{ fontWeight: "bold" }}
           >
-            <Descriptions.Item label="执行状态">
+            <Descriptions.Item label={t("执行状态")}>
               <JobStatusTag status={job.status} />
             </Descriptions.Item>
-            <Descriptions.Item label="日志内容" span={2}>
+            <Descriptions.Item label={t("日志内容")} span={2}>
               {job.log ? (
                 <Paragraph
                   ellipsis={{
                     rows: 2,
                     expandable: true,
-                    symbol: "查看全部日志",
+                    symbol: t("查看全部日志"),
                   }}
                   style={{ margin: 0 }}
                 >
@@ -63,20 +65,20 @@ export function JobDetail({ job, jobId, visible, onCancel }) {
                 <Text type="secondary">无日志信息</Text>
               )}
             </Descriptions.Item>
-            <Descriptions.Item label="入列时间" span={1}>
+            <Descriptions.Item label={t("入列时间")} span={1}>
               {apiClient.formatIsoToDateTime(job.enqueue_time)}
             </Descriptions.Item>
-            <Descriptions.Item label="结束时间" span={1}>
+            <Descriptions.Item label={t("结束时间")} span={1}>
               {apiClient.formatIsoToDateTime(job.date_done)}
             </Descriptions.Item>
-            <Descriptions.Item label="任务名称" span={1}>
+            <Descriptions.Item label={t("任务名称")} span={1}>
               {job.task_name ? (
                 job.task_name
               ) : (
                 <Text type="secondary">无返回值</Text>
               )}
             </Descriptions.Item>
-            <Descriptions.Item label="返回值" span={2}>
+            <Descriptions.Item label={t("返回值")} span={2}>
               {job.return_value ? (
                 <pre className="json">
                   {JSON.stringify(job.return_value, null, 2)}

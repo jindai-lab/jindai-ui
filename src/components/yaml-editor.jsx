@@ -16,10 +16,12 @@ import 'prismjs/components/prism-javascript';
 // Import a PrismJS theme for styling, e.g., 'prism.css' or another theme
 import 'prismjs/themes/prism.css'; 
 import 'prismjs/components/prism-yaml';
+import { useTranslation } from "react-i18next";
 
 const { Text } = Typography;
 
 const YamlEditor = ({ initialValue = '', onSave, onValidate }) => {
+const { t } = useTranslation();
   const [value, setValue] = useState(initialValue);
   const [error, setError] = useState(null);
   const [isDirty, setIsDirty] = useState(false);
@@ -44,7 +46,7 @@ const YamlEditor = ({ initialValue = '', onSave, onValidate }) => {
 
   const handleSave = () => {
     if (error) {
-      message.error('YAML 格式有误，请修正后再保存');
+      message.error(t("yaml_格式有误请修正后再保存"));
       return;
     }
     if (onSave) {
@@ -55,7 +57,7 @@ const YamlEditor = ({ initialValue = '', onSave, onValidate }) => {
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(value);
-    message.info('代码已复制到剪贴板');
+    message.info(t("代码已复制到剪贴板"));
   };
 
   const formatYaml = () => {
@@ -63,9 +65,9 @@ const YamlEditor = ({ initialValue = '', onSave, onValidate }) => {
       const obj = yaml.load(value);
       const formatted = yaml.dump(obj, { indent: 2 });
       setValue(formatted);
-      message.success('已自动格式化');
+      message.success(t("已自动格式化"));
     } catch (e) {
-      message.error('格式化失败：YAML 结构不正确');
+      message.error(t("格式化失败yaml_结构不正确"));
     }
   };
 

@@ -2,8 +2,10 @@ import { Table } from 'antd'
 import { useEffect, useState } from 'react';
 import { apiClient } from "../api.js"
 import dayjs from 'dayjs';
+import { useTranslation } from "react-i18next";
 
 export default function HistoryPage() {
+const { t } = useTranslation();
 
   const [histories, setHistories] = useState([])
 
@@ -19,7 +21,7 @@ export default function HistoryPage() {
         rowKey="id"
         columns={[
           {
-            title: '日期',
+            title: t("日期"),
             dataIndex: 'created_at',
             render (v) {
               return dayjs(v).format('YYYY-MM-DD HH:mm:ss');
@@ -30,7 +32,7 @@ export default function HistoryPage() {
           //   dataIndex: 'user_id',
           // },
           {
-            title: '查询',
+            title: t("查询"),
             dataIndex: 'queries',
             render(v) {
               return (<pre className='json'>{JSON.stringify(v, null, 2)}</pre>)

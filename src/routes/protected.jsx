@@ -1,10 +1,12 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useEffect } from "react";
 import { ThreeDots } from "react-loader-spinner";
+import { useTranslation } from "react-i18next";
 
 const ProtectedRoute = ({auth}) => {
+const { t } = useTranslation();
   if (auth.isLoading) {
-    console.log('正在验证登录状态')
+    console.log(t("正在验证登录状态"))
     return null;
   }
 

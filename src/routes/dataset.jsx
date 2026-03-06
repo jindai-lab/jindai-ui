@@ -9,8 +9,10 @@ import { Button, Input, message, Modal, Popconfirm, Space, Table } from 'antd';
 import { useEffect, useState } from "react";
 import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../api'
+import { useTranslation } from "react-i18next";
 
 export default function DatasetPage() {
+const { t } = useTranslation();
 
   const [datasets, setDatasets] = useState([]);
   const [newName, setNewName] = useState('');
@@ -21,19 +23,19 @@ export default function DatasetPage() {
 
   const columns = [
     {
-      title: '名称',
+      title: t("名称"),
       dataIndex: 'title',
       key: 'title',
       width: '40%',
     },
     {
-      title: '排序权重',
+      title: t("排序权重"),
       dataIndex: 'order_weight',
       key: 'order_weight',
       width: '20%',
     },
     {
-      title: '操作',
+      title: t("操作"),
       key: 'action',
       width: '20%',
       align: 'center',
@@ -45,8 +47,8 @@ export default function DatasetPage() {
           <Popconfirm
             title={`确定删除【${record.value}】吗？`}
             onConfirm={() => handleDelete(record)}
-            okText="确定"
-            cancelText="取消"
+            okText={t("确定")}
+            cancelText={t("取消")}
           >
             <Button icon={<DeleteOutlined />} size="small" danger type="link">删除</Button>
           </Popconfirm>
@@ -85,13 +87,13 @@ export default function DatasetPage() {
   const handleDelete = (record) => {
     apiClient.delete(`datasets/${record.record_id}`).then((e) => {
       console.log(e)
-      message.info('删除成功')
+      message.info(t("删除成功"))
       handleRefresh()
     })
   }
 
   const handleRefresh = () => {
-    message.loading('刷新数据集列表', 0);
+    message.loading(t("刷新数据集列表"), 0);
     apiClient.datasets()
       .then(setDatasets)
       .finally(() => { message.destroy() });
@@ -108,9 +110,9 @@ export default function DatasetPage() {
       <Table {...tableProps} />
 
       <Modal
-        title={"重命名 " + (editingRecord?.title || '')}
-        okText="修改"
-        cancelText="取消"
+        title={"t("重命名") " + (editingRecord?.title || '')}
+        okText={t("修改")}
+        cancelText={t("取消")}
         open={!!editingRecord}
         onOk={async () => {
           try {
@@ -119,39 +121,39 @@ export default function DatasetPage() {
               original: editingRecord.title,
               newName: newName.trim()
             })
-            message.success(`数据集重命名成功`);
+            message.success(`t("数据集重命名成功")`);
             handleRefresh(); // 刷新目录列表，实时展示新名称
             setEditingRecord(null);
             setNewName('');
           } catch (err) {
-            message.error('重命名失败：' + err.message || '服务器异常');
+            message.error(t("重命名失败") + err.message || t("服务器异常"));
           }
         }}
         onCancel={() => setEditingRecord(null)}
       >
-        <Input placeholder="请输入新名称" value={newName} onChange={(e) => setNewName(e.target.value)} />
+        <Input placeholder={t("请输入新名称")} value={newName} onChange={(e) => setNewName(e.target.value)} />
       </Modal>
       <Modal
         title="新建数据集"
-        okText="创建"
-        cancelText="取消"
+        okText={t("创建")}
+        cancelText={t("取消")}
         open={creatingDataset}
         onOk={async () => {
           try {
             apiClient.datasetCreate({
               name: creatingDatasetName.trim()
             })
-            message.success('文件夹创建成功');
+            message.success(t("文件夹创建成功"));
             handleRefresh(); // 刷新目录列表，实时展示新增结果
             setCreatingDataset(false);
             setCreatingDatasetName('');
           } catch (err) {
-            message.error('创建失败：' + err.message || '服务器异常');
+            message.error(t("创建失败") + err.message || t("服务器异常"));
           }
         }}
         onCancel={() => setCreatingDataset(false)}
       >
-        <Input placeholder="请输入新名称" value={creatingDatasetName} onChange={(e) => setCreatingDatasetName(e.target.value)} />
+        <Input placeholder={t("请输入新名称")} value={creatingDatasetName} onChange={(e) => setCreatingDatasetName(e.target.value)} />
       </Modal>
     </>
   )

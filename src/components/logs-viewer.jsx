@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Card, Button, Tag, Space, Typography, Tooltip, Empty } from 'antd';
 import { 
+import { useTranslation } from "react-i18next";
   Terminal, 
   Pause, 
   Play, 
@@ -14,6 +15,7 @@ import {
 const { Text } = Typography;
 
 const LogsViewer = ({ taskId }) => {
+const { t } = useTranslation();
   const [logs, setLogs] = useState([]);
   const [isPaused, setIsPaused] = useState(false);
   const [status, setStatus] = useState('connecting'); // connecting, connected, error
@@ -89,7 +91,7 @@ const LogsViewer = ({ taskId }) => {
       extra={
         <Space>
           {renderStatus()}
-          <Tooltip title={isPaused ? "继续滚动" : "暂停滚动"}>
+          <Tooltip title={isPaused ? t("继续滚动") : t("暂停滚动")}>
             <Button 
               type={isPaused ? "primary" : "default"}
               icon={isPaused ? <Play size={14} /> : <Pause size={14} />} 

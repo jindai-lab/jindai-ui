@@ -6,8 +6,10 @@ import { useParams } from "react-router-dom";
 import { apiClient } from "../api";
 import ParamPanel from "../components/param-panel";
 import YamlEditor from "../components/yaml-editor";
+import { useTranslation } from "react-i18next";
 
 export default function Workflow({ }) {
+const { t } = useTranslation();
   const { taskId } = useParams();
   const editorRef = useRef(null);
   const [shortcutMap, setShortcutMap] = useState(null);
@@ -19,14 +21,14 @@ export default function Workflow({ }) {
     const undefFields = Object.keys(data)
       .filter((x) => typeof validated[x] === "undefined")
       .join(", ");
-    if (undefFields) throw new Error("多余字段：" + undefFields);
+    if (undefFields) throw new Error(t("多余字段") + undefFields);
     const { pipeline } = data;
     if (
       !Array.isArray(pipeline) ||
       pipeline.map((x) => Object.entries(x).length == 1).filter((x) => !x)
         .length
     )
-      throw new Error("Pipeline 应为数组，且各元素为一个对象。");
+      throw new Error(t("pipeline_应为数组且各元素为一个对象"));
   }
 
   const validateData = (data, schema) => {
@@ -43,7 +45,7 @@ export default function Workflow({ }) {
       setShortcutMap(buildShortcuts(shortcut_map, pipeline))
     } catch (err) {
       console.log(err)
-      throw new Error("快捷方式有误: " + err)
+      throw new Error("t("快捷方式有误") " + err)
     }
     return { name, pipeline, shared, resume_next, concurrent, shortcut_map };
   }
@@ -106,22 +108,22 @@ export default function Workflow({ }) {
       const yaml_src = yaml.dump(validateData(data, pipelineSchema));
       setYamlContent(yaml_src);
     } catch (err) {
-      console.error("获取配置失败:", err);
-      message.error("无法加载配置文件，请检查任务 ID 或网络连接。");
+      console.error(t("获取配置失败"), err);
+      message.error(t("无法加载配置文件请检查任务_id_或网络连接"));
     } finally {
     }
   };
 
   const handleSave = async (updatedYaml) => {
-    const hide = message.loading("正在保存配置...", 0);
+    const hide = message.loading(t("正在保存配置"), 0);
     try {
       let data = validateData(yaml.load(updatedYaml));
       await apiClient.taskDBO(taskId, data);
-      message.success("配置更新成功");
+      message.success(t("配置更新成功"));
       setYamlContent(updatedYaml); // 更新本地缓存的内容
     } catch (err) {
-      console.error("保存失败:", err);
-      message.error("保存失败，服务器返回错误");
+      console.error(t("保存失败"), err);
+      message.error(t("保存失败服务器返回错误"));
     } finally {
       hide();
     }

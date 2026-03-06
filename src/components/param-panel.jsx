@@ -4,8 +4,10 @@ import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import DatasetSelector from './dataset-selector'
 import FileSourceSelector from './filesource-selector'
 import { apiClient } from '../api';
+import { useTranslation } from "react-i18next";
 
 const ParamPanel = ({ scheme, value = {}, onChange }) => {
+const { t } = useTranslation();
 
   // 统一变更处理函数
   const handleFieldChange = (key, val) => {
@@ -35,9 +37,9 @@ const ParamPanel = ({ scheme, value = {}, onChange }) => {
       bool: (
         <Select
           options={[
-            { value: "", label: '不指定' },
-            { value: true, label: '是' },
-            { value: false, label: '否' },
+            { value: "", label: t("不指定") },
+            { value: true, label: t("是") },
+            { value: false, label: t("否") },
           ]}
           value={currentVal}
           onChange={(v) => handleFieldChange(key, v)}
@@ -62,19 +64,19 @@ const ParamPanel = ({ scheme, value = {}, onChange }) => {
       ),
       groupBy: (
         <Select multiple value={currentVal} onChange={(e) => handleFieldChange(key, e)} options={[
-          { value: 'pdate', label: "日期" },
-          { value: 'author', label: '作者' },
-          { value: 'source_url', label: '来源' },
-          { value: 'outline', label: '大纲' }
+          { value: 'pdate', label: t("日期") },
+          { value: 'author', label: t("作者") },
+          { value: 'source_url', label: t("来源") },
+          { value: 'outline', label: t("大纲") }
         ]} />
       ),
       sort: (
         <Select multiple value={currentVal} onChange={(e) => handleFieldChange(key, e)} options={[
-          { value: 'pdate', label: "日期（↑）" },
-          { value: '-pdate', label: "日期（↓）" },
-          { value: 'author', label: '作者' },
-          { value: 'source_url', label: '来源' },
-          { value: 'outline', label: '大纲' }
+          { value: 'pdate', label: t("日期（↑）") },
+          { value: '-pdate', label: t("日期") },
+          { value: 'author', label: t("作者") },
+          { value: 'source_url', label: t("来源") },
+          { value: 'outline', label: t("大纲") }
         ]} />
       ),
       lang: (

@@ -3,6 +3,9 @@ import axios from "axios";
 import localeCodes from "locale-codes";
 import dayjs from "dayjs";
 
+
+const t = function (x) { return x; }
+
 class SmartStorage {
   constructor(prefix = "jindai_local_config") {
     this._prefix = prefix;
@@ -112,10 +115,10 @@ export const apiClient = Object.assign(
     },
     // datasets
     async datasets() {
-      return (await this.makeCall("datasets"))?.results.filter(ds => ds.title);      
+      return (await this.makeCall("datasets"))?.results.filter(ds => ds.title);
     },
     async datasetRename({ id = "", original = "", newName }) {
-      return await this.makeCall(`datasets/${id}`, { name: newName }, {method: 'PUT'});
+      return await this.makeCall(`datasets/${id}`, { name: newName }, { method: 'PUT' });
     },
     async datasetCreate({ name }) {
       return await this.makeCall(`datasets`, { name });
@@ -194,14 +197,14 @@ export const apiClient = Object.assign(
     },
     // histories
     async histories() {
-      return await this.makeCall('histories/?sort=-created_at', null, {method: 'GET'})
+      return await this.makeCall('histories/?sort=-created_at', null, { method: 'GET' })
     },
     // other
     langCodes: Object.entries(
       Object.fromEntries([
-        ["auto", "自动"],
-        ["zhs", "简体中文"],
-        ["zht", "繁体中文"],
+        ["auto", t("自动")],
+        ["zhs", t("简体中文")],
+        ["zht", t("繁体中文")],
         ...localeCodes.all.map((lang) => [lang["iso639-1"], lang.name]),
       ]),
     ).map(([code, name]) => ({

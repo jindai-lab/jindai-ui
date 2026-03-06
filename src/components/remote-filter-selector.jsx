@@ -1,8 +1,10 @@
 import { Select, Spin } from 'antd';
 import { useEffect, useState } from 'react';
 import { apiClient } from '../api';
+import { useTranslation } from "react-i18next";
 
 const RemoteFilterSelector = ({ filters, column, multiple, ...props }) => {
+const { t } = useTranslation();
 	const [options, setOptions] = useState([]);
 	const [loading, setLoading] = useState(false);
 	const [hasLoaded, setHasLoaded] = useState(false);
@@ -19,7 +21,7 @@ const RemoteFilterSelector = ({ filters, column, multiple, ...props }) => {
 			setOptions(filterItems);
 			setHasLoaded(true);
 		} catch (error) {
-			console.error("加载失败", error);
+			console.error(t("加载失败"), error);
 		} finally {
 			setLoading(false);
 		}
@@ -35,7 +37,7 @@ const RemoteFilterSelector = ({ filters, column, multiple, ...props }) => {
 	return (
 		<Select
 			mode={multiple ? 'multiple' : ''}     
-			placeholder="点击加载选项"
+			placeholder={t("点击加载选项")}
 			onOpenChange={handleOpenChange}
 			options={options}
 			loading={loading} 

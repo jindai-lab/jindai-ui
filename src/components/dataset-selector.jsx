@@ -2,6 +2,7 @@ import { apiClient } from '../api'
 import { TreeSelect, Tag, Space } from 'antd'
 import { useEffect, useState, useMemo } from 'react'
 import { CheckOutlined } from '@ant-design/icons'
+import { useTranslation } from "react-i18next";
 
 export default function DatasetSelector({
   onChange,
@@ -10,6 +11,7 @@ export default function DatasetSelector({
   style,
   ...props
 }) {
+  const { t } = useTranslation();
   const [datasets, setDatasets] = useState([])
   
   async function fetchDatasets() {
@@ -48,7 +50,7 @@ export default function DatasetSelector({
     }
     
     const node = selectedNodes?.[0]
-    return node?.title || selectedKeys?.[0] || '数据集'
+    return node?.title || selectedKeys?.[0] || t("数据集")
   }
 
   return (
@@ -65,7 +67,7 @@ export default function DatasetSelector({
       styles={{
         popup: { root: { maxHeight: 400, overflow: 'auto' } }
       }}
-      placeholder="选择数据集"
+      placeholder={t("选择数据集")}
       allowClear
       maxTagCount="responsive"
       treeDefaultExpandAll

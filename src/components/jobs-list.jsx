@@ -3,8 +3,10 @@ import { Collapse, Popconfirm, Button, Table, Tag } from "antd";
 import { DeleteOutlined  } from "@ant-design/icons"
 import { JobStatusTag, JobDetail } from "./job-widgets";
 import { apiClient } from "../api";
+import { useTranslation } from "react-i18next";
 
 export function JobsList({ jobs }) {
+const { t } = useTranslation();
   const [modalVisible, setModalVisible] = useState(false);
   const [currentJobId, setCurrentJobId] = useState("");
   const [jobDetail, setJobDetail] = useState(null);
@@ -29,19 +31,19 @@ export function JobsList({ jobs }) {
       ),
     },
     {
-      title: "入列时间",
+      title: t("入列时间"),
       key: "enqueue_time",
       dataIndex: "enqueue_time",
       render: (dt) => apiClient.formatIsoToDateTime(dt),
     },
     {
-      title: "完成状态",
+      title: t("完成状态"),
       dataIndex: "status",
       key: "status",
       render: (status) => <JobStatusTag status={status} />,
     },
     {
-      title: "操作",
+      title: t("操作"),
       key: "operation",
       render: (record) => {
         return (
@@ -49,8 +51,8 @@ export function JobsList({ jobs }) {
             <Popconfirm
               title={`确定删除【${record.job_id}】吗？`}
               onConfirm={() => removeJob(record.job_id)}
-              okText="确定"
-              cancelText="取消"
+              okText={t("确定")}
+              cancelText={t("取消")}
             >
               <Button size="small" icon={<DeleteOutlined />} danger>
                 删除
@@ -73,14 +75,14 @@ export function JobsList({ jobs }) {
       setJobDetail(result);
     } catch (err) {
       // 捕获 API 调用错误
-      message.error(`获取 Job ${jobId} 详情失败：${err.message || "未知错误"}`);
+      message.error(`获取 Job ${jobId} 详情失败：${err.message || t("未知错误")}`);
     } finally {
     }
   };
 
   return (
     <Collapse defaultActiveKey={[]}>
-      <Collapse.Panel header="结果详情" key="detailed">
+      <Collapse.Panel header={t("结果详情")} key="detailed">
         <Table
           columns={jobColumns}
           dataSource={jobs.map((job) => ({ key: job.job_id, ...job }))}

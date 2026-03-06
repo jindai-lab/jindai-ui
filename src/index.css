@@ -12,17 +12,9 @@
   font-synthesis: none;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  --ant-color-text: var(--text);
-  --ant-color-bg-container: var(--panel-bg);
-  --ant-color-bg-layout: var(--bg);
-  --ant-color-text-base: var(--text);
 }
 
 :root.dark {
-  --ant-color-text-heading: var(--text);
-  --ant-color-bg-container: var(--panel-bg);
-  --ant-color-bg-layout: var(--bg);
-  --ant-color-text-base: var(--text);
   --primary: #16a387;
   --text: #e2e8f0;
   --bg: #181818;

@@ -5,8 +5,10 @@ import { useAuth } from "react-oidc-context";
 import { useEffect, Suspense } from "react";
 import ProtectedRoute from './protected.jsx'
 import { apiClient } from "../api";
+import { useTranslation } from "react-i18next";
 
 export default function Root() {
+const { t } = useTranslation();
   const auth = useAuth()
   
   useEffect(() => {
@@ -15,11 +17,11 @@ export default function Root() {
 
 
   if (auth.isLoading) {
-    console.log('正在验证登录状态')
+    console.log(t("正在验证登录状态"))
   }
 
   useEffect(() => {
-    console.log("当前用户状态:", auth.user, "是否已认证:", auth.isAuthenticated, "正在载入", auth.isLoading);
+    console.log(t("当前用户状态"), auth.user, t("是否已认证"), auth.isAuthenticated, t("正在载入"), auth.isLoading);
   }, [auth.isAuthenticated, auth.user, auth.isLoading, auth.user?.access_token]);
   
   return (
