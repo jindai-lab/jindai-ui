@@ -1,11 +1,11 @@
 {
   "name": "jindai-ui",
   "private": true,
-  "version": "2.0.0",
+  "version": "2.0.34",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "node build-version.js && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "postbuild": "npx purgecss --css dist/assets/*.css --content dist/index.html dist/assets/*.js --output dist/assets"
