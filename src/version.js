@@ -1,2 +1,2 @@
-export const VERSION = '2.0.35';
-export const COMMIT_COUNT = 35;
+export const VERSION = '2.0.36';
+export const COMMIT_COUNT = 36;

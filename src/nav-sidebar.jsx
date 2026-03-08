@@ -18,9 +18,11 @@ import { version } from "../package.json";
 export default function NavSidebar({user, logout}) {
   const [showNavbar, setShowNavbar] = useState(true);
   const [showAbout, setShowAbout] = useState(false);
+  const [backendVersion, setBackendVersion] = useState('2.0');
 
   useEffect(() => {
     setShowNavbar(apiClient.localConfig.showNavbar === true);
+    apiClient.get('openapi.json').then(resp => setBackendVersion(resp.data.info.version))
   }, []);
 
   return (
@@ -92,7 +94,7 @@ export default function NavSidebar({user, logout}) {
               />
             </div>
             <div className="about-modal-content">
-              <p>文献利用平台 v{version}</p>
+              <p>文献利用平台 v{version}@{backendVersion}</p>
               <p>检索/管理文献资源工具</p>
               <p>© 2018-{new Date().getFullYear()} Jindai-Lab</p>
               <p>本软件已取得软件著作权登记。</p>
