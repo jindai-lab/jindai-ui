@@ -4,12 +4,15 @@ import { AuthProvider } from "react-oidc-context";
 import { WebStorageStateStore } from "oidc-client-ts";
 import { ConfigProvider } from "antd";
 import { theme } from "antd";
+import { I18nextProvider } from "react-i18next";
+import i18n from "./i18n";
 
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import "./index.css";
 import oidc_settings from "./oidc-client-ids.js";
 
 import Root from "./routes/root.jsx";
+const ApiKeysPage = React.lazy(() => import("./routes/apikeys.jsx"));
 const DatasetPage = React.lazy(() => import("./routes/dataset.jsx"));
 const ErrorPage = React.lazy(() => import("./routes/errors.jsx"));
 const FilePage = React.lazy(() => import("./routes/file.jsx"));
@@ -110,6 +113,10 @@ const router = createBrowserRouter([
         element: <SettingsPage />,
       },
       {
+        path: "manageapikeys",
+        element: <ApiKeysPage />,
+      },
+      {
         path: "datasets",
         element: <DatasetPage />,
       },
@@ -130,8 +137,13 @@ const router = createBrowserRouter([
 ]);
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <AuthProvider {...oidcConfig}>
-      <ThemeConfigProvider><RouterProvider router={router} /></ThemeConfigProvider>
-    </AuthProvider>
+    <I18nextProvider i18n={i18n}>
+      <AuthProvider {...oidcConfig}>
+        <ThemeConfigProvider><RouterProvider router={router} /></ThemeConfigProvider>
+      </AuthProvider>
+    </I18nextProvider>
   </React.StrictMode>
 );
+
+// Expose i18n instance to global window for use in api.js
+window.i18nInstance = (key) => i18n.t(key);

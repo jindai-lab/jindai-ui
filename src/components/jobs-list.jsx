@@ -31,19 +31,19 @@ const { t } = useTranslation();
       ),
     },
     {
-      title: t("入列时间"),
+      title: t("enqueue_time"),
       key: "enqueue_time",
       dataIndex: "enqueue_time",
       render: (dt) => apiClient.formatIsoToDateTime(dt),
     },
     {
-      title: t("完成状态"),
+      title: t("completion_status"),
       dataIndex: "status",
       key: "status",
       render: (status) => <JobStatusTag status={status} />,
     },
     {
-      title: t("操作"),
+      title: t("action"),
       key: "operation",
       render: (record) => {
         return (
@@ -51,8 +51,8 @@ const { t } = useTranslation();
             <Popconfirm
               title={`确定删除【${record.job_id}】吗？`}
               onConfirm={() => removeJob(record.job_id)}
-              okText={t("确定")}
-              cancelText={t("取消")}
+              okText={t("confirm")}
+              cancelText={t("cancel")}
             >
               <Button size="small" icon={<DeleteOutlined />} danger>
                 删除
@@ -75,14 +75,14 @@ const { t } = useTranslation();
       setJobDetail(result);
     } catch (err) {
       // 捕获 API 调用错误
-      message.error(`获取 Job ${jobId} 详情失败：${err.message || t("未知错误")}`);
+      message.error(`获取 Job ${jobId} 详情失败：${err.message || t("unknown_error")}`);
     } finally {
     }
   };
 
   return (
     <Collapse defaultActiveKey={[]}>
-      <Collapse.Panel header={t("结果详情")} key="detailed">
+      <Collapse.Panel header={t("result_details")} key="detailed">
         <Table
           columns={jobColumns}
           dataSource={jobs.map((job) => ({ key: job.job_id, ...job }))}

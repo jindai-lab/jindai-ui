@@ -50,7 +50,7 @@ export default function DatasetSelector({
     }
     
     const node = selectedNodes?.[0]
-    return node?.title || selectedKeys?.[0] || t("数据集")
+    return node?.title || selectedKeys?.[0] || t("dataset")
   }
 
   return (
@@ -67,7 +67,7 @@ export default function DatasetSelector({
       styles={{
         popup: { root: { maxHeight: 400, overflow: 'auto' } }
       }}
-      placeholder={t("选择数据集")}
+      placeholder={t("select_dataset")}
       allowClear
       maxTagCount="responsive"
       treeDefaultExpandAll

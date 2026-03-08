@@ -18,11 +18,11 @@ import { version } from "../package.json";
 export default function NavSidebar({user, logout}) {
   const [showNavbar, setShowNavbar] = useState(true);
   const [showAbout, setShowAbout] = useState(false);
-  const [backendVersion, setBackendVersion] = useState('2.0');
+  const [backendVersion, setBackendVersion] = useState('000');
 
   useEffect(() => {
     setShowNavbar(apiClient.localConfig.showNavbar === true);
-    apiClient.get('openapi.json').then(resp => setBackendVersion(resp.data.info.version))
+    apiClient.get('openapi.json').then(resp => setBackendVersion(resp.data.info.version.split('.').pop()))
   }, []);
 
   return (

@@ -1,17 +1,19 @@
-import { Card, Col, Row, Select, Checkbox, Input, Divider, Space } from "antd";
+import { Card, Col, Row, Select, Checkbox, Input, Divider, Space, Button } from "antd";
 import { useEffect, useState, useContext } from "react";
+import { useNavigate } from "react-router-dom";
 import { apiClient } from "../api";
 import { ThemeContext } from "../main";
 import { useTranslation } from "react-i18next";
 
 export default function SettingsPage() {
+  const navigate = useNavigate();
   const { t } = useTranslation();
   const themeContext = useContext(ThemeContext);
 
   const [settings, setSettings] = useState({
     theme: 'auto',
     viewPdfAsImage: false,
-    translatorLang: t("简体中文"),
+    translatorLang: t("simplified_chinese"),
     translatorZhipuApiKey: '',
     language: 'zh-CN'
   })
@@ -38,9 +40,9 @@ export default function SettingsPage() {
 
   return (
     <>
-      <Card title={t("界面设置")} style={{ background: "var(--panel-bg)", color: "var(--text)", borderColor: "var(--border)", marginBottom: 16 }}>
+      <Card title={t("interface_settings")} style={{ background: "var(--panel-bg)", color: "var(--text)", borderColor: "var(--border)", marginBottom: 16 }}>
         <Row>
-          <Col span={4} style={{ color: "var(--text)", fontWeight: 500 }}>{t("界面语言")}</Col>
+          <Col span={4} style={{ color: "var(--text)", fontWeight: 500 }}>{t("interface_language")}</Col>
           <Col span={8}>
             <Select 
               value={settings.language} 
@@ -49,17 +51,17 @@ export default function SettingsPage() {
                 updateSettings({ language: value })
               }} 
               options={[
-                { label: "简体中文", value: "zh-CN" },
-                { label: "English", value: "en" },
+                { label: t("simplified_chinese"), value: "zh-CN" },
+                { label: t("english"), value: "en" },
               ]}></Select>
           </Col>
         </Row>
       </Card>
 
-      <Card title={t("外观设置")} style={{ background: "var(--panel-bg)", color: "var(--text)", borderColor: "var(--border)", marginBottom: 16 }}>
+      <Card title={t("appearance_settings")} style={{ background: "var(--panel-bg)", color: "var(--text)", borderColor: "var(--border)", marginBottom: 16 }}>
         <Space direction="vertical" size="large" style={{ width: '100%' }}>
           <Row>
-            <Col span={4} style={{ color: "var(--text)", fontWeight: 500 }}>{t("颜色模式")}</Col>
+            <Col span={4} style={{ color: "var(--text)", fontWeight: 500 }}>{t("color_mode")}</Col>
             <Col span={8}>
               <Select 
                 value={settings.theme} 
@@ -68,51 +70,74 @@ export default function SettingsPage() {
                   updateSettings({ theme: value })
                 }} 
                 options={[
-                  { label: t("自动"), value: "auto" },
-                  { label: t("浅色"), value: "light" },
-                  { label: t("深色"), value: "dark" },
+                  { label: t("auto"), value: "auto" },
+                  { label: t("light"), value: "light" },
+                  { label: t("dark"), value: "dark" },
                 ]}></Select>
             </Col>
           </Row>
           <Divider style={{ margin: "8px 0" }} />
           <Row>
-            <Col span={4} style={{ color: "var(--text)", fontWeight: 500 }}>{t("显示设置")}</Col>
+            <Col span={4} style={{ color: "var(--text)", fontWeight: 500 }}>{t("display_settings")}</Col>
             <Col span={8}>
               <Checkbox checked={Boolean(settings.viewPdfAsImage)} onChange={(e) => {
                 updateSettings({ viewPdfAsImage: e.target.checked })
-              }}>{t("使用服务器端图片渲染 PDF")}</Checkbox>
+              }}>{t("use_server_side_pdf_rendering")}</Checkbox>
             </Col>
           </Row>
         </Space>
       </Card>
 
-      <Card title={t("自动翻译")} style={{ background: "var(--panel-bg)", color: "var(--text)", borderColor: "var(--border)" }}>
+      <Card title={t("auto_translate")} style={{ background: "var(--panel-bg)", color: "var(--text)", borderColor: "var(--border)", marginBottom: 16 }}>
         <Space direction="vertical" size="large" style={{ width: '100%' }}>
           <Row>
-            <Col span={4} style={{ color: "var(--text)", fontWeight: 500 }}>{t("自动将文本翻译为")}</Col>
+            <Col span={4} style={{ color: "var(--text)", fontWeight: 500 }}>{t("auto_translate_to")}</Col>
             <Col span={8}>
               <Select 
                 value={settings.translatorLang} 
                 onChange={e => updateSettings({ translatorLang: e })} 
                 style={{ width: 160 }} 
                 options={[
-                  { label: t("简体中文"), value: "zh-CN" },
-                  { label: "English", value: "en" },
-                  { label: t("不翻译"), value: "" }
+                  { label: t("simplified_chinese"), value: "zh-CN" },
+                  { label: t("english"), value: "en" },
+                  { label: t("not_translate"), value: "" }
                 ]}></Select>
             </Col>
           </Row>
           <Divider style={{ margin: "8px 0" }} />
           <Row>
-            <Col span={4} style={{ color: "var(--text)", fontWeight: 500 }}>智谱 API Key</Col>
+            <Col span={4} style={{ color: "var(--text)", fontWeight: 500 }}>{t("zhipu_api_key")}</Col>
             <Col span={12}>
               <Input 
                 value={settings.translatorZhipuApiKey} 
                 onChange={e => updateSettings({ translatorZhipuApiKey: e.target.value })}
-                placeholder="请输入智谱 AI API Key"
+                placeholder={t("please_enter_new_name")}
                 style={{ width: 320 }}
                 type="password"
               />
+            </Col>
+          </Row>
+        </Space>
+      </Card>
+
+      <Card title={t("api_key_management")} style={{ background: "var(--panel-bg)", color: "var(--text)", borderColor: "var(--border)", marginBottom: 16 }}>
+        <Space orientation="vertical" size="large" style={{ width: '100%' }}>
+          <Row>
+            <Col span={4} style={{ color: "var(--text)", fontWeight: 500 }}>{t("api_key")}</Col>
+            <Col span={12}>
+              <Button
+                type="primary"
+                onClick={() => navigate('/manageapikeys')}
+              >
+                {t("manage_api_keys")}
+              </Button>
+            </Col>
+          </Row>
+          <Row>
+            <Col span={16}>
+              <p style={{ color: "var(--text)", opacity: 0.7, fontSize: "0.9rem" }}>
+                {t("create_and_manage_api_keys")}
+              </p>
             </Col>
           </Row>
         </Space>

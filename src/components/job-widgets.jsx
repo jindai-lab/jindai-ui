@@ -46,16 +46,16 @@ const { t } = useTranslation();
             size="middle"
             labelStyle={{ fontWeight: "bold" }}
           >
-            <Descriptions.Item label={t("执行状态")}>
+            <Descriptions.Item label={t("execution_status")}>
               <JobStatusTag status={job.status} />
             </Descriptions.Item>
-            <Descriptions.Item label={t("日志内容")} span={2}>
+            <Descriptions.Item label={t("log_content")} span={2}>
               {job.log ? (
                 <Paragraph
                   ellipsis={{
                     rows: 2,
                     expandable: true,
-                    symbol: t("查看全部日志"),
+                    symbol: t("view_all_logs"),
                   }}
                   style={{ margin: 0 }}
                 >
@@ -65,20 +65,20 @@ const { t } = useTranslation();
                 <Text type="secondary">无日志信息</Text>
               )}
             </Descriptions.Item>
-            <Descriptions.Item label={t("入列时间")} span={1}>
+            <Descriptions.Item label={t("enqueue_time")} span={1}>
               {apiClient.formatIsoToDateTime(job.enqueue_time)}
             </Descriptions.Item>
-            <Descriptions.Item label={t("结束时间")} span={1}>
+            <Descriptions.Item label={t("end_time")} span={1}>
               {apiClient.formatIsoToDateTime(job.date_done)}
             </Descriptions.Item>
-            <Descriptions.Item label={t("任务名称")} span={1}>
+            <Descriptions.Item label={t("task_name")} span={1}>
               {job.task_name ? (
                 job.task_name
               ) : (
                 <Text type="secondary">无返回值</Text>
               )}
             </Descriptions.Item>
-            <Descriptions.Item label={t("返回值")} span={2}>
+            <Descriptions.Item label={t("return_value")} span={2}>
               {job.return_value ? (
                 <pre className="json">
                   {JSON.stringify(job.return_value, null, 2)}

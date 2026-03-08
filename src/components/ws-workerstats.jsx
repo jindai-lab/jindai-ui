@@ -15,7 +15,7 @@ export const useWorkerStats = () => {
 
     // 连接成功
     ws.current.onopen = () => {
-      console.log(t("websocket_已连接"));
+      console.log(t("websocket_connected"));
     };
 
     // 接收消息：核心逻辑
@@ -25,7 +25,7 @@ export const useWorkerStats = () => {
         // 假设后端返回的是数组，直接存入 state 驱动 Antd Table
         setData(data); 
       } catch (error) {
-        console.error(t("解析数据失败"), error);
+        console.error(t("parse_data_failed"), error);
       }
     };
 
@@ -37,7 +37,7 @@ export const useWorkerStats = () => {
 
     // 关闭处理
     ws.current.onclose = () => {
-      console.log(t("websocket_已断开"));
+      console.log(t("websocket_disconnected"));
       // 可以在这里实现断线重连逻辑
     };
   };

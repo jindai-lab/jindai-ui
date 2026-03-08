@@ -3,8 +3,15 @@ import axios from "axios";
 import localeCodes from "locale-codes";
 import dayjs from "dayjs";
 
-
-const t = function (x) { return x; }
+// i18n translation function
+// Uses the global i18n instance if available, otherwise returns the input
+const t = function (key) {
+  // Try to use the global i18n instance if available
+  if (window.i18nInstance) {
+    return window.i18nInstance(key) || key;
+  }
+  return key;
+};
 
 class SmartStorage {
   constructor(prefix = "jindai_local_config") {

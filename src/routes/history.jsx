@@ -21,7 +21,7 @@ const { t } = useTranslation();
         rowKey="id"
         columns={[
           {
-            title: t("日期"),
+            title: t("date"),
             dataIndex: 'created_at',
             render (v) {
               return dayjs(v).format('YYYY-MM-DD HH:mm:ss');
@@ -32,7 +32,7 @@ const { t } = useTranslation();
           //   dataIndex: 'user_id',
           // },
           {
-            title: t("查询"),
+            title: t("query"),
             dataIndex: 'queries',
             render(v) {
               return (<pre className='json'>{JSON.stringify(v, null, 2)}</pre>)

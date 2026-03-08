@@ -65,15 +65,15 @@ const { t } = useTranslation();
   /** 删除文件/文件夹 */
   const handleDelete = (record) => {
     // 请求后台接口 DELETE /api/files/<文件/文件夹id> 删除资源
-    console.log(t("删除文件文件夹"), record.relative_path);
+    console.log(t("delete_file_folder"), record.relative_path);
     apiClient
       .deleteFile(record.relative_path)
       .then((response) => {
-        message.success(`${record.is_directory ? t("t("文件")夹") : "文件"}删除成功`);
+        message.success(`${record.is_directory ? t("folder") : t("file")}删除成功`);
         handleRefresh(); // 刷新目录列表，实时更新删除结果
       })
       .catch((err) => {
-        message.error(t("删除失败") + err.message || t("服务器异常"));
+        message.error(t("delete_failed") + err.message || t("server_exception"));
       });
   };
 
@@ -115,13 +115,13 @@ const { t } = useTranslation();
     listFiles(folderPath).then((data) => {
       setCurrentFileList(data);
     });
-    message.success(t("目录已刷新"));
+    message.success(t("directory_refreshed"));
   };
 
   // ========== 表格列配置 ==========
   const columns = [
     {
-      title: t("名称"),
+      title: t("name"),
       dataIndex: "name",
       key: "name",
       width: "40%",
@@ -148,7 +148,7 @@ const { t } = useTranslation();
       ),
     },
     {
-      title: t("大小"),
+      title: t("size"),
       dataIndex: "size",
       key: "size",
       width: "15%",
@@ -164,7 +164,7 @@ const { t } = useTranslation();
       },
     },
     {
-      title: t("创建时间"),
+      title: t("create_time"),
       dataIndex: "created_at",
       key: "created_at",
       width: "25%",
@@ -172,7 +172,7 @@ const { t } = useTranslation();
       render: (text) => new Date(text).toLocaleString("zh-CN"),
     },
     {
-      title: t("操作"),
+      title: t("action"),
       key: "action",
       width: "20%",
       align: "left",
@@ -220,8 +220,8 @@ const { t } = useTranslation();
           <Popconfirm
             title={`确定删除【${record.name}】吗？`}
             onConfirm={() => handleDelete(record)}
-            okText={t("确定")}
-            cancelText={t("取消")}
+            okText={t("confirm")}
+            cancelText={t("cancel")}
           >
             <Button icon={<DeleteOutlined />} size="small" danger type="link">
               删除
@@ -277,9 +277,9 @@ const { t } = useTranslation();
         {folderPath || "/"}
       </div>
       <Modal
-        title={t("重命名") + (editingRecord?.relative_path || "")}
-        okText={t("修改")}
-        cancelText={t("取消")}
+        title={t("rename") + (editingRecord?.relative_path || "")}
+        okText={t("edit")}
+        cancelText={t("cancel")}
         open={!!editingRecord}
         onOk={async () => {
           try {
@@ -289,43 +289,43 @@ const { t } = useTranslation();
               newName: newName.trim(),
             });
             message.success(
-              `${editingRecord.is_directory ? t("t("文件")夹") : "文件"}重命名成功`,
+              `${editingRecord.is_directory ? t("folder") : t("file")}${t("重命名成功")}`,
             );
             handleRefresh(); // 刷新目录列表，实时展示新名称
             setEditingRecord(null);
             setNewName("");
           } catch (err) {
-            message.error(t("重命名失败") + err.message || t("服务器异常"));
+            message.error(t("rename_failed") + err.message || t("server_exception"));
           }
         }}
         onCancel={() => setEditingRecord(null)}
       >
         <Input
-          placeholder={t("请输入新名称")}
+          placeholder={t("please_enter_new_name")}
           value={newName}
           onChange={(e) => setNewName(e.target.value)}
         />
       </Modal>
       <Modal
         title="新建文件夹"
-        okText={t("创建")}
-        cancelText={t("取消")}
+        okText={t("create")}
+        cancelText={t("cancel")}
         open={creatingDir}
         onOk={async () => {
           try {
             await apiClient.createFolder(folderPath, folderName);
-            message.success(t("文件夹创建成功"));
+            message.success(t("folder_created_successfully"));
             handleRefresh(); // 刷新目录列表，实时展示新增结果
             setCreatingDir(false);
             setFolderName("");
           } catch (err) {
-            message.error(t("创建失败") + err.message || t("服务器异常"));
+            message.error(t("create_failed") + err.message || t("server_exception"));
           }
         }}
         onCancel={() => setCreatingDir(false)}
       >
         <Input
-          placeholder={t("请输入新名称")}
+          placeholder={t("please_enter_new_name")}
           value={folderName}
           onChange={(e) => setFolderName(e.target.value)}
         />
@@ -340,7 +340,7 @@ const { t } = useTranslation();
         }}
       >
         <Input
-          placeholder={t("搜索文件文件夹名称")}
+          placeholder={t("search_file_folder_name")}
           prefix={<SearchOutlined />}
           value={searchValue}
           onChange={(e) => setSearchValue(e.target.value)}

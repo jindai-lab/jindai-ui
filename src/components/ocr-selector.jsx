@@ -4,22 +4,22 @@ import { useTranslation } from "react-i18next";
 
 // 核心：OCR语言对照表（完全映射你提供的表格，包含所有字段）
 const OCR_LANGUAGE_LIST = [
-  { tesseractCode: 'eng', paddleCode: 'en', language: t("英文") },
-  { tesseractCode: 'chi_sim', paddleCode: 'ch', language: t("简体中文") },
-  { tesseractCode: 'chi_tra', paddleCode: 'chinese_cht', language: t("繁体中文") },
-  { tesseractCode: 'fra', paddleCode: 'fr', language: t("法文") },
-  { tesseractCode: 'deu', paddleCode: 'german', language: t("德文") },
-  { tesseractCode: 'spa', paddleCode: 'spanish', language: t("西班牙文") },
-  { tesseractCode: 'rus', paddleCode: 'ru', language: t("俄文") },
-  { tesseractCode: 'jpn', paddleCode: 'japan', language: t("日文") },
-  { tesseractCode: 'kor', paddleCode: 'korean', language: t("韩文") },
-  { tesseractCode: 'ara', paddleCode: 'ar', language: t("阿拉伯文") },
-  { tesseractCode: 'hin', paddleCode: 'hi', language: t("印地文") },
-  { tesseractCode: 'por', paddleCode: 'pt', language: t("葡萄牙文") },
-  { tesseractCode: 'ita', paddleCode: 'it', language: t("意大利文") },
-  { tesseractCode: 'tur', paddleCode: 'tr', language: t("土耳其文") },
-  { tesseractCode: 'vie', paddleCode: 'vi', language: t("越南文") },
-  { tesseractCode: 'tha', paddleCode: 'th', language: t("泰文") },
+  { tesseractCode: 'eng', paddleCode: 'en', language: t("english") },
+  { tesseractCode: 'chi_sim', paddleCode: 'ch', language: t("simplified_chinese") },
+  { tesseractCode: 'chi_tra', paddleCode: 'chinese_cht', language: t("traditional_chinese") },
+  { tesseractCode: 'fra', paddleCode: 'fr', language: t("french") },
+  { tesseractCode: 'deu', paddleCode: 'german', language: t("german") },
+  { tesseractCode: 'spa', paddleCode: 'spanish', language: t("spanish") },
+  { tesseractCode: 'rus', paddleCode: 'ru', language: t("russian") },
+  { tesseractCode: 'jpn', paddleCode: 'japan', language: t("japanese") },
+  { tesseractCode: 'kor', paddleCode: 'korean', language: t("korean") },
+  { tesseractCode: 'ara', paddleCode: 'ar', language: t("arabic") },
+  { tesseractCode: 'hin', paddleCode: 'hi', language: t("hindi") },
+  { tesseractCode: 'por', paddleCode: 'pt', language: t("portuguese") },
+  { tesseractCode: 'ita', paddleCode: 'it', language: t("italian") },
+  { tesseractCode: 'tur', paddleCode: 'tr', language: t("turkish") },
+  { tesseractCode: 'vie', paddleCode: 'vi', language: t("vietnamese") },
+  { tesseractCode: 'tha', paddleCode: 'th', language: t("thai") },
 ];
 
 // 默认选中：简体中文
@@ -91,7 +91,7 @@ const { t } = useTranslation();
         <Space>
           输出文件名
           <Input
-            placeholder={t("请输入新名称")}
+            placeholder={t("please_enter_new_name")}
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
           />

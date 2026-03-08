@@ -21,14 +21,14 @@ const { t } = useTranslation();
     const undefFields = Object.keys(data)
       .filter((x) => typeof validated[x] === "undefined")
       .join(", ");
-    if (undefFields) throw new Error(t("多余字段") + undefFields);
+    if (undefFields) throw new Error(t("extra_fields") + undefFields);
     const { pipeline } = data;
     if (
       !Array.isArray(pipeline) ||
       pipeline.map((x) => Object.entries(x).length == 1).filter((x) => !x)
         .length
     )
-      throw new Error(t("pipeline_应为数组且各元素为一个对象"));
+      throw new Error(t("pipeline_should_be_array_with_objects"));
   }
 
   const validateData = (data, schema) => {
@@ -45,7 +45,7 @@ const { t } = useTranslation();
       setShortcutMap(buildShortcuts(shortcut_map, pipeline))
     } catch (err) {
       console.log(err)
-      throw new Error("t("快捷方式有误") " + err)
+      throw new Error(t("shortcut_error") + err)
     }
     return { name, pipeline, shared, resume_next, concurrent, shortcut_map };
   }
@@ -108,22 +108,22 @@ const { t } = useTranslation();
       const yaml_src = yaml.dump(validateData(data, pipelineSchema));
       setYamlContent(yaml_src);
     } catch (err) {
-      console.error(t("获取配置失败"), err);
-      message.error(t("无法加载配置文件请检查任务_id_或网络连接"));
+      console.error(t("get_config_failed"), err);
+      message.error(t("cannot_load_config_file_check_task_id_or_network"));
     } finally {
     }
   };
 
   const handleSave = async (updatedYaml) => {
-    const hide = message.loading(t("正在保存配置"), 0);
+    const hide = message.loading(t("saving_configuration"), 0);
     try {
       let data = validateData(yaml.load(updatedYaml));
       await apiClient.taskDBO(taskId, data);
-      message.success(t("配置更新成功"));
+      message.success(t("configuration_updated_successfully"));
       setYamlContent(updatedYaml); // 更新本地缓存的内容
     } catch (err) {
-      console.error(t("保存失败"), err);
-      message.error(t("保存失败服务器返回错误"));
+      console.error(t("save_failed"), err);
+      message.error(t("save_failed_server_error"));
     } finally {
       hide();
     }

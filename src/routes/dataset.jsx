@@ -23,19 +23,19 @@ const { t } = useTranslation();
 
   const columns = [
     {
-      title: t("名称"),
+      title: t("name"),
       dataIndex: 'title',
       key: 'title',
       width: '40%',
     },
     {
-      title: t("排序权重"),
+      title: t("sort_weight"),
       dataIndex: 'order_weight',
       key: 'order_weight',
       width: '20%',
     },
     {
-      title: t("操作"),
+      title: t("action"),
       key: 'action',
       width: '20%',
       align: 'center',
@@ -47,8 +47,8 @@ const { t } = useTranslation();
           <Popconfirm
             title={`确定删除【${record.value}】吗？`}
             onConfirm={() => handleDelete(record)}
-            okText={t("确定")}
-            cancelText={t("取消")}
+            okText={t("confirm")}
+            cancelText={t("cancel")}
           >
             <Button icon={<DeleteOutlined />} size="small" danger type="link">删除</Button>
           </Popconfirm>
@@ -87,13 +87,13 @@ const { t } = useTranslation();
   const handleDelete = (record) => {
     apiClient.delete(`datasets/${record.record_id}`).then((e) => {
       console.log(e)
-      message.info(t("删除成功"))
+      message.info(t("delete_success"))
       handleRefresh()
     })
   }
 
   const handleRefresh = () => {
-    message.loading(t("刷新数据集列表"), 0);
+    message.loading(t("refresh_dataset_list"), 0);
     apiClient.datasets()
       .then(setDatasets)
       .finally(() => { message.destroy() });
@@ -110,9 +110,9 @@ const { t } = useTranslation();
       <Table {...tableProps} />
 
       <Modal
-        title={"t("重命名") " + (editingRecord?.title || '')}
-        okText={t("修改")}
-        cancelText={t("取消")}
+        title={t("rename") + (editingRecord?.title || '')}
+        okText={t("edit")}
+        cancelText={t("cancel")}
         open={!!editingRecord}
         onOk={async () => {
           try {
@@ -121,39 +121,39 @@ const { t } = useTranslation();
               original: editingRecord.title,
               newName: newName.trim()
             })
-            message.success(`t("数据集重命名成功")`);
+            message.success(`t("dataset_renamed_successfully")`);
             handleRefresh(); // 刷新目录列表，实时展示新名称
             setEditingRecord(null);
             setNewName('');
           } catch (err) {
-            message.error(t("重命名失败") + err.message || t("服务器异常"));
+            message.error(t("rename_failed") + err.message || t("server_exception"));
           }
         }}
         onCancel={() => setEditingRecord(null)}
       >
-        <Input placeholder={t("请输入新名称")} value={newName} onChange={(e) => setNewName(e.target.value)} />
+        <Input placeholder={t("please_enter_new_name")} value={newName} onChange={(e) => setNewName(e.target.value)} />
       </Modal>
       <Modal
         title="新建数据集"
-        okText={t("创建")}
-        cancelText={t("取消")}
+        okText={t("create")}
+        cancelText={t("cancel")}
         open={creatingDataset}
         onOk={async () => {
           try {
             apiClient.datasetCreate({
               name: creatingDatasetName.trim()
             })
-            message.success(t("文件夹创建成功"));
+            message.success(t("folder_created_successfully"));
             handleRefresh(); // 刷新目录列表，实时展示新增结果
             setCreatingDataset(false);
             setCreatingDatasetName('');
           } catch (err) {
-            message.error(t("创建失败") + err.message || t("服务器异常"));
+            message.error(t("create_failed") + err.message || t("server_exception"));
           }
         }}
         onCancel={() => setCreatingDataset(false)}
       >
-        <Input placeholder={t("请输入新名称")} value={creatingDatasetName} onChange={(e) => setCreatingDatasetName(e.target.value)} />
+        <Input placeholder={t("please_enter_new_name")} value={creatingDatasetName} onChange={(e) => setCreatingDatasetName(e.target.value)} />
       </Modal>
     </>
   )

@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 const ProtectedRoute = ({auth}) => {
 const { t } = useTranslation();
   if (auth.isLoading) {
-    console.log(t("正在验证登录状态"))
+    console.log(t("verifying_login_status"))
     return null;
   }
 

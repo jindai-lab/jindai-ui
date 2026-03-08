@@ -66,7 +66,7 @@ export default function FileSourceSelector({
     }
     
     const node = selectedNodes?.[0]
-    return node?.title || selectedKeys?.[0] || t("文件源")
+    return node?.title || selectedKeys?.[0] || t("file_source")
   }
 
   return (
@@ -83,7 +83,7 @@ export default function FileSourceSelector({
       styles={{
         popup: { root: { maxHeight: 400, overflow: 'auto' } }
       }}
-      placeholder={t("选择文件源")}
+      placeholder={t("select_file_source")}
       allowClear
       maxTagCount="responsive"
       treeData={sourceFiles}

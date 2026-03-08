@@ -46,7 +46,7 @@ const { t } = useTranslation();
 
   const handleSave = () => {
     if (error) {
-      message.error(t("yaml_格式有误请修正后再保存"));
+      message.error(t("yaml_format_error_please_fix"));
       return;
     }
     if (onSave) {
@@ -57,7 +57,7 @@ const { t } = useTranslation();
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(value);
-    message.info(t("代码已复制到剪贴板"));
+    message.info(t("code_copied_to_clipboard"));
   };
 
   const formatYaml = () => {
@@ -65,9 +65,9 @@ const { t } = useTranslation();
       const obj = yaml.load(value);
       const formatted = yaml.dump(obj, { indent: 2 });
       setValue(formatted);
-      message.success(t("已自动格式化"));
+      message.success(t("auto_formatted"));
     } catch (e) {
-      message.error(t("格式化失败yaml_结构不正确"));
+      message.error(t("format_failed_yaml_structure_error"));
     }
   };
 

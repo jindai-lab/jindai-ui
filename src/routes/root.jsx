@@ -17,11 +17,11 @@ const { t } = useTranslation();
 
 
   if (auth.isLoading) {
-    console.log(t("正在验证登录状态"))
+    console.log(t("verifying_login_status"))
   }
 
   useEffect(() => {
-    console.log(t("当前用户状态"), auth.user, t("是否已认证"), auth.isAuthenticated, t("正在载入"), auth.isLoading);
+    console.log(t("current_user_status"), auth.user, t("is_authenticated"), auth.isAuthenticated, t("loading_data"), auth.isLoading);
   }, [auth.isAuthenticated, auth.user, auth.isLoading, auth.user?.access_token]);
   
   return (

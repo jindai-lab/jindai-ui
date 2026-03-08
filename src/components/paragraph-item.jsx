@@ -14,24 +14,24 @@ const { t } = useTranslation();
   const [translatedText, setTranslatedText] = useState('');
 
   const FIELD_NAMES = {
-    keywords: t("关键词"),
-    pdate: t("日期"),
-    author: t("作者"),
-    outline: t("大纲"),
-    content: t("内容"),
-    dataset: t("数据集"),
-    source_url: t("出处"),
-    source_page: t("页号"),
-    pagenum: t("页码"),
-    lang: t("语言"),
-    extdata: t("额外数据"),
+    keywords: t("keyword"),
+    pdate: t("date"),
+    author: t("author"),
+    outline: t("outline"),
+    content: t("content"),
+    dataset: t("dataset"),
+    source_url: t("source_url"),
+    source_page: t("page_number"),
+    pagenum: t("page_code"),
+    lang: t("language"),
+    extdata: t("extra_data"),
     id: 'ID',
-    dataset_name: t("数据集"),
-    count: t("计数")
+    dataset_name: t("dataset"),
+    count: t("count")
   }
 
   const formatValue = (value) => {
-    let displayValue = value ?? t("无数据");
+    let displayValue = value ?? t("no_data");
     // 处理数组类型
     if (Array.isArray(displayValue)) {
       displayValue = displayValue.map(x => formatValue(x)).join(', ')
@@ -42,7 +42,7 @@ const { t } = useTranslation();
     }
     // 处理布尔值
     if (typeof displayValue === 'boolean') {
-      displayValue = displayValue ? t("是") : t("否");
+      displayValue = displayValue ? t("yes") : t("no");
     }
     return displayValue;
   }
@@ -124,7 +124,7 @@ const { t } = useTranslation();
 
       {/* 文本内容区域 */}
       <div className="text-content" lang={data.lang}>
-        {data.content || t("无文本内容")}
+        {data.content || t("no_text_content")}
       </div>
 
       {translatedText && (<div className="text-content text-translated" lang={apiClient.localConfig.translatorLang}>

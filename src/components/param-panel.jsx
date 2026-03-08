@@ -37,9 +37,9 @@ const { t } = useTranslation();
       bool: (
         <Select
           options={[
-            { value: "", label: t("不指定") },
-            { value: true, label: t("是") },
-            { value: false, label: t("否") },
+            { value: "", label: t("not_specified") },
+            { value: true, label: t("yes") },
+            { value: false, label: t("no") },
           ]}
           value={currentVal}
           onChange={(v) => handleFieldChange(key, v)}
@@ -64,19 +64,19 @@ const { t } = useTranslation();
       ),
       groupBy: (
         <Select multiple value={currentVal} onChange={(e) => handleFieldChange(key, e)} options={[
-          { value: 'pdate', label: t("日期") },
-          { value: 'author', label: t("作者") },
-          { value: 'source_url', label: t("来源") },
-          { value: 'outline', label: t("大纲") }
+          { value: 'pdate', label: t("date") },
+          { value: 'author', label: t("author") },
+          { value: 'source_url', label: t("source") },
+          { value: 'outline', label: t("outline") }
         ]} />
       ),
       sort: (
         <Select multiple value={currentVal} onChange={(e) => handleFieldChange(key, e)} options={[
           { value: 'pdate', label: t("日期（↑）") },
-          { value: '-pdate', label: t("日期") },
-          { value: 'author', label: t("作者") },
-          { value: 'source_url', label: t("来源") },
-          { value: 'outline', label: t("大纲") }
+          { value: '-pdate', label: t("date") },
+          { value: 'author', label: t("author") },
+          { value: 'source_url', label: t("source") },
+          { value: 'outline', label: t("outline") }
         ]} />
       ),
       lang: (

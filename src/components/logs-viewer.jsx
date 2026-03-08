@@ -91,7 +91,7 @@ const { t } = useTranslation();
       extra={
         <Space>
           {renderStatus()}
-          <Tooltip title={isPaused ? t("继续滚动") : t("暂停滚动")}>
+          <Tooltip title={isPaused ? t("continue_scroll") : t("pause_scroll")}>
             <Button 
               type={isPaused ? "primary" : "default"}
               icon={isPaused ? <Play size={14} /> : <Pause size={14} />} 

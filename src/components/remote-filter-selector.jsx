@@ -21,7 +21,7 @@ const { t } = useTranslation();
 			setOptions(filterItems);
 			setHasLoaded(true);
 		} catch (error) {
-			console.error(t("加载失败"), error);
+			console.error(t("load_failed"), error);
 		} finally {
 			setLoading(false);
 		}
@@ -37,7 +37,7 @@ const { t } = useTranslation();
 	return (
 		<Select
 			mode={multiple ? 'multiple' : ''}     
-			placeholder={t("点击加载选项")}
+			placeholder={t("click_to_load_options")}
 			onOpenChange={handleOpenChange}
 			options={options}
 			loading={loading} 

@@ -68,7 +68,7 @@ const SearchFilterBar = ({ filters, updateFilter, executeSearch }) => {
             position: 'relative'
           }}>
             <Input.Search
-              placeholder={t("搜索")}
+              placeholder={t("search")}
               allowClear
               enterButton={<SearchOutlined />}
               size="large"
@@ -105,7 +105,7 @@ const SearchFilterBar = ({ filters, updateFilter, executeSearch }) => {
         {/* 第二行：主要筛选区 - 使用 Row/Col 响应式布局 */}
         <Row gutter={[16, 16]}>
           <Col xs={24} lg={12}>
-            <FilterItem label={t("数据集")}>
+            <FilterItem label={t("dataset")}>
               <DatasetSelector
                 multiple
                 value={filters.datasets}
@@ -115,7 +115,7 @@ const SearchFilterBar = ({ filters, updateFilter, executeSearch }) => {
             </FilterItem>
           </Col>
           <Col xs={24} lg={12}>
-            <FilterItem label={t("文件源")}>
+            <FilterItem label={t("file_source")}>
               <FileSourceSelector
                 multiple
                 value={filters.sources}
@@ -138,7 +138,7 @@ const SearchFilterBar = ({ filters, updateFilter, executeSearch }) => {
           border: '1px solid var(--border)',
           color: 'var(--text)'
         }}>
-          <FilterItem label={t("大纲")}>
+          <FilterItem label={t("outline")}>
             <RemoteFilterSelector
               filters={filters}
               multiple
@@ -149,7 +149,7 @@ const SearchFilterBar = ({ filters, updateFilter, executeSearch }) => {
             />
           </FilterItem>
 
-          <FilterItem label={t("作者")}>
+          <FilterItem label={t("author")}>
             <RemoteFilterSelector
               multiple
               filters={filters}
@@ -160,13 +160,13 @@ const SearchFilterBar = ({ filters, updateFilter, executeSearch }) => {
             />
           </FilterItem>
 
-          <FilterItem label={t("排序")}>
+          <FilterItem label={t("sort")}>
             <Select
               value={filters.sort}
               onChange={(v) => updateFilter({ sort: v })}
               style={{ width: 130 }}
               disabled={filters.embeddings}
-              placeholder={t("相关度")}
+              placeholder={t("relevance")}
             >
               <Option value="">相关度</Option>
               <Option value="pdate">日期 ↑</Option>
@@ -176,12 +176,12 @@ const SearchFilterBar = ({ filters, updateFilter, executeSearch }) => {
             </Select>
           </FilterItem>
 
-          <FilterItem label={t("分组")}>
+          <FilterItem label={t("grouping")}>
             <Select
               value={filters.groupBy}
               onChange={(v) => updateFilter({ groupBy: v })}
               style={{ width: 120 }}
-              placeholder={t("不分组")}
+              placeholder={t("no_grouping")}
             >
               <Option value="">不分组</Option>
               <Option value="author">作者</Option>
@@ -190,7 +190,7 @@ const SearchFilterBar = ({ filters, updateFilter, executeSearch }) => {
             </Select>
           </FilterItem>
 
-          <FilterItem label={t("语言")}>
+          <FilterItem label={t("language")}>
             <RemoteFilterSelector
               multiple
               filters={filters}
@@ -307,7 +307,7 @@ function SearchPage() {
     if (q) {
       executeSearch(initialFilters, true);
     }
-    document.title = t("搜索");
+    document.title = t("search");
   }, []);
 
   // Sync URL with Filters
@@ -375,7 +375,7 @@ function SearchPage() {
         syncParamsToUrl(targetFilters);
       }
     } catch (err) {
-      message.error(err.message || t("搜索失败"));
+      message.error(err.message || t("search_failed"));
     } finally {
       setIsLoading(false);
     }
