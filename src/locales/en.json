@@ -509,8 +509,15 @@
   "tiers": "Tiers",
   "layer": "Layer",
   "layers": "Layers",
+  "platform_name": "Jindai Platform",
   "filter_count": "{{count}} filters",
   "semantic_matching": "Semantic Matching",
   "date_asc": "Date ↑",
-  "date_desc": "Date ↓"
+  "date_desc": "Date ↓",
+  "history": "History",
+  "files": "Files",
+  "datasets": "Datasets",
+  "platform_version": "Platform v{{frontend}}@{{backend}}",
+  "literature_resource_tool": "Jindai, a literature resource search and management tool",
+  "software_registered": "This software has obtained software copyright registration."
 }

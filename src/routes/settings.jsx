@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { apiClient } from "../api";
 import { ThemeContext } from "../main";
 import { useTranslation } from "react-i18next";
+import i18next from "i18next";
 
 export default function SettingsPage() {
   const navigate = useNavigate();
@@ -45,14 +46,14 @@ export default function SettingsPage() {
           <Col span={4} style={{ color: "var(--text)", fontWeight: 500 }}>{t("interface_language")}</Col>
           <Col span={8}>
             <Select 
-              value={settings.language} 
+              value={i18next.language} 
               style={{ width: 160 }}
               onChange={(value) => {
-                updateSettings({ language: value })
+                i18next.changeLanguage(value)
               }} 
               options={[
-                { label: t("simplified_chinese"), value: "zh-CN" },
-                { label: t("english"), value: "en" },
+                { label: "简体中文", value: "zh-CN" },
+                { label: "English", value: "en" },
               ]}></Select>
           </Col>
         </Row>

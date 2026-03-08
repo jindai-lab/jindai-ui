@@ -14,8 +14,10 @@ import { useState } from "react";
 import { useEffect } from "react";
 import { apiClient } from "./api";
 import { version } from "../package.json";
+import { useTranslation } from "react-i18next";
 
 export default function NavSidebar({user, logout}) {
+  const { t } = useTranslation();
   const [showNavbar, setShowNavbar] = useState(true);
   const [showAbout, setShowAbout] = useState(false);
   const [backendVersion, setBackendVersion] = useState('000');
@@ -36,32 +38,32 @@ export default function NavSidebar({user, logout}) {
           }}
         >
           <img src="/favicon.ico" width={32} height={32} />
-          <span className="menu-text">文献利用平台</span>
+          <span className="menu-text">{t("platform_name")}</span>
         </div>
         <nav className="sidebar-menu">
           <NavLink to="/">
             <FileSearchOutlined />
-            <span className="menu-text">搜索</span>
+            <span className="menu-text">{t("search")}</span>
           </NavLink>
           <NavLink to="/histories">
             <HistoryOutlined />
-            <span className="menu-text">历史记录</span>
+            <span className="menu-text">{t("history")}</span>
           </NavLink>
           <NavLink to="/settings">
             <SettingOutlined />
-            <span className="menu-text">设置</span>
+            <span className="menu-text">{t("settings")}</span>
           </NavLink>
           <NavLink to="/files">
             <FolderOpenOutlined />
-            <span className="menu-text">文件</span>
+            <span className="menu-text">{t("files")}</span>
           </NavLink>
           <NavLink to="/datasets">
             <DatabaseOutlined />
-            <span className="menu-text">数据集</span>
+            <span className="menu-text">{t("datasets")}</span>
           </NavLink>
           <NavLink to="/tasks">
             <ScheduleOutlined />
-            <span className="menu-text">任务</span>
+            <span className="menu-text">{t("tasks")}</span>
           </NavLink>
         </nav>
         <div className="sidebar-footer">
@@ -70,34 +72,34 @@ export default function NavSidebar({user, logout}) {
             onClick={() => logout()}
           >
             <LogoutOutlined />
-            <span className="menu-text">注销 {user?.profile.preferred_username}</span>
+            <span className="menu-text">{t("logout")} {user?.profile.preferred_username}</span>
           </div>
           <div
             className="menu-item about-btn"
             onClick={() => setShowAbout(true)}
           >
             <InfoCircleOutlined />
-            <span className="menu-text">关于</span>
+            <span className="menu-text">{t("about")}</span>
           </div>
         </div>
       </aside>
 
-      {/* 新增：关于信息弹窗 */}
+      {/* About modal */}
       {showAbout && (
         <div className="about-modal-mask" onClick={() => setShowAbout(false)}>
           <div className="about-modal" onClick={(e) => e.stopPropagation()}>
             <div className="about-modal-header">
-              <span>关于</span>
+              <span>{t("about")}</span>
               <CloseOutlined
                 className="close-btn"
                 onClick={() => setShowAbout(false)}
               />
             </div>
             <div className="about-modal-content">
-              <p>文献利用平台 v{version}@{backendVersion}</p>
-              <p>检索/管理文献资源工具</p>
-              <p>© 2018-{new Date().getFullYear()} Jindai-Lab</p>
-              <p>本软件已取得软件著作权登记。</p>
+              <p>{t("platform_version", { frontend: version, backend: backendVersion })}</p>
+              <p>{t("literature_resource_tool")}</p>
+              <p>{t("copyright", { year: new Date().getFullYear() })}</p>
+              <p>{t("software_registered")}</p>
             </div>
           </div>
         </div>
