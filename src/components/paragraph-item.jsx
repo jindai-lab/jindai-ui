@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Modal, Typography, Descriptions } from 'antd';
+import { Button, Modal, Typography, Descriptions, Checkbox } from 'antd';
 import { TableOutlined, TranslationOutlined } from '@ant-design/icons'
 import { apiClient } from '../api';
 import { useTranslation } from "react-i18next";
@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next";
 const { Title, Text } = Typography;
 
 // 搜索结果项组件
-const ParagraphItem = ({ data }) => {
+const ParagraphItem = ({ data, checked, onChange }) => {
 const { t } = useTranslation();
   // 控制元数据弹窗显示/隐藏的状态
   const [metadataVisible, setMetadataVisible] = useState(false);
@@ -88,6 +88,9 @@ const { t } = useTranslation();
   return (
     <div className="result" key={data.id}>
       <div className="metadata-section">
+      <div style={{ marginRight: '8px', display: 'inline' }}>
+        <Checkbox checked={checked} onChange={(e) => onChange?.(data.id, e.target.checked)} />
+      </div>
         <div className="metadata-item">
           <span className="metadata-label">{FIELD_NAMES.dataset}</span>
           <span className="metadata-value" data-id={data.dataset}>{data.dataset_name || ''}</span>

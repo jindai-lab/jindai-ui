@@ -108,6 +108,8 @@
   "vietnamese": "越南文",
   "return_value": "返回值",
   "select_dataset": "选择数据集",
+  "select_all": "全选",
+  "deselect_all": "全不选",
   "select_file_source": "选择文件源",
   "configuration_updated_successfully": "配置更新成功",
   "rename": "重命名 /",
@@ -143,5 +145,8 @@
   "platform_version": "Jindai 数字文献利用平台 v{{frontend}}@{{backend}}",
   "literature_resource_tool": "检索/管理文献资源工具",
   "copyright": "© 2018-{{year}} Jindai-Lab",
-  "software_registered": "本软件已取得软件著作权登记。"
+  "software_registered": "本软件已取得软件著作权登记。",
+  "export": "导出",
+  "items_selected": "个项目已选中",
+  "no_selected_items": "未选中任何项目"
 }

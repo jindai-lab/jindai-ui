@@ -1,4 +1,4 @@
-import { Spin, message, Pagination } from "antd";
+import { Spin, message, Pagination, Button, Checkbox } from "antd";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { apiClient } from "../api";
@@ -32,6 +32,9 @@ function SearchPage() {
     offset: -1, // The starting point of the current memory chunk
     lastQuery: null, // Stringified version of filters used for the last fetch
   });
+
+  // Selected paragraph IDs state
+  const [selectedIds, setSelectedIds] = useState(new Set());
 
   // Helper: Update individual filter fields
   const updateFilter = (updates) => {
@@ -175,6 +178,96 @@ function SearchPage() {
     document.querySelector('.result-wrapper').scrollIntoView()
   };
 
+  // Handle checkbox change for a single paragraph
+  const handleCheckboxChange = (id, isChecked) => {
+    setSelectedIds(prev => {
+      const newSet = new Set(prev);
+      if (isChecked) {
+        newSet.add(id);
+      } else {
+        newSet.delete(id);
+      }
+      return newSet;
+    });
+  };
+
+  // Handle select all/unselect all
+  const handleSelectAll = (isChecked) => {
+    if (isChecked) {
+      const allIds = visibleResults.map(ele => ele.id);
+      setSelectedIds(prev => {
+        const newSet = new Set(prev);
+        allIds.forEach(id => newSet.add(id));
+        return newSet;
+      });
+    } else {
+      const allIds = visibleResults.map(ele => ele.id);
+      setSelectedIds(prev => {
+        const newSet = new Set(prev);
+        allIds.forEach(id => newSet.delete(id));
+        return newSet;
+      });
+    }
+  };
+
+  // Export selected paragraphs to markdown
+  const handleExportMarkdown = () => {
+    const selectedResults = visibleResults.filter(ele => selectedIds.has(ele.id));
+    if (selectedResults.length === 0) {
+      message.warning(t("no_selected_items"));
+      return;
+    }
+
+    // Sort by dataset and page number for better organization
+    const sortedResults = [...selectedResults].sort((a, b) => {
+      if (a.dataset !== b.dataset) {
+        return (a.dataset_name || '').localeCompare(b.dataset_name || '');
+      }
+      return (a.source_page || 0) - (b.source_page || 0);
+    });
+
+    let markdownContent = `# Search Results\n\n`;
+    markdownContent += `**Search Query:** ${filters.q}\n\n`;
+    markdownContent += `**Total Selected:** ${selectedResults.length}\n\n`;
+    markdownContent += `---\n\n`;
+
+    let currentDataset = '';
+    sortedResults.forEach((item, index) => {
+      // Add dataset header if changed
+      if (item.dataset_name !== currentDataset) {
+        currentDataset = item.dataset_name;
+        markdownContent += `## ${currentDataset || 'Unknown Dataset'}\n\n`;
+      }
+
+      // Add item content
+      markdownContent += `### Result ${index + 1}\n\n`;
+      if (item.source_url) {
+        markdownContent += `**Source:** [${item.source_url}](${item.source_url})\n\n`;
+      }
+      if (item.pagenum) {
+        markdownContent += `**Page:** ${item.pagenum}\n\n`;
+      }
+      if (item.content) {
+        markdownContent += `${item.content}\n\n`;
+      }
+      markdownContent += `---\n\n`;
+    });
+
+    // Create download link
+    const blob = new Blob([markdownContent], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `search_results_${new Date().toISOString().split('T')[0]}.md`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  // Check if all visible results are selected
+  const isAllSelected = visibleResults.length > 0 && visibleResults.every(ele => selectedIds.has(ele.id));
+
 
   return (
     <div className="search-page-container">
@@ -187,8 +280,34 @@ function SearchPage() {
       {/* Results Section */}
       <Spin spinning={isLoading}>
         <div className="result-wrapper">
+          {/* Select All Checkbox */}
+          <div style={{ marginBottom: '12px', padding: '8px', background: 'var(--bg-secondary)', borderRadius: '4px' }}>
+            <Checkbox
+              checked={isAllSelected}
+              onChange={(e) => handleSelectAll(e.target.checked)}
+            >
+              {t("select_all")}
+            </Checkbox>
+            <Button
+              type="primary"
+              style={{ marginLeft: '16px' }}
+              onClick={handleExportMarkdown}
+              disabled={selectedIds.size === 0}
+            >
+              {t("export")}
+            </Button>
+            <span style={{ marginLeft: '16px', color: 'var(--text-secondary)' }}>
+              {selectedIds.size} {t("items_selected")}
+            </span>
+          </div>
+
           {visibleResults.map((ele) => (
-            <ParagraphItem key={ele.id} data={ele} />
+            <ParagraphItem
+              key={ele.id}
+              data={ele}
+              checked={selectedIds.has(ele.id)}
+              onChange={handleCheckboxChange}
+            />
           ))}
 
           {dataContext.total > 0 && (

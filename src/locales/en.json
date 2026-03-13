@@ -519,5 +519,7 @@
   "datasets": "Datasets",
   "platform_version": "Platform v{{frontend}}@{{backend}}",
   "literature_resource_tool": "Jindai, a literature resource search and management tool",
-  "software_registered": "This software has obtained software copyright registration."
+  "software_registered": "This software has obtained software copyright registration.",
+  "items_selected": "items selected",
+  "no_selected_items": "No items selected"
 }
