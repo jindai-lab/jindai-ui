@@ -4,12 +4,15 @@ import { apiClient } from "../api";
 import { useTranslation } from "react-i18next";
 import { PlusOutlined, DeleteOutlined, EditOutlined, EyeOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
+import ASSET_MCP_JSON from '../assets/mcp.json?raw'
+import ASSET_MCP_PY from '../assets/jindai-mcp.py?raw'
 
 export default function ApiKeysPage() {
   const { t } = useTranslation();
   const [apiKeys, setApiKeys] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [showExampleModal, setShowExampleModal] = useState(false);
   const [form] = Form.useForm();
   const [viewingKey, setViewingKey] = useState(null);
 
@@ -23,7 +26,7 @@ export default function ApiKeysPage() {
       const data = await apiClient.makeCall("apikeys", null, { method: "GET" });
       setApiKeys(data?.data || []);
     } catch (e) {
-      message.error(t("加载API密钥失败") + ": " + e);
+      message.error(t("Failed to load API keys") + ": " + e);
     } finally {
       setLoading(false);
     }
@@ -32,14 +35,14 @@ export default function ApiKeysPage() {
   const handleCreate = async (values) => {
     try {
       const data = await apiClient.makeCall("apikeys", values, { method: "POST" });
-      message.success(t("API密钥创建成功"));
+      message.success(t("API key created successfully"));
       // Show the plain key to user (only shown once!)
       Modal.info({
-        title: t("API密钥已创建"),
+        title: t("API Key Created"),
         content: (
           <div>
             <p style={{ color: "var(--primary)", fontWeight: "bold" }}>
-              {t("请复制以下API密钥，关闭后将无法再次查看：")}
+              {t("Please copy the following API key. It cannot be viewed again after closing:")}
             </p>
             <div style={{ 
               background: "var(--panel-bg)", 
@@ -58,37 +61,37 @@ export default function ApiKeysPage() {
         }
       });
     } catch (e) {
-      message.error(t("创建API密钥失败") + ": " + e);
+      message.error(t("Failed to create API key") + ": " + e);
     }
   };
 
   const handleDelete = async (id) => {
     try {
       await apiClient.makeCall(`apikeys/${id}`, null, { method: "DELETE" });
-      message.success(t("API密钥已删除"));
+      message.success(t("API key deleted"));
       loadApiKeys();
     } catch (e) {
-      message.error(t("删除API密钥失败") + ": " + e);
+      message.error(t("Failed to delete API key") + ": " + e);
     }
   };
 
   const handleRevoke = async (id) => {
     try {
       await apiClient.makeCall(`apikeys/${id}/revoke`, null, { method: "POST" });
-      message.success(t("API密钥已吊销"));
+      message.success(t("API key revoked"));
       loadApiKeys();
     } catch (e) {
-      message.error(t("吊销API密钥失败") + ": " + e);
+      message.error(t("Failed to revoke API key") + ": " + e);
     }
   };
 
   const handleActivate = async (id) => {
     try {
       await apiClient.makeCall(`apikeys/${id}/activate`, null, { method: "POST" });
-      message.success(t("API密钥已激活"));
+      message.success(t("API key activated"));
       loadApiKeys();
     } catch (e) {
-      message.error(t("激活API密钥失败") + ": " + e);
+      message.error(t("Failed to activate API key") + ": " + e);
     }
   };
 
@@ -96,73 +99,73 @@ export default function ApiKeysPage() {
 
   const columns = [
     {
-      title: t("name"),
+      title: t("Name"),
       dataIndex: "name",
       key: "name",
       width: 200,
     },
     {
-      title: t("状态"),
+      title: t("Status"),
       dataIndex: "is_active",
       key: "is_active",
       width: 100,
       render: (active) => (
         <Tag color={active ? "green" : "red"}>
-          {active ? t("启用") : t("已禁用")}
+          {active ? t("Active") : t("Disabled")}
         </Tag>
       ),
     },
     {
-      title: t("create_time"),
+      title: t("Create Time"),
       dataIndex: "created_at",
       key: "created_at",
       width: 180,
       render (dt) { return dt ? dayjs(dt).format(defaultDateFormat) : ''; }
     },
     {
-      title: t("最后使用"),
+      title: t("Last Used"),
       dataIndex: "last_used_at",
       key: "last_used_at",
       width: 180,
       render (dt) { return dt ? dayjs(dt).format(defaultDateFormat) : ''; }
     },
     {
-      title: t("过期时间"),
+      title: t("Expires At"),
       dataIndex: "expires_at",
       key: "expires_at",
       width: 180,
       render (dt) { return dt ? dayjs(dt).format(defaultDateFormat) : ''; }
     },
     {
-      title: t("action"),
+      title: t("Action"),
       key: "actions",
       width: 200,
       render: (_, record) => (
         <Space size="small">
           {record.is_active ? (
             <Popconfirm
-              title={t("确定要停用此API密钥吗？")}
+              title={t("Are you sure you want to deactivate this API key?")}
               onConfirm={() => handleRevoke(record.id)}
-              okText={t("confirm")}
-              cancelText={t("cancel")}
+              okText={t("Confirm")}
+              cancelText={t("Cancel")}
             >
               <Button size="small">
-                {t("停用")}
+                {t("Deactivate")}
               </Button>
             </Popconfirm>
           ) : (
             <Button size="small" type="primary" onClick={() => handleActivate(record.id)}>
-              {t("激活")}
+              {t("Activate")}
             </Button>
           )}
             <Popconfirm
-              title={t("确定要删除此API密钥吗？")}
+              title={t("Are you sure you want to delete this API key?")}
               onConfirm={() => handleDelete(record.id)}
-              okText={t("confirm")}
-              cancelText={t("cancel")}
+              okText={t("Confirm")}
+              cancelText={t("Cancel")}
             >
             <Button size="small" danger icon={<DeleteOutlined />}>
-              {t("删除")}
+              {t("Delete")}
             </Button>
             </Popconfirm>
         </Space>
@@ -175,13 +178,19 @@ export default function ApiKeysPage() {
       <Card
         title={
           <Space>
-            {t("API 密钥管理")}
+            {t("api_key_management")}
             <Button 
               type="primary" 
               icon={<PlusOutlined />}
               onClick={() => setShowModal(true)}
             >
-              {t("创建新密钥")}
+              {t("create_new_key")}
+            </Button>
+            <Button 
+              icon={<EyeOutlined />}
+              onClick={() => setShowExampleModal(true)}
+            >
+              {t("example_code")}
             </Button>
           </Space>
         }
@@ -198,7 +207,7 @@ export default function ApiKeysPage() {
 
       {/* Create API Key Modal */}
       <Modal
-        title={t("创建 API 密钥")}
+        title={t("create_api_key")}
         open={showModal}
         onCancel={() => setShowModal(false)}
         footer={null}
@@ -210,22 +219,94 @@ export default function ApiKeysPage() {
         >
           <Form.Item
             name="name"
-            label={t("name")}
-            rules={[{ required: true, message: t("请输入密钥名称") }]}
+            label={t("Name")}
+            rules={[{ required: true, message: t("Please enter a key name") }]}
           >
-            <Input placeholder={t("例如：生产环境密钥")} />
+            <Input placeholder={t("e.g., Production Key")} />
           </Form.Item>
           <Form.Item>
             <Space>
               <Button type="primary" htmlType="submit">
-                {t("create")}
+                {t("Create")}
               </Button>
               <Button onClick={() => setShowModal(false)}>
-                {t("cancel")}
+                {t("Cancel")}
               </Button>
             </Space>
           </Form.Item>
         </Form>
+      </Modal>
+
+      {/* Example Code Modal */}
+      <Modal
+        title={t("example_code")}
+        open={showExampleModal}
+        onCancel={() => setShowExampleModal(false)}
+        footer={null}
+        width={600}
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div>
+            <h4 style={{ margin: '0 0 8px 0' }}>{t("mcp.json")}</h4>
+            <pre style={{ 
+              background: "var(--panel-bg)", 
+              padding: "12px", 
+              borderRadius: "4px",
+              fontFamily: "monospace",
+              fontSize: "12px",
+              maxHeight: "200px",
+              overflowY: "auto"
+            }}>
+              {ASSET_MCP_JSON.replace('<HOST>', location.host)}
+            </pre>
+            <Button 
+              type="primary" 
+              style={{ marginTop: '8px' }}
+              onClick={() => {
+                // Download mcp.json
+                const element = document.createElement("a");
+                const file = new Blob(["{}"], {type: 'application/json'});
+                element.href = URL.createObjectURL(file);
+                element.download = "mcp.json";
+                document.body.appendChild(element);
+                element.click();
+                document.body.removeChild(element);
+              }}
+            >
+              {t("download")}
+            </Button>
+          </div>
+          <div>
+            <h4 style={{ margin: '0 0 8px 0' }}>jindai-mcp.py</h4>
+            <pre style={{ 
+              background: "var(--panel-bg)", 
+              padding: "12px", 
+              borderRadius: "4px",
+              fontFamily: "monospace",
+              fontSize: "12px",
+              maxHeight: "200px",
+              overflowY: "auto"
+            }}>
+              {ASSET_MCP_PY}
+            </pre>
+            <Button 
+              type="primary" 
+              style={{ marginTop: '8px' }}
+              onClick={() => {
+                // Download mcp.py
+                const element = document.createElement("a");
+                const file = new Blob([""], {type: 'text/plain'});
+                element.href = URL.createObjectURL(file);
+                element.download = "jindai-mcp.py";
+                document.body.appendChild(element);
+                element.click();
+                document.body.removeChild(element);
+              }}
+            >
+              {t("download")}
+            </Button>
+          </div>
+        </div>
       </Modal>
     </>
   );

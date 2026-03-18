@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "search-engine": {
+      "command": "python",
+      "args": [
+        "/path/to/your/jindai-mcp.py"   // 替换为实际脚本路径
+      ],
+      "env": {
+        "SEARCH_API_URL": "https://<HOST>/api/v2/search", // 搜索引擎 API 地址
+        "SEARCH_API_KEY": "<APIKEY>"                // 替换为实际的 Bearer 令牌
+      }
+    }
+  }
+}
