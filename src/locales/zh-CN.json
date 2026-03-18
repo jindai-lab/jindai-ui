@@ -163,10 +163,8 @@
   "status": "状态",
   "active": "启用",
   "disabled": "已禁用",
-  "create_time": "创建时间",
   "last_used": "最后使用",
   "expires_at": "过期时间",
-  "action": "操作",
   "are_you_sure_you_want_to_deactivate_this_api_key": "确定要停用此API密钥吗？",
   "are_you_sure_you_want_to_delete_this_api_key": "确定要删除此API密钥吗？",
   "deactivate": "停用",
@@ -177,5 +175,15 @@
   "example_code": "示例代码",
   "download": "下载",
   "please_enter_a_key_name": "请输入密钥名称",
-  "e.g._production_key": "例如：生产环境密钥"
+  "e.g._production_key": "例如：生产环境密钥",
+  "get_pipeline_schema_failed": "获取管道配置失败",
+  "add_stage": "添加阶段",
+  "move_up": "上移",
+  "move_down": "下移",
+  "delete_stage": "删除阶段",
+  "select_stage_class": "选择阶段类型",
+  "no_stages_added": "暂未添加任何阶段",
+  "stage_class": "阶段类型",
+  "stage": "阶段",
+  "source_code": "源代码"
 }

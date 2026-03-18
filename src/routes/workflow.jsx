@@ -1,10 +1,11 @@
-import { message, Form, Button, Space } from "antd";
-import { PlayCircleOutlined } from "@ant-design/icons";
+import { message, Form, Button, Space, Tabs } from "antd";
+import { PlayCircleOutlined, CodeOutlined, FormOutlined } from "@ant-design/icons";
 import yaml from "js-yaml";
 import { useState, useRef, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { apiClient } from "../api";
 import ParamPanel from "../components/param-panel";
+import Pipeline from "../components/pipeline";
 import YamlEditor from "../components/yaml-editor";
 import { useTranslation } from "react-i18next";
 
@@ -15,6 +16,16 @@ const { t } = useTranslation();
   const [shortcutMap, setShortcutMap] = useState(null);
   const [yamlContent, setYamlContent] = useState("");
   const [pipelineSchema, setPipelineSchema] = useState([]);
+  const [viewMode, setViewMode] = useState(() => {
+    const saved = localStorage.getItem('workflow_view_mode');
+    return saved || 'yaml';
+  });
+  const [pipelineData, setPipelineData] = useState([]);
+
+  // Save view mode to localStorage
+  useEffect(() => {
+    localStorage.setItem('workflow_view_mode', viewMode);
+  }, [viewMode]);
 
   const handleValidate = (data) => {
     const validated = validateData(data);
@@ -58,6 +69,7 @@ const { t } = useTranslation();
       if (data) {
         const validated = validateData(data, schema);
         setYamlContent(yaml.dump(validated.pipeline))
+        setPipelineData(validated.pipeline);
       }
     })();
   }
@@ -107,20 +119,43 @@ const { t } = useTranslation();
       const data = await apiClient.taskDBO(taskId);
       const yaml_src = yaml.dump(validateData(data, pipelineSchema));
       setYamlContent(yaml_src);
+      return data;
     } catch (err) {
       console.error(t("get_config_failed"), err);
       message.error(t("cannot_load_config_file_check_task_id_or_network"));
-    } finally {
     }
   };
 
-  const handleSave = async (updatedYaml) => {
+  const handleSaveYaml = async (updatedYaml) => {
     const hide = message.loading(t("saving_configuration"), 0);
     try {
       let data = validateData(yaml.load(updatedYaml));
       await apiClient.taskDBO(taskId, data);
       message.success(t("configuration_updated_successfully"));
       setYamlContent(updatedYaml); // 更新本地缓存的内容
+      setPipelineData(data.pipeline);
+    } catch (err) {
+      console.error(t("save_failed"), err);
+      message.error(t("save_failed_server_error"));
+    } finally {
+      hide();
+    }
+  };
+
+  const handleSavePipeline = async (updatedPipeline) => {
+    const hide = message.loading(t("saving_configuration"), 0);
+    try {
+      // Get current data from yamlContent to preserve other fields
+      const currentData = yaml.load(yamlContent) || {};
+      const data = {
+        ...currentData,
+        pipeline: updatedPipeline
+      };
+      validateData(data, pipelineSchema);
+      await apiClient.taskDBO(taskId, data);
+      message.success(t("configuration_updated_successfully"));
+      setPipelineData(updatedPipeline);
+      setYamlContent(yaml.dump(data));
     } catch (err) {
       console.error(t("save_failed"), err);
       message.error(t("save_failed_server_error"));
@@ -176,17 +211,75 @@ const { t } = useTranslation();
     })
     const yaml_src = yaml.dump(data)
     setYamlContent(yaml_src);
-    await handleSave(yaml_src)
+    await handleSaveYaml(yaml_src)
   }
+
+  // Convert pipeline data to YAML format
+  const pipelineToYaml = (pipeline) => {
+    return yaml.dump(pipeline);
+  };
+
+  // Convert YAML to pipeline data
+  const yamlToPipeline = (yamlStr) => {
+    try {
+      const data = yaml.load(yamlStr);
+      if (Array.isArray(data)) {
+        return data;
+      }
+      if (data && Array.isArray(data.pipeline)) {
+        return data.pipeline;
+      }
+      return [];
+    } catch (err) {
+      console.error("Failed to parse YAML:", err);
+      return [];
+    }
+  };
 
   return (
     <>
-      {(<YamlEditor
-        initialValue={yamlContent}
-        onSave={handleSave}
-        onValidate={handleValidate}
-      />)}
-      {(shortcutMap && <Form>
+      <Tabs
+        activeKey={viewMode}
+        onChange={(key) => setViewMode(key)}
+        items={[
+          {
+            key: 'yaml',
+            label: (
+              <Space>
+                <CodeOutlined />
+                {t("source_code")}
+              </Space>
+            ),
+            children: (
+              <YamlEditor
+                initialValue={yamlContent}
+                onSave={handleSaveYaml}
+                onValidate={handleValidate}
+              />
+            )
+          },
+          {
+            key: 'pipeline',
+            label: (
+              <Space>
+                <FormOutlined />
+                {t("pipeline")}
+              </Space>
+            ),
+            children: (
+              <Pipeline
+                value={pipelineData}
+                onChange={(newPipeline) => {
+                  setPipelineData(newPipeline);
+                  setYamlContent(pipelineToYaml(newPipeline));
+                }}
+              />
+            )
+          }
+        ]}
+        style={{ marginTop: 16 }}
+      />
+      {(shortcutMap && viewMode === 'yaml' && <Form>
         <ParamPanel scheme={shortcutMap.scheme || {}} value={shortcutMap.value || {}}
           onChange={e => {
             setShortcutMap({

@@ -551,5 +551,15 @@
   "download_mcp_json": "Download mcp.json",
   "download_mcp_py": "Download mcp.py",
   "please_enter_a_key_name": "Please enter a key name",
-  "e.g._production_key": "e.g., Production Key"
+  "e.g._production_key": "e.g., Production Key",
+  "get_pipeline_schema_failed": "Failed to load pipeline schema",
+  "add_stage": "Add Stage",
+  "move_up": "Move Up",
+  "move_down": "Move Down",
+  "delete_stage": "Delete Stage",
+  "select_stage_class": "Select Stage Class",
+  "no_stages_added": "No stages added yet",
+  "stage_class": "Stage Class",
+  "stage": "Stage",
+  "source_code": "Source Code"
 }
