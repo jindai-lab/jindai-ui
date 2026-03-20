@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Card, Button, Space, Select, Divider, message } from 'antd';
+import { Form, Card, Button, Space, Select, Divider, message, Input, Switch } from 'antd';
 import { PlusOutlined, DeleteOutlined, UpOutlined, DownOutlined } from '@ant-design/icons';
 import ParamPanel from './param-panel';
 import { apiClient } from '../api';
 import { useTranslation } from "react-i18next";
 
-const Pipeline = ({ value = [], onChange }) => {
+const Pipeline = ({ value = [], onChange, workflowConfig = {}, onWorkflowConfigChange }) => {
   const { t } = useTranslation();
   const [pipelineSchema, setPipelineSchema] = useState([]);
   const [expandedStages, setExpandedStages] = useState({});
@@ -101,6 +101,14 @@ const Pipeline = ({ value = [], onChange }) => {
     onChange(newPipeline);
   };
 
+  // Update workflow config
+  const updateWorkflowConfig = (field, value) => {
+    onWorkflowConfigChange({
+      ...workflowConfig,
+      [field]: value
+    });
+  };
+
   // Get schema for a specific stage class
   const getStageSchema = (className) => {
     return pipelineSchema.find(s => s.label === className);
@@ -114,6 +122,51 @@ const Pipeline = ({ value = [], onChange }) => {
 
   return (
     <div style={{ marginBottom: 16 }}>
+      {/* Workflow Configuration Section */}
+      <Card
+        size="small"
+        style={{
+          marginBottom: 16,
+          borderLeft: '4px solid var(--primary)',
+          position: 'relative'
+        }}
+        title={
+          <Space>
+            <span>{t("workflow_config")}</span>
+          </Space>
+        }
+      >
+        <Form layout="vertical">
+          <Form.Item label={t("name")} style={{ marginBottom: 16 }}>
+            <Input
+              value={workflowConfig.name || ''}
+              onChange={(e) => updateWorkflowConfig('name', e.target.value)}
+              placeholder={t("enter_workflow_name")}
+            />
+          </Form.Item>
+          <Form.Item label={t("shared")} style={{ marginBottom: 16 }}>
+            <Switch
+              checked={workflowConfig.shared || false}
+              onChange={(checked) => updateWorkflowConfig('shared', checked)}
+            />
+          </Form.Item>
+          <Form.Item label={t("resume_next")} style={{ marginBottom: 16 }}>
+            <Switch
+              checked={workflowConfig.resume_next !== false}
+              onChange={(checked) => updateWorkflowConfig('resume_next', checked)}
+            />
+          </Form.Item>
+          <Form.Item label={t("concurrent")} style={{ marginBottom: 16 }}>
+            <Input
+              type="number"
+              value={workflowConfig.concurrent || 3}
+              onChange={(e) => updateWorkflowConfig('concurrent', parseInt(e.target.value, 10) || 0)}
+              min={0}
+            />
+          </Form.Item>
+        </Form>
+      </Card>
+
       <Space style={{ marginBottom: 16 }}>
         <Button type="primary" onClick={addStage} icon={<PlusOutlined />}>
           {t("add_stage")}

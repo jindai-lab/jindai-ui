@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import { Card, Button, Tag, Space, Typography, Tooltip, Empty } from 'antd';
-import { 
 import { useTranslation } from "react-i18next";
   Terminal, 
   Pause, 

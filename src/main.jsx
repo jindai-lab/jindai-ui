@@ -13,6 +13,7 @@ import oidc_settings from "./oidc-client-ids.js";
 
 import Root from "./routes/root.jsx";
 const ApiKeysPage = React.lazy(() => import("./routes/apikeys.jsx"));
+const BibItemsPage = React.lazy(() => import("./routes/bibitems.jsx"));
 const DatasetPage = React.lazy(() => import("./routes/dataset.jsx"));
 const ErrorPage = React.lazy(() => import("./routes/errors.jsx"));
 const FilePage = React.lazy(() => import("./routes/file.jsx"));
@@ -119,6 +120,10 @@ const router = createBrowserRouter([
       {
         path: "datasets",
         element: <DatasetPage />,
+      },
+      {
+        path: "bibitems",
+        element: <BibItemsPage />,
       },
       {
         path: "import",

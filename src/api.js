@@ -206,6 +206,19 @@ export const apiClient = Object.assign(
     async histories() {
       return await this.makeCall('histories/?sort=-created_at', null, { method: 'GET' })
     },
+    // bibliography
+    async bibliographyItems(options) {
+      return await this.makeCall('bibliography/', options, { method: 'GET' })
+    },
+    async createBibliographyItem(data) {
+      return await this.makeCall('bibliography/', data, { method: 'POST' })
+    },
+    async updateBibliographyItem(id, data) {
+      return await this.makeCall(`bibliography/${id}`, data, { method: 'PUT' })
+    },
+    async deleteBibliographyItem(id) {
+      return await this.makeCall(`bibliography/${id}`, null, { method: 'DELETE' })
+    },
     // other
     langCodes: Object.entries(
       Object.fromEntries([

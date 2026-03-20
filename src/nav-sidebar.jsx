@@ -1,5 +1,6 @@
 import { NavLink } from "react-router-dom";
 import {
+  BookOutlined,
   DatabaseOutlined,
   FileSearchOutlined,
   FolderOpenOutlined,
@@ -60,6 +61,10 @@ export default function NavSidebar({user, logout}) {
           <NavLink to="/datasets">
             <DatabaseOutlined />
             <span className="menu-text">{t("datasets")}</span>
+          </NavLink>
+          <NavLink to="/bibitems">
+            <BookOutlined />
+            <span className="menu-text">{t("bibliography_items")}</span>
           </NavLink>
           <NavLink to="/tasks">
             <ScheduleOutlined />

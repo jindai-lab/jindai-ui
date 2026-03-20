@@ -14,7 +14,7 @@ export default function SettingsPage() {
   const [settings, setSettings] = useState({
     theme: 'auto',
     viewPdfAsImage: false,
-    translatorLang: t("simplified_chinese"),
+    translatorLang: t("zh_cn"),
     translatorZhipuApiKey: '',
     language: 'zh-CN'
   })
@@ -99,8 +99,8 @@ export default function SettingsPage() {
                 onChange={e => updateSettings({ translatorLang: e })} 
                 style={{ width: 160 }} 
                 options={[
-                  { label: t("simplified_chinese"), value: "zh-CN" },
-                  { label: t("english"), value: "en" },
+                  { label: t("zh_cn"), value: "zh-CN" },
+                  { label: t("en"), value: "en" },
                   { label: t("not_translate"), value: "" }
                 ]}></Select>
             </Col>

@@ -7,9 +7,7 @@ const resources = Object.entries(jsons).reduce((acc, [path, module]) => {
   // 从文件路径中提取语言代码，例如 './locales/en.json' 提取出 'en'
   const lang = path.match(/\.\/locales\/(.*)\.json$/)?.[1];
   if (lang) {
-    acc[lang] = {
-      translation: module.default, // 注意：对于 .json 文件，内容通常在 module.default 中
-    };
+    acc[lang] = module.default;
   }
   return acc;
 }, {});

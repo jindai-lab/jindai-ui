@@ -289,7 +289,7 @@ const { t } = useTranslation();
               newName: newName.trim(),
             });
             message.success(
-              `${editingRecord.is_directory ? t("folder") : t("file")}${t("重命名成功")}`,
+              `${editingRecord.is_directory ? t("folder") : t("file")}${t("rename_success")}`,
             );
             handleRefresh(); // 刷新目录列表，实时展示新名称
             setEditingRecord(null);

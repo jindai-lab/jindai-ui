@@ -21,6 +21,12 @@ const { t } = useTranslation();
     return saved || 'yaml';
   });
   const [pipelineData, setPipelineData] = useState([]);
+  const [workflowConfig, setWorkflowConfig] = useState({
+    name: '',
+    shared: false,
+    resume_next: true,
+    concurrent: 3
+  });
 
   // Save view mode to localStorage
   useEffect(() => {
@@ -68,8 +74,15 @@ const { t } = useTranslation();
       const data = await fetchSource();
       if (data) {
         const validated = validateData(data, schema);
-        setYamlContent(yaml.dump(validated.pipeline))
+        setYamlContent(yaml.dump(validated))
         setPipelineData(validated.pipeline);
+        // Set workflow config from loaded data
+        setWorkflowConfig({
+          name: data.name || '',
+          shared: data.shared !== undefined ? data.shared : false,
+          resume_next: data.resume_next !== undefined ? data.resume_next : true,
+          concurrent: data.concurrent || 3
+        });
       }
     })();
   }
@@ -134,6 +147,13 @@ const { t } = useTranslation();
       message.success(t("configuration_updated_successfully"));
       setYamlContent(updatedYaml); // 更新本地缓存的内容
       setPipelineData(data.pipeline);
+      // Update workflow config from saved data
+      setWorkflowConfig({
+        name: data.name || '',
+        shared: data.shared !== undefined ? data.shared : false,
+        resume_next: data.resume_next !== undefined ? data.resume_next : true,
+        concurrent: data.concurrent || 3
+      });
     } catch (err) {
       console.error(t("save_failed"), err);
       message.error(t("save_failed_server_error"));
@@ -156,6 +176,13 @@ const { t } = useTranslation();
       message.success(t("configuration_updated_successfully"));
       setPipelineData(updatedPipeline);
       setYamlContent(yaml.dump(data));
+      // Update workflow config from saved data
+      setWorkflowConfig({
+        name: data.name || '',
+        shared: data.shared !== undefined ? data.shared : false,
+        resume_next: data.resume_next !== undefined ? data.resume_next : true,
+        concurrent: data.concurrent || 3
+      });
     } catch (err) {
       console.error(t("save_failed"), err);
       message.error(t("save_failed_server_error"));
@@ -269,9 +296,22 @@ const { t } = useTranslation();
             children: (
               <Pipeline
                 value={pipelineData}
+                workflowConfig={workflowConfig}
                 onChange={(newPipeline) => {
                   setPipelineData(newPipeline);
                   setYamlContent(pipelineToYaml(newPipeline));
+                }}
+                onWorkflowConfigChange={(newConfig) => {
+                  setWorkflowConfig(newConfig);
+                  // Update yamlContent with new workflow config
+                  const currentData = yaml.load(yamlContent) || {};
+                  const data = {
+                    ...currentData,
+                    ...newConfig
+                  };
+                  setYamlContent(yaml.dump(data));
+                  // Save to server
+                  handleSaveYaml(yaml.dump(data));
                 }}
               />
             )
@@ -279,7 +319,7 @@ const { t } = useTranslation();
         ]}
         style={{ marginTop: 16 }}
       />
-      {(shortcutMap && viewMode === 'yaml' && <Form>
+      {(shortcutMap && <Form>
         <ParamPanel scheme={shortcutMap.scheme || {}} value={shortcutMap.value || {}}
           onChange={e => {
             setShortcutMap({

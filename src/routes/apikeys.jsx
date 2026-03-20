@@ -42,7 +42,7 @@ export default function ApiKeysPage() {
         content: (
           <div>
             <p style={{ color: "var(--primary)", fontWeight: "bold" }}>
-              {t("Please copy the following API key. It cannot be viewed again after closing:")}
+              {t("copy_api_key")}
             </p>
             <div style={{ 
               background: "var(--panel-bg)", 
@@ -222,7 +222,7 @@ export default function ApiKeysPage() {
             label={t("Name")}
             rules={[{ required: true, message: t("Please enter a key name") }]}
           >
-            <Input placeholder={t("e.g., Production Key")} />
+            <Input placeholder={t("e_g_production_key")} />
           </Form.Item>
           <Form.Item>
             <Space>
