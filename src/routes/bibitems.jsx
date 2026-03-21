@@ -1,6 +1,6 @@
 import { Card, Button, Table, Modal, Form, Input, message, Space, Tag, Popconfirm, Grid, Image, Upload, Dropdown, Select } from "antd";
 import { useEffect, useState, useRef } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { apiClient } from "../api";
 import { useTranslation } from "react-i18next";
 import { PlusOutlined, DeleteOutlined, EditOutlined, EyeOutlined, BookOutlined, DashboardOutlined, UnorderedListOutlined, DownloadOutlined, SyncOutlined, UploadOutlined, FileTextOutlined, CodeOutlined, SearchOutlined } from "@ant-design/icons";
@@ -28,6 +28,7 @@ export default function BibItemsPage() {
   const [bibtexText, setBibtexText] = useState('');
   const [selectedItemsForExport, setSelectedItemsForExport] = useState([]);
   const fileInputRef = useRef(null);
+  const navigate = useNavigate();
 
   // Initialize search state from URL params
   const [searchQuery, setSearchQuery] = useState('');
@@ -45,10 +46,10 @@ export default function BibItemsPage() {
   useEffect(() => {
     // Load from URL params on mount
     const query = searchParams.get('query') || '';
-    const type = { 'all': 'all', 'title': 'title', 'author': 'author' }[searchParams.get('type')] || 'all';
+    const type = searchParams.get('type') || 'all';
     const page = parseInt(searchParams.get('page')) || 1;
     setSearchQuery(query)
-    setSearchType(type)
+    setSearchType(['tag', 'title', 'author', 'all'].includes(type) ? type : 'all')
     handleSearch(query, type, page, 20);
   }, [searchParams]);
 
@@ -403,10 +404,7 @@ export default function BibItemsPage() {
       render: (text, record) => (
         <div
           style={{ cursor: 'pointer' }}
-          onClick={(e) => {
-            e.stopPropagation();
-            updateSearchParams(text, 'title')
-          }}
+          onClick={() => setSelectedItem(record)}
         >
           <strong>{text}</strong>
           {record.doi && <Tag style={{ marginLeft: 8 }} size="small">{record.doi}</Tag>}
@@ -455,22 +453,12 @@ export default function BibItemsPage() {
       width: 150,
       render: (_, record) => (
         <Space size="small">
-          <Button size="small" icon={<EyeOutlined />} onClick={() => handleView(record)}>
+          <Button size="small" icon={<EyeOutlined />} href={`/files/${record.abstract_note.split('\n')[0]}`} target="_blank">
             {t("view")}
           </Button>
           <Button size="small" icon={<EditOutlined />} onClick={() => handleEdit(record)}>
             {t("edit")}
           </Button>
-          <Popconfirm
-            title={t("Are you sure you want to delete this item?")}
-            onConfirm={() => handleDelete(record.id)}
-            okText={t("confirm")}
-            cancelText={t("cancel")}
-          >
-            <Button size="small" danger icon={<DeleteOutlined />}>
-              {t("delete")}
-            </Button>
-          </Popconfirm>
         </Space>
       ),
     },
@@ -498,6 +486,7 @@ export default function BibItemsPage() {
                   { label: t("all_fields"), value: 'all' },
                   { label: t("title"), value: 'title' },
                   { label: t("author"), value: 'author' },
+                  { label: t("tag"), value: 'tag' },
                 ]}
               />
               <Button
@@ -647,10 +636,7 @@ export default function BibItemsPage() {
                 <Card.Meta
                   title={<div
                     style={{ cursor: 'pointer' }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      updateSearchParams(item.title, 'title');
-                    }}
+                    onClick={() => setSelectedItem(item)}
                   >{item.title}</div>}
                   description={
                     <div>
@@ -796,6 +782,16 @@ export default function BibItemsPage() {
               }}>
                 {t("cancel")}
               </Button>
+              {(editingItem && <Popconfirm
+                title={t("Are you sure you want to delete this item?")}
+                onConfirm={() => handleDelete(record.id)}
+                okText={t("confirm")}
+                cancelText={t("cancel")}
+              >
+                <Button danger icon={<DeleteOutlined />}>
+                  {t("delete")}
+                </Button>
+              </Popconfirm>)}
             </Space>
           </Form.Item>
         </Form>
@@ -927,7 +923,10 @@ export default function BibItemsPage() {
                     <div style={{ color: 'var(--text-secondary)', fontSize: 12 }}>{t("tags")}</div>
                     <Space>
                       {selectedItem.tags.map((tag, index) => (
-                        <Tag key={index}>{tag}</Tag>
+                        <Tag key={index} style={{cursor: "pointer"}} onClick={() => {
+                          updateSearchParams(tag, 'tag')
+                          setSelectedItem(null)
+                        }}>{tag}</Tag>
                       ))}
                     </Space>
                   </div>

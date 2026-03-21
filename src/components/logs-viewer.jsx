@@ -1,20 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { Card, Button, Tag, Space, Typography, Tooltip, Empty } from 'antd';
 import { useTranslation } from "react-i18next";
-  Terminal, 
-  Pause, 
-  Play, 
-  Trash2, 
-  Download, 
-  Info, 
-  CheckCircle2, 
-  AlertCircle 
-} from 'lucide-react';
+
 
 const { Text } = Typography;
 
 const LogsViewer = ({ taskId }) => {
-const { t } = useTranslation();
+  const { t } = useTranslation();
   const [logs, setLogs] = useState([]);
   const [isPaused, setIsPaused] = useState(false);
   const [status, setStatus] = useState('connecting'); // connecting, connected, error
@@ -34,11 +26,14 @@ const { t } = useTranslation();
 
     const connect = () => {
       setStatus('connecting');
-      const es = new EventSource(`/api/v2/worker/logs/${taskId}`); // TODO: THIS IS OBSOLETE
+      const es = new WebSocket(`ws://${location.hostname}/api/v2/worker/logs`); // TODO: THIS IS OBSOLETE
       eventSourceRef.current = es;
 
-      es.onopen = () => setStatus('connected');
-      
+      es.onopen = () => {
+        setStatus('connected');
+        es.send(JSON.stringify({ action: 'subscribe', task_id: taskId }))
+      }
+
       es.onmessage = (event) => {
         if (!isPaused) {
           setLogs((prev) => [...prev, event.data]);
@@ -79,7 +74,7 @@ const { t } = useTranslation();
   };
 
   return (
-    <Card 
+    <Card
       title={
         <Space>
           <Terminal size={18} />
@@ -91,9 +86,9 @@ const { t } = useTranslation();
         <Space>
           {renderStatus()}
           <Tooltip title={isPaused ? t("continue_scroll") : t("pause_scroll")}>
-            <Button 
+            <Button
               type={isPaused ? "primary" : "default"}
-              icon={isPaused ? <Play size={14} /> : <Pause size={14} />} 
+              icon={isPaused ? <Play size={14} /> : <Pause size={14} />}
               onClick={() => setIsPaused(!isPaused)}
               size="small"
             />
@@ -109,11 +104,11 @@ const { t } = useTranslation();
       styles={{ body: { padding: 0, backgroundColor: '#001529' } }}
       className="shadow-lg border-slate-200"
     >
-      <div 
+      <div
         ref={scrollRef}
-        style={{ 
-          height: '500px', 
-          overflowY: 'auto', 
+        style={{
+          height: '500px',
+          overflowY: 'auto',
           padding: '16px',
           fontFamily: '"Fira Code", Consolas, monospace',
           fontSize: '13px',
@@ -123,17 +118,17 @@ const { t } = useTranslation();
       >
         {logs.length === 0 && status !== 'error' ? (
           <div className="flex flex-col items-center justify-center h-full opacity-50">
-            <Empty description={<Text style={{color: '#6b7280'}}>暂无日志输出</Text>} image={Empty.PRESENTED_IMAGE_SIMPLE} />
+            <Empty description={<Text style={{ color: '#6b7280' }}>暂无日志输出</Text>} image={Empty.PRESENTED_IMAGE_SIMPLE} />
           </div>
         ) : (
           logs.map((log, index) => (
             <div key={index} className="flex hover:bg-white/5 transition-colors px-1 rounded">
-              <span style={{ 
-                width: '40px', 
-                textAlign: 'right', 
-                marginRight: '16px', 
-                color: '#4b5563', 
-                userSelect: 'none' 
+              <span style={{
+                width: '40px',
+                textAlign: 'right',
+                marginRight: '16px',
+                color: '#4b5563',
+                userSelect: 'none'
               }}>
                 {index + 1}
               </span>
@@ -147,7 +142,7 @@ const { t } = useTranslation();
           </div>
         )}
       </div>
-      
+
     </Card>
   );
 };

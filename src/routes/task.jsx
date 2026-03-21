@@ -46,7 +46,7 @@ const TaskDboList = () => {
 
   // 从数据库/后端接口 获取taskdbo数据
   const getTaskDboData = async () => {
-    const { results } = (await apiClient.workerListTasks()) || { results: [] };
+    const { results } = (await apiClient.listTaskDbos()) || { results: [] };
     setTaskList(results);
     setLoading(false);
   };
@@ -125,14 +125,14 @@ const TaskDboList = () => {
             <Button
               size="small"
               icon={<PlayCircleOutlined />}
-              onClick={() => runTask(record.task_id)}
+              onClick={() => runTask(record.id)}
             >
               运行
             </Button>
             <Button
               size="small"
               icon={<DeleteOutlined />}
-              onClick={() => deleteTask(record.task_id)}
+              onClick={() => deleteTask(record.id)}
               danger
             >
               删除
@@ -243,8 +243,8 @@ export default function TaskPage() {
           borderColor: "var(--border)",
         }}
       >
-        {typeof stats.running === "undefined" && t("loading")}
-        {typeof stats.running !== "undefined" && (
+        {typeof stats.processing === "undefined" && t("loading")}
+        {typeof stats.processing !== "undefined" && (
           <>
             <Row gutter={16}>
               <Col span={6}>
@@ -261,7 +261,7 @@ export default function TaskPage() {
                 <Card variant="soft" color="primary">
                   <Statistic
                     title="运行中"
-                    value={stats.running}
+                    value={stats.processing}
                     prefix={<SyncOutlined />}
                     styles={{ content: { color: "#1890ff" } }}
                   />
@@ -271,7 +271,7 @@ export default function TaskPage() {
                 <Card variant="soft" color="success">
                   <Statistic
                     title="已结束"
-                    value={stats.completed}
+                    value={stats.success}
                     prefix={<CheckCircleOutlined />}
                     styles={{ content: { color: "#52c41a" } }}
                   />

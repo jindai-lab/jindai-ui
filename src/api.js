@@ -187,6 +187,9 @@ export const apiClient = Object.assign(
     async workerJobDelete(jobId) {
       return await this.makeCall(`worker/tasks/${jobId}`, null, { method: "DELETE" });
     },
+    async TaskDboDelete(taskId) {
+      return await this.makeCall(`tasks/${taskId}`, null, { method: "DELETE" });
+    },
     async workerJobResult(jobId) {
       return await this.makeCall(`worker/tasks/${jobId}/result`);
     },
@@ -205,8 +208,8 @@ export const apiClient = Object.assign(
     async workerClearQueue(taskName) {
       return await this.makeCall(`worker/queues/${taskName}/clear`, null, { method: "POST" });
     },
-    async workerListTasks(offset = 0, limit = 100) {
-      return await this.makeCall(`worker/tasks`, { offset, limit }, {method: 'GET'});
+    async listTaskDbos(offset = 0, limit = 100) {
+      return await this.makeCall(`tasks/`, { offset, limit }, {method: 'GET'});
     },
     async embeddingStats() {
       return await this.makeCall("embeddings/");

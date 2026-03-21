@@ -8,15 +8,15 @@ export const useWorkerStats = () => {
   const ws = useRef(null); 
 
   const startWorkerStats = () => {
-    const socketUrl = `wss://${location.hostname}/api/ws/maintenance/jobs/stats`;
+    const socketUrl = `wss://${location.hostname}/api/v2/worker/stats`;
 
     if (ws.current != null) return;
-    ws.current = new WebSocket(socketUrl);
+    ws.current = new WebSocket(socketUrl + '?token=' + apiClient.bearer);
     
     // Send subscribe message after connection
-    ws.current.onopen = () => {
+    ws.current.onopen = function () {
       console.log(t("websocket_connected"));
-      ws.current.send(JSON.stringify({ action: "subscribe" }));
+      this.send(JSON.stringify({ action: "subscribe" }));
     };
 
     // 接收消息：核心逻辑
@@ -24,7 +24,7 @@ export const useWorkerStats = () => {
       try {
         const data = JSON.parse(event.data);
         // 假设后端返回的是数组，直接存入 state 驱动 Antd Table
-        setData(data); 
+        if (typeof data.processing !== 'undefined') setData(data); 
       } catch (error) {
         console.error(t("parse_data_failed"), error);
       }
