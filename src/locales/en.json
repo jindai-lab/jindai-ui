@@ -210,6 +210,7 @@
     "list_view": "List View",
     "api_key_activated": "API key activated",
     "paste_bibtex": "Paste BibTeX",
+    "more_actions": "More Actions",
     "example_code": "Example Code",
     "content": "Content",
     "last_used": "Last Used",
@@ -253,6 +254,9 @@
     "enter_notes": "Enter notes...",
     "turkish": "Turkish",
     "failed_to_create_bibliography_item": "Failed to create bibliography item",
-    "e_g_10_1002_9781118175324": "e.g., 10.1002/9781118175324"
+    "e_g_10_1002_9781118175324": "e.g., 10.1002/9781118175324",
+    "all_fields": "All Fields",
+    "clear": "Clear",
+    "search_bibliography": "Search Bibliography"
   }
 }

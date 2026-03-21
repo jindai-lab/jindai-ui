@@ -176,16 +176,37 @@ export const apiClient = Object.assign(
     },
     // tasks & worker
     async workerSubmitTask(type, params) {
-      return await this.makeCall(`worker/${type}`, params);
+      return (await this.makeCall(`worker/tasks`, { task_name: type, ...params }))?.task_id;
     },
     async workerClearJobs() {
-      return await this.makeCall("worker/", null, { method: "DELETE" });
+      return await this.makeCall("worker/queues", null, { method: "DELETE" });
     },
     async workerJob(jobId) {
-      return await this.makeCall(`worker/${jobId}`);
+      return await this.makeCall(`worker/tasks/${jobId}`);
     },
     async workerJobDelete(jobId) {
-      return await this.makeCall(`worker/${jobId}`, null, { method: "DELETE" });
+      return await this.makeCall(`worker/tasks/${jobId}`, null, { method: "DELETE" });
+    },
+    async workerJobResult(jobId) {
+      return await this.makeCall(`worker/tasks/${jobId}/result`);
+    },
+    async workerJobLogs(jobId) {
+      return await this.makeCall(`worker/tasks/${jobId}/logs`);
+    },
+    async workerRegisteredTasks() {
+      return await this.makeCall(`worker/registered`);
+    },
+    async workerStatus() {
+      return await this.makeCall(`worker/status`);
+    },
+    async workerQueues() {
+      return await this.makeCall(`worker/queues`);
+    },
+    async workerClearQueue(taskName) {
+      return await this.makeCall(`worker/queues/${taskName}/clear`, null, { method: "POST" });
+    },
+    async workerListTasks(offset = 0, limit = 100) {
+      return await this.makeCall(`worker/tasks`, { offset, limit }, {method: 'GET'});
     },
     async embeddingStats() {
       return await this.makeCall("embeddings/");

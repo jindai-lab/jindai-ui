@@ -1,8 +1,9 @@
-import { Card, Button, Table, Modal, Form, Input, message, Space, Tag, Popconfirm, Grid, Image, Upload } from "antd";
+import { Card, Button, Table, Modal, Form, Input, message, Space, Tag, Popconfirm, Grid, Image, Upload, Dropdown, Select } from "antd";
 import { useEffect, useState, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import { apiClient } from "../api";
 import { useTranslation } from "react-i18next";
-import { PlusOutlined, DeleteOutlined, EditOutlined, EyeOutlined, BookOutlined, DashboardOutlined, UnorderedListOutlined, DownloadOutlined, SyncOutlined, UploadOutlined, FileTextOutlined, CodeOutlined } from "@ant-design/icons";
+import { PlusOutlined, DeleteOutlined, EditOutlined, EyeOutlined, BookOutlined, DashboardOutlined, UnorderedListOutlined, DownloadOutlined, SyncOutlined, UploadOutlined, FileTextOutlined, CodeOutlined, SearchOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 
 const { useBreakpoint } = Grid;
@@ -10,7 +11,10 @@ const { useBreakpoint } = Grid;
 export default function BibItemsPage() {
   const { t } = useTranslation();
   const screens = useBreakpoint();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [bibItems, setBibItems] = useState([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
@@ -23,20 +27,53 @@ export default function BibItemsPage() {
   const [showBibtexModal, setShowBibtexModal] = useState(false);
   const [bibtexText, setBibtexText] = useState('');
   const [selectedItemsForExport, setSelectedItemsForExport] = useState([]);
+  const fileInputRef = useRef(null);
+
+  // Initialize search state from URL params
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchType, setSearchType] = useState('all');
+
+  // Update URL params when search changes
+  const updateSearchParams = (query, type, page = 1) => {
+    const params = new URLSearchParams();
+    if (query) params.set('query', query);
+    if (type && type !== 'all') params.set('type', type);
+    if (page > 1) params.set('page', page);
+    setSearchParams(params);
+  };
 
   useEffect(() => {
-    loadBibItems();
-  }, []);
+    // Load from URL params on mount
+    const query = searchParams.get('query') || '';
+    const type = { 'all': 'all', 'title': 'title', 'author': 'author' }[searchParams.get('type')] || 'all';
+    const page = parseInt(searchParams.get('page')) || 1;
+    setSearchQuery(query)
+    setSearchType(type)
+    handleSearch(query, type, page, 20);
+  }, [searchParams]);
 
   useEffect(() => {
     localStorage.setItem('bibitems_view_mode', viewMode);
   }, [viewMode]);
 
-  const loadBibItems = async () => {
+  const handleSearch = async (query = '', type = '', page = 1, limit = 20) => {
     setLoading(true);
     try {
-      const data = await apiClient.makeCall("bibliography/", null, { method: "GET" });
-      setBibItems(data.results ?? []);
+      const offset = (page - 1) * limit;
+      const data = await apiClient.makeCall(`bibliography/search`, {
+        query: query || searchQuery,
+        type: type || searchType,
+        limit, offset
+      }, { method: "GET" });
+      setBibItems(data.results?.map(item => {
+        if (item.date) {
+          item.date = dayjs(item.date).format('YYYY-MM-DD')
+          if (item.date.startsWith('0101-')) item.date = ''
+        }
+        return item;
+      }) ?? []);
+      setTotalCount(data.count ?? 0);
+      setCurrentPage(page);
     } catch (e) {
       message.error(t("Failed to load bibliography items") + ": " + e);
     } finally {
@@ -44,11 +81,29 @@ export default function BibItemsPage() {
     }
   };
 
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value)
+  };
+
+  const handleSearchTypeChange = (value) => {
+    setSearchType(value)
+  };
+
+  const handleSearchSubmit = () => {
+    updateSearchParams(searchQuery, searchType)
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleSearchSubmit();
+    }
+  };
+
   const handleCreate = async (values) => {
     try {
       const data = await apiClient.makeCall("bibliography/", { ...values, dataset: values.dataset || "" }, { method: "POST" });
       message.success(t("Bibliography item created successfully"));
-      loadBibItems();
+      handleSearch();
       setShowModal(false);
       form.resetFields();
     } catch (e) {
@@ -60,7 +115,7 @@ export default function BibItemsPage() {
     try {
       const data = await apiClient.makeCall(`bibliography/${editingItem.id}`, values, { method: "PUT" });
       message.success(t("Bibliography item updated successfully"));
-      loadBibItems();
+      handleSearch();
       setShowModal(false);
       setEditingItem(null);
       form.resetFields();
@@ -73,7 +128,7 @@ export default function BibItemsPage() {
     try {
       await apiClient.makeCall(`bibliography/${id}`, null, { method: "DELETE" });
       message.success(t("Bibliography item deleted"));
-      loadBibItems();
+      handleSearch();
     } catch (e) {
       message.error(t("Failed to delete bibliography item") + ": " + e);
     }
@@ -124,9 +179,9 @@ export default function BibItemsPage() {
       const epubAttachment = record.file_attachments.find(a =>
         (a.mimetype || '').includes('epub') || (a.path || '').toLowerCase().endsWith('.epub')
       );
-      
+
       let attachment = pdfAttachment || epubAttachment;
-      
+
       if (attachment) {
         // Construct file path
         let filePath = attachment.path;
@@ -180,7 +235,7 @@ export default function BibItemsPage() {
       setLoading(true);
       const response = await apiClient.makeCall("bibliography/sync/calibre", null, { method: "POST" });
       message.success(response.message || `Imported ${response.count} items from Calibre`);
-      loadBibItems();
+      handleSearch();
     } catch (e) {
       message.error(t("Failed to sync from Calibre") + ": " + e);
     } finally {
@@ -193,7 +248,7 @@ export default function BibItemsPage() {
       setLoading(true);
       const response = await apiClient.makeCall("bibliography/sync/zotero", null, { method: "POST" });
       message.success(response.message || `Imported ${response.count} items from Zotero`);
-      loadBibItems();
+      handleSearch();
     } catch (e) {
       message.error(t("Failed to sync from Zotero") + ": " + e);
     } finally {
@@ -210,7 +265,7 @@ export default function BibItemsPage() {
         dataset_name: file.name.replace('.bib', '')
       }, { method: "POST" });
       message.success(response.message || `Imported ${response.count} items from BibTeX`);
-      loadBibItems();
+      handleSearch();
       setShowBibtexModal(false);
       setBibtexText('');
     } catch (e) {
@@ -232,7 +287,7 @@ export default function BibItemsPage() {
         dataset_name: 'BibTeX Import'
       }, { method: "POST" });
       message.success(response.message || `Imported ${response.count} items from BibTeX`);
-      loadBibItems();
+      handleSearch();
       setShowBibtexModal(false);
       setBibtexText('');
     } catch (e) {
@@ -242,14 +297,10 @@ export default function BibItemsPage() {
     }
   };
 
-  const handleExportBibtex = async () => {
-    if (selectedItemsForExport.length === 0) {
-      message.warning(t("Please select items to export"));
-      return;
-    }
+  const handleExportBibtex = async (item) => {
     try {
       setLoading(true);
-      const response = await apiClient.makeCall("bibliography/export/bibtex", selectedItemsForExport, { method: "POST" });
+      const response = await apiClient.makeCall("bibliography/export/bibtex", [item.id], { method: "POST" });
       if (response.success && response.bibtex) {
         const blob = new Blob([response.bibtex], { type: 'text/x-bibtex' });
         const url = URL.createObjectURL(blob);
@@ -316,7 +367,7 @@ export default function BibItemsPage() {
       render: (_, record) => {
         const coverUrl = getCoverUrl(record);
         return (
-          <div 
+          <div
             style={{
               width: 50,
               height: 75,
@@ -328,8 +379,8 @@ export default function BibItemsPage() {
             onClick={() => handleView(record)}
           >
             {coverUrl ? (
-              <img 
-                src={coverUrl} 
+              <img
+                src={coverUrl}
                 alt={record.title}
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 onError={(e) => {
@@ -350,7 +401,13 @@ export default function BibItemsPage() {
       key: "title",
       width: 300,
       render: (text, record) => (
-        <div style={{ cursor: 'pointer' }} onClick={() => handleView(record)}>
+        <div
+          style={{ cursor: 'pointer' }}
+          onClick={(e) => {
+            e.stopPropagation();
+            updateSearchParams(text, 'title')
+          }}
+        >
           <strong>{text}</strong>
           {record.doi && <Tag style={{ marginLeft: 8 }} size="small">{record.doi}</Tag>}
         </div>
@@ -361,6 +418,17 @@ export default function BibItemsPage() {
       dataIndex: "author",
       key: "author",
       width: 200,
+      render: (text, record) => (
+        <div
+          style={{ cursor: 'pointer', color: 'var(--primary-color)' }}
+          onClick={(e) => {
+            e.stopPropagation();
+            updateSearchParams(text, 'author', 1, 20);
+          }}
+        >
+          {text}
+        </div>
+      ),
     },
     {
       title: t("item_type"),
@@ -380,7 +448,6 @@ export default function BibItemsPage() {
       dataIndex: "date",
       key: "date",
       width: 120,
-      render: (dt) => dt ? dayjs(dt).format('YYYY-MM-DD') : '',
     },
     {
       title: t("action"),
@@ -409,37 +476,45 @@ export default function BibItemsPage() {
     },
   ];
 
-  const gridColumns = [
-    {
-      title: t("title"),
-      dataIndex: "title",
-      key: "title",
-    },
-    {
-      title: t("author"),
-      dataIndex: "author",
-      key: "author",
-    },
-    {
-      title: t("item_type"),
-      dataIndex: "item_type",
-      key: "item_type",
-    },
-    {
-      title: t("date"),
-      dataIndex: "date",
-      key: "date",
-      render: (dt) => dt ? dayjs(dt).format('YYYY-MM-DD') : '',
-    },
-  ];
-
   return (
     <>
       <Card
         title={
           <Space>
-            <BookOutlined />
             {t("bibliography_items")}
+            <Space size="small">
+              <Input
+                placeholder={t("search")}
+                value={searchQuery}
+                onChange={handleSearchChange}
+                onKeyUp={handleKeyPress}
+                style={{ width: 200 }}
+              />
+              <Select
+                value={searchType}
+                onChange={handleSearchTypeChange}
+                style={{ width: 120 }}
+                options={[
+                  { label: t("all_fields"), value: 'all' },
+                  { label: t("title"), value: 'title' },
+                  { label: t("author"), value: 'author' },
+                ]}
+              />
+              <Button
+                type="primary"
+                onClick={handleSearchSubmit}
+                icon={<SearchOutlined />}
+              >
+                {t("search")}
+              </Button>
+              {searchQuery && (
+                <Button onClick={() => {
+                  setSearchParams({});
+                }}>
+                  {t("clear")}
+                </Button>
+              )}
+            </Space>
             <Space size="small">
               <Button
                 type="primary"
@@ -452,34 +527,52 @@ export default function BibItemsPage() {
               >
                 {t("create_new")}
               </Button>
-              <Button
-                icon={<SyncOutlined />}
-                onClick={handleSyncCalibre}
+              <Dropdown
+                menu={{
+                  items: [
+                    {
+                      key: 'sync-calibre',
+                      icon: <SyncOutlined />,
+                      label: t("sync_calibre"),
+                      onClick: handleSyncCalibre,
+                    },
+                    {
+                      key: 'sync-zotero',
+                      icon: <SyncOutlined />,
+                      label: t("sync_zotero"),
+                      onClick: handleSyncZotero,
+                    },
+                    {
+                      type: 'divider',
+                    },
+                    {
+                      key: 'paste-bibtex',
+                      icon: <FileTextOutlined />,
+                      label: t("paste_bibtex"),
+                      onClick: () => setShowBibtexModal(true),
+                    },
+                    {
+                      key: 'upload-bibtex',
+                      icon: <UploadOutlined />,
+                      label: t("upload_bibtex"),
+                      onClick: () => fileInputRef.current?.click(),
+                    },
+                    {
+                      type: 'divider',
+                    },
+                  ],
+                }}
+                trigger={['click']}
               >
-                {t("sync_calibre")}
-              </Button>
-              <Button
-                icon={<SyncOutlined />}
-                onClick={handleSyncZotero}
-              >
-                {t("sync_zotero")}
-              </Button>
-              <Button
-                icon={<FileTextOutlined />}
-                onClick={() => setShowBibtexModal(true)}
-              >
-                {t("paste_bibtex")}
-              </Button>
-              <Button
-                icon={<UploadOutlined />}
-                onClick={() => fileInputRef.current?.click()}
-              >
-                {t("upload_bibtex")}
-              </Button>
+                <Button icon={<CodeOutlined />}>
+                  {t("more_actions")}
+                </Button>
+              </Dropdown>
               <input
                 type="file"
                 accept=".bib"
                 style={{ display: 'none' }}
+                ref={fileInputRef}
                 onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (file) {
@@ -490,13 +583,6 @@ export default function BibItemsPage() {
                   }
                 }}
               />
-              <Button
-                icon={<DownloadOutlined />}
-                onClick={handleExportBibtex}
-                disabled={selectedItemsForExport.length === 0}
-              >
-                {t("export_bibtex")}
-              </Button>
             </Space>
             <Space size="small" style={{ marginLeft: 16 }}>
               <Button
@@ -524,7 +610,14 @@ export default function BibItemsPage() {
             dataSource={bibItems}
             loading={loading}
             rowKey="id"
-            pagination={{ pageSize: 20 }}
+            pagination={{
+              pageSize: 20,
+              current: currentPage,
+              total: totalCount,
+              onChange: (page) => {
+                updateSearchParams(searchQuery, searchType, page);
+              }
+            }}
           />
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: screens.md ? 'repeat(auto-fill, minmax(280px, 1fr))' : '1fr', gap: 16 }}>
@@ -537,8 +630,8 @@ export default function BibItemsPage() {
                 cover={
                   <div style={{ height: 150, overflow: 'hidden' }}>
                     {getCoverUrl(item) ? (
-                      <img 
-                        src={getCoverUrl(item)} 
+                      <img
+                        src={getCoverUrl(item)}
                         alt={item.title}
                         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                         onError={(e) => {
@@ -552,12 +645,26 @@ export default function BibItemsPage() {
                 }
               >
                 <Card.Meta
-                  title={<div style={{ cursor: 'pointer' }} onClick={() => handleView(item)}>{item.title}</div>}
+                  title={<div
+                    style={{ cursor: 'pointer' }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      updateSearchParams(item.title, 'title');
+                    }}
+                  >{item.title}</div>}
                   description={
                     <div>
-                      <div style={{ color: 'var(--text-secondary)', fontSize: 14 }}>{item.author}</div>
+                      <div
+                        style={{ color: 'var(--text-secondary)', fontSize: 14, cursor: 'pointer' }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          updateSearchParams(item.author, 'author');
+                        }}
+                      >
+                        {item.author}
+                      </div>
                       {item.publication && <div style={{ color: 'var(--text-secondary)', fontSize: 14 }}>{item.publication}</div>}
-                      {item.date && <div style={{ color: 'var(--text-secondary)', fontSize: 12 }}>{dayjs(item.date).format('YYYY-MM-DD')}</div>}
+                      {item.date && <div style={{ color: 'var(--text-secondary)', fontSize: 12 }}>{item.date}</div>}
                     </div>
                   }
                 />
@@ -599,84 +706,84 @@ export default function BibItemsPage() {
           >
             <Input placeholder={t("e_g_the_art_of_computer_programming")} />
           </Form.Item>
-          
+
           <Form.Item
             name="author"
             label={t("author")}
           >
             <Input placeholder={t("e_g_donald_e_knuth")} />
           </Form.Item>
-          
+
           <Form.Item
             name="item_type"
             label={t("item_type")}
           >
             <Input placeholder={t("e_g_book_journalarticle")} />
           </Form.Item>
-          
+
           <Form.Item
             name="publication"
             label={t("publication")}
           >
             <Input placeholder={t("e_g_addison_wesley")} />
           </Form.Item>
-          
+
           <Form.Item
             name="date"
             label={t("date")}
           >
             <Input placeholder={t("e_g_2011_03_04")} />
           </Form.Item>
-          
+
           <Form.Item
             name="doi"
             label={t("doi")}
           >
             <Input placeholder={t("e_g_10_1002_9781118175324")} />
           </Form.Item>
-          
+
           <Form.Item
             name="url"
             label={t("url")}
           >
             <Input placeholder={t("e_g_https_example_com")} />
           </Form.Item>
-          
+
           <Form.Item
             name="isbn"
             label={t("isbn")}
           >
             <Input placeholder={t("e_g_978_0201896831")} />
           </Form.Item>
-          
+
           <Form.Item
             name="abstract_note"
             label={t("abstract_note")}
           >
             <Input.TextArea rows={3} placeholder={t("Enter abstract...")} />
           </Form.Item>
-          
+
           <Form.Item
             name="notes"
             label={t("notes")}
           >
             <Input.TextArea rows={2} placeholder={t("Enter notes...")} />
           </Form.Item>
-          
+
           <Form.Item
             name="tags"
             label={t("tags")}
           >
             <Input placeholder={t("e_g_computer_programming_algorithms")} />
           </Form.Item>
-          
+
           <Form.Item
             name="dataset"
             label={t("dataset")}
           >
             <Input placeholder={t("Enter dataset name...")} />
           </Form.Item>
-          
+
           <Form.Item>
             <Space>
               <Button type="primary" htmlType="submit">
@@ -707,8 +814,8 @@ export default function BibItemsPage() {
             <div style={{ display: 'flex', gap: 24 }}>
               <div style={{ flex: '0 0 150px' }}>
                 {getCoverUrl(selectedItem) ? (
-                  <img 
-                    src={getCoverUrl(selectedItem)} 
+                  <img
+                    src={getCoverUrl(selectedItem)}
                     alt={selectedItem.title}
                     style={{ width: 150, height: 225, objectFit: 'cover', borderRadius: 4 }}
                   />
@@ -721,7 +828,7 @@ export default function BibItemsPage() {
                 <p style={{ margin: '0 0 16px 0', color: 'var(--text-secondary)' }}>
                   {selectedItem.author}
                 </p>
-                
+
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                   {selectedItem.item_type && (
                     <div>
@@ -750,7 +857,7 @@ export default function BibItemsPage() {
                   {selectedItem.date && (
                     <div>
                       <div style={{ color: 'var(--text-secondary)', fontSize: 12 }}>{t("date")}</div>
-                      <div>{dayjs(selectedItem.date).format('YYYY-MM-DD')}</div>
+                      <div>{selectedItem.date === '0101-01-01' ? '-' : dayjs(selectedItem.date).format('YYYY-MM-DD')}</div>
                     </div>
                   )}
                   {selectedItem.volume && (
@@ -800,21 +907,21 @@ export default function BibItemsPage() {
                     </div>
                   )}
                 </div>
-                
+
                 {selectedItem.abstract_note && (
                   <div style={{ marginTop: 16 }}>
                     <div style={{ color: 'var(--text-secondary)', fontSize: 12 }}>{t("abstract_note")}</div>
                     <div style={{ whiteSpace: 'pre-wrap' }}>{selectedItem.abstract_note}</div>
                   </div>
                 )}
-                
+
                 {selectedItem.notes && (
                   <div style={{ marginTop: 16 }}>
                     <div style={{ color: 'var(--text-secondary)', fontSize: 12 }}>{t("notes")}</div>
                     <div style={{ whiteSpace: 'pre-wrap' }}>{selectedItem.notes}</div>
                   </div>
                 )}
-                
+
                 {selectedItem.tags && selectedItem.tags.length > 0 && (
                   <div style={{ marginTop: 16 }}>
                     <div style={{ color: 'var(--text-secondary)', fontSize: 12 }}>{t("tags")}</div>
@@ -825,7 +932,7 @@ export default function BibItemsPage() {
                     </Space>
                   </div>
                 )}
-                
+
                 {selectedItem.file_attachments && selectedItem.file_attachments.length > 0 && (
                   <div style={{ marginTop: 16 }}>
                     <div style={{ color: 'var(--text-secondary)', fontSize: 12 }}>{t("file_attachments")}</div>
@@ -847,6 +954,9 @@ export default function BibItemsPage() {
                     </ul>
                   </div>
                 )}
+
+                <Button size="small" icon={<CodeOutlined />} onClick={() => handleExportBibtex(selectedItem)}>{t("export_bibtex")}</Button>
+
               </div>
             </div>
           </div>

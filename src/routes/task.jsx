@@ -46,7 +46,7 @@ const TaskDboList = () => {
 
   // 从数据库/后端接口 获取taskdbo数据
   const getTaskDboData = async () => {
-    const { results } = (await apiClient.taskDBO()) || { results: [] };
+    const { results } = (await apiClient.workerListTasks()) || { results: [] };
     setTaskList(results);
     setLoading(false);
   };
@@ -55,6 +55,12 @@ const TaskDboList = () => {
     const jobId = await apiClient.workerSubmitTask('custom', { task_id });
     console.log(jobId);
     message.info(`已创建任务 ${jobId}`);
+  };
+
+  const deleteTask = async (task_id) => {
+    await apiClient.workerJobDelete(task_id);
+    message.success(`任务 ${task_id} 已删除`);
+    getTaskDboData();
   };
 
   // 组件挂载时加载数据，空数组依赖仅执行一次
@@ -119,9 +125,17 @@ const TaskDboList = () => {
             <Button
               size="small"
               icon={<PlayCircleOutlined />}
-              onClick={() => runTask(record.id)}
+              onClick={() => runTask(record.task_id)}
             >
               运行
+            </Button>
+            <Button
+              size="small"
+              icon={<DeleteOutlined />}
+              onClick={() => deleteTask(record.task_id)}
+              danger
+            >
+              删除
             </Button>
           </>
         );
@@ -184,7 +198,7 @@ export default function TaskPage() {
     if (res) {
       setEmbeddingsStats(res);
     }
-    const tasks = await apiClient.taskTypes();
+    const tasks = await apiClient.workerRegisteredTasks();
     setTaskTypes(tasks);
   };
 

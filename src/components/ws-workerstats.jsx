@@ -8,14 +8,15 @@ export const useWorkerStats = () => {
   const ws = useRef(null); 
 
   const startWorkerStats = () => {
-    const socketUrl = `wss://${location.hostname}/api/ws/jobs/stats?token=${apiClient.bearer}`;
+    const socketUrl = `wss://${location.hostname}/api/ws/maintenance/jobs/stats`;
 
     if (ws.current != null) return;
     ws.current = new WebSocket(socketUrl);
-
-    // 连接成功
+    
+    // Send subscribe message after connection
     ws.current.onopen = () => {
       console.log(t("websocket_connected"));
+      ws.current.send(JSON.stringify({ action: "subscribe" }));
     };
 
     // 接收消息：核心逻辑

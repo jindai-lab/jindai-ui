@@ -83,7 +83,7 @@ export default function SettingsPage() {
             <Col span={8}>
               <Checkbox checked={Boolean(settings.viewPdfAsImage)} onChange={(e) => {
                 updateSettings({ viewPdfAsImage: e.target.checked })
-              }}>{t("use_server_side_pdf_rendering")}</Checkbox>
+              }} />{t("use_server_side_pdf_rendering")}
             </Col>
           </Row>
         </Space>
