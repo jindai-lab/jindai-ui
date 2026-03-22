@@ -194,12 +194,12 @@ export default function TaskPage() {
   const { stats, startWorkerStats, stopWorkerStats } = useWorkerStats();
 
   const refreshEmbeddingsCount = async () => {
+    const tasks = await apiClient.workerRegisteredTasks();
+    setTaskTypes(tasks);
     const res = await apiClient.embeddingStats();
     if (res) {
       setEmbeddingsStats(res);
     }
-    const tasks = await apiClient.workerRegisteredTasks();
-    setTaskTypes(tasks);
   };
 
   useEffect(() => {

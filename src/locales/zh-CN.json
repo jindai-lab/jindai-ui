@@ -129,7 +129,7 @@
     "result_details": "结果详情",
     "use_server_side_pdf_rendering": "使用服务器端PDF渲染",
     "saving_configuration": "保存配置",
-    "copyright": "版权",
+    "copyright": "版权所有",
     "delete_file_folder": "删除文件/文件夹",
     "failed_to_activate_api_key": "激活API密钥失败",
     "failed_to_import_bibtex": "导入BibTeX失败",
@@ -141,7 +141,7 @@
     "are_you_sure_you_want_to_deactivate_this_api_key": "确定要停用此API密钥吗？",
     "thai": "泰语",
     "search_file_folder_name": "搜索文件/文件夹名称",
-    "software_registered": "软件已注册",
+    "software_registered": "本软件已取得软件著作权登记",
     "keyword": "关键词",
     "shortcut_error": "快捷键错误",
     "deactivate": "停用",
@@ -164,7 +164,7 @@
     "create": "创建",
     "vietnamese": "越南语",
     "failed_to_load_api_keys": "加载API密钥失败",
-    "platform_version": "平台版本",
+    "platform_version": "Jindai v{{frontend}}@{{backend}}",
     "copy_api_key": "复制API密钥",
     "api_key": "API密钥",
     "interface_language": "界面语言",
@@ -257,6 +257,7 @@
     "e_g_10_1002_9781118175324": "例如：10.1002/9781118175324",
     "all_fields": "所有字段",
     "clear": "清除",
-    "search_bibliography": "搜索文献"
+    "search_bibliography": "搜索文献",
+    "filter_count": "{{count}} 个筛选"
   }
 }

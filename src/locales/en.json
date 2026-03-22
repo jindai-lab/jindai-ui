@@ -257,6 +257,7 @@
     "e_g_10_1002_9781118175324": "e.g., 10.1002/9781118175324",
     "all_fields": "All Fields",
     "clear": "Clear",
-    "search_bibliography": "Search Bibliography"
+    "search_bibliography": "Search Bibliography",
+    "filter_count": "{{count}} Filters"
   }
 }
