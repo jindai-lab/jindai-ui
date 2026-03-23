@@ -62,7 +62,7 @@ export default function NavSidebar({user, logout}) {
             <DatabaseOutlined />
             <span className="menu-text">{t("datasets")}</span>
           </NavLink>
-          <NavLink to="/bibitems">
+          <NavLink to="/bibliothek">
             <BookOutlined />
             <span className="menu-text">{t("bibliography_items")}</span>
           </NavLink>

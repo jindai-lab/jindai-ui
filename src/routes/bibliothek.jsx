@@ -1,17 +1,17 @@
-import { Card, Button, Table, Modal, Form, Input, message, Space, Tag, Popconfirm, Grid, Pagination, Dropdown, Select } from "antd";
-import { useEffect, useState, useRef } from "react";
+import { CodeOutlined, DashboardOutlined, EditOutlined, EyeOutlined, FileTextOutlined, PlusOutlined, SearchOutlined, SyncOutlined, UnorderedListOutlined, UploadOutlined } from "@ant-design/icons";
+import { Button, Card, Divider, Dropdown, Form, Grid, Input, message, Modal, Pagination, Select, Space, Table, Tag } from "antd";
+import dayjs from "dayjs";
+import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { apiClient } from "../api";
-import { useTranslation } from "react-i18next";
-import { PlusOutlined, DeleteOutlined, EditOutlined, EyeOutlined, BookOutlined, DashboardOutlined, UnorderedListOutlined, DownloadOutlined, SyncOutlined, UploadOutlined, FileTextOutlined, CodeOutlined, SearchOutlined } from "@ant-design/icons";
-import dayjs from "dayjs";
+import { BibItemCover, BibItemDetailContent } from "../components/bib-item-detail-content";
 import BibItemDisplay from "../components/bib-item-display";
 import BibItemEditForm from "../components/bib-item-edit-form";
-import { getCoverUrl, getDefaultCover, BibItemDetailContent } from "../components/bib-item-detail-content";
 
 const { useBreakpoint } = Grid;
 
-export default function BibItemsPage() {
+export default function BibliothekPage() {
   const { t } = useTranslation();
   const screens = useBreakpoint();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -37,7 +37,7 @@ export default function BibItemsPage() {
   const [searchType, setSearchType] = useState('all');
 
   // Update URL params when search changes
-  const updateSearchParams = (query, type, page = 1, force = false) => {
+  const updateSearchParams = (query, type, page = 1, force = true) => {
     const params = new URLSearchParams();
     if (query) params.set('query', query);
     if (type && type !== 'all') params.set('type', type);
@@ -95,7 +95,7 @@ export default function BibItemsPage() {
   };
 
   const handleSearchSubmit = () => {
-    updateSearchParams(searchQuery, searchType)
+    updateSearchParams(searchQuery, searchType, 1, true)
   };
 
   const handleKeyPress = (e) => {
@@ -144,7 +144,7 @@ export default function BibItemsPage() {
     form.setFieldsValue({
       item_type: record.item_type,
       title: record.title,
-      author: record.author,
+      authors: record.authors,
       abstract_note: record.abstract_note,
       publication: record.publication,
       date: record.date ? dayjs(record.date) : null,
@@ -176,35 +176,6 @@ export default function BibItemsPage() {
 
   const handleView = (record) => {
     setSelectedItem(record);
-  };
-
-  const handleDownload = async (attachment) => {
-    try {
-      let filePath = attachment.path;
-      if (filePath && !filePath.startsWith('http')) {
-        // For local files, use the files API
-        const url = `/files/${encodeURIComponent(filePath)}`;
-        const { url: blobUrl } = await apiClient.download(url);
-        const link = document.createElement('a');
-        link.href = blobUrl;
-        link.download = attachment.title || attachment.path?.split('/').pop() || 'attachment';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(blobUrl);
-      } else if (filePath) {
-        // For remote URLs, trigger download
-        const link = document.createElement('a');
-        link.href = filePath;
-        link.download = attachment.title || filePath.split('/').pop() || 'attachment';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }
-    } catch (error) {
-      console.error('Download failed:', error);
-      message.error(t("download_failed"));
-    }
   };
 
   // Import/Export handlers
@@ -306,8 +277,7 @@ export default function BibItemsPage() {
       title: t("cover"),
       key: "cover",
       width: 80,
-      render: (_, record) => {
-        const coverUrl = getCoverUrl(record);
+      render: (_, item) => {
         return (
           <div
             style={{
@@ -318,21 +288,9 @@ export default function BibItemsPage() {
               overflow: 'hidden',
               cursor: 'pointer'
             }}
-            onClick={() => handleView(record)}
+            onClick={() => handleView(item)}
           >
-            {coverUrl ? (
-              <img
-                src={coverUrl}
-                alt={record.title}
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                  e.target.parentElement.innerHTML = '';
-                }}
-              />
-            ) : (
-              getDefaultCover()
-            )}
+            <BibItemCover item={item} />
           </div>
         );
       },
@@ -354,19 +312,20 @@ export default function BibItemsPage() {
     },
     {
       title: t("author"),
-      dataIndex: "author",
-      key: "author",
+      dataIndex: "authors",
+      key: "authors",
       width: 200,
-      render: (text, record) => (
-        <div
-          style={{ cursor: 'pointer', color: 'var(--primary-color)' }}
-          onClick={(e) => {
-            e.stopPropagation();
-            updateSearchParams(text, 'author', 1, 20);
-          }}
-        >
-          {text}
-        </div>
+      render: (authors, record) => (
+        authors.map(author => (
+          <div
+            style={{ cursor: 'pointer', color: 'var(--primary-color)' }}
+            onClick={(e) => {
+              e.stopPropagation();
+              updateSearchParams(author, 'author', 1, 20);
+            }}
+          >
+            {author}
+          </div>))
       ),
     },
     {
@@ -445,95 +404,98 @@ export default function BibItemsPage() {
                 </Button>
               )}
             </Space>
-            <Space size="small">
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={() => {
-                  setEditingItem(null);
-                  form.resetFields();
-                  setShowModal(true);
-                }}
-              >
-                {t("create_new")}
-              </Button>
-              <Dropdown
-                menu={{
-                  items: [
-                    {
-                      key: 'sync-calibre',
-                      icon: <SyncOutlined />,
-                      label: t("sync_calibre"),
-                      onClick: handleSyncCalibre,
-                    },
-                    {
-                      key: 'sync-zotero',
-                      icon: <SyncOutlined />,
-                      label: t("sync_zotero"),
-                      onClick: handleSyncZotero,
-                    },
-                    {
-                      type: 'divider',
-                    },
-                    {
-                      key: 'paste-bibtex',
-                      icon: <FileTextOutlined />,
-                      label: t("paste_bibtex"),
-                      onClick: () => setShowBibtexModal(true),
-                    },
-                    {
-                      key: 'upload-bibtex',
-                      icon: <UploadOutlined />,
-                      label: t("upload_bibtex"),
-                      onClick: () => fileInputRef.current?.click(),
-                    },
-                    {
-                      type: 'divider',
-                    },
-                  ],
-                }}
-                trigger={['click']}
-              >
-                <Button icon={<CodeOutlined />}>
-                  {t("more_actions")}
-                </Button>
-              </Dropdown>
-              <input
-                type="file"
-                accept=".bib"
-                style={{ display: 'none' }}
-                ref={fileInputRef}
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    handleUploadBibtex(file);
-                  }
-                  if (fileInputRef.current) {
-                    fileInputRef.current.value = '';
-                  }
-                }}
-              />
-            </Space>
-            <Space size="small" style={{ marginLeft: 16 }}>
-              <Button
-                icon={<UnorderedListOutlined />}
-                type={viewMode === 'list' ? 'primary' : 'default'}
-                onClick={() => setViewMode('list')}
-              >
-                {t("list_view")}
-              </Button>
-              <Button
-                icon={<DashboardOutlined />}
-                type={viewMode === 'grid' ? 'primary' : 'default'}
-                onClick={() => setViewMode('grid')}
-              >
-                {t("grid_view")}
-              </Button>
-            </Space>
           </Space>
         }
         style={{ background: "var(--panel-bg)", color: "var(--text)", borderColor: "var(--border)" }}
       >
+        <Space size="small">
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => {
+              setEditingItem(null);
+              form.resetFields();
+              setShowModal(true);
+            }}
+          >
+            {t("create_new")}
+          </Button>
+          <Dropdown
+            menu={{
+              items: [
+                {
+                  key: 'sync-calibre',
+                  icon: <SyncOutlined />,
+                  label: t("sync_calibre"),
+                  onClick: handleSyncCalibre,
+                },
+                {
+                  key: 'sync-zotero',
+                  icon: <SyncOutlined />,
+                  label: t("sync_zotero"),
+                  onClick: handleSyncZotero,
+                },
+                {
+                  type: 'divider',
+                },
+                {
+                  key: 'paste-bibtex',
+                  icon: <FileTextOutlined />,
+                  label: t("paste_bibtex"),
+                  onClick: () => setShowBibtexModal(true),
+                },
+                {
+                  key: 'upload-bibtex',
+                  icon: <UploadOutlined />,
+                  label: t("upload_bibtex"),
+                  onClick: () => fileInputRef.current?.click(),
+                },
+                {
+                  type: 'divider',
+                },
+              ],
+            }}
+            trigger={['click']}
+          >
+            <Button icon={<CodeOutlined />}>
+              {t("more_actions")}
+            </Button>
+          </Dropdown>
+          <input
+            type="file"
+            accept=".bib"
+            style={{ display: 'none' }}
+            ref={fileInputRef}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                handleUploadBibtex(file);
+              }
+              if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+              }
+            }}
+          />
+        </Space>
+        <Space size="small" style={{ marginLeft: 16 }}>
+          <Button
+            icon={<UnorderedListOutlined />}
+            type={viewMode === 'list' ? 'primary' : 'default'}
+            onClick={() => setViewMode('list')}
+          >
+            {t("list_view")}
+          </Button>
+          <Button
+            icon={<DashboardOutlined />}
+            type={viewMode === 'grid' ? 'primary' : 'default'}
+            onClick={() => setViewMode('grid')}
+          >
+            {t("grid_view")}
+          </Button>
+        </Space>
+
+        <Divider></Divider>
+
         {viewMode === 'list' ? (
           <Table
             columns={columns}
@@ -557,7 +519,7 @@ export default function BibItemsPage() {
                   key={item.id}
                   item={item}
                   onEdit={handleEdit}
-                  onViewFile={handleView}
+                  onView={handleView}
                   onExportBibtex={handleExportBibtex}
                 />
               ))}
@@ -633,7 +595,7 @@ export default function BibItemsPage() {
           </Form.Item>
         </Form>
       </Modal>
-      
+
       {/* Detail Info for selected item */}
       <Modal
         title={t("bibliography_detail")}

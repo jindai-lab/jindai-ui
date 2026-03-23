@@ -203,6 +203,7 @@
     "no_task_data": "无任务数据",
     "abstract_note": "摘要/备注",
     "download": "下载",
+    "downloading": "下载中...",
     "log_content": "日志内容",
     "confirm": "确认",
     "file_attachments": "文件附件",

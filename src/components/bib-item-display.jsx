@@ -1,10 +1,9 @@
-import { Card, Space, Button, Modal } from "antd";
-import { useState } from "react";
+import { Card, Space, Button, Modal, Tag } from "antd";
 import { EyeOutlined, CodeOutlined } from "@ant-design/icons";
-import { getCoverUrl, getDefaultCover } from "./bib-item-detail-content";
+import { BibItemCover } from "./bib-item-detail-content";
 import { useTranslation } from "react-i18next";
 
-export default function BibItemDisplay({ item, onEdit, onViewFile }) {
+export default function BibItemDisplay({ item, onEdit, onView }) {
   const { t } = useTranslation();
 
   return (
@@ -16,18 +15,7 @@ export default function BibItemDisplay({ item, onEdit, onViewFile }) {
           <a
             href={`/files/${item.file_attachments[0]}`}
             target="_blank" style={{ height: 150, overflow: 'hidden' }}>
-            {getCoverUrl(item) ? (
-              <img
-                src={getCoverUrl(item)}
-                alt={item.title}
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                }}
-              />
-            ) : (
-              getDefaultCover()
-            )}
+            <BibItemCover item={item} fit="cover" />
           </a>
         }
       >
@@ -38,7 +26,7 @@ export default function BibItemDisplay({ item, onEdit, onViewFile }) {
               <div
                 style={{ color: 'var(--text-secondary)', fontSize: 14 }}
               >
-                {item.author}
+                {item.authors.map(author => <Tag>{author}</Tag>)}
               </div>
               {item.publication && <div style={{ color: 'var(--text-secondary)', fontSize: 14 }}>{item.publication}</div>}
               {item.date && <div style={{ color: 'var(--text-secondary)', fontSize: 12 }}>{item.date}</div>}
@@ -46,7 +34,7 @@ export default function BibItemDisplay({ item, onEdit, onViewFile }) {
           }
         />
         <Space size="small" style={{ marginTop: 12 }}>
-          <Button size="small" icon={<EyeOutlined />} onClick={(e) => { e.stopPropagation(); onViewFile(item); }}>
+          <Button size="small" icon={<EyeOutlined />} onClick={(e) => { e.stopPropagation(); onView(item); }}>
             {t("view")}
           </Button>
           <Button size="small" icon={<CodeOutlined />} onClick={(e) => { e.stopPropagation(); onEdit(item); }}>

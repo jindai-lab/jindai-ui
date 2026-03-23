@@ -47,7 +47,7 @@ export default function SettingsPage() {
           <Col span={8}>
             <Select 
               value={i18next.language} 
-              style={{ width: 160 }}
+              style={{ width: '100%' }}
               onChange={(value) => {
                 i18next.changeLanguage(value)
               }} 
@@ -62,28 +62,12 @@ export default function SettingsPage() {
       <Card title={t("appearance_settings")} style={{ background: "var(--panel-bg)", color: "var(--text)", borderColor: "var(--border)", marginBottom: 16 }}>
         <Space direction="vertical" size="large" style={{ width: '100%' }}>
           <Row>
-            <Col span={4} style={{ color: "var(--text)", fontWeight: 500 }}>{t("color_mode")}</Col>
-            <Col span={8}>
-              <Select 
-                value={settings.theme} 
-                style={{ width: 140 }}
-                onChange={(value) => {
-                  updateSettings({ theme: value })
-                }} 
-                options={[
-                  { label: t("auto"), value: "auto" },
-                  { label: t("light"), value: "light" },
-                  { label: t("dark"), value: "dark" },
-                ]}></Select>
-            </Col>
-          </Row>
-          <Divider style={{ margin: "8px 0" }} />
-          <Row>
             <Col span={4} style={{ color: "var(--text)", fontWeight: 500 }}>{t("display_settings")}</Col>
             <Col span={8}>
               <Checkbox checked={Boolean(settings.viewPdfAsImage)} onChange={(e) => {
                 updateSettings({ viewPdfAsImage: e.target.checked })
-              }} />{t("use_server_side_pdf_rendering")}
+                id="viewPdfAsImage"
+              }}>{t("use_server_side_pdf_rendering")}</Checkbox>
             </Col>
           </Row>
         </Space>
@@ -97,7 +81,7 @@ export default function SettingsPage() {
               <Select 
                 value={settings.translatorLang} 
                 onChange={e => updateSettings({ translatorLang: e })} 
-                style={{ width: 160 }} 
+                style={{ width: '100%' }} 
                 options={[
                   { label: t("zh_cn"), value: "zh-CN" },
                   { label: t("en"), value: "en" },
@@ -113,7 +97,7 @@ export default function SettingsPage() {
                 value={settings.translatorZhipuApiKey} 
                 onChange={e => updateSettings({ translatorZhipuApiKey: e.target.value })}
                 placeholder={t("please_enter_new_name")}
-                style={{ width: 320 }}
+                style={{ width: '100%' }}
                 type="password"
               />
             </Col>

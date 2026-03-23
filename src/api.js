@@ -179,7 +179,7 @@ export const apiClient = Object.assign(
       return (await this.makeCall(`worker/tasks`, { task_name: type, ...params }))?.task_id;
     },
     async workerClearJobs() {
-      return await this.makeCall("worker/queues", null, { method: "DELETE" });
+      return await this.makeCall("worker/tasks", null, { method: "DELETE" });
     },
     async workerJob(jobId) {
       return await this.makeCall(`worker/tasks/${jobId}`);

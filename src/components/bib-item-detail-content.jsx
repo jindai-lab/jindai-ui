@@ -1,59 +1,78 @@
-import { Tag, Space, Button } from "antd";
+import { Tag, Space, Button, Spin, message } from "antd";
 import { DownloadOutlined, CodeOutlined, BookOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { apiClient } from "../api";
 import { useTranslation } from "react-i18next";
+import { useEffect, useState } from "react";
 
-export function getDefaultCover() {
-  return (
-    <div style={{
-      width: '100%',
-      height: '100%',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: 'var(--bg-secondary)',
-      color: 'var(--text-secondary)',
-      fontSize: '48px'
-    }}>
-      <BookOutlined />
-    </div>
-  );
-}
 
-export function getCoverUrl(item) {
-  if (item.cover) {
-      return `/api/v2/files/${item.cover}`
+export function BibItemCover({ item, fit }) {
+  const [coverUrl, setCoverUrl] = useState('')
+
+  const getDefaultCover = () => {
+    return (
+      <div style={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'var(--bg-secondary)',
+        color: 'var(--text-secondary)',
+        fontSize: '48px'
+      }}>
+        <BookOutlined />
+      </div>
+    );
   }
-  if (item.file_attachments && item.file_attachments.length > 0) {
-    // Try to find an image attachment
-    for (const attachment of item.file_attachments) {
-      const mimetype = attachment.mimetype || '';
-      if (mimetype.startsWith('image/')) {
-        // If it's a local file path, construct the URL
-        if (attachment.path && !attachment.path.startsWith('http')) {
-          return `/api/v2/files/${encodeURIComponent(attachment.path)}`;
-        }
-        return attachment.path;
-      }
+
+  const getCoverUrl = async (item) => {
+    if (item.cover) {
+      const downloaded = await apiClient.download(`files/${item.cover}`)
+      return downloaded.url;
     }
-    // If no image found, return the first attachment as a placeholder
     return null;
   }
-  return null;
+
+  useEffect(() => {
+    getCoverUrl(item).then(setCoverUrl)
+  }, [item])
+
+  return (
+    coverUrl ? (
+      <img
+        src={coverUrl}
+        alt={item.title}
+        style={{ width: '100%', height: '100%', objectFit: fit || 'contain' }}
+        onError={(e) => {
+          e.target.style.display = 'none';
+          e.target.parentElement.innerHTML = '';
+        }}
+      />
+    ) : (
+      getDefaultCover()
+    )
+  )
 }
 
-export function handleDownload(attachment, t) {
-  return async () => {
+
+export function BibItemDetailContent({ item, onExportBibtex }) {
+  const { t } = useTranslation();
+  const [downloading, setDownloading] = useState(null)
+
+  if (!item) return null;
+
+  const handleDownload = async (attachment) => {
+    setDownloading(attachment);
     try {
-      let filePath = attachment.path;
+      let filePath = attachment;
       if (filePath && !filePath.startsWith('http')) {
         // For local files, use the files API
-        const url = `/files/${encodeURIComponent(filePath)}`;
+        const url = `files/${filePath}`;
         const { url: blobUrl } = await apiClient.download(url);
         const link = document.createElement('a');
         link.href = blobUrl;
-        link.download = attachment.title || attachment.path?.split('/').pop() || 'attachment';
+        link.download = attachment.split('/').pop();
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -69,38 +88,22 @@ export function handleDownload(attachment, t) {
       }
     } catch (error) {
       console.error('Download failed:', error);
-      // message.error(t("download_failed"));
+      message.error(t("download_failed"));
+    } finally {
+      setDownloading(null);
     }
   };
-}
-
-export function BibItemDetailContent({ item, onExportBibtex }) {
-  const { t } = useTranslation();
-
-  if (!item) return null;
 
   return (
     <div style={{ padding: 16 }}>
       <div style={{ display: 'flex', gap: 24 }}>
         <div style={{ flex: '0 0 150px' }}>
-          {getCoverUrl(item) ? (
-            <img
-              src={getCoverUrl(item)}
-              alt={item.title}
-              style={{ width: 150, height: 225, objectFit: 'cover', borderRadius: 4 }}
-              onError={(e) => {
-                e.target.style.display = 'none';
-                e.target.innerHTML = '';
-              }}
-            />
-          ) : (
-            getDefaultCover()
-          )}
+          <BibItemCover item={item} />
         </div>
         <div style={{ flex: 1 }}>
           <h2 style={{ margin: '0 0 8px 0' }}>{item.title}</h2>
           <p style={{ margin: '0 0 16px 0', color: 'var(--text-secondary)' }}>
-            {item.author}
+            {item.authors.map(author => <Tag>{author}</Tag>)}
           </p>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
@@ -199,7 +202,7 @@ export function BibItemDetailContent({ item, onExportBibtex }) {
           {item.tags && item.tags.length > 0 && (
             <div style={{ marginTop: 16 }}>
               <div style={{ color: 'var(--text-secondary)', fontSize: 12 }}>{t("tags")}</div>
-              <Space>
+              <Space style={{ flexWrap: "wrap" }}>
                 {[...new Set(item.tags)].map((tag, index) => (
                   <Tag key={index}>{tag}</Tag>
                 ))}
@@ -217,10 +220,10 @@ export function BibItemDetailContent({ item, onExportBibtex }) {
                       <span>{attachment.split('/').pop(0)}</span>
                       <Button
                         size="small"
-                        icon={<DownloadOutlined />}
-                        onClick={handleDownload(attachment, t)}
+                        icon={downloading === attachment ? <Spin spin /> : <DownloadOutlined />}
+                        onClick={() => handleDownload(attachment)}
                       >
-                        {t("download")}
+                        {downloading === attachment ? t("downloading") : t("download")}
                       </Button>
                     </Space>
                   </li>
