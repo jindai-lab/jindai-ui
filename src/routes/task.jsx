@@ -28,7 +28,6 @@ import { useNavigate } from "react-router-dom";
 import { apiClient } from "../api.js";
 import ParamPanel from "../components/param-panel.jsx";
 import { useWorkerStats } from "../components/ws-workerstats.jsx";
-import "./task.css";
 
 import { JobsList } from "../components/jobs-list.jsx";
 import { useTranslation } from "react-i18next";

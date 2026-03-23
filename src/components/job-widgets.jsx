@@ -90,7 +90,7 @@ const { t } = useTranslation();
           </Descriptions>
 
           {/* 错误信息（仅在有错误时显示） */}
-          {job.status != "SUCCESS" && job.error && (
+          {job.status != "success" && job.error && (
             <>
               <Divider orientation="left" style={{ marginTop: "20px" }}>
                 <Text strong type="danger">
@@ -103,6 +103,7 @@ const { t } = useTranslation();
                   padding: "16px",
                   borderRadius: "4px",
                   border: "1px solid #ffccc7",
+                  color: "#000000"
                 }}
               >
                 {job.error}
@@ -140,17 +141,15 @@ const { t } = useTranslation();
 
 export function JobStatusTag({ status }) {
   switch (status) {
-    case "SUCCESS":
+    case "success":
       return (
         <Tag icon={<CheckCircleOutlined />} color="success">
           执行成功
         </Tag>
       );
-    case "PENDING":
+    case "queued":
       return <Tag color="gold">挂起</Tag>;
-    case "PROCESSING":
-    case "STARTED":
-    case "RUNNING":
+    case "running":
       return <Tag color="blue">运行中</Tag>;
     default:
       return (
