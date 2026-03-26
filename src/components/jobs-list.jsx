@@ -162,7 +162,7 @@ function JobDetailModal({ job, visible, onCancel }) {
                   }}
                   style={{ margin: 0, whiteSpace: "pre-wrap" }}
                 >
-                  {job.error}
+                  {JSON.parse(job.error)}
                 </Paragraph>
               </div>
             </>

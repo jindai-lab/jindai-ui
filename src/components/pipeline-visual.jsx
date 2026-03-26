@@ -5,43 +5,9 @@ import ParamPanel from './param-panel';
 import { apiClient } from '../api';
 import { useTranslation } from "react-i18next";
 
-const Pipeline = ({ value = [], onChange, workflowConfig = {}, onWorkflowConfigChange }) => {
+const PipelineVisual = ({ value = [], onChange, pipelineSchema = {}, onSyncYaml }) => {
   const { t } = useTranslation();
-  const [pipelineSchema, setPipelineSchema] = useState([]);
   const [expandedStages, setExpandedStages] = useState({});
-
-  // Fetch pipeline schema on mount
-  useEffect(() => {
-    const fetchPipelineSchema = async () => {
-      try {
-        const schemaData = await apiClient.getPipelines();
-        const flattened = [];
-
-        // Iterate through categories
-        for (const category in schemaData) {
-          const components = schemaData[category];
-
-          // Iterate through components in that category
-          for (const componentKey in components) {
-            const component = components[componentKey];
-            flattened.push({
-              label: component.name,
-              category: category,
-              args: component.args,
-              doc: component.doc
-            });
-          }
-        }
-
-        setPipelineSchema(flattened);
-      } catch (err) {
-        console.error(t("get_pipeline_schema_failed"), err);
-        message.error(t("get_pipeline_schema_failed"));
-      }
-    };
-
-    fetchPipelineSchema();
-  }, []);
 
   // Toggle stage expansion
   const toggleStageExpand = (index) => {
@@ -54,7 +20,11 @@ const Pipeline = ({ value = [], onChange, workflowConfig = {}, onWorkflowConfigC
   // Add a new stage
   const addStage = () => {
     const newStage = { '': {} };
-    onChange([...value, newStage]);
+    const newPipeline = [...value, newStage];
+    onChange(newPipeline);
+    if (onSyncYaml) {
+      onSyncYaml(newPipeline);
+    }
   };
 
   // Delete a stage
@@ -62,6 +32,9 @@ const Pipeline = ({ value = [], onChange, workflowConfig = {}, onWorkflowConfigC
     const newPipeline = [...value];
     newPipeline.splice(index, 1);
     onChange(newPipeline);
+    if (onSyncYaml) {
+      onSyncYaml(newPipeline);
+    }
   };
 
   // Move stage up
@@ -70,6 +43,9 @@ const Pipeline = ({ value = [], onChange, workflowConfig = {}, onWorkflowConfigC
     const newPipeline = [...value];
     [newPipeline[index - 1], newPipeline[index]] = [newPipeline[index], newPipeline[index - 1]];
     onChange(newPipeline);
+    if (onSyncYaml) {
+      onSyncYaml(newPipeline);
+    }
   };
 
   // Move stage down
@@ -78,6 +54,9 @@ const Pipeline = ({ value = [], onChange, workflowConfig = {}, onWorkflowConfigC
     const newPipeline = [...value];
     [newPipeline[index], newPipeline[index + 1]] = [newPipeline[index + 1], newPipeline[index]];
     onChange(newPipeline);
+    if (onSyncYaml) {
+      onSyncYaml(newPipeline);
+    }
   };
 
   // Update stage class name
@@ -90,6 +69,9 @@ const Pipeline = ({ value = [], onChange, workflowConfig = {}, onWorkflowConfigC
     const newStage = { [className]: currentParams };
     newPipeline[index] = newStage;
     onChange(newPipeline);
+    if (onSyncYaml) {
+      onSyncYaml(newPipeline);
+    }
   };
 
   // Update stage parameters
@@ -99,14 +81,9 @@ const Pipeline = ({ value = [], onChange, workflowConfig = {}, onWorkflowConfigC
     const currentClass = Object.keys(currentStage)[0];
     newPipeline[index] = { [currentClass]: newParams };
     onChange(newPipeline);
-  };
-
-  // Update workflow config
-  const updateWorkflowConfig = (field, value) => {
-    onWorkflowConfigChange({
-      ...workflowConfig,
-      [field]: value
-    });
+    if (onSyncYaml) {
+      onSyncYaml(newPipeline);
+    }
   };
 
   // Get schema for a specific stage class
@@ -122,51 +99,6 @@ const Pipeline = ({ value = [], onChange, workflowConfig = {}, onWorkflowConfigC
 
   return (
     <div style={{ marginBottom: 16 }}>
-      {/* Workflow Configuration Section */}
-      <Card
-        size="small"
-        style={{
-          marginBottom: 16,
-          borderLeft: '4px solid var(--primary)',
-          position: 'relative'
-        }}
-        title={
-          <Space>
-            <span>{t("workflow_config")}</span>
-          </Space>
-        }
-      >
-        <Form layout="vertical">
-          <Form.Item label={t("name")} style={{ marginBottom: 16 }}>
-            <Input
-              value={workflowConfig.name || ''}
-              onChange={(e) => updateWorkflowConfig('name', e.target.value)}
-              placeholder={t("enter_workflow_name")}
-            />
-          </Form.Item>
-          <Form.Item label={t("shared")} style={{ marginBottom: 16 }}>
-            <Switch
-              checked={workflowConfig.shared || false}
-              onChange={(checked) => updateWorkflowConfig('shared', checked)}
-            />
-          </Form.Item>
-          <Form.Item label={t("resume_next")} style={{ marginBottom: 16 }}>
-            <Switch
-              checked={workflowConfig.resume_next !== false}
-              onChange={(checked) => updateWorkflowConfig('resume_next', checked)}
-            />
-          </Form.Item>
-          <Form.Item label={t("concurrent")} style={{ marginBottom: 16 }}>
-            <Input
-              type="number"
-              value={workflowConfig.concurrent || 3}
-              onChange={(e) => updateWorkflowConfig('concurrent', parseInt(e.target.value, 10) || 0)}
-              min={0}
-            />
-          </Form.Item>
-        </Form>
-      </Card>
-
       <Space style={{ marginBottom: 16 }}>
         <Button type="primary" onClick={addStage} icon={<PlusOutlined />}>
           {t("add_stage")}
@@ -174,10 +106,12 @@ const Pipeline = ({ value = [], onChange, workflowConfig = {}, onWorkflowConfigC
       </Space>
 
       {value.map((stage, index) => {
+        if (Array.isArray(stage)) {
+            stage = {[stage[0]]: stage[1]}
+        }
         const stageClass = Object.keys(stage)[0];
         const stageParams = Object.values(stage)[0] || {};
         const stageSchema = getStageSchema(stageClass);
-        console.log(stageSchema)
 
         return (
           <Card
@@ -249,6 +183,7 @@ const Pipeline = ({ value = [], onChange, workflowConfig = {}, onWorkflowConfigC
                 scheme={Object.fromEntries(stageSchema.args.map(arg => [arg.name, arg.type]))}
                 value={stageParams}
                 onChange={(newParams) => updateStageParams(index, newParams)}
+                pipelineSchema={pipelineSchema}
               />
             )}
           </Card>
@@ -264,4 +199,4 @@ const Pipeline = ({ value = [], onChange, workflowConfig = {}, onWorkflowConfigC
   );
 };
 
-export default Pipeline;
+export default PipelineVisual;

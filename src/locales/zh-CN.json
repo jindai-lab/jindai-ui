@@ -30,7 +30,7 @@
     "failed_to_export_bibtex": "导出BibTeX失败",
     "traditional_chinese": "繁体中文",
     "items_selected": "已选择项目",
-    "platform_name": "平台名称",
+    "platform_name": "数字文献利用平台",
     "e_g_2011_03_04": "例如：2011-03-04",
     "auto": "自动",
     "grouping": "分组",
@@ -259,6 +259,10 @@
     "all_fields": "所有字段",
     "clear": "清除",
     "search_bibliography": "搜索文献",
-    "filter_count": "{{count}} 个筛选"
+    "filter_count": "{{count}} 个筛选",
+    "update": "更新",
+    "run": "运行",
+    "yaml_valid": "验证通过",
+    "start_time": "开始时间"
   }
 }

@@ -5,9 +5,10 @@ import DatasetSelector from './dataset-selector'
 import FileSourceSelector from './filesource-selector'
 import { apiClient } from '../api';
 import { useTranslation } from "react-i18next";
+import PipelineVisual from './pipeline-visual.jsx';
 
-const ParamPanel = ({ scheme, value = {}, onChange }) => {
-const { t } = useTranslation();
+const ParamPanel = ({ scheme, value = {}, onChange, pipelineSchema = {} }) => {
+  const { t } = useTranslation();
 
   // 统一变更处理函数
   const handleFieldChange = (key, val) => {
@@ -81,7 +82,10 @@ const { t } = useTranslation();
       ),
       lang: (
         <Select value={currentVal} onChange={(e) => handleFieldChange(key, e)}
-         options={apiClient.langCodes} />
+          options={apiClient.langCodes} />
+      ),
+      PIPELINE: (
+        <PipelineVisual value={currentVal} onChange={(e) => handleFieldChange(key, e)} pipelineSchema={pipelineSchema} />
       )
     };
 

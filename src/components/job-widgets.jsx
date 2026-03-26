@@ -72,16 +72,12 @@ const { t } = useTranslation();
               {apiClient.formatIsoToDateTime(job.date_done)}
             </Descriptions.Item>
             <Descriptions.Item label={t("task_name")} span={1}>
-              {job.task_name ? (
-                job.task_name
-              ) : (
-                <Text type="secondary">无返回值</Text>
-              )}
+              {job.task_name}
             </Descriptions.Item>
             <Descriptions.Item label={t("return_value")} span={2}>
               {job.return_value ? (
                 <pre className="json">
-                  {JSON.stringify(job.return_value, null, 2)}
+                  {JSON.parse(job.return_value)}
                 </pre>
               ) : (
                 <Text type="secondary">无返回值</Text>
@@ -149,7 +145,7 @@ export function JobStatusTag({ status }) {
       );
     case "queued":
       return <Tag color="gold">挂起</Tag>;
-    case "running":
+    case "processing":
       return <Tag color="blue">运行中</Tag>;
     default:
       return (

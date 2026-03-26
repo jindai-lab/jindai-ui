@@ -1,16 +1,16 @@
-import { message, Form, Button, Space, Tabs } from "antd";
-import { PlayCircleOutlined, CodeOutlined, FormOutlined } from "@ant-design/icons";
+import { message, Form, Button, Space, Tabs, Input, Switch, InputNumber } from "antd";
+import { PlayCircleOutlined, CodeOutlined, FormOutlined, SettingOutlined } from "@ant-design/icons";
 import yaml from "js-yaml";
 import { useState, useRef, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { apiClient } from "../api";
 import ParamPanel from "../components/param-panel";
-import Pipeline from "../components/pipeline";
-import YamlEditor from "../components/yaml-editor";
+import PipelineVisual from "../components/pipeline-visual";
+import PipelineYaml from "../components/pipeline-yaml";
 import { useTranslation } from "react-i18next";
 
 export default function Workflow({ }) {
-const { t } = useTranslation();
+  const { t } = useTranslation();
   const { taskId } = useParams();
   const editorRef = useRef(null);
   const [shortcutMap, setShortcutMap] = useState(null);
@@ -18,76 +18,63 @@ const { t } = useTranslation();
   const [pipelineSchema, setPipelineSchema] = useState([]);
   const [viewMode, setViewMode] = useState(() => {
     const saved = localStorage.getItem('workflow_view_mode');
-    return saved || 'yaml';
+    return saved || 'settings';
   });
   const [pipelineData, setPipelineData] = useState([]);
   const [workflowConfig, setWorkflowConfig] = useState({
     name: '',
     shared: false,
     resume_next: true,
-    concurrent: 3
+    concurrent: 3,
+    shortcut_map: {}
   });
+  const [form] = Form.useForm();
 
   // Save view mode to localStorage
   useEffect(() => {
     localStorage.setItem('workflow_view_mode', viewMode);
   }, [viewMode]);
 
-  const handleValidate = (data) => {
-    const validated = validateData(data);
-    const undefFields = Object.keys(data)
-      .filter((x) => typeof validated[x] === "undefined")
-      .join(", ");
-    if (undefFields) throw new Error(t("extra_fields") + undefFields);
-    const { pipeline } = data;
-    if (
-      !Array.isArray(pipeline) ||
-      pipeline.map((x) => Object.entries(x).length == 1).filter((x) => !x)
-        .length
-    )
-      throw new Error(t("pipeline_should_be_array_with_objects"));
-  }
-
-  const validateData = (data, schema) => {
-    let { name, pipeline, shared, resume_next, concurrent, shortcut_map } =
-      data;
-    pipeline = pipeline.map((x) => {
-      if (Array.isArray(x) && x.length == 2)
-        return {
-          [x[0]]: x[1],
-        };
-      else return x;
-    });
-    try {
-      setShortcutMap(buildShortcuts(shortcut_map, pipeline))
-    } catch (err) {
-      console.log(err)
-      throw new Error(t("shortcut_error") + err)
-    }
-    return { name, pipeline, shared, resume_next, concurrent, shortcut_map };
-  }
-
+  // Load data on mount
   useEffect(() => {
     (async function () {
       const schema = await fetchPipelineSchema();
       setPipelineSchema(schema);
       const data = await fetchSource();
       if (data) {
-        const validated = validateData(data, schema);
-        setYamlContent(yaml.dump(validated))
-        setPipelineData(validated.pipeline);
-        // Set workflow config from loaded data
+        // Extract workflow config
         setWorkflowConfig({
+          name: data.name || '',
+          shared: data.shared !== undefined ? data.shared : false,
+          resume_next: data.resume_next !== undefined ? data.resume_next : true,
+          concurrent: data.concurrent || 3,
+          shortcut_map: data.shortcut_map || {}
+        });
+        
+        // Extract pipeline data
+        const pipeline = data.pipeline || [];
+        setPipelineData(pipeline);
+        setYamlContent(yaml.dump(pipeline));
+        
+        // Set form values
+        form.setFieldsValue({
           name: data.name || '',
           shared: data.shared !== undefined ? data.shared : false,
           resume_next: data.resume_next !== undefined ? data.resume_next : true,
           concurrent: data.concurrent || 3
         });
+        
+        // Build shortcuts if shortcut_map exists
+        if (data.shortcut_map) {
+          try {
+            setShortcutMap(buildShortcuts(data.shortcut_map, pipeline));
+          } catch (err) {
+            console.log("Shortcut build error:", err);
+          }
+        }
       }
     })();
-  }
-    , []
-  )
+  }, []);
 
   const fetchPipelineSchema = async () => {
     const schemaData = await apiClient.getPipelines();
@@ -120,7 +107,8 @@ const { t } = useTranslation();
           },
           insertText: snippet,
           detail: category.split("\n")[0], // Shows the first line of category as detail
-          args: component.args
+          args: component.args,
+          category,
         });
       }
     }
@@ -130,30 +118,31 @@ const { t } = useTranslation();
   const fetchSource = async () => {
     try {
       const data = await apiClient.taskDBO(taskId);
-      const yaml_src = yaml.dump(validateData(data, pipelineSchema));
-      setYamlContent(yaml_src);
       return data;
     } catch (err) {
       console.error(t("get_config_failed"), err);
       message.error(t("cannot_load_config_file_check_task_id_or_network"));
+      return null;
     }
   };
 
-  const handleSaveYaml = async (updatedYaml) => {
+  // Sync YAML content when pipeline changes (visual tab)
+  const handlePipelineChange = (newPipeline) => {
+    setPipelineData(newPipeline);
+    setYamlContent(yaml.dump(newPipeline));
+  };
+
+  // Sync pipeline data when YAML changes (source code tab)
+  const handleYamlChange = (parsedPipeline) => {
+    setPipelineData(parsedPipeline);
+  };
+
+  // Save handler - saves entire taskdbo
+  const handleSave = async (data) => {
     const hide = message.loading(t("saving_configuration"), 0);
     try {
-      let data = validateData(yaml.load(updatedYaml));
       await apiClient.taskDBO(taskId, data);
       message.success(t("configuration_updated_successfully"));
-      setYamlContent(updatedYaml); // 更新本地缓存的内容
-      setPipelineData(data.pipeline);
-      // Update workflow config from saved data
-      setWorkflowConfig({
-        name: data.name || '',
-        shared: data.shared !== undefined ? data.shared : false,
-        resume_next: data.resume_next !== undefined ? data.resume_next : true,
-        concurrent: data.concurrent || 3
-      });
     } catch (err) {
       console.error(t("save_failed"), err);
       message.error(t("save_failed_server_error"));
@@ -162,35 +151,35 @@ const { t } = useTranslation();
     }
   };
 
-  const handleSavePipeline = async (updatedPipeline) => {
-    const hide = message.loading(t("saving_configuration"), 0);
-    try {
-      // Get current data from yamlContent to preserve other fields
-      const currentData = yaml.load(yamlContent) || {};
-      const data = {
-        ...currentData,
-        pipeline: updatedPipeline
-      };
-      validateData(data, pipelineSchema);
-      await apiClient.taskDBO(taskId, data);
-      message.success(t("configuration_updated_successfully"));
-      setPipelineData(updatedPipeline);
-      setYamlContent(yaml.dump(data));
-      // Update workflow config from saved data
-      setWorkflowConfig({
-        name: data.name || '',
-        shared: data.shared !== undefined ? data.shared : false,
-        resume_next: data.resume_next !== undefined ? data.resume_next : true,
-        concurrent: data.concurrent || 3
-      });
-    } catch (err) {
-      console.error(t("save_failed"), err);
-      message.error(t("save_failed_server_error"));
-    } finally {
-      hide();
-    }
+  // Handle settings form submit
+  const handleSaveSettings = async (values) => {
+    const data = {
+      name: values.name,
+      shared: values.shared,
+      resume_next: values.resume_next,
+      concurrent: values.concurrent,
+      shortcut_map: workflowConfig.shortcut_map || {},
+      pipeline: pipelineData
+    };
+    await handleSave(data);
+    setWorkflowConfig({
+      ...workflowConfig,
+      name: values.name,
+      shared: values.shared,
+      resume_next: values.resume_next,
+      concurrent: values.concurrent
+    });
   };
 
+  // Handle shortcut map update
+  const handleShortcutMapChange = (newShortcutMap) => {
+    setWorkflowConfig({
+      ...workflowConfig,
+      shortcut_map: newShortcutMap
+    });
+  };
+
+  // Build shortcuts from shortcut_map and pipeline
   const findShrotcutKey = (key, context, setval) => {
     const schema = pipelineSchema;
     const segs = key.split('.');
@@ -231,37 +220,16 @@ const { t } = useTranslation();
   }
 
   const updateShortcuts = async () => {
-    const data = yaml.load(yamlContent)
-    Object.entries(shortcutMap.value).forEach(([name, val]) => {
-      const key = Object.entries(data.shortcut_map).filter(([k, n]) => n == name)[0]?.[0]
-      findShrotcutKey(key, data.pipeline, val)
-    })
-    const yaml_src = yaml.dump(data)
-    setYamlContent(yaml_src);
-    await handleSaveYaml(yaml_src)
+    const data = {
+      name: workflowConfig.name,
+      shared: workflowConfig.shared,
+      resume_next: workflowConfig.resume_next,
+      concurrent: workflowConfig.concurrent,
+      shortcut_map: workflowConfig.shortcut_map,
+      pipeline: pipelineData
+    };
+    await handleSave(data);
   }
-
-  // Convert pipeline data to YAML format
-  const pipelineToYaml = (pipeline) => {
-    return yaml.dump(pipeline);
-  };
-
-  // Convert YAML to pipeline data
-  const yamlToPipeline = (yamlStr) => {
-    try {
-      const data = yaml.load(yamlStr);
-      if (Array.isArray(data)) {
-        return data;
-      }
-      if (data && Array.isArray(data.pipeline)) {
-        return data.pipeline;
-      }
-      return [];
-    } catch (err) {
-      console.error("Failed to parse YAML:", err);
-      return [];
-    }
-  };
 
   return (
     <>
@@ -270,19 +238,64 @@ const { t } = useTranslation();
         onChange={(key) => setViewMode(key)}
         items={[
           {
-            key: 'yaml',
+            key: 'settings',
             label: (
               <Space>
-                <CodeOutlined />
-                {t("source_code")}
+                <SettingOutlined />
+                {t("settings")}
               </Space>
             ),
             children: (
-              <YamlEditor
-                initialValue={yamlContent}
-                onSave={handleSaveYaml}
-                onValidate={handleValidate}
-              />
+              <Form
+                form={form}
+                layout="vertical"
+                style={{ maxWidth: 600 }}
+                onFinish={handleSaveSettings}
+                preserveFields
+              >
+                <Form.Item
+                  name="name"
+                  label={t("task_name")}
+                  rules={[{ required: true, message: t("Please enter task name") }]}
+                >
+                  <Input placeholder={t("e_g_my_task")} />
+                </Form.Item>
+
+                <Form.Item
+                  name="concurrent"
+                  label={t("concurrency")}
+                  rules={[{ required: true, message: t("Please enter concurrency") }]}
+                >
+                  <InputNumber 
+                    min={1} 
+                    max={100} 
+                    style={{ width: '100%' }} 
+                    placeholder={t("e_g_3")} 
+                  />
+                </Form.Item>
+
+                <Form.Item
+                  name="resume_next"
+                  label={t("resume_next")}
+                  valuePropName="checked"
+                >
+                  <Switch />
+                </Form.Item>
+
+                <Form.Item
+                  name="shared"
+                  label={t("shared")}
+                  valuePropName="checked"
+                >
+                  <Switch />
+                </Form.Item>
+
+                <Form.Item>
+                  <Button type="primary" htmlType="submit">
+                    {t("save")}
+                  </Button>
+                </Form.Item>
+              </Form>
             )
           },
           {
@@ -294,46 +307,73 @@ const { t } = useTranslation();
               </Space>
             ),
             children: (
-              <Pipeline
+              <PipelineVisual
                 value={pipelineData}
-                workflowConfig={workflowConfig}
-                onChange={(newPipeline) => {
-                  setPipelineData(newPipeline);
-                  setYamlContent(pipelineToYaml(newPipeline));
-                }}
-                onWorkflowConfigChange={(newConfig) => {
-                  setWorkflowConfig(newConfig);
-                  // Update yamlContent with new workflow config
-                  const currentData = yaml.load(yamlContent) || {};
-                  const data = {
-                    ...currentData,
-                    ...newConfig
-                  };
-                  setYamlContent(yaml.dump(data));
-                  // Save to server
-                  handleSaveYaml(yaml.dump(data));
+                pipelineSchema={pipelineSchema}
+                onChange={handlePipelineChange}
+                onSyncYaml={(newPipeline) => {
+                  setYamlContent(yaml.dump(newPipeline));
                 }}
               />
             )
-          }
+          },
+          {
+            key: 'yaml',
+            label: (
+              <Space>
+                <CodeOutlined />
+                {t("source_code")}
+              </Space>
+            ),
+            children: (
+              <PipelineYaml
+                initialValue={yamlContent}
+                onChange={handleYamlChange}
+                onSave={(yamlStr) => {
+                  try {
+                    const parsed = yaml.load(yamlStr);
+                    const data = {
+                      name: workflowConfig.name,
+                      shared: workflowConfig.shared,
+                      resume_next: workflowConfig.resume_next,
+                      concurrent: workflowConfig.concurrent,
+                      shortcut_map: workflowConfig.shortcut_map,
+                      pipeline: parsed
+                    };
+                    handleSave(data);
+                  } catch (err) {
+                    console.error("YAML save error:", err);
+                  }
+                }}
+              />
+            )
+          },
         ]}
         style={{ marginTop: 16 }}
       />
-      {(shortcutMap && <Form>
-        <ParamPanel scheme={shortcutMap.scheme || {}} value={shortcutMap.value || {}}
-          onChange={e => {
-            setShortcutMap({
-              scheme: shortcutMap.scheme,
-              value: e
-            })
-          }} />
-        <Button type="primary" onClick={updateShortcuts}>更新</Button><Space></Space>
-        <Button icon={<PlayCircleOutlined />} onClick={async () => {
-          await updateShortcuts()
-          const jobId = await apiClient.workerSubmitTask('custom', { task_id: taskId })
-          message.info(`已提交任务 ${jobId}`)
-        }}>运行</Button>
-      </Form>)}
+      
+      {/* Shortcut Panel */}
+      {shortcutMap && (
+        <Form style={{ marginTop: 16 }}>
+          <ParamPanel 
+            scheme={shortcutMap.scheme || {}} 
+            value={shortcutMap.value || {}}
+            onChange={handleShortcutMapChange}
+          />
+          <Button type="primary" onClick={updateShortcuts}>{t("update")}</Button>
+          <Space></Space>
+          <Button 
+            icon={<PlayCircleOutlined />} 
+            onClick={async () => {
+              await updateShortcuts()
+              const jobId = await apiClient.workerSubmitTask('custom', { task_id: taskId })
+              message.info(`已提交任务 ${jobId}`)
+            }}
+          >
+            {t("run")}
+          </Button>
+        </Form>
+      )}
     </>
   );
 }

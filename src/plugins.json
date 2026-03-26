@@ -1,0 +1,9 @@
+{
+  "plugins": [
+    {
+      "type": "local",
+      "source": "../packages/bibliothek-plugin/dist",
+      "enabled": true
+    }
+  ]
+}

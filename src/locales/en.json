@@ -259,6 +259,8 @@
     "all_fields": "All Fields",
     "clear": "Clear",
     "search_bibliography": "Search Bibliography",
-    "filter_count": "{{count}} Filters"
+    "filter_count": "{{count}} Filters",
+    "update": "Update",
+    "run": "Run"
   }
 }
