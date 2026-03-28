@@ -19,8 +19,7 @@ import { apiClient } from './api';
 
 import Root from "./routes/root.jsx";
 const ApiKeysPage = React.lazy(() => import("./routes/apikeys.jsx"));
-// Dynamic import for fallback - plugins may override this
-const FallbackBibliothekPage = React.lazy(() => import("./routes/bibliothek.jsx"));
+const BibliothekPage = React.lazy(() => import("./routes/bibliothek.jsx"));
 const DatasetPage = React.lazy(() => import("./routes/dataset.jsx"));
 const ErrorPage = React.lazy(() => import("./routes/errors.jsx"));
 const FilePage = React.lazy(() => import("./routes/file.jsx"));
@@ -37,9 +36,9 @@ const { useToken } = theme;
 export const ThemeContext = React.createContext();
 
 // 主题配置组件
-const ThemeConfigProvider = ({children}) => {
+const ThemeConfigProvider = ({ children }) => {
   const [themeMode, setThemeMode] = React.useState("auto");
-  
+
   // 从 localStorage 获取主题设置
   React.useEffect(() => {
     const savedTheme = localStorage.getItem("jindai-theme");
@@ -108,7 +107,7 @@ const pluginManager = new PluginManager({
 // 加载插件
 const loadPlugins = async () => {
   const pluginLoader = new PluginLoader();
-  
+
   for (const pluginConfigItem of pluginConfig.plugins) {
     if (pluginConfigItem.enabled) {
       try {
@@ -133,18 +132,19 @@ const createAppRoutes = () => {
     { path: 'datasets', element: <DatasetPage /> },
     { path: 'import', element: <ImportPage /> },
     { path: 'tasks', element: <TaskPage /> },
-    { path: 'tasks/:taskId', element: <Workflow /> }
+    { path: 'tasks/:taskId', element: <Workflow /> },
+    { path: 'bibliothek', element: <BibliothekPage /> }
   ];
-  
+
   // 添加插件路由 - 插件路由会覆盖基础路由
   const pluginRoutes = pluginManager.getRoutes();
-  
+
   // 创建一个映射来跟踪哪些路径已被插件路由覆盖
   const pluginRoutePaths = new Set(pluginRoutes.map(route => route.path));
-  
+
   // 过滤掉被插件覆盖的基础路由
   const filteredBaseRoutes = baseRoutes.filter(route => !pluginRoutePaths.has(route.path));
-  
+
   return [
     {
       path: '/',
@@ -162,7 +162,7 @@ const createAppRoutes = () => {
 loadPlugins().then(() => {
   // 扩展 API 客户端
   const extendedApiClient = pluginManager.extendApiClient(apiClient);
-  
+
   ReactDOM.createRoot(document.getElementById('root')).render(
     <React.StrictMode>
       <I18nextProvider i18n={i18n}>

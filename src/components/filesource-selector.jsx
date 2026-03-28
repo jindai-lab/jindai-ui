@@ -76,7 +76,7 @@ export default function FileSourceSelector({
       multiple={multiple}
       style={{
         width: '100%',
-        minWidth: 200,
+        minWidth: 400,
         ...style
       }}
       value={value}

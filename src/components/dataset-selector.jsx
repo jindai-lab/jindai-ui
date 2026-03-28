@@ -60,7 +60,7 @@ export default function DatasetSelector({
       multiple={multiple}
       style={{
         width: '100%',
-        minWidth: 200,
+        minWidth: 400,
         ...style
       }}
       value={value}
