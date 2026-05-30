@@ -240,6 +240,7 @@ export default function TaskPage() {
           background: "var(--panel-bg)",
           color: "var(--text)",
           borderColor: "var(--border)",
+          marginBottom: 16,
         }}
       >
         {typeof stats.processing === "undefined" && t("loading")}
@@ -289,16 +290,16 @@ export default function TaskPage() {
             </Row>
           </>
         )}
-        <Row>
+        <Row style={{marginTop: '1rem'}}>
           <JobsList jobs={stats.results || []} />
         </Row>
       </Card>
-      <Card title="任务列表" style={{ background: "var(--panel-bg)", color: "var(--text)", borderColor: "var(--border)" }}>
+      <Card title="任务列表" style={{ background: "var(--panel-bg)", color: "var(--text)", borderColor: "var(--border)", marginBottom: 16 }}>
         <Row>
           <TaskDboList />
         </Row>
       </Card>
-      <Card title="维护任务" style={{ background: "var(--panel-bg)", color: "var(--text)", borderColor: "var(--border)" }}>
+      <Card title="维护任务" style={{ background: "var(--panel-bg)", color: "var(--text)", borderColor: "var(--border)", marginBottom: 16 }}>
         <Row>Embeddings 总数：{embeddingsStats.finished} / 列队：{embeddingsStats.queued}</Row>
         <Form>
           <Form.Item label={t("task_type")}>

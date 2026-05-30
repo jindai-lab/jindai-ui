@@ -2,10 +2,11 @@ import {
   DeleteOutlined,
   EditOutlined,
   ImportOutlined,
+  MergeCellsOutlined,
   PlusOutlined,
   ReloadOutlined
 } from '@ant-design/icons';
-import { Button, Input, message, Modal, Popconfirm, Space, Table } from 'antd';
+import { Button, Form, Input, message, Modal, Popconfirm, Space, Table } from 'antd';
 import { useEffect, useState } from "react";
 import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../api'
@@ -19,6 +20,9 @@ const { t } = useTranslation();
   const [editingRecord, setEditingRecord] = useState(null);
   const [creatingDataset, setCreatingDataset] = useState(false);
   const [creatingDatasetName, setCreatingDatasetName] = useState('');
+  const [mergeModalOpen, setMergeModalOpen] = useState(false);
+  const [mergeForm] = Form.useForm();
+  const [mergeLoading, setMergeLoading] = useState(false);
   const navigate = useNavigate();
 
   const columns = [
@@ -99,11 +103,31 @@ const { t } = useTranslation();
       .finally(() => { message.destroy() });
   }
 
+  const handleMerge = async (values) => {
+    setMergeLoading(true);
+    try {
+      const result = await apiClient.datasetMerge({
+        pattern: values.pattern || undefined,
+        regex: values.regex || undefined,
+        target: values.target
+      });
+      message.success(result.message);
+      setMergeModalOpen(false);
+      mergeForm.resetFields();
+      handleRefresh();
+    } catch (err) {
+      message.error(err.message || t("merge_failed"));
+    } finally {
+      setMergeLoading(false);
+    }
+  };
+
   return (
     <>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <Space size="small">
           <Button icon={<ReloadOutlined />} size="small" onClick={handleRefresh}>刷新</Button>
+          <Button icon={<MergeCellsOutlined />} size="small" onClick={() => setMergeModalOpen(true)}>合并数据集</Button>
         </Space>
         数据集
       </div>
@@ -154,6 +178,51 @@ const { t } = useTranslation();
         onCancel={() => setCreatingDataset(false)}
       >
         <Input placeholder={t("please_enter_new_name")} value={creatingDatasetName} onChange={(e) => setCreatingDatasetName(e.target.value)} />
+      </Modal>
+      <Modal
+        title="合并数据集"
+        okText={t("merge")}
+        cancelText={t("cancel")}
+        open={mergeModalOpen}
+        confirmLoading={mergeLoading}
+        onOk={() => mergeForm.submit()}
+        onCancel={() => {
+          setMergeModalOpen(false);
+          mergeForm.resetFields();
+        }}
+      >
+        <Form
+          form={mergeForm}
+          layout="vertical"
+          onFinish={handleMerge}
+        >
+          <Form.Item
+            name="pattern"
+            label="包含字符串"
+            tooltip="匹配包含此字符串的数据集名称（不区分大小写）"
+          >
+            <Input placeholder="例如: 2024" />
+          </Form.Item>
+          <Form.Item
+            name="regex"
+            label="正则表达式"
+            tooltip="使用正则表达式匹配数据集名称"
+          >
+            <Input placeholder="例如: ^report_.*" />
+          </Form.Item>
+          <Form.Item
+            name="target"
+            label="目标数据集"
+            rules={[{ required: true, message: '请输入目标数据集名称' }]}
+          >
+            <Input placeholder="合并后的数据集名称" />
+          </Form.Item>
+          <Form.Item>
+            <div style={{ color: '#888', fontSize: '12px' }}>
+              注意：匹配的数据集将被合并到目标数据集中，源数据集会被删除。此操作不可撤销。
+            </div>
+          </Form.Item>
+        </Form>
       </Modal>
     </>
   )

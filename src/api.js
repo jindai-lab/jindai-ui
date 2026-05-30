@@ -130,6 +130,9 @@ export const apiClient = Object.assign(
     async datasetCreate({ name }) {
       return await this.makeCall(`datasets`, { name });
     },
+    async datasetMerge({ pattern, regex, target }) {
+      return await this.makeCall(`datasets/merge`, { pattern, regex, target });
+    },
     async datasetSort(sortedNames) {
       this.makeCall("datasets", {
         batch: sortedNames.map((x, i) => ({
