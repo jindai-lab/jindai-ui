@@ -15,6 +15,7 @@ import {
   Empty,
   Form,
   message,
+  Modal,
   Row,
   Select,
   Space,
@@ -53,12 +54,12 @@ const TaskDboList = () => {
   const runTask = async (task_id) => {
     const jobId = await apiClient.workerSubmitTask('custom', { task_id });
     console.log(jobId);
-    message.info(`已创建任务 ${jobId}`);
+    message.info(t("task_created", { jobId }));
   };
 
   const deleteTask = async (task_id) => {
     await apiClient.workerJobDelete(task_id);
-    message.success(`任务 ${task_id} 已删除`);
+    message.success(t("task_deleted", { taskId: task_id }));
     getTaskDboData();
   };
 
@@ -103,9 +104,9 @@ const TaskDboList = () => {
       align: "center",
       render: (isResume) =>
         isResume ? (
-          <Tag color="processing">是</Tag>
+          <Tag color="processing">{t("yes")}</Tag>
         ) : (
-          <Tag color="gray">否</Tag>
+          <Tag color="gray">{t("no")}</Tag>
         ),
     },
     {
@@ -119,14 +120,14 @@ const TaskDboList = () => {
               icon={<EditOutlined />}
               onClick={() => navigate(`/tasks/${record.id}`)}
             >
-              编辑
+              {t("edit")}
             </Button>
             <Button
               size="small"
               icon={<PlayCircleOutlined />}
               onClick={() => runTask(record.id)}
             >
-              运行
+              {t("run")}
             </Button>
             <Button
               size="small"
@@ -134,7 +135,7 @@ const TaskDboList = () => {
               onClick={() => deleteTask(record.id)}
               danger
             >
-              删除
+              {t("delete")}
             </Button>
           </>
         );
@@ -172,7 +173,7 @@ const TaskDboList = () => {
           pagination={{
             pageSize: 10,
             showSizeChanger: true,
-            showTotal: (total) => `共 ${total} 条任务数据`,
+              showTotal: (total) => t("total_tasks", { total }),
           }}
           scroll={{ x: "max-content" }}
           // 空数据兜底
@@ -220,19 +221,28 @@ export default function TaskPage() {
     }
   }, []);
 
-  const clearTasks = async () => {
-    await apiClient.workerClearJobs();
-    message.info(t("tasks_cleared"));
+  const clearTasks = () => {
+    Modal.confirm({
+      title: t("clear_all_tasks_confirm_title"),
+      content: t("clear_all_tasks_confirm_content"),
+      okText: t("confirm"),
+      cancelText: t("cancel"),
+      okButtonProps: { danger: true },
+      onOk: async () => {
+        await apiClient.workerClearJobs();
+        message.success(t("tasks_cleared"));
+      },
+    });
   };
 
   return (
     <>
       <Card
-        title="任务运行状态"
+        title={t("task_run_status")}
         extra={
           <>
             <Button onClick={clearTasks} danger icon={<DeleteOutlined />}>
-              清空任务
+              {t("clear_tasks")}
             </Button>
           </>
         }
@@ -250,7 +260,7 @@ export default function TaskPage() {
               <Col span={6}>
                 <Card variant="soft" color="warning">
                   <Statistic
-                    title="挂起"
+                    title={t("status_queued")}
                     value={stats.queued}
                     prefix={<ClockCircleOutlined />}
                     styles={{ content: { color: "#faad14" } }}
@@ -260,7 +270,7 @@ export default function TaskPage() {
               <Col span={6}>
                 <Card variant="soft" color="primary">
                   <Statistic
-                    title="运行中"
+                    title={t("status_running")}
                     value={stats.processing}
                     prefix={<SyncOutlined />}
                     styles={{ content: { color: "#1890ff" } }}
@@ -270,7 +280,7 @@ export default function TaskPage() {
               <Col span={6}>
                 <Card variant="soft" color="success">
                   <Statistic
-                    title="已结束"
+                    title={t("status_completed")}
                     value={stats.success}
                     prefix={<CheckCircleOutlined />}
                     styles={{ content: { color: "#52c41a" } }}
@@ -280,7 +290,7 @@ export default function TaskPage() {
               <Col span={6}>
                 <Card variant="soft" color="error">
                   <Statistic
-                    title="失败"
+                    title={t("status_failed")}
                     value={stats.failed}
                     prefix={<CloseCircleOutlined />}
                     styles={{ content: { color: "#f5222d" } }}
@@ -294,13 +304,13 @@ export default function TaskPage() {
           <JobsList jobs={stats.results || []} />
         </Row>
       </Card>
-      <Card title="任务列表" style={{ background: "var(--panel-bg)", color: "var(--text)", borderColor: "var(--border)", marginBottom: 16 }}>
+      <Card title={t("task_list")} style={{ background: "var(--panel-bg)", color: "var(--text)", borderColor: "var(--border)", marginBottom: 16 }}>
         <Row>
           <TaskDboList />
         </Row>
       </Card>
-      <Card title="维护任务" style={{ background: "var(--panel-bg)", color: "var(--text)", borderColor: "var(--border)", marginBottom: 16 }}>
-        <Row>Embeddings 总数：{embeddingsStats.finished} / 列队：{embeddingsStats.queued}</Row>
+      <Card title={t("maintenance_tasks")} style={{ background: "var(--panel-bg)", color: "var(--text)", borderColor: "var(--border)", marginBottom: 16 }}>
+        <Row>{t("embeddings_info", { finished: embeddingsStats.finished, queued: embeddingsStats.queued })}</Row>
         <Form>
           <Form.Item label={t("task_type")}>
             <Select style={{ width: 200 }} options={Object.keys(taskTypes).filter(name => name != 'custom').map(name => {
@@ -313,9 +323,9 @@ export default function TaskPage() {
           <Button type="primary" onClick={async () => {
             if (activeTaskType) {
               const jobId = await apiClient.workerSubmitTask(activeTaskType, activeTaskParams);
-              message.info(`创建了维护任务 ${jobId}`)
+              message.info(t("maintenance_task_created", { jobId }))
             }
-          }}>运行</Button>
+          }}>{t("run")}</Button>
         </Form>
       </Card>
       <div style={{ paddingBottom: 50 }}></div>

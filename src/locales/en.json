@@ -261,6 +261,19 @@
     "search_bibliography": "Search Bibliography",
     "filter_count": "{{count}} Filters",
     "update": "Update",
-    "run": "Run"
+    "run": "Run",
+    "task_created": "Task {{jobId}} has been created",
+    "task_deleted": "Task {{taskId}} has been deleted",
+    "total_tasks": "Total {{total}} task(s)",
+    "task_run_status": "Task Run Status",
+    "clear_tasks": "Clear Tasks",
+    "status_queued": "Queued",
+    "status_running": "Running",
+    "status_completed": "Completed",
+    "status_failed": "Failed",
+    "task_list": "Task List",
+    "maintenance_tasks": "Maintenance Tasks",
+    "embeddings_info": "Embeddings Finished: {{finished}} / Queued: {{queued}}",
+    "maintenance_task_created": "Created maintenance task {{jobId}}"
   }
 }
