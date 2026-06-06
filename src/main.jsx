@@ -12,10 +12,7 @@ import "./index.css";
 import oidc_settings from "./oidc-client-ids.js";
 
 // 插件系统相关导入
-import { PluginManager } from './plugin/PluginManager';
-import { PluginLoader } from './plugin/PluginLoader';
-import pluginConfig from './plugins.json';
-import { apiClient } from './api';
+import { apiClient } from "./api";
 
 import Root from "./routes/root.jsx";
 const ApiKeysPage = React.lazy(() => import("./routes/apikeys.jsx"));
@@ -49,7 +46,10 @@ const ThemeConfigProvider = ({ children }) => {
 
   // 根据主题模式返回 Ant Design 主题配置
   const getAntdTheme = () => {
-    const isDark = themeMode === "dark" || (themeMode === "auto" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    const isDark =
+      themeMode === "dark" ||
+      (themeMode === "auto" &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches);
     return {
       token: {
         colorPrimary: "#1AB394",
@@ -94,85 +94,41 @@ const oidcConfig = {
   ...oidc_settings,
 };
 
-// 创建插件管理器
-const pluginManager = new PluginManager({
-  apiClient,
-  registerRoute: (route) => { /* 注册路由 */ },
-  registerComponent: (name, component) => { /* 注册组件 */ },
-  registerI18nResources: (lang, resources) => { /* 注册国际化 */ },
-  registerConfig: (config) => { /* 注册配置 */ },
-  theme: ThemeContext
-});
-
-// 加载插件
-const loadPlugins = async () => {
-  const pluginLoader = new PluginLoader();
-
-  for (const pluginConfigItem of pluginConfig.plugins) {
-    if (pluginConfigItem.enabled) {
-      try {
-        const plugin = await pluginLoader.loadFromConfig(pluginConfigItem);
-        await pluginManager.register(plugin);
-      } catch (error) {
-        console.error(`Failed to load plugin: ${pluginConfigItem.source}`, error);
-      }
-    }
-  }
-};
-
 // 创建路由
-const createAppRoutes = () => {
-  const baseRoutes = [
-    { path: '*', element: <SearchPage /> },
-    { path: '/', element: <SearchPage /> },
-    { path: 'files/*', element: <FilePage /> },
-    { path: 'histories', element: <HistoryPage /> },
-    { path: 'settings', element: <SettingsPage /> },
-    { path: 'manageapikeys', element: <ApiKeysPage /> },
-    { path: 'datasets', element: <DatasetPage /> },
-    { path: 'import', element: <ImportPage /> },
-    { path: 'tasks', element: <TaskPage /> },
-    { path: 'tasks/:taskId', element: <Workflow /> },
-    { path: 'bibliothek', element: <BibliothekPage /> }
-  ];
-
-  // 添加插件路由 - 插件路由会覆盖基础路由
-  const pluginRoutes = pluginManager.getRoutes();
-
-  // 创建一个映射来跟踪哪些路径已被插件路由覆盖
-  const pluginRoutePaths = new Set(pluginRoutes.map(route => route.path));
-
-  // 过滤掉被插件覆盖的基础路由
-  const filteredBaseRoutes = baseRoutes.filter(route => !pluginRoutePaths.has(route.path));
-
-  return [
-    {
-      path: '/',
-      element: <Root />,
-      errorElement: <ErrorPage />,
-      children: [
-        ...filteredBaseRoutes,
-        ...pluginRoutes
-      ]
-    }
-  ];
-};
-
-// 加载插件并创建应用
-loadPlugins().then(() => {
-  // 扩展 API 客户端
-  const extendedApiClient = pluginManager.extendApiClient(apiClient);
-
-  ReactDOM.createRoot(document.getElementById('root')).render(
-    <React.StrictMode>
-      <I18nextProvider i18n={i18n}>
-        <AuthProvider {...oidcConfig}>
-          <ThemeConfigProvider><RouterProvider router={createBrowserRouter(createAppRoutes())} /></ThemeConfigProvider>
-        </AuthProvider>
-      </I18nextProvider>
-    </React.StrictMode>
-  );
-});
+const router = [
+  {
+    path: "/",
+    element: <Root />,
+    errorElement: <ErrorPage />,
+    children: [
+      { path: "*", element: <SearchPage /> },
+      { path: "/", element: <SearchPage /> },
+      { path: "files/*", element: <FilePage /> },
+      { path: "histories", element: <HistoryPage /> },
+      { path: "settings", element: <SettingsPage /> },
+      { path: "manageapikeys", element: <ApiKeysPage /> },
+      { path: "datasets", element: <DatasetPage /> },
+      { path: "import", element: <ImportPage /> },
+      { path: "tasks", element: <TaskPage /> },
+      { path: "tasks/:taskId", element: <Workflow /> },
+      { path: "bibliothek", element: <BibliothekPage /> },
+    ],
+  },
+];
 
 // Expose i18n instance to global window for use in api.js
 window.i18nInstance = (key) => i18n.t(key);
+
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <React.StrictMode>
+    <I18nextProvider i18n={i18n}>
+      <AuthProvider {...oidcConfig}>
+        <ThemeConfigProvider>
+          <React.Suspense fallback={<div>Loading...</div>}>
+            <RouterProvider router={createBrowserRouter(router)} />
+          </React.Suspense>
+        </ThemeConfigProvider>
+      </AuthProvider>
+    </I18nextProvider>
+  </React.StrictMode>,
+);

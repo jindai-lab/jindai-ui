@@ -27,7 +27,7 @@ const SinglePagePDFViewer = ({ fileUrl, pdfWidth }) => {
   pdfWidth = pdfWidth || 800;
   return (
     <div className="pdf-single-page-viewer">
-      <Document file={fileUrl} loading={<CustomDocumentLoader />}>
+      <Document file={fileUrl} loading={<CustomDocumentLoader />} options={{wasmUrl: '/wasm/'}}>
         <Page pageNumber={pageNumber} width={pdfWidth} />
       </Document>
     </div>

@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "search-engine": {
+    "search-jindai": {
       "command": "python",
       "args": [
         "/path/to/your/jindai-mcp.py"   // 替换为实际脚本路径
