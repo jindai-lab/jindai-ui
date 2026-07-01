@@ -89,7 +89,7 @@ const { t } = useTranslation();
     <div className="result" key={data.id}>
       <div className="metadata-section">
       <div style={{ marginRight: '8px', display: 'inline' }}>
-        <Checkbox checked={checked} onChange={(e) => onChange?.(data.id, e.target.checked)} />
+        <Checkbox checked={checked} onChange={(e) => onChange?.(data, e.target.checked)} />
       </div>
         <div className="metadata-item">
           <span className="metadata-label">{FIELD_NAMES.dataset}</span>

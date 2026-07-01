@@ -33,8 +33,8 @@ function SearchPage() {
     lastQuery: null, // Stringified version of filters used for the last fetch
   });
 
-  // Selected paragraph IDs state
-  const [selectedIds, setSelectedIds] = useState(new Set());
+  // Selected paragraph state
+  const [selectedResults, setSelectedResults] = useState([]);
 
   // Helper: Update individual filter fields
   const updateFilter = (updates) => {
@@ -171,6 +171,12 @@ function SearchPage() {
       });
   }, [dataContext, filters]);
 
+  // selected IDs
+  const selectedIds = useMemo(() => new Set(selectedResults.map(x => x.id)), [selectedResults])
+
+  // Check if all visible results are selected
+  const isAllSelected = useMemo(() => visibleResults.length > 0 && visibleResults.every(ele => selectedIds.has(ele.id)), [visibleResults, selectedResults]);
+
   const handlePageChange = async (page, pageSize) => {
     const newFilters = updateFilter({ page, pageSize });
     apiClient.localConfig.pageSize = pageSize;
@@ -179,47 +185,39 @@ function SearchPage() {
   };
 
   // Handle checkbox change for a single paragraph
-  const handleCheckboxChange = (id, isChecked) => {
-    setSelectedIds(prev => {
-      const newSet = new Set(prev);
-      if (isChecked) {
-        newSet.add(id);
-      } else {
-        newSet.delete(id);
-      }
-      return newSet;
+  const handleCheckboxChange = (item, isChecked) => {
+    setSelectedResults(prev => {
+      if (isChecked)
+        return prev.some(x => x.id === item.id) ? prev : [...prev, item]
+      else
+        return prev.filter(x => x.id !== item.id)
     });
   };
 
   // Handle select all/unselect all
   const handleSelectAll = (isChecked) => {
     if (isChecked) {
-      const allIds = visibleResults.map(ele => ele.id);
-      setSelectedIds(prev => {
-        const newSet = new Set(prev);
-        allIds.forEach(id => newSet.add(id));
-        return newSet;
+      setSelectedResults(prev => {
+        const prevIds = new Set(prev.map(x => x.id));
+        return prev.concat(visibleResults.filter(x => !prevIds.has(x.id)))
       });
     } else {
-      const allIds = visibleResults.map(ele => ele.id);
-      setSelectedIds(prev => {
-        const newSet = new Set(prev);
-        allIds.forEach(id => newSet.delete(id));
-        return newSet;
+      setSelectedResults(prev => {
+        const visibleIds = new Set(visibleResults.map(x => x.id));
+        return prev.filter(x => !visibleIds.has(x.id))
       });
     }
   };
 
   // Export selected paragraphs to markdown
   const handleExportMarkdown = () => {
-    const selectedResults = visibleResults.filter(ele => selectedIds.has(ele.id));
     if (selectedResults.length === 0) {
       message.warning(t("no_selected_items"));
       return;
     }
 
     // Sort by dataset and page number for better organization
-    const sortedResults = [...selectedResults].sort((a, b) => {
+    const sortedResults = selectedResults.sort((a, b) => {
       if (a.dataset !== b.dataset) {
         return (a.dataset_name || '').localeCompare(b.dataset_name || '');
       }
@@ -265,17 +263,13 @@ function SearchPage() {
     URL.revokeObjectURL(url);
   };
 
-  // Check if all visible results are selected
-  const isAllSelected = visibleResults.length > 0 && visibleResults.every(ele => selectedIds.has(ele.id));
-
-
   return (
     <div className="search-page-container">
 
       {/* Search Input Section */}
       <SearchFilterBar
-       style={{background: 'var(--bg)', color: 'var(--text)'}}
-       filters={filters} updateFilter={updateFilter} executeSearch={executeSearch} />
+        style={{ background: 'var(--bg)', color: 'var(--text)' }}
+        filters={filters} updateFilter={updateFilter} executeSearch={executeSearch} />
 
       {/* Results Section */}
       <Spin spinning={isLoading}>
@@ -292,13 +286,18 @@ function SearchPage() {
               type="primary"
               style={{ marginLeft: '16px' }}
               onClick={handleExportMarkdown}
-              disabled={selectedIds.size === 0}
+              disabled={selectedResults.length === 0}
             >
               {t("export")}
             </Button>
             <span style={{ marginLeft: '16px', color: 'var(--text-secondary)' }}>
-              {selectedIds.size} {t("items_selected")}
+              {selectedResults.length} {t("items_selected")}
             </span>
+            {(selectedResults.length > 0) && (
+              <Button style={{ marginLeft: '16px' }} onClick={() => setSelectedResults([])}>
+                {t("clear")}
+              </Button>
+            )}
           </div>
 
           {visibleResults.map((ele) => (
