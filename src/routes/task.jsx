@@ -5,6 +5,7 @@ import {
   DeleteOutlined,
   EditOutlined,
   PlayCircleOutlined,
+  PlusOutlined,
   SyncOutlined
 } from "@ant-design/icons";
 import {
@@ -57,10 +58,19 @@ const TaskDboList = () => {
     message.info(t("task_created", { jobId }));
   };
 
-  const deleteTask = async (task_id) => {
-    await apiClient.workerJobDelete(task_id);
-    message.success(t("task_deleted", { taskId: task_id }));
-    getTaskDboData();
+  const deleteTask = (task_id) => {
+    Modal.confirm({
+      title: t("delete_task_confirm_title"),
+      content: t("delete_task_confirm_content", { taskId: task_id }),
+      okText: t("confirm"),
+      cancelText: t("cancel"),
+      okButtonProps: { danger: true },
+      onOk: async () => {
+        await apiClient.TaskDboDelete(task_id);
+        message.success(t("task_deleted", { taskId: task_id }));
+        getTaskDboData();
+      },
+    });
   };
 
   // 组件挂载时加载数据，空数组依赖仅执行一次
@@ -186,6 +196,7 @@ const TaskDboList = () => {
 
 export default function TaskPage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [embeddingsStats, setEmbeddingsStats] = useState({});
   const [taskTypes, setTaskTypes] = useState({});
   const [activeTaskType, setActiveTaskType] = useState('');
@@ -233,6 +244,14 @@ export default function TaskPage() {
         message.success(t("tasks_cleared"));
       },
     });
+  };
+
+  const createTask = async () => {
+    const task = await apiClient.createTaskDbo({ name: t("new_task") });
+    if (task?.id) {
+      message.success(t("task_created_success"));
+      navigate(`/tasks/${task.id}`);
+    }
   };
 
   return (
@@ -304,7 +323,15 @@ export default function TaskPage() {
           <JobsList jobs={stats.results || []} />
         </Row>
       </Card>
-      <Card title={t("task_list")} style={{ background: "var(--panel-bg)", color: "var(--text)", borderColor: "var(--border)", marginBottom: 16 }}>
+      <Card
+        title={t("task_list")}
+        extra={
+          <Button type="primary" icon={<PlusOutlined />} onClick={createTask}>
+            {t("new_task")}
+          </Button>
+        }
+        style={{ background: "var(--panel-bg)", color: "var(--text)", borderColor: "var(--border)", marginBottom: 16 }}
+      >
         <Row>
           <TaskDboList />
         </Row>
