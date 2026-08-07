@@ -4,8 +4,6 @@ import { apiClient } from "../api";
 import { useTranslation } from "react-i18next";
 import { PlusOutlined, DeleteOutlined, EditOutlined, EyeOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
-import ASSET_MCP_JSON from '../assets/mcp.json?raw'
-import ASSET_MCP_PY from '../assets/jindai-mcp.py?raw'
 
 export default function ApiKeysPage() {
   const { t } = useTranslation();
@@ -247,64 +245,7 @@ export default function ApiKeysPage() {
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div>
-            <h4 style={{ margin: '0 0 8px 0' }}>{t("mcp.json")}</h4>
-            <pre style={{ 
-              background: "var(--panel-bg)", 
-              padding: "12px", 
-              borderRadius: "4px",
-              fontFamily: "monospace",
-              fontSize: "12px",
-              maxHeight: "200px",
-              overflowY: "auto"
-            }}>
-              {ASSET_MCP_JSON.replace('<HOST>', location.host)}
-            </pre>
-            <Button 
-              type="primary" 
-              style={{ marginTop: '8px' }}
-              onClick={() => {
-                // Download mcp.json
-                const element = document.createElement("a");
-                const file = new Blob(["{}"], {type: 'application/json'});
-                element.href = URL.createObjectURL(file);
-                element.download = "mcp.json";
-                document.body.appendChild(element);
-                element.click();
-                document.body.removeChild(element);
-              }}
-            >
-              {t("download")}
-            </Button>
-          </div>
-          <div>
-            <h4 style={{ margin: '0 0 8px 0' }}>jindai-mcp.py</h4>
-            <pre style={{ 
-              background: "var(--panel-bg)", 
-              padding: "12px", 
-              borderRadius: "4px",
-              fontFamily: "monospace",
-              fontSize: "12px",
-              maxHeight: "200px",
-              overflowY: "auto"
-            }}>
-              {ASSET_MCP_PY}
-            </pre>
-            <Button 
-              type="primary" 
-              style={{ marginTop: '8px' }}
-              onClick={() => {
-                // Download mcp.py
-                const element = document.createElement("a");
-                const file = new Blob([""], {type: 'text/plain'});
-                element.href = URL.createObjectURL(file);
-                element.download = "jindai-mcp.py";
-                document.body.appendChild(element);
-                element.click();
-                document.body.removeChild(element);
-              }}
-            >
-              {t("download")}
-            </Button>
+            {/* Skill */}
           </div>
         </div>
       </Modal>

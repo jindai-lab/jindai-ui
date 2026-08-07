@@ -257,6 +257,7 @@
     "failed_to_create_bibliography_item": "Failed to create bibliography item",
     "e_g_10_1002_9781118175324": "e.g., 10.1002/9781118175324",
     "all_fields": "All Fields",
+    "export_all": "Export All",
     "clear": "Clear",
     "search_bibliography": "Search Bibliography",
     "filter_count": "{{count}} Filters",

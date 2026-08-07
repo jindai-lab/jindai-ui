@@ -259,6 +259,7 @@
     "failed_to_create_bibliography_item": "创建文献失败",
     "e_g_10_1002_9781118175324": "例如：10.1002/9781118175324",
     "all_fields": "所有字段",
+    "export_all": "导出全部",
     "clear": "清除",
     "search_bibliography": "搜索文献",
     "filter_count": "{{count}} 个筛选",

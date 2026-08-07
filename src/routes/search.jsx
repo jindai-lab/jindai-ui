@@ -209,6 +209,78 @@ function SearchPage() {
     }
   };
 
+  // Export all (up to 10k) results to markdown
+  const [isExportingAll, setIsExportingAll] = useState(false);
+
+  const handleExportAll = async () => {
+    setIsExportingAll(true);
+    try {
+      const queryParams = { ...filters };
+      delete queryParams.page;
+      delete queryParams.pageSize;
+      if (!queryParams.embeddings) delete queryParams.embeddings;
+
+      const response = await apiClient.search({ limit: 10000, offset: 0, ...queryParams });
+
+      if (response && response.results) {
+        const sortedResults = [...response.results].sort((a, b) => {
+          if (a.dataset !== b.dataset) {
+            return (a.dataset_name || '').localeCompare(b.dataset_name || '');
+          }
+          return (a.source_page || 0) - (b.source_page || 0);
+        });
+
+        const totalCount = response.total || sortedResults.length;
+
+        if (totalCount > 10000) {
+          message.warning(`搜索结果超过 10000 条，仅导出前 10000 条记录。`);
+        }
+
+        let markdownContent = `# Search Results\n\n`;
+        markdownContent += `**Search Query:** ${filters.q}\n\n`;
+        markdownContent += `**Total Exported:** ${totalCount}\n\n`;
+        if (totalCount > 10000) {
+          markdownContent += `> ⚠️ Total matches: ${totalCount}, only showing first 10000 records.\n\n`;
+        }
+        markdownContent += `---\n\n`;
+
+        let currentDataset = '';
+        sortedResults.forEach((item, index) => {
+          if (item.dataset_name !== currentDataset) {
+            currentDataset = item.dataset_name;
+            markdownContent += `## ${currentDataset || 'Unknown Dataset'}\n\n`;
+          }
+
+          markdownContent += `---\n\n`;
+          if (item.source_url) {
+            markdownContent += `**Source:** [${item.source_url}](${item.source_url})\n\n`;
+          }
+          if (item.pagenum) {
+            markdownContent += `**Page:** ${item.pagenum}\n\n`;
+          }
+          if (item.content) {
+            markdownContent += `${item.content}\n\n`;
+          }
+          markdownContent += `---\n\n`;
+        });
+
+        const blob = new Blob([markdownContent], { type: 'text/markdown;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `search_all_${new Date().toISOString().replace(/[^\d]/g, '')}.md`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }
+    } catch (err) {
+      message.error(err.message || t("search_failed"));
+    } finally {
+      setIsExportingAll(false);
+    }
+  };
+
   // Export selected paragraphs to markdown
   const handleExportMarkdown = () => {
     if (selectedResults.length === 0) {
@@ -289,6 +361,14 @@ function SearchPage() {
               disabled={selectedResults.length === 0}
             >
               {t("export")}
+            </Button>
+            <Button
+              type="default"
+              style={{ marginLeft: '8px' }}
+              onClick={handleExportAll}
+              loading={isExportingAll}
+            >
+              {t("export_all")}
             </Button>
             <span style={{ marginLeft: '16px', color: 'var(--text-secondary)' }}>
               {selectedResults.length} {t("items_selected")}

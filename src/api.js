@@ -225,6 +225,9 @@ export const apiClient = Object.assign(
         method: updated ? "PUT" : "GET",
       });
     },
+    async createTaskDbo(data) {
+      return await this.makeCall(`tasks/`, data, { method: "POST" });
+    },
     // pipeline
     async getPipelines() {
       return await this.makeCall('plugins/pipeline')

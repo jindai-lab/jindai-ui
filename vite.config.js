@@ -14,8 +14,7 @@ export default defineConfig({
       },
     },
     allowedHosts: [
-      'dh.local.innovors.info',
-      'dh.innovors.info',
+      'dh.lailai.world',
       'dh.innovors.com'
     ]
   },
