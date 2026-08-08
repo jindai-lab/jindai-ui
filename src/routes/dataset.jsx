@@ -75,7 +75,7 @@ const { t } = useTranslation();
     size: 'middle',
     scroll: { x: 'max-content' },
     style: { marginTop: 16, borderRadius: 8, overflow: 'hidden' },
-    rowClassName: (record) => record.is_directory ? 'file-row-dir' : 'file-row-file',
+    rowClassName: 'file-row-dir',
   };
 
   const handleAdd = (newName) => {
@@ -163,11 +163,19 @@ const { t } = useTranslation();
         cancelText={t("cancel")}
         open={creatingDataset}
         onOk={async () => {
+          if (!creatingDatasetName.trim()) {
+            message.warning(t("please_enter_new_name"));
+            return;
+          }
           try {
-            apiClient.datasetCreate({
+            const result = await apiClient.datasetCreate({
               name: creatingDatasetName.trim()
-            })
-            message.success(t("folder_created_successfully"));
+            });
+            if (result === undefined) {
+              // makeCall 内部已弹出错误提示，但这里保证不误报成功
+              return;
+            }
+            message.success(t("dataset_created_successfully"));
             handleRefresh(); // 刷新目录列表，实时展示新增结果
             setCreatingDataset(false);
             setCreatingDatasetName('');

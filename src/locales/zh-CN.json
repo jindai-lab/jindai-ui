@@ -27,6 +27,7 @@
     "no_execution_records": "无执行记录",
     "publication": "出版物",
     "folder_created_successfully": "文件夹创建成功",
+    "dataset_created_successfully": "数据集创建成功",
     "failed_to_export_bibtex": "导出BibTeX失败",
     "traditional_chinese": "繁体中文",
     "items_selected": "已选择项目",

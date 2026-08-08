@@ -27,6 +27,7 @@
     "no_execution_records": "No Execution Records",
     "publication": "Publication",
     "folder_created_successfully": "Folder created successfully",
+    "dataset_created_successfully": "Dataset created successfully",
     "failed_to_export_bibtex": "Failed to export BibTeX",
     "traditional_chinese": "Traditional Chinese",
     "items_selected": "Items Selected",
