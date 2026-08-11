@@ -80,6 +80,7 @@ export function JobsList({ jobs }) {
           bordered
         />
         <JobDetailModal
+          key={currentJob ? currentJob.task_id : "none"}
           job={currentJob}
           visible={modalVisible}
           onCancel={() => setModalVisible(false)}
@@ -124,10 +125,6 @@ function JobDetailModal({ job, visible, onCancel }) {
   useEffect(() => {
     if (!visible || !job) return;
 
-    setLogs([]);
-    logsRef.current = [];
-    setWsStatus("connecting");
-
     const socketUrl = `${getWebSocketBaseUrl()}?token=${apiClient.bearer}`;
     const ws = new WebSocket(socketUrl);
     wsRef.current = ws;
@@ -142,6 +139,16 @@ function JobDetailModal({ job, visible, onCancel }) {
         const msg = JSON.parse(event.data);
         if (msg.type === "log" && msg.data) {
           // 仅显示当前任务的日志
+          if (msg.task_id && msg.task_id !== jobRef.current.task_id) return;
+          const formatted = {
+            timestamp: msg.data.timestamp,
+            level: msg.data.level || "INFO",
+            message: msg.data.message,
+          };
+          logsRef.current = [...logsRef.current, formatted];
+          if (!isPausedRef.current) {
+            setLogs(logsRef.current);
+          }
         } else if (msg.type === "ping") {
           // keepalive
         }
@@ -171,7 +178,14 @@ function JobDetailModal({ job, visible, onCancel }) {
   }
 
   const handlePauseToggle = () => {
-    setIsPaused((prev) => !prev);
+    setIsPaused((prev) => {
+      const next = !prev;
+      if (!next) {
+        // 恢复时一次性显示累积的日志
+        setLogs(logsRef.current);
+      }
+      return next;
+    });
   };
 
   const handleClearLogs = () => {
