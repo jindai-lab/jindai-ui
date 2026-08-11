@@ -5,7 +5,7 @@ import ParamPanel from './param-panel';
 import { apiClient } from '../api';
 import { useTranslation } from "react-i18next";
 
-const PipelineVisual = ({ value = [], onChange, pipelineSchema = {}, onSyncYaml }) => {
+const PipelineVisual = ({ value = [], onChange, pipelineSchema = {}, onSyncYaml, shortcutMap = {}, onShortcutChange }) => {
   const { t } = useTranslation();
   const [expandedStages, setExpandedStages] = useState({});
 
@@ -21,6 +21,17 @@ const PipelineVisual = ({ value = [], onChange, pipelineSchema = {}, onSyncYaml 
   const addStage = () => {
     const newStage = { '': {} };
     const newPipeline = [...value, newStage];
+    onChange(newPipeline);
+    if (onSyncYaml) {
+      onSyncYaml(newPipeline);
+    }
+  };
+
+  // Insert a new stage at a specific position
+  const insertStage = (index) => {
+    const newStage = { '': {} };
+    const newPipeline = [...value];
+    newPipeline.splice(index, 0, newStage);
     onChange(newPipeline);
     if (onSyncYaml) {
       onSyncYaml(newPipeline);
@@ -86,6 +97,26 @@ const PipelineVisual = ({ value = [], onChange, pipelineSchema = {}, onSyncYaml 
     }
   };
 
+  // Build the shortcut_map path for a stage param: ClassName@index.paramName (index is 1-based)
+  const buildShortcutKey = (index, paramName) => {
+    const stage = value[index];
+    const stageClass = Object.keys(stage)[0];
+    return `${stageClass}@${index + 1}.${paramName}`;
+  };
+
+  // Update the shortcut name for a stage param
+  const updateShortcut = (index, paramName, shortcutName) => {
+    if (!onShortcutChange) return;
+    const key = buildShortcutKey(index, paramName);
+    const newShortcutMap = { ...shortcutMap };
+    if (shortcutName && shortcutName.trim()) {
+      newShortcutMap[key] = shortcutName.trim();
+    } else {
+      delete newShortcutMap[key];
+    }
+    onShortcutChange(newShortcutMap);
+  };
+
   // Get schema for a specific stage class
   const getStageSchema = (className) => {
     return pipelineSchema.find(s => s.label === className);
@@ -99,11 +130,6 @@ const PipelineVisual = ({ value = [], onChange, pipelineSchema = {}, onSyncYaml 
 
   return (
     <div style={{ marginBottom: 16 }}>
-      <Space style={{ marginBottom: 16 }}>
-        <Button type="primary" onClick={addStage} icon={<PlusOutlined />}>
-          {t("add_stage")}
-        </Button>
-      </Space>
 
       {value.map((stage, index) => {
         if (Array.isArray(stage)) {
@@ -114,6 +140,18 @@ const PipelineVisual = ({ value = [], onChange, pipelineSchema = {}, onSyncYaml 
         const stageSchema = getStageSchema(stageClass);
 
         return (
+          <div key={index} style={{ position: 'relative' }}>
+          {/* Insert button above each stage */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
+            <Button
+              type="dashed"
+              size="small"
+              icon={<PlusOutlined />}
+              onClick={() => insertStage(index)}
+              title={t("insert_stage")}
+              block
+            />
+          </div>
           <Card
             key={index}
             size="small"
@@ -186,7 +224,41 @@ const PipelineVisual = ({ value = [], onChange, pipelineSchema = {}, onSyncYaml 
                 pipelineSchema={pipelineSchema}
               />
             )}
+
+            {/* Shortcut Map Editing for this stage */}
+            {stageClass && stageSchema && onShortcutChange && (
+              <Divider style={{ margin: '12px 0' }} />
+            )}
+            {stageClass && stageSchema && onShortcutChange && (
+              <Form.Item label={t("shortcut_map")} style={{ marginBottom: 0 }}>
+                {stageSchema.args.map(arg => {
+                  const key = buildShortcutKey(index, arg.name);
+                  return (
+                    <Space key={arg.name} style={{ display: 'flex', marginBottom: 8 }} align="baseline">
+                      <span style={{ width: 120, flexShrink: 0, color: 'var(--text-secondary)' }}>{arg.name}</span>
+                      <Input
+                        style={{ flex: 1 }}
+                        placeholder={t("shortcut_name_placeholder")}
+                        value={shortcutMap[key] || undefined}
+                        onChange={(e) => updateShortcut(index, arg.name, e.target.value)}
+                        allowClear
+                        onClear={() => updateShortcut(index, arg.name, '')}
+                        suffix={
+                          shortcutMap[key] && (
+                            <DeleteOutlined
+                              style={{ cursor: 'pointer', color: 'var(--danger)' }}
+                              onClick={() => updateShortcut(index, arg.name, '')}
+                            />
+                          )
+                        }
+                      />
+                    </Space>
+                  );
+                })}
+              </Form.Item>
+            )}
           </Card>
+          </div>
         );
       })}
 
@@ -195,6 +267,17 @@ const PipelineVisual = ({ value = [], onChange, pipelineSchema = {}, onSyncYaml 
           {t("no_stages_added")}
         </div>
       )}
+
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
+        <Button
+          type="dashed"
+          size="small"
+          icon={<PlusOutlined />}
+          onClick={() => insertStage(value.length)}
+          title={t("insert_stage")}
+          block
+        />
+      </div>
     </div>
   );
 };

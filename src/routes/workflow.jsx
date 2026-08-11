@@ -171,12 +171,27 @@ export default function Workflow({ }) {
     });
   };
 
-  // Handle shortcut map update
+  // Handle shortcut map update from the bottom Shortcut Panel (existing behavior)
   const handleShortcutMapChange = (newShortcutMap) => {
     setWorkflowConfig({
       ...workflowConfig,
       shortcut_map: newShortcutMap
     });
+  };
+
+  // Handle shortcut map update from the pipeline visual editor.
+  // newShortcutMap is in raw {path: name} format.
+  const handleShortcutMapChangeFromPipeline = (newShortcutMap) => {
+    setWorkflowConfig({
+      ...workflowConfig,
+      shortcut_map: newShortcutMap
+    });
+    // Rebuild the display shortcutMap state so the bottom panel stays in sync
+    try {
+      setShortcutMap(buildShortcuts(newShortcutMap, pipelineData));
+    } catch (err) {
+      console.log("Shortcut build error:", err);
+    }
   };
 
   // Build shortcuts from shortcut_map and pipeline
@@ -314,6 +329,8 @@ export default function Workflow({ }) {
                 onSyncYaml={(newPipeline) => {
                   setYamlContent(yaml.dump(newPipeline));
                 }}
+                shortcutMap={workflowConfig.shortcut_map || {}}
+                onShortcutChange={handleShortcutMapChangeFromPipeline}
               />
             )
           },
