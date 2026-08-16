@@ -159,12 +159,12 @@ function SearchPage() {
     return dataContext.results
       .slice(relativeOffset, relativeOffset + filters.pageSize)
       .map((ele) => {
-        const source_url = ele.source_url || "";
+        const source_path = ele.source_path || ele.source_url || "";
         return {
           ...ele,
-          href: source_url.match(/https?:\/\//)
-            ? source_url
-            : `/files/${source_url.replace(/^\//, "")}?page=${ele.source_page + 1}`,
+          href: source_path.match(/https?:\/\//)
+            ? source_path
+            : `/files/${source_path.replace(/^\//, "")}?page=${ele.source_page + 1}`,
           displayDate:
             ele.pdate?.toString().replace(/(-01){0,2}T.+$/, "") || "",
         };
@@ -252,8 +252,9 @@ function SearchPage() {
           }
 
           markdownContent += `---\n\n`;
-          if (item.source_url) {
-            markdownContent += `**Source:** [${item.source_url}](${item.source_url})\n\n`;
+          const source_ref = item.source_path || item.source_url || '';
+          if (source_ref) {
+            markdownContent += `**Source:** [${source_ref}](${source_ref})\n\n`;
           }
           if (item.pagenum) {
             markdownContent += `**Page:** ${item.pagenum}\n\n`;
@@ -311,8 +312,9 @@ function SearchPage() {
 
       // Add item content
       markdownContent += `### Result ${index + 1}\n\n`;
-      if (item.source_url) {
-        markdownContent += `**Source:** [${item.source_url}](${item.source_url})\n\n`;
+      const source_ref = item.source_path || item.source_url || '';
+      if (source_ref) {
+        markdownContent += `**Source:** [${source_ref}](${source_ref})\n\n`;
       }
       if (item.pagenum) {
         markdownContent += `**Page:** ${item.pagenum}\n\n`;

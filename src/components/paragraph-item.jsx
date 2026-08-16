@@ -98,8 +98,8 @@ const { t } = useTranslation();
         <div className="metadata-item">
           <span className="metadata-label">{FIELD_NAMES.source_url}</span>
           <span className="metadata-value">
-            <a href={data.href} title={data.source_url} target='_blank' rel="noopener noreferrer">
-              {data.source_url.substring(0, 10) + '...' + data.source_url.substring(10).split('/').pop().slice(-15) || ''}
+            <a href={data.href} title={data.source_path || data.source_url} target='_blank' rel="noopener noreferrer">
+              {((data.source_path || data.source_url) || '').substring(0, 10) + '...' + ((data.source_path || data.source_url) || '').substring(10).split('/').pop().slice(-15) || ''}
               {data.pagenum ? `:${data.pagenum}` : ''}
             </a>
           </span>
