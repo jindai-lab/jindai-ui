@@ -1,16 +1,20 @@
 import {
   DeleteOutlined,
   EditOutlined,
+  FolderOpenOutlined,
   ImportOutlined,
   MergeCellsOutlined,
   PlusOutlined,
   ReloadOutlined
 } from '@ant-design/icons';
-import { Button, Form, Input, message, Modal, Popconfirm, Space, Table } from 'antd';
+import {
+  Button, Form, Input, Modal, Popconfirm, Space, Table, Drawer, List, Empty, message
+} from 'antd';
 import { useEffect, useState } from "react";
 import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../api'
 import { useTranslation } from "react-i18next";
+import FileSourceSelector from '../components/filesource-selector';
 
 export default function DatasetPage() {
 const { t } = useTranslation();
@@ -24,6 +28,14 @@ const { t } = useTranslation();
   const [mergeForm] = Form.useForm();
   const [mergeLoading, setMergeLoading] = useState(false);
   const navigate = useNavigate();
+
+  // Dataset detail (file paths) state
+  const [detailRecord, setDetailRecord] = useState(null);
+  const [detailPaths, setDetailPaths] = useState([]);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [addPaths, setAddPaths] = useState([]);
+  const [addLoading, setAddLoading] = useState(false);
+  const [removingPath, setRemovingPath] = useState(null);
 
   const columns = [
     {
@@ -41,10 +53,11 @@ const { t } = useTranslation();
     {
       title: t("action"),
       key: 'action',
-      width: '20%',
+      width: '28%',
       align: 'center',
       render: (_, record) => (
-        <Space size="small">
+        <Space size="small" onClick={(e) => e.stopPropagation()}>
+          <Button style={{color: 'var(--primary)'}} icon={<FolderOpenOutlined />} size="small" onClick={() => handleDetail(record)} type="link">文件</Button>
           <Button style={{color: 'var(--primary)'}} icon={<PlusOutlined />} size="small" onClick={() => handleAdd(record.value + '--')} type="link">添加</Button>
           <Button style={{color: 'var(--primary)'}} icon={<EditOutlined />} size="small" onClick={() => handleEdit(record)} type="link">编辑</Button>
           <Button style={{color: 'var(--primary)'}} icon={<ImportOutlined />} size="small" onClick={() => navigate(`/import?dataset=${record.value}`)} type="link">导入</Button>
@@ -61,6 +74,13 @@ const { t } = useTranslation();
     },
   ];
 
+  const handleRefresh = () => {
+    message.loading(t("refresh_dataset_list"), 0);
+    apiClient.datasets()
+      .then(setDatasets)
+      .finally(() => { message.destroy() });
+  }
+
   useEffect(() => {
     handleRefresh()
   }, []);
@@ -76,6 +96,65 @@ const { t } = useTranslation();
     scroll: { x: 'max-content' },
     style: { marginTop: 16, borderRadius: 8, overflow: 'hidden' },
     rowClassName: 'file-row-dir',
+    onRow: (record) => ({
+      onClick: () => handleDetail(record),
+      style: { cursor: 'pointer' },
+    }),
+  };
+
+  const handleDetail = (record) => {
+    setDetailRecord(record);
+    setDetailPaths([]);
+    setAddPaths([]);
+    setAddLoading(false);
+    loadDatasetFiles(record.record_id);
+  };
+
+  const loadDatasetFiles = async (datasetId) => {
+    if (!datasetId) {
+      setDetailPaths([]);
+      return;
+    }
+    setDetailLoading(true);
+    try {
+      const res = await apiClient.datasetFiles(datasetId);
+      setDetailPaths(res?.paths || []);
+    } catch (err) {
+      message.error(err.message || '获取文件列表失败');
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
+  const handleAddFiles = async () => {
+    if (!addPaths?.length) {
+      message.warning('请先选择要添加的文件路径');
+      return;
+    }
+    setAddLoading(true);
+    try {
+      const res = await apiClient.datasetAddFiles(detailRecord.record_id, addPaths);
+      message.success('文件路径添加成功');
+      setDetailPaths(res?.paths || []);
+      setAddPaths([]);
+    } catch (err) {
+      message.error(err.message || '添加文件路径失败');
+    } finally {
+      setAddLoading(false);
+    }
+  };
+
+  const handleRemoveFile = async (path) => {
+    setRemovingPath(path);
+    try {
+      const res = await apiClient.datasetRemoveFiles(detailRecord.record_id, [path]);
+      message.success('文件路径已移除');
+      setDetailPaths(res?.paths || []);
+    } catch (err) {
+      message.error(err.message || '移除文件路径失败');
+    } finally {
+      setRemovingPath(null);
+    }
   };
 
   const handleAdd = (newName) => {
@@ -94,13 +173,6 @@ const { t } = useTranslation();
       message.info(t("delete_success"))
       handleRefresh()
     })
-  }
-
-  const handleRefresh = () => {
-    message.loading(t("refresh_dataset_list"), 0);
-    apiClient.datasets()
-      .then(setDatasets)
-      .finally(() => { message.destroy() });
   }
 
   const handleMerge = async (values) => {
@@ -132,6 +204,70 @@ const { t } = useTranslation();
         数据集
       </div>
       <Table {...tableProps} />
+
+      {/* Dataset detail drawer: manage file paths */}
+      <Drawer
+        title={`${t("dataset")}: ${detailRecord?.value || ''}`}
+        width={560}
+        open={!!detailRecord}
+        onClose={() => setDetailRecord(null)}
+        destroyOnClose
+      >
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ marginBottom: 8, fontWeight: 500 }}>{t("add_file_path")}</div>
+          <Space style={{ width: '100%' }} direction="vertical">
+            <FileSourceSelector
+              multiple
+              value={addPaths}
+              onChange={setAddPaths}
+              placeholder={t("select_file_source")}
+            />
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              loading={addLoading}
+              onClick={handleAddFiles}
+              disabled={!addPaths?.length}
+            >
+              {t("add")}
+            </Button>
+          </Space>
+        </div>
+        <div style={{ marginBottom: 8, fontWeight: 500 }}>
+          {t("associated_files")}（{detailPaths.length}）
+        </div>
+        <List
+          loading={detailLoading}
+          bordered
+          dataSource={detailPaths}
+          locale={{ emptyText: <Empty description={t("no_files")} /> }}
+          renderItem={(path) => (
+            <List.Item
+              actions={[
+                <Popconfirm
+                  key="remove"
+                  title={`确定从该数据集移除【${path}】吗？`}
+                  onConfirm={() => handleRemoveFile(path)}
+                  okText={t("confirm")}
+                  cancelText={t("cancel")}
+                >
+                  <Button
+                    icon={<DeleteOutlined />}
+                    danger
+                    type="link"
+                    size="small"
+                    loading={removingPath === path}
+                  >
+                    {t("remove")}
+                  </Button>
+                </Popconfirm>,
+              ]}
+            >
+              {path}
+            </List.Item>
+          )}
+        />
+      </Drawer>
 
       <Modal
         title={t("rename") + (editingRecord?.title || '')}

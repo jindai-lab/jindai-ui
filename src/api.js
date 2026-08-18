@@ -133,6 +133,19 @@ export const apiClient = Object.assign(
     async datasetMerge({ pattern, regex, target }) {
       return await this.makeCall(`datasets/merge`, { pattern, regex, target });
     },
+    async datasetFiles(datasetId) {
+      return await this.makeCall(`datasets/${datasetId}/files`);
+    },
+    async datasetAddFiles(datasetId, paths) {
+      return await this.makeCall(`datasets/${datasetId}/files`, { paths }, { method: 'POST' });
+    },
+    async datasetRemoveFiles(datasetId, paths) {
+      const resp = await this.delete(
+        `datasets/${datasetId}/files`,
+        { data: { paths } },
+      );
+      return resp?.data;
+    },
     async datasetSort(sortedNames) {
       this.makeCall("datasets", {
         batch: sortedNames.map((x, i) => ({
