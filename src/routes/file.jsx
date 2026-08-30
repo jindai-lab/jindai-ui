@@ -61,6 +61,7 @@ const PdfViewer = ({ path, asImage }) => {
         setPdfMaxPages(data.page_count)
 
         document.onkeydown = function (e) {
+          if (e.altKey || e.metaKey || e.ctrlKey) return;
           switch (e.key) {
             case "ArrowLeft":
             case "a":
