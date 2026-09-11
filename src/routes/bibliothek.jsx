@@ -1,5 +1,5 @@
-import { CodeOutlined, DashboardOutlined, EditOutlined, EyeOutlined, FileTextOutlined, PlusOutlined, SearchOutlined, SyncOutlined, UnorderedListOutlined, UploadOutlined } from "@ant-design/icons";
-import { Button, Card, Divider, Dropdown, Form, Grid, Input, message, Modal, Pagination, Select, Space, Table, Tag } from "antd";
+import { CodeOutlined, DashboardOutlined, EditOutlined, EyeOutlined, FilePdfOutlined, FileTextOutlined, PlusOutlined, SearchOutlined, SyncOutlined, UnorderedListOutlined, UploadOutlined } from "@ant-design/icons";
+import { Button, Card, Divider, Dropdown, Form, Grid, Input, message, Modal, Pagination, Select, Space, Table, Tag, Typography, Upload } from "antd";
 import dayjs from "dayjs";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -29,6 +29,10 @@ export default function BibliothekPage() {
   const [selectedItem, setSelectedItem] = useState(null);
   const [showBibtexModal, setShowBibtexModal] = useState(false);
   const [bibtexText, setBibtexText] = useState('');
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [pathPreview, setPathPreview] = useState('');
+  const [uploadForm] = Form.useForm();
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
 
@@ -60,6 +64,25 @@ export default function BibliothekPage() {
   useEffect(() => {
     localStorage.setItem('bibitems_view_mode', viewMode);
   }, [viewMode]);
+
+  // Preview the normalized Authors/<author>/ storage path as authors are typed
+  const watchedAuthors = Form.useWatch('authors', uploadForm);
+  useEffect(() => {
+    const list = (watchedAuthors || []).filter((a) => a && String(a).trim());
+    if (!list.length) {
+      setPathPreview('');
+      return;
+    }
+    const timer = setTimeout(async () => {
+      try {
+        const resp = await apiClient.makeCall('bibliography/authors/normalize', { authors: list });
+        if (resp?.success) setPathPreview(`Authors/${resp.directory}/`);
+      } catch (e) {
+        // preview only, ignore errors
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [watchedAuthors]);
 
   const handleSearch = async (query = '', type = '', page = 1, limit = 20) => {
     setLoading(true);
@@ -224,6 +247,45 @@ export default function BibliothekPage() {
     }
   };
 
+  const handleUploadPdf = async () => {
+    let values;
+    try {
+      values = await uploadForm.validateFields();
+    } catch (e) {
+      return; // validation errors are shown by the form
+    }
+    const f = values.file?.[0]?.originFileObj;
+    if (!f) {
+      message.warning(t("please_select_a_pdf_file"));
+      return;
+    }
+    if (!f.name.toLowerCase().endsWith('.pdf')) {
+      message.error(t("only_pdf_allowed"));
+      return;
+    }
+    try {
+      setUploading(true);
+      const fd = new FormData();
+      fd.append('file', f);
+      (values.authors || []).forEach((a) => fd.append('authors', a));
+      if (values.title) fd.append('title', values.title);
+      const data = await apiClient.uploadBibliographyPdf(fd);
+      if (data?.success) {
+        message.success(data.message || t("pdf_uploaded"));
+        setShowUploadModal(false);
+        uploadForm.resetFields();
+        setPathPreview('');
+        updateSearchParams();
+      } else {
+        message.error(data?.message || t("pdf_upload_failed"));
+      }
+    } catch (e) {
+      message.error(t("pdf_upload_failed") + ": " + e);
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handlePasteBibtex = async () => {
     if (!bibtexText.trim()) {
       message.warning(t("Please enter BibTeX text"));
@@ -316,7 +378,7 @@ export default function BibliothekPage() {
       key: "authors",
       width: 200,
       render: (authors, record) => (
-        authors.map(author => (
+        authors?.map(author => (
           <div
             style={{ cursor: 'pointer', color: 'var(--primary-color)' }}
             onClick={(e) => {
@@ -346,6 +408,27 @@ export default function BibliothekPage() {
       dataIndex: "date",
       key: "date",
       width: 120,
+    },
+    {
+      title: t("file_path"),
+      key: "file_path",
+      width: 230,
+      render: (_, record) => {
+        const p = record.file_attachments?.[0]
+          || (record.path && !record.path.startsWith('bib:') ? record.path : '');
+        return p ? (
+          <Typography.Text
+            type="secondary"
+            style={{ fontSize: 12 }}
+            copyable={{ text: p }}
+            ellipsis={{ tooltip: p }}
+          >
+            {p}
+          </Typography.Text>
+        ) : (
+          ''
+        );
+      },
     },
     {
       title: t("action"),
@@ -443,6 +526,12 @@ export default function BibliothekPage() {
                   icon: <FileTextOutlined />,
                   label: t("paste_bibtex"),
                   onClick: () => setShowBibtexModal(true),
+                },
+                {
+                  key: 'upload-pdf',
+                  icon: <FilePdfOutlined />,
+                  label: t("upload_pdf"),
+                  onClick: () => setShowUploadModal(true),
                 },
                 {
                   key: 'upload-bibtex',
@@ -560,6 +649,54 @@ export default function BibliothekPage() {
           }}
           onDelete={handleDelete}
         />
+      </Modal>
+
+      {/* Upload PDF Modal */}
+      <Modal
+        title={t("upload_pdf")}
+        open={showUploadModal}
+        onCancel={() => {
+          setShowUploadModal(false);
+          uploadForm.resetFields();
+          setPathPreview('');
+        }}
+        onOk={handleUploadPdf}
+        confirmLoading={uploading}
+        okText={t("upload")}
+        width={560}
+      >
+        <Form form={uploadForm} layout="vertical">
+          <Form.Item
+            name="file"
+            label={t("file")}
+            valuePropName="fileList"
+            getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList)}
+            rules={[{ required: true, message: t("please_select_a_pdf_file") }]}
+          >
+            <Upload.Dragger accept=".pdf,application/pdf" maxCount={1} beforeUpload={() => false}>
+              <p className="ant-upload-drag-icon">
+                <FilePdfOutlined />
+              </p>
+              <p className="ant-upload-text">{t("click_or_drag_pdf_here")}</p>
+              <p className="ant-upload-hint">{t("only_pdf_allowed")}</p>
+            </Upload.Dragger>
+          </Form.Item>
+          <Form.Item
+            name="authors"
+            label={t("author")}
+            rules={[{ required: true, message: t("please_enter_authors") }]}
+            extra={pathPreview || t("authors_storage_hint")}
+          >
+            <Select mode="tags" placeholder={t("e_g_john_cage")} />
+          </Form.Item>
+          <Form.Item
+            name="title"
+            label={t("title")}
+            extra={t("leave_blank_to_extract_from_filename")}
+          >
+            <Input placeholder={t("leave_blank_to_extract_from_filename")} />
+          </Form.Item>
+        </Form>
       </Modal>
 
       {/* Paste BibTeX Modal */}

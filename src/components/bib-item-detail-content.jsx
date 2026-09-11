@@ -62,6 +62,10 @@ export function BibItemDetailContent({ item, onExportBibtex }) {
 
   if (!item) return null;
 
+  // Relative path of the stored file (hidden for pure bibliographic entries)
+  const filePath = item.file_attachments?.[0]
+    || (item.path && !item.path.startsWith('bib:') ? item.path : '');
+
   const handleDownload = async (attachment) => {
     setDownloading(attachment);
     try {
@@ -103,7 +107,7 @@ export function BibItemDetailContent({ item, onExportBibtex }) {
         <div style={{ flex: 1 }}>
           <h2 style={{ margin: '0 0 8px 0' }}>{item.title}</h2>
           <p style={{ margin: '0 0 16px 0', color: 'var(--text-secondary)' }}>
-            {item.authors.map(author => <Tag>{author}</Tag>)}
+            {item.authors?.map(author => <Tag>{author}</Tag>)}
           </p>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
@@ -181,6 +185,12 @@ export function BibItemDetailContent({ item, onExportBibtex }) {
               <div>
                 <div style={{ color: 'var(--text-secondary)', fontSize: 12 }}>{t("language")}</div>
                 <div>{item.language}</div>
+              </div>
+            )}
+            {filePath && (
+              <div style={{ gridColumn: '1 / -1' }}>
+                <div style={{ color: 'var(--text-secondary)', fontSize: 12 }}>{t("file_path")}</div>
+                <div style={{ wordBreak: 'break-all' }}>{filePath}</div>
               </div>
             )}
           </div>

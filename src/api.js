@@ -262,6 +262,10 @@ export const apiClient = Object.assign(
     async deleteBibliographyItem(id) {
       return await this.makeCall(`bibliography/${id}`, null, { method: 'DELETE' })
     },
+    async uploadBibliographyPdf(formData) {
+      const resp = await this.post('bibliography/upload/pdf', formData)
+      return resp?.data
+    },
     // other
     langCodes: Object.entries(
       Object.fromEntries([
