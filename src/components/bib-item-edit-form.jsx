@@ -6,31 +6,31 @@ import { DeleteOutlined } from "@ant-design/icons";
 
 const { TextArea } = Input;
 
+export const itemTypeOptions = [
+  { label: 'book', value: 'book' },
+  { label: 'journalArticle', value: 'journalArticle' },
+  { label: 'magazineArticle', value: 'magazineArticle' },
+  { label: 'newspaperArticle', value: 'newspaperArticle' },
+  { label: 'thesis', value: 'thesis' },
+  { label: 'letter', value: 'letter' },
+  { label: 'manuscript', value: 'manuscript' },
+  { label: 'invoice', value: 'invoice' },
+  { label: 'email', value: 'email' },
+  { label: 'instantMessage', value: 'instantMessage' },
+  { label: 'forumPost', value: 'forumPost' },
+  { label: 'blogPost', value: 'blogPost' },
+  { label: 'podcast', value: 'podcast' },
+  { label: 'videoRecording', value: 'videoRecording' },
+  { label: 'audioRecording', value: 'audioRecording' },
+  { label: 'conferencePaper', value: 'conferencePaper' },
+  { label: 'document', value: 'document' },
+  { label: 'encyclopediaArticle', value: 'encyclopediaArticle' },
+  { label: 'dictionaryEntry', value: 'dictionaryEntry' },
+];
+
 export default function BibItemEditForm({ item, onSubmit, onCancel, onDelete }) {
   const { t } = useTranslation();
   const [form] = Form.useForm();
-
-  const itemTypeOptions = [
-    { label: 'book', value: 'book' },
-    { label: 'journalArticle', value: 'journalArticle' },
-    { label: 'magazineArticle', value: 'magazineArticle' },
-    { label: 'newspaperArticle', value: 'newspaperArticle' },
-    { label: 'thesis', value: 'thesis' },
-    { label: 'letter', value: 'letter' },
-    { label: 'manuscript', value: 'manuscript' },
-    { label: 'invoice', value: 'invoice' },
-    { label: 'email', value: 'email' },
-    { label: 'instantMessage', value: 'instantMessage' },
-    { label: 'forumPost', value: 'forumPost' },
-    { label: 'blogPost', value: 'blogPost' },
-    { label: 'podcast', value: 'podcast' },
-    { label: 'videoRecording', value: 'videoRecording' },
-    { label: 'audioRecording', value: 'audioRecording' },
-    { label: 'conferencePaper', value: 'conferencePaper' },
-    { label: 'document', value: 'document' },
-    { label: 'encyclopediaArticle', value: 'encyclopediaArticle' },
-    { label: 'dictionaryEntry', value: 'dictionaryEntry' },
-  ];
 
   useEffect(() => {
     if (item) {

@@ -1,9 +1,9 @@
-import { Card, Space, Button, Modal, Tag } from "antd";
-import { EyeOutlined, CodeOutlined, DownloadOutlined } from "@ant-design/icons";
+import { Card, Space, Button, Tag } from "antd";
+import { DownloadOutlined, EditOutlined, EyeOutlined } from "@ant-design/icons";
 import { BibItemCover } from "./bib-item-detail-content";
 import { useTranslation } from "react-i18next";
 
-export default function BibItemDisplay({ item, onEdit, onView }) {
+export default function BibItemDisplay({ item, onEdit, onView, onShowDetail, onDownload }) {
   const { t } = useTranslation();
 
   // Relative path of the stored file (hidden for pure bibliographic entries)
@@ -16,17 +16,12 @@ export default function BibItemDisplay({ item, onEdit, onView }) {
         hoverable
         style={{ background: 'var(--bg)', borderColor: 'var(--border)' }}
         cover={
-          filePath ? (
-            <a
-              href={`/files/${filePath}`}
-              target="_blank" style={{ height: 150, overflow: 'hidden' }}>
-              <BibItemCover item={item} fit="cover" />
-            </a>
-          ) : (
-            <div style={{ height: 150, overflow: 'hidden' }}>
-              <BibItemCover item={item} fit="cover" />
-            </div>
-          )
+          <div
+            style={{ height: 150, overflow: 'hidden', cursor: 'pointer' }}
+            onClick={() => onShowDetail(item)}
+          >
+            <BibItemCover item={item} fit="contain" />
+          </div>
         }
       >
         <Card.Meta
@@ -54,20 +49,16 @@ export default function BibItemDisplay({ item, onEdit, onView }) {
           }
         />
         <Space size="small" style={{ marginTop: 12 }}>
-          <Button size="small" icon={<EyeOutlined />} onClick={(e) => { e.stopPropagation(); onView(item); }}>
-            {t("view")}
-          </Button>
-          <Button size="small" icon={<CodeOutlined />} onClick={(e) => { e.stopPropagation(); onEdit(item); }}>
+          {filePath && (
+            <Button size="small" icon={<EyeOutlined />} onClick={(e) => { e.stopPropagation(); onView(item); }}>
+              {t("view")}
+            </Button>
+          )}
+          <Button size="small" icon={<EditOutlined />} onClick={(e) => { e.stopPropagation(); onEdit(item); }}>
             {t("edit")}
           </Button>
           {filePath && (
-            <Button
-              size="small"
-              icon={<DownloadOutlined />}
-              href={`/files/${filePath}`}
-              download
-              onClick={(e) => e.stopPropagation()}
-            >
+            <Button size="small" icon={<DownloadOutlined />} onClick={(e) => { e.stopPropagation(); onDownload(item); }}>
               {t("download")}
             </Button>
           )}

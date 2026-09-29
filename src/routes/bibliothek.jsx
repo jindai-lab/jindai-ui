@@ -1,4 +1,4 @@
-import { CodeOutlined, DashboardOutlined, EditOutlined, EyeOutlined, FilePdfOutlined, FileTextOutlined, PlusOutlined, SearchOutlined, SyncOutlined, UnorderedListOutlined, UploadOutlined } from "@ant-design/icons";
+import { CodeOutlined, DashboardOutlined, DownloadOutlined, EditOutlined, EyeOutlined, FilePdfOutlined, FileTextOutlined, PlusOutlined, SearchOutlined, SyncOutlined, UnorderedListOutlined, UploadOutlined } from "@ant-design/icons";
 import { Button, Card, Divider, Dropdown, Form, Grid, Input, message, Modal, Pagination, Select, Space, Table, Tag, Typography, Upload } from "antd";
 import dayjs from "dayjs";
 import { useEffect, useRef, useState } from "react";
@@ -7,7 +7,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { apiClient } from "../api";
 import { BibItemCover, BibItemDetailContent } from "../components/bib-item-detail-content";
 import BibItemDisplay from "../components/bib-item-display";
-import BibItemEditForm from "../components/bib-item-edit-form";
+import BibItemEditForm, { itemTypeOptions } from "../components/bib-item-edit-form";
 
 const { useBreakpoint } = Grid;
 
@@ -18,6 +18,7 @@ export default function BibliothekPage() {
   const [bibItems, setBibItems] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
@@ -34,18 +35,23 @@ export default function BibliothekPage() {
   const [pathPreview, setPathPreview] = useState('');
   const [uploadForm] = Form.useForm();
   const fileInputRef = useRef(null);
+  const [dragPdfOver, setDragPdfOver] = useState(false);
+  const dragCounterRef = useRef(0);
   const navigate = useNavigate();
 
   // Initialize search state from URL params
   const [searchQuery, setSearchQuery] = useState('');
   const [searchType, setSearchType] = useState('all');
+  const [itemType, setItemType] = useState('book');
 
   // Update URL params when search changes
-  const updateSearchParams = (query, type, page = 1, force = true) => {
+  const updateSearchParams = (query, type, page = 1, force = true, itemTypeValue = itemType, limitValue = pageSize) => {
     const params = new URLSearchParams();
     if (query) params.set('query', query);
     if (type && type !== 'all') params.set('type', type);
+    if (itemTypeValue && itemTypeValue !== 'book') params.set('item_type', itemTypeValue);
     if (page > 1) params.set('page', page);
+    if (limitValue && limitValue !== 20) params.set('limit', limitValue);
     if (force) params.set('t', new Date().getTime())
     setSearchParams(params);
   };
@@ -54,10 +60,13 @@ export default function BibliothekPage() {
     // Load from URL params on mount
     const query = searchParams.get('query') || '';
     const type = searchParams.get('type') || 'all';
+    const itemTypeParam = searchParams.get('item_type') || 'book';
     const page = parseInt(searchParams.get('page')) || 1;
+    const limit = parseInt(searchParams.get('limit')) || 20;
     setSearchQuery(query)
     setSearchType(['tag', 'title', 'author', 'all'].includes(type) ? type : 'all')
-    handleSearch(query, type, page, 20);
+    setItemType(itemTypeParam)
+    handleSearch(query, type, page, limit, itemTypeParam);
     document.querySelector('.ant-card-body').scrollIntoView()
   }, [searchParams]);
 
@@ -84,13 +93,14 @@ export default function BibliothekPage() {
     return () => clearTimeout(timer);
   }, [watchedAuthors]);
 
-  const handleSearch = async (query = '', type = '', page = 1, limit = 20) => {
+  const handleSearch = async (query = '', type = '', page = 1, limit = 20, itemTypeFilter = itemType) => {
     setLoading(true);
     try {
       const offset = (page - 1) * limit;
       const data = await apiClient.makeCall(`bibliography/search`, {
         query: query || searchQuery,
         type: type || searchType,
+        item_type: itemTypeFilter,
         limit, offset
       }, { method: "GET" });
       setBibItems(data.results?.map(item => {
@@ -102,6 +112,7 @@ export default function BibliothekPage() {
       }) ?? []);
       setTotalCount(data.count ?? 0);
       setCurrentPage(page);
+      setPageSize(limit);
     } catch (e) {
       message.error(t("Failed to load bibliography items") + ": " + e);
     } finally {
@@ -115,6 +126,11 @@ export default function BibliothekPage() {
 
   const handleSearchTypeChange = (value) => {
     setSearchType(value)
+  };
+
+  const handleItemTypeChange = (value) => {
+    setItemType(value)
+    updateSearchParams(searchQuery, searchType, 1, true, value)
   };
 
   const handleSearchSubmit = () => {
@@ -201,6 +217,34 @@ export default function BibliothekPage() {
     setSelectedItem(record);
   };
 
+  // Relative path of the stored file (empty for pure bibliographic entries)
+  const getItemFilePath = (item) => item.file_attachments?.[0]
+    || (item.path && !item.path.startsWith('bib:') ? item.path : '');
+
+  // "View" opens the online PDF reader (SPA route /files/<path>)
+  const handleOpenReader = (item) => {
+    const p = getItemFilePath(item);
+    if (p) navigate(`/files/${p}`);
+  };
+
+  // Download the attached file as a blob (the plain /files/ URL falls back to index.html)
+  const handleDownloadFile = async (item) => {
+    const p = getItemFilePath(item);
+    if (!p) return;
+    try {
+      const { url } = await apiClient.download(`files/${p}`);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = p.split('/').pop();
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      message.error(t("download_failed") + ": " + e);
+    }
+  };
+
   // Import/Export handlers
   const handleSyncCalibre = async () => {
     try {
@@ -284,6 +328,63 @@ export default function BibliothekPage() {
     } finally {
       setUploading(false);
     }
+  };
+
+  const openUploadPdfModal = () => {
+    uploadForm.resetFields();
+    setPathPreview('');
+    setShowUploadModal(true);
+  };
+
+  const uploadPdfFileDirect = (file) => {
+    uploadForm.setFieldsValue({
+      file: [{
+        uid: String(Date.now() + Math.random()),
+        name: file.name,
+        status: 'done',
+        originFileObj: file,
+      }],
+    });
+    setShowUploadModal(true);
+  };
+
+  const hasDraggedFiles = (e) => Array.from(e.dataTransfer?.types || []).includes('Files');
+
+  const handleListDragEnter = (e) => {
+    if (!hasDraggedFiles(e) || showUploadModal) return;
+    e.preventDefault();
+    dragCounterRef.current += 1;
+    setDragPdfOver(true);
+  };
+
+  const handleListDragOver = (e) => {
+    if (!hasDraggedFiles(e)) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+  };
+
+  const handleListDragLeave = (e) => {
+    if (!hasDraggedFiles(e)) return;
+    dragCounterRef.current = Math.max(0, dragCounterRef.current - 1);
+    if (dragCounterRef.current === 0) setDragPdfOver(false);
+  };
+
+  const handleListDrop = (e) => {
+    if (!hasDraggedFiles(e)) return;
+    e.preventDefault();
+    dragCounterRef.current = 0;
+    setDragPdfOver(false);
+    const dropped = Array.from(e.dataTransfer.files || []);
+    if (!dropped.length) return;
+    const pdfFiles = dropped.filter((f) => f.name.toLowerCase().endsWith('.pdf'));
+    if (!pdfFiles.length) {
+      message.error(t("only_pdf_allowed"));
+      return;
+    }
+    if (pdfFiles.length > 1) {
+      message.info(t("only_first_pdf_uploaded"));
+    }
+    uploadPdfFileDirect(pdfFiles[0]);
   };
 
   const handlePasteBibtex = async () => {
@@ -433,17 +534,27 @@ export default function BibliothekPage() {
     {
       title: t("action"),
       key: "actions",
-      width: 150,
-      render: (_, record) => (
-        <Space size="small">
-          <Button size="small" icon={<EyeOutlined />} onClick={() => handleView(record)}>
-            {t("view")}
-          </Button>
-          <Button size="small" icon={<EditOutlined />} onClick={() => handleEdit(record)}>
-            {t("edit")}
-          </Button>
-        </Space>
-      ),
+      width: 200,
+      render: (_, record) => {
+        const p = getItemFilePath(record);
+        return (
+          <Space size="small">
+            {p && (
+              <Button size="small" icon={<EyeOutlined />} onClick={() => handleOpenReader(record)}>
+                {t("view")}
+              </Button>
+            )}
+            <Button size="small" icon={<EditOutlined />} onClick={() => handleEdit(record)}>
+              {t("edit")}
+            </Button>
+            {p && (
+              <Button size="small" icon={<DownloadOutlined />} onClick={() => handleDownloadFile(record)}>
+                {t("download")}
+              </Button>
+            )}
+          </Space>
+        );
+      },
     },
   ];
 
@@ -471,6 +582,20 @@ export default function BibliothekPage() {
                   { label: t("author"), value: 'author' },
                   { label: t("tag"), value: 'tag' },
                 ]}
+              />
+              <Select
+                value={itemType}
+                onChange={handleItemTypeChange}
+                style={{ width: 170 }}
+                showSearch
+                placeholder={t("item_type")}
+                options={[
+                  { label: t("all_item_types"), value: 'all' },
+                  ...itemTypeOptions,
+                ]}
+                filterOption={(input, option) =>
+                  (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                }
               />
               <Button
                 type="primary"
@@ -503,6 +628,12 @@ export default function BibliothekPage() {
           >
             {t("create_new")}
           </Button>
+          <Button
+            icon={<FilePdfOutlined />}
+            onClick={openUploadPdfModal}
+          >
+            {t("upload_pdf")}
+          </Button>
           <Dropdown
             menu={{
               items: [
@@ -531,7 +662,7 @@ export default function BibliothekPage() {
                   key: 'upload-pdf',
                   icon: <FilePdfOutlined />,
                   label: t("upload_pdf"),
-                  onClick: () => setShowUploadModal(true),
+                  onClick: openUploadPdfModal,
                 },
                 {
                   key: 'upload-bibtex',
@@ -585,46 +716,84 @@ export default function BibliothekPage() {
 
         <Divider></Divider>
 
-        {viewMode === 'list' ? (
-          <Table
-            columns={columns}
-            dataSource={bibItems}
-            loading={loading}
-            rowKey="id"
-            pagination={{
-              pageSize: 20,
-              current: currentPage,
-              total: totalCount,
-              onChange: (page) => {
-                updateSearchParams(searchQuery, searchType, page);
-              }
-            }}
-          />
-        ) : (
-          <>
-            <div style={{ display: 'grid', gridTemplateColumns: screens.md ? 'repeat(auto-fill, minmax(280px, 1fr))' : '1fr', gap: 16 }}>
-              {bibItems.map((item) => (
-                <BibItemDisplay
-                  key={item.id}
-                  item={item}
-                  onEdit={handleEdit}
-                  onView={handleView}
-                  onExportBibtex={handleExportBibtex}
+        <div
+          onDragEnter={handleListDragEnter}
+          onDragOver={handleListDragOver}
+          onDragLeave={handleListDragLeave}
+          onDrop={handleListDrop}
+          style={{ position: 'relative' }}
+        >
+          {viewMode === 'list' ? (
+            <Table
+              columns={columns}
+              dataSource={bibItems}
+              loading={loading}
+              rowKey="id"
+              pagination={{
+                pageSize,
+                current: currentPage,
+                total: totalCount,
+                showSizeChanger: true,
+                pageSizeOptions: [10, 20, 50, 100],
+                onChange: (page, size) => {
+                  updateSearchParams(searchQuery, searchType, page, true, itemType, size);
+                }
+              }}
+            />
+          ) : (
+            <>
+              <div style={{ display: 'grid', gridTemplateColumns: screens.md ? 'repeat(auto-fill, minmax(280px, 1fr))' : '1fr', gap: 16 }}>
+                {bibItems.map((item) => (
+                  <BibItemDisplay
+                    key={item.id}
+                    item={item}
+                    onEdit={handleEdit}
+                    onView={handleOpenReader}
+                    onShowDetail={handleView}
+                    onDownload={handleDownloadFile}
+                    onExportBibtex={handleExportBibtex}
+                  />
+                ))}
+              </div>
+              <div style={{ marginTop: 16, textAlign: 'center' }}>
+                <Pagination
+                  current={currentPage}
+                  pageSize={pageSize}
+                  total={totalCount}
+                  showSizeChanger
+                  pageSizeOptions={[10, 20, 50, 100]}
+                  onChange={(page, size) => {
+                    updateSearchParams(searchQuery, searchType, page, true, itemType, size);
+                  }}
                 />
-              ))}
+              </div>
+            </>
+          )}
+          {dragPdfOver && (
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                zIndex: 10,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 12,
+                background: 'var(--panel-bg)',
+                opacity: 0.9,
+                border: '2px dashed var(--primary-color)',
+                borderRadius: 8,
+                pointerEvents: 'none',
+              }}
+            >
+              <FilePdfOutlined style={{ fontSize: 48, color: 'var(--primary-color)' }} />
+              <Typography.Title level={5} style={{ margin: 0, color: 'var(--primary-color)' }}>
+                {t("drop_pdf_to_upload")}
+              </Typography.Title>
             </div>
-            <div style={{ marginTop: 16, textAlign: 'center' }}>
-              <Pagination
-                current={currentPage}
-                pageSize={20}
-                total={totalCount}
-                onChange={(page) => {
-                  updateSearchParams(searchQuery, searchType, page);
-                }}
-              />
-            </div>
-          </>
-        )}
+          )}
+        </div>
       </Card>
 
       {/* Create/Edit Modal */}

@@ -42,9 +42,9 @@ export default function SettingsPage() {
   return (
     <>
       <Card title={t("interface_settings")} style={{ background: "var(--panel-bg)", color: "var(--text)", borderColor: "var(--border)", marginBottom: 16 }}>
-        <Row>
+        <Row align="middle">
           <Col span={4} style={{ color: "var(--text)", fontWeight: 500 }}>{t("interface_language")}</Col>
-          <Col span={8}>
+          <Col flex="auto">
             <Select 
               value={i18next.language} 
               style={{ width: '100%' }}
@@ -60,13 +60,12 @@ export default function SettingsPage() {
       </Card>
 
       <Card title={t("appearance_settings")} style={{ background: "var(--panel-bg)", color: "var(--text)", borderColor: "var(--border)", marginBottom: 16 }}>
-        <Space direction="vertical" size="large" style={{ width: '100%' }}>
-          <Row>
+        <Space orientation="vertical" size="large" style={{ width: '100%' }}>
+          <Row align="middle">
             <Col span={4} style={{ color: "var(--text)", fontWeight: 500 }}>{t("display_settings")}</Col>
-            <Col span={8}>
+            <Col flex="auto">
               <Checkbox checked={Boolean(settings.viewPdfAsImage)} onChange={(e) => {
                 updateSettings({ viewPdfAsImage: e.target.checked })
-                id="viewPdfAsImage"
               }}>{t("use_server_side_pdf_rendering")}</Checkbox>
             </Col>
           </Row>
@@ -74,10 +73,10 @@ export default function SettingsPage() {
       </Card>
 
       <Card title={t("auto_translate")} style={{ background: "var(--panel-bg)", color: "var(--text)", borderColor: "var(--border)", marginBottom: 16 }}>
-        <Space direction="vertical" size="large" style={{ width: '100%' }}>
-          <Row>
+        <Space orientation="vertical" size="large" style={{ width: '100%' }}>
+          <Row align="middle">
             <Col span={4} style={{ color: "var(--text)", fontWeight: 500 }}>{t("auto_translate_to")}</Col>
-            <Col span={8}>
+            <Col flex="auto">
               <Select 
                 value={settings.translatorLang} 
                 onChange={e => updateSettings({ translatorLang: e })} 
@@ -89,27 +88,14 @@ export default function SettingsPage() {
                 ]}></Select>
             </Col>
           </Row>
-          <Divider style={{ margin: "8px 0" }} />
-          <Row>
-            <Col span={4} style={{ color: "var(--text)", fontWeight: 500 }}>{t("zhipu_api_key")}</Col>
-            <Col span={12}>
-              <Input 
-                value={settings.translatorZhipuApiKey} 
-                onChange={e => updateSettings({ translatorZhipuApiKey: e.target.value })}
-                placeholder={t("please_enter_new_name")}
-                style={{ width: '100%' }}
-                type="password"
-              />
-            </Col>
-          </Row>
         </Space>
       </Card>
 
       <Card title={t("api_key_management")} style={{ background: "var(--panel-bg)", color: "var(--text)", borderColor: "var(--border)", marginBottom: 16 }}>
         <Space orientation="vertical" size="large" style={{ width: '100%' }}>
-          <Row>
+          <Row align="middle">
             <Col span={4} style={{ color: "var(--text)", fontWeight: 500 }}>{t("api_key")}</Col>
-            <Col span={12}>
+            <Col flex="auto">
               <Button
                 type="primary"
                 onClick={() => navigate('/manageapikeys')}
