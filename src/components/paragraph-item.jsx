@@ -110,10 +110,10 @@ const { t } = useTranslation();
             <span className="metadata-value">{data.outline || ''}</span>
           </div>
         )}
-        {data.author && (
+        {(data.authors?.length > 0) && (
           <div className="metadata-item">
             <span className="metadata-label">{FIELD_NAMES.author}</span>
-            <span className="metadata-value">{data.author}</span>
+            <span className="metadata-value">{data.authors.join(' & ')}</span>
           </div>
         )}
         {data.displayDate && (

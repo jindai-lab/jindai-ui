@@ -74,7 +74,8 @@ export default function BibliothekPage() {
     localStorage.setItem('bibitems_view_mode', viewMode);
   }, [viewMode]);
 
-  // Preview the normalized Authors/<author>/ storage path as authors are typed
+  // Preview the normalized <upload base dir>/<first author>/ storage path as
+  // authors are typed (base dir comes from the plugin config, default "OneDrive/")
   const watchedAuthors = Form.useWatch('authors', uploadForm);
   useEffect(() => {
     const list = (watchedAuthors || []).filter((a) => a && String(a).trim());
@@ -85,13 +86,24 @@ export default function BibliothekPage() {
     const timer = setTimeout(async () => {
       try {
         const resp = await apiClient.makeCall('bibliography/authors/normalize', { authors: list });
-        if (resp?.success) setPathPreview(`Authors/${resp.directory}/`);
+        if (resp?.success) setPathPreview(`${resp.root || 'OneDrive'}/${resp.directory}/`);
       } catch (e) {
         // preview only, ignore errors
       }
     }, 300);
     return () => clearTimeout(timer);
   }, [watchedAuthors]);
+
+  // Pre-fill the title from the file name (dropping a trailing "_cropped"
+  // suffix) so the user can review and edit it before uploading.
+  const watchedFile = Form.useWatch('file', uploadForm);
+  useEffect(() => {
+    const name = watchedFile?.[0]?.originFileObj?.name || watchedFile?.[0]?.name || '';
+    if (!name.toLowerCase().endsWith('.pdf')) return;
+    const stem = name.replace(/\.pdf$/i, '');
+    const autoTitle = stem.replace(/(?:[_\s]cropped)+$/i, '').trim();
+    uploadForm.setFieldsValue({ title: autoTitle || stem.trim() });
+  }, [watchedFile, uploadForm]);
 
   const handleSearch = async (query = '', type = '', page = 1, limit = 20, itemTypeFilter = itemType) => {
     setLoading(true);
@@ -861,9 +873,9 @@ export default function BibliothekPage() {
           <Form.Item
             name="title"
             label={t("title")}
-            extra={t("leave_blank_to_extract_from_filename")}
+            extra={t("title_autofill_from_filename")}
           >
-            <Input placeholder={t("leave_blank_to_extract_from_filename")} />
+            <Input placeholder={t("title_autofill_from_filename")} />
           </Form.Item>
         </Form>
       </Modal>
