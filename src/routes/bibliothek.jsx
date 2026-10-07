@@ -1,13 +1,16 @@
-import { CodeOutlined, DashboardOutlined, DownloadOutlined, EditOutlined, EyeOutlined, FilePdfOutlined, FileTextOutlined, PlusOutlined, SearchOutlined, SyncOutlined, UnorderedListOutlined, UploadOutlined } from "@ant-design/icons";
+import { CodeOutlined, CopyOutlined, DashboardOutlined, DownloadOutlined, EditOutlined, EyeOutlined, FilePdfOutlined, FileTextOutlined, PlusOutlined, SearchOutlined, SyncOutlined, UnorderedListOutlined, UploadOutlined } from "@ant-design/icons";
 import { Button, Card, Divider, Dropdown, Form, Grid, Input, message, Modal, Pagination, Select, Space, Table, Tag, Typography, Upload } from "antd";
 import dayjs from "dayjs";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { apiClient } from "../api";
+import { openAuthorSearch } from "../author-search";
 import { BibItemCover, BibItemDetailContent } from "../components/bib-item-detail-content";
 import BibItemDisplay from "../components/bib-item-display";
-import BibItemEditForm, { itemTypeOptions } from "../components/bib-item-edit-form";
+import BibItemEditForm from "../components/bib-item-edit-form";
+import AuthorsSelect from "../components/authors-select";
+import { formatItemType, getItemTypeOptions } from "../components/item-types";
 
 const { useBreakpoint } = Grid;
 
@@ -39,7 +42,9 @@ export default function BibliothekPage() {
   const dragCounterRef = useRef(0);
   const navigate = useNavigate();
 
-  // Initialize search state from URL params
+  // Search input state. It is initialized from (and kept in sync with) the
+  // URL params: the URL-driven effect below calls handleSearch, which
+  // canonicalizes these fields against the params it searches by.
   const [searchQuery, setSearchQuery] = useState('');
   const [searchType, setSearchType] = useState('all');
   const [itemType, setItemType] = useState('book');
@@ -57,20 +62,6 @@ export default function BibliothekPage() {
   };
 
   useEffect(() => {
-    // Load from URL params on mount
-    const query = searchParams.get('query') || '';
-    const type = searchParams.get('type') || 'all';
-    const itemTypeParam = searchParams.get('item_type') || 'book';
-    const page = parseInt(searchParams.get('page')) || 1;
-    const limit = parseInt(searchParams.get('limit')) || 20;
-    setSearchQuery(query)
-    setSearchType(['tag', 'title', 'author', 'all'].includes(type) ? type : 'all')
-    setItemType(itemTypeParam)
-    handleSearch(query, type, page, limit, itemTypeParam);
-    document.querySelector('.ant-card-body').scrollIntoView()
-  }, [searchParams]);
-
-  useEffect(() => {
     localStorage.setItem('bibitems_view_mode', viewMode);
   }, [viewMode]);
 
@@ -78,16 +69,19 @@ export default function BibliothekPage() {
   // authors are typed (base dir comes from the plugin config, default "OneDrive/")
   const watchedAuthors = Form.useWatch('authors', uploadForm);
   useEffect(() => {
-    const list = (watchedAuthors || []).filter((a) => a && String(a).trim());
-    if (!list.length) {
-      setPathPreview('');
-      return;
-    }
+    // Debounce the whole preview refresh (including clearing it once all
+    // authors are removed) so the effect body never calls setState
+    // synchronously.
     const timer = setTimeout(async () => {
+      const list = (watchedAuthors || []).filter((a) => a && String(a).trim());
+      if (!list.length) {
+        setPathPreview('');
+        return;
+      }
       try {
         const resp = await apiClient.makeCall('bibliography/authors/normalize', { authors: list });
         if (resp?.success) setPathPreview(`${resp.root || 'OneDrive'}/${resp.directory}/`);
-      } catch (e) {
+      } catch {
         // preview only, ignore errors
       }
     }, 300);
@@ -106,12 +100,21 @@ export default function BibliothekPage() {
   }, [watchedFile, uploadForm]);
 
   const handleSearch = async (query = '', type = '', page = 1, limit = 20, itemTypeFilter = itemType) => {
+    // Canonicalize the search inputs with the params actually being
+    // searched: this keeps the boxes in sync with the URL on the initial
+    // mount and on browser back/forward navigation (the URL-driven effect
+    // below is our only caller and always passes explicit params).
+    const effectiveQuery = query || searchQuery;
+    const effectiveType = type || searchType;
+    setSearchQuery(effectiveQuery);
+    setSearchType(['tag', 'title', 'author', 'all'].includes(effectiveType) ? effectiveType : 'all');
+    setItemType(itemTypeFilter);
     setLoading(true);
     try {
       const offset = (page - 1) * limit;
       const data = await apiClient.makeCall(`bibliography/search`, {
-        query: query || searchQuery,
-        type: type || searchType,
+        query: effectiveQuery,
+        type: effectiveType,
         item_type: itemTypeFilter,
         limit, offset
       }, { method: "GET" });
@@ -131,6 +134,28 @@ export default function BibliothekPage() {
       setLoading(false);
     }
   };
+
+  // Keep a ref to the latest handleSearch so the URL-driven effect below can
+  // call it without re-subscribing on every render (handleSearch's identity
+  // changes each render, which would otherwise re-trigger the effect).
+  const handleSearchRef = useRef(handleSearch);
+  useEffect(() => {
+    handleSearchRef.current = handleSearch;
+  });
+
+  // The URL params are the source of truth for searching: run a search
+  // whenever they change (initial mount, back/forward navigation, search
+  // box, pagination).  handleSearch itself keeps the input boxes in sync
+  // with these params.
+  useEffect(() => {
+    const query = searchParams.get('query') || '';
+    const type = searchParams.get('type') || 'all';
+    const itemTypeParam = searchParams.get('item_type') || 'book';
+    const page = parseInt(searchParams.get('page')) || 1;
+    const limit = parseInt(searchParams.get('limit')) || 20;
+    handleSearchRef.current?.(query, type, page, limit, itemTypeParam);
+    document.querySelector('.ant-card-body')?.scrollIntoView();
+  }, [searchParams]);
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value)
@@ -157,7 +182,7 @@ export default function BibliothekPage() {
 
   const handleCreate = async (values) => {
     try {
-      const data = await apiClient.makeCall("bibliography/", { ...values, dataset: values.dataset || "" }, { method: "POST" });
+      await apiClient.makeCall("bibliography/", { ...values, dataset: values.dataset || "" }, { method: "POST" });
       message.success(t("Bibliography item created successfully"));
       updateSearchParams();
       setShowModal(false);
@@ -169,7 +194,7 @@ export default function BibliothekPage() {
 
   const handleUpdate = async (values) => {
     try {
-      const data = await apiClient.makeCall(`bibliography/${editingItem.id}`, values, { method: "PUT" });
+      await apiClient.makeCall(`bibliography/${editingItem.id}`, values, { method: "PUT" });
       message.success(t("Bibliography item updated successfully"));
       updateSearchParams();
       setShowModal(false);
@@ -219,7 +244,7 @@ export default function BibliothekPage() {
       notes: record.notes,
       tags: record.tags?.join(', '),
       related: record.related,
-      file_attachments: record.file_attachments ? JSON.stringify(record.file_attachments, null, 2) : '',
+      file_attachments: record.file_attachments || [],
       extra: record.extra ? JSON.stringify(record.extra, null, 2) : '',
     });
     setShowModal(true);
@@ -307,7 +332,7 @@ export default function BibliothekPage() {
     let values;
     try {
       values = await uploadForm.validateFields();
-    } catch (e) {
+    } catch {
       return; // validation errors are shown by the form
     }
     const f = values.file?.[0]?.originFileObj;
@@ -325,6 +350,7 @@ export default function BibliothekPage() {
       fd.append('file', f);
       (values.authors || []).forEach((a) => fd.append('authors', a));
       if (values.title) fd.append('title', values.title);
+      fd.append('item_type', values.item_type || 'book');
       const data = await apiClient.uploadBibliographyPdf(fd);
       if (data?.success) {
         message.success(data.message || t("pdf_uploaded"));
@@ -356,6 +382,8 @@ export default function BibliothekPage() {
         status: 'done',
         originFileObj: file,
       }],
+      // Sensible default for the literature type when opening via drag & drop
+      item_type: uploadForm.getFieldValue('item_type') || 'book',
     });
     setShowUploadModal(true);
   };
@@ -443,7 +471,6 @@ export default function BibliothekPage() {
       message.error(t("Failed to export BibTeX") + ": " + e);
     } finally {
       setLoading(false);
-      setSelectedItemsForExport([]);
     }
   };
 
@@ -490,13 +517,16 @@ export default function BibliothekPage() {
       dataIndex: "authors",
       key: "authors",
       width: 200,
-      render: (authors, record) => (
+      render: (authors) => (
         authors?.map(author => (
           <div
+            key={author}
             style={{ cursor: 'pointer', color: 'var(--primary-color)' }}
             onClick={(e) => {
               e.stopPropagation();
-              updateSearchParams(author, 'author', 1, 20);
+              // Open the author search in a new window instead of
+              // re-running it in place, so the current list stays put.
+              openAuthorSearch(author, itemType);
             }}
           >
             {author}
@@ -508,7 +538,7 @@ export default function BibliothekPage() {
       dataIndex: "item_type",
       key: "item_type",
       width: 120,
-      render: (text) => <Tag>{text || 'Unknown'}</Tag>,
+      render: (text) => <Tag>{formatItemType(t, text)}</Tag>,
     },
     {
       title: t("publication"),
@@ -533,7 +563,10 @@ export default function BibliothekPage() {
           <Typography.Text
             type="secondary"
             style={{ fontSize: 12 }}
-            copyable={{ text: p }}
+            copyable={{
+              text: p,
+              icon: <CopyOutlined style={{ color: 'var(--primary)' }} />,
+            }}
             ellipsis={{ tooltip: p }}
           >
             {p}
@@ -603,10 +636,11 @@ export default function BibliothekPage() {
                 placeholder={t("item_type")}
                 options={[
                   { label: t("all_item_types"), value: 'all' },
-                  ...itemTypeOptions,
+                  ...getItemTypeOptions(t),
                 ]}
                 filterOption={(input, option) =>
                   (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                  || String(option?.value ?? '').toLowerCase().includes(input.toLowerCase())
                 }
               />
               <Button
@@ -759,6 +793,7 @@ export default function BibliothekPage() {
                   <BibItemDisplay
                     key={item.id}
                     item={item}
+                    itemType={itemType}
                     onEdit={handleEdit}
                     onView={handleOpenReader}
                     onShowDetail={handleView}
@@ -868,7 +903,7 @@ export default function BibliothekPage() {
             rules={[{ required: true, message: t("please_enter_authors") }]}
             extra={pathPreview || t("authors_storage_hint")}
           >
-            <Select mode="tags" placeholder={t("e_g_john_cage")} />
+            <AuthorsSelect placeholder={t("e_g_john_cage")} />
           </Form.Item>
           <Form.Item
             name="title"
@@ -876,6 +911,20 @@ export default function BibliothekPage() {
             extra={t("title_autofill_from_filename")}
           >
             <Input placeholder={t("title_autofill_from_filename")} />
+          </Form.Item>
+          <Form.Item
+            name="item_type"
+            label={t("item_type")}
+            initialValue="book"
+          >
+            <Select
+              showSearch
+              options={getItemTypeOptions(t)}
+              filterOption={(input, option) =>
+                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                || String(option?.value ?? '').toLowerCase().includes(input.toLowerCase())
+              }
+            />
           </Form.Item>
         </Form>
       </Modal>
@@ -902,7 +951,7 @@ export default function BibliothekPage() {
                 <Button type="link" icon={<FileTextOutlined />} onClick={() => {
                   navigator.clipboard.readText().then(text => {
                     setBibtexText(text);
-                  }).catch(err => {
+                  }).catch(() => {
                     message.warning(t("Failed to read clipboard"));
                   });
                 }}>
@@ -922,7 +971,7 @@ export default function BibliothekPage() {
         footer={null}
         width={800}
       >
-        <BibItemDetailContent item={selectedItem} onExportBibtex={() => handleExportBibtex(selectedItem)} />
+        <BibItemDetailContent item={selectedItem} itemType={itemType} onExportBibtex={() => handleExportBibtex(selectedItem)} />
       </Modal>
     </>
   );

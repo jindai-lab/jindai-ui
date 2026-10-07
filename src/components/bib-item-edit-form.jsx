@@ -3,30 +3,11 @@ import { useEffect } from "react";
 import dayjs from "dayjs";
 import { useTranslation } from "react-i18next";
 import { DeleteOutlined } from "@ant-design/icons";
+import { getItemTypeOptions } from "./item-types";
+import AuthorsSelect from "./authors-select";
+import FileSourceSelector from "./filesource-selector";
 
 const { TextArea } = Input;
-
-export const itemTypeOptions = [
-  { label: 'book', value: 'book' },
-  { label: 'journalArticle', value: 'journalArticle' },
-  { label: 'magazineArticle', value: 'magazineArticle' },
-  { label: 'newspaperArticle', value: 'newspaperArticle' },
-  { label: 'thesis', value: 'thesis' },
-  { label: 'letter', value: 'letter' },
-  { label: 'manuscript', value: 'manuscript' },
-  { label: 'invoice', value: 'invoice' },
-  { label: 'email', value: 'email' },
-  { label: 'instantMessage', value: 'instantMessage' },
-  { label: 'forumPost', value: 'forumPost' },
-  { label: 'blogPost', value: 'blogPost' },
-  { label: 'podcast', value: 'podcast' },
-  { label: 'videoRecording', value: 'videoRecording' },
-  { label: 'audioRecording', value: 'audioRecording' },
-  { label: 'conferencePaper', value: 'conferencePaper' },
-  { label: 'document', value: 'document' },
-  { label: 'encyclopediaArticle', value: 'encyclopediaArticle' },
-  { label: 'dictionaryEntry', value: 'dictionaryEntry' },
-];
 
 export default function BibItemEditForm({ item, onSubmit, onCancel, onDelete }) {
   const { t } = useTranslation();
@@ -61,7 +42,8 @@ export default function BibItemEditForm({ item, onSubmit, onCancel, onDelete }) 
         notes: item.notes,
         tags: item.tags?.join(', '),
         related: item.related,
-        file_attachments: item.file_attachments ? JSON.stringify(item.file_attachments, null, 2) : '',
+        // Array of storage-relative paths; picked with FileSourceSelector.
+        file_attachments: item.file_attachments || [],
         extra: item.extra ? JSON.stringify(item.extra, null, 2) : '',
         dataset: item.dataset || '',
       });
@@ -69,11 +51,12 @@ export default function BibItemEditForm({ item, onSubmit, onCancel, onDelete }) 
   }, [item, form]);
 
   const handleFinish = (values) => {
-    // Convert dayjs back to string
+    // Convert dayjs back to string; file_attachments comes from the file
+    // picker as an array of storage-relative paths.
     const formattedValues = {
       ...values,
       date: values.date ? values.date.format('YYYY-MM-DD') : null,
-      file_attachments: values.file_attachments ? JSON.parse(values.file_attachments) : [],
+      file_attachments: values.file_attachments || [],
       extra: values.extra ? JSON.parse(values.extra) : {},
     };
     onSubmit(formattedValues);
@@ -98,11 +81,7 @@ export default function BibItemEditForm({ item, onSubmit, onCancel, onDelete }) 
         name="authors"
         label={t("author")}
       >
-        <Select
-          mode="tags"
-          placeholder={t("authors")}
-          options={[]}
-        />
+        <AuthorsSelect placeholder={t("authors")} />
       </Form.Item>
 
       <Form.Item
@@ -111,10 +90,11 @@ export default function BibItemEditForm({ item, onSubmit, onCancel, onDelete }) 
       >
         <Select
           placeholder={t("e_g_book_journalarticle")}
-          options={itemTypeOptions}
+          options={getItemTypeOptions(t)}
           showSearch
           filterOption={(input, option) =>
             (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+            || String(option?.value ?? '').toLowerCase().includes(input.toLowerCase())
           }
         />
       </Form.Item>
@@ -299,7 +279,7 @@ export default function BibItemEditForm({ item, onSubmit, onCancel, onDelete }) 
         name="file_attachments"
         label={t("file_attachments")}
       >
-        <TextArea rows={3} placeholder={t("Enter file attachments as JSON...")} />
+        <FileSourceSelector multiple />
       </Form.Item>
 
       <Form.Item

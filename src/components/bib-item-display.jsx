@@ -2,8 +2,10 @@ import { Card, Space, Button, Tag } from "antd";
 import { DownloadOutlined, EditOutlined, EyeOutlined } from "@ant-design/icons";
 import { BibItemCover } from "./bib-item-detail-content";
 import { useTranslation } from "react-i18next";
+import { formatItemType } from "./item-types";
+import { openAuthorSearch } from "../author-search";
 
-export default function BibItemDisplay({ item, onEdit, onView, onShowDetail, onDownload }) {
+export default function BibItemDisplay({ item, itemType, onEdit, onView, onShowDetail, onDownload }) {
   const { t } = useTranslation();
 
   // Relative path of the stored file (hidden for pure bibliographic entries)
@@ -28,10 +30,30 @@ export default function BibItemDisplay({ item, onEdit, onView, onShowDetail, onD
           title={<div style={{ cursor: 'pointer' }}>{item.title}</div>}
           description={
             <div>
+              {item.item_type && (
+                <div style={{ marginBottom: 4 }}>
+                  <Tag color="geekblue" style={{ marginInlineEnd: 0 }}>
+                    {formatItemType(t, item.item_type)}
+                  </Tag>
+                </div>
+              )}
               <div
                 style={{ color: 'var(--text-secondary)', fontSize: 14 }}
               >
-                {item.authors?.map(author => <Tag>{author}</Tag>)}
+                {item.authors?.map(author => (
+                  <Tag
+                    key={author}
+                    style={{ cursor: 'pointer', color: 'var(--primary-color)' }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // Clicking an author opens a new window with that
+                      // author's full bibliography.
+                      openAuthorSearch(author, itemType);
+                    }}
+                  >
+                    {author}
+                  </Tag>
+                ))}
               </div>
               {item.publication && <div style={{ color: 'var(--text-secondary)', fontSize: 14 }}>{item.publication}</div>}
               {item.date && <div style={{ color: 'var(--text-secondary)', fontSize: 12 }}>{item.date}</div>}

@@ -2,6 +2,8 @@ import { Tag, Space, Button, Spin, message } from "antd";
 import { DownloadOutlined, CodeOutlined, BookOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { apiClient } from "../api";
+import { formatItemType } from "./item-types";
+import { openAuthorSearch } from "../author-search";
 import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 
@@ -56,7 +58,7 @@ export function BibItemCover({ item, fit }) {
 }
 
 
-export function BibItemDetailContent({ item, onExportBibtex }) {
+export function BibItemDetailContent({ item, itemType, onExportBibtex }) {
   const { t } = useTranslation();
   const [downloading, setDownloading] = useState(null)
 
@@ -107,14 +109,26 @@ export function BibItemDetailContent({ item, onExportBibtex }) {
         <div style={{ flex: 1 }}>
           <h2 style={{ margin: '0 0 8px 0' }}>{item.title}</h2>
           <p style={{ margin: '0 0 16px 0', color: 'var(--text-secondary)' }}>
-            {item.authors?.map(author => <Tag>{author}</Tag>)}
+            {item.authors?.map(author => (
+              <Tag
+                key={author}
+                style={{ cursor: 'pointer', color: 'var(--primary-color)' }}
+                onClick={() => {
+                  // Clicking an author opens a new window with that
+                  // author's full bibliography.
+                  openAuthorSearch(author, itemType);
+                }}
+              >
+                {author}
+              </Tag>
+            ))}
           </p>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
             {item.item_type && (
               <div>
                 <div style={{ color: 'var(--text-secondary)', fontSize: 12 }}>{t("item_type")}</div>
-                <div>{item.item_type}</div>
+                <div>{formatItemType(t, item.item_type)}</div>
               </div>
             )}
             {item.publication && (

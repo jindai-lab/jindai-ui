@@ -266,6 +266,10 @@ export const apiClient = Object.assign(
       const resp = await this.post('bibliography/upload/pdf', formData)
       return resp?.data
     },
+    async bibliographyAuthors(q = "", limit = 100) {
+      // Distinct-author autocomplete list (Redis-cached server side).
+      return await this.makeCall('bibliography/authors', { q, limit }, { method: 'GET' })
+    },
     // other
     langCodes: Object.entries(
       Object.fromEntries([
