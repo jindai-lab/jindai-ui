@@ -146,6 +146,8 @@
     "item_type_videoRecording": "Video Recording",
     "item_type_audioRecording": "Audio Recording",
     "item_type_conferencePaper": "Conference Paper",
+    "item_type_proceedings": "Proceedings",
+    "item_type_webpage": "Web Page",
     "item_type_document": "Document",
     "item_type_encyclopediaArticle": "Encyclopedia Article",
     "item_type_dictionaryEntry": "Dictionary Entry",

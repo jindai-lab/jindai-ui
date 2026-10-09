@@ -152,6 +152,8 @@
     "item_type_videoRecording": "视频记录",
     "item_type_audioRecording": "音频记录",
     "item_type_conferencePaper": "会议论文",
+    "item_type_proceedings": "合订本·论文集",
+    "item_type_webpage": "网页",
     "item_type_document": "文档",
     "item_type_encyclopediaArticle": "百科条目",
     "item_type_dictionaryEntry": "词典条目",

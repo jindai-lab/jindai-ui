@@ -18,6 +18,8 @@ export const itemTypeValues = [
   'videoRecording',
   'audioRecording',
   'conferencePaper',
+  'proceedings',
+  'webpage',
   'document',
   'encyclopediaArticle',
   'dictionaryEntry',
