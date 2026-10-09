@@ -155,6 +155,8 @@
     "item_type_document": "文档",
     "item_type_encyclopediaArticle": "百科条目",
     "item_type_dictionaryEntry": "词典条目",
+    "item_type_multimedia": "多媒体",
+    "item_type_toolBook": "工具书",
     "unknown_item_type": "未知",
     "settings": "设置",
     "e_g_https_example_com": "例如：https://example.com",

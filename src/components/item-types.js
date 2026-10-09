@@ -21,6 +21,9 @@ export const itemTypeValues = [
   'document',
   'encyclopediaArticle',
   'dictionaryEntry',
+  // Custom jindai types (2026-10-09 user request) — kept camelCase like Zotero's.
+  'multimedia',
+  'toolBook',
 ];
 
 // Translated { label, value } options for Select components.

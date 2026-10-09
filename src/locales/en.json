@@ -149,6 +149,8 @@
     "item_type_document": "Document",
     "item_type_encyclopediaArticle": "Encyclopedia Article",
     "item_type_dictionaryEntry": "Dictionary Entry",
+    "item_type_multimedia": "Multimedia",
+    "item_type_toolBook": "Tool Book",
     "unknown_item_type": "Unknown",
     "settings": "Settings",
     "e_g_https_example_com": "e.g., https://example.com",

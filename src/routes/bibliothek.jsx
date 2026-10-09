@@ -502,15 +502,24 @@ export default function BibliothekPage() {
       dataIndex: "title",
       key: "title",
       width: 300,
-      render: (text, record) => (
-        <a
-          href={`/files/${record.file_attachments[0]}`}
-          target="_blank"
-        >
-          <strong>{text}</strong>
-          {record.doi && <Tag style={{ marginLeft: 8 }} size="small">{record.doi}</Tag>}
-        </a>
-      ),
+      render: (text, record) => {
+        // 没有可打开的文件（file_attachments 为空的纯书目行）时绝不能拼
+        // `/files/undefined`——复用 getItemFilePath 的取值+兜底，取不到就渲染纯文本。
+        const filePath = getItemFilePath(record);
+        const label = (
+          <>
+            <strong>{text}</strong>
+            {record.doi && <Tag style={{ marginLeft: 8 }} size="small">{record.doi}</Tag>}
+          </>
+        );
+        return filePath ? (
+          <a href={`/files/${filePath}`} target="_blank" rel="noreferrer">
+            {label}
+          </a>
+        ) : (
+          <span>{label}</span>
+        );
+      },
     },
     {
       title: t("author"),
@@ -521,7 +530,7 @@ export default function BibliothekPage() {
         authors?.map(author => (
           <div
             key={author}
-            style={{ cursor: 'pointer', color: 'var(--primary-color)' }}
+            style={{ cursor: 'pointer', color: 'var(--primary)' }}
             onClick={(e) => {
               e.stopPropagation();
               // Open the author search in a new window instead of
@@ -829,13 +838,13 @@ export default function BibliothekPage() {
                 gap: 12,
                 background: 'var(--panel-bg)',
                 opacity: 0.9,
-                border: '2px dashed var(--primary-color)',
+                border: '2px dashed var(--primary)',
                 borderRadius: 8,
                 pointerEvents: 'none',
               }}
             >
-              <FilePdfOutlined style={{ fontSize: 48, color: 'var(--primary-color)' }} />
-              <Typography.Title level={5} style={{ margin: 0, color: 'var(--primary-color)' }}>
+              <FilePdfOutlined style={{ fontSize: 48, color: 'var(--primary)' }} />
+              <Typography.Title level={5} style={{ margin: 0, color: 'var(--primary)' }}>
                 {t("drop_pdf_to_upload")}
               </Typography.Title>
             </div>
