@@ -10,11 +10,28 @@ const { Text } = Typography;
 const { Option } = Select;
 
 /**
+ * 语言筛选的固定候选项：不从服务器拉取取值列表，
+ * 只允许在下列语言代码中筛选（value 即写入后端 Paragraph.lang 的代码）。
+ */
+const LANGUAGES = [
+  { value: "zhs", labelKey: "simplified_chinese" },
+  { value: "zht", labelKey: "traditional_chinese" },
+  { value: "en", labelKey: "english" },
+  { value: "ja", labelKey: "japanese" },
+  { value: "de", labelKey: "german" },
+  { value: "fr", labelKey: "french" },
+];
+
+/**
  * Search Filter Bar Component
  * Contains search input, dataset/source selectors, and filter controls
  */
 export const SearchFilterBar = ({ filters, updateFilter, executeSearch }) => {
   const { t } = useTranslation();
+  const languageOptions = useMemo(
+    () => LANGUAGES.map(({ value, labelKey }) => ({ value, label: t(labelKey) })),
+    [t]
+  );
   const handleReset = () => {
     updateFilter({
       q: "",
@@ -25,6 +42,7 @@ export const SearchFilterBar = ({ filters, updateFilter, executeSearch }) => {
       groupBy: "",
       outline: [],
       authors: [],
+      lang: [],
       page: 1,
     });
   };
@@ -192,13 +210,23 @@ export const SearchFilterBar = ({ filters, updateFilter, executeSearch }) => {
           </FilterItem>
 
           <FilterItem label={t("language")}>
-            <RemoteFilterSelector
-              multiple
-              filters={filters}
-              column="lang"
+            <Select
+              mode="multiple"
+              value={filters.lang || []}
               onChange={(v) => updateFilter({ lang: v })}
-              value={filters.lang}
-              style={{ width: 100 }}
+              options={languageOptions}
+              filterOption={(input, option) => {
+                const keyword = input.trim().toLowerCase();
+                if (!keyword) return true;
+                return (
+                  String(option?.value ?? "").toLowerCase().includes(keyword) ||
+                  String(option?.label ?? "").toLowerCase().includes(keyword)
+                );
+              }}
+              maxTagCount="responsive"
+              allowClear
+              popupMatchSelectWidth={false}
+              style={{ width: 140 }}
             />
           </FilterItem>
 

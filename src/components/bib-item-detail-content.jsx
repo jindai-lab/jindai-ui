@@ -112,7 +112,7 @@ export function BibItemDetailContent({ item, itemType, onExportBibtex }) {
             {item.authors?.map(author => (
               <Tag
                 key={author}
-                style={{ cursor: 'pointer', color: 'var(--primary-color)' }}
+                style={{ cursor: 'pointer', color: 'var(--primary)' }}
                 onClick={() => {
                   // Clicking an author opens a new window with that
                   // author's full bibliography.

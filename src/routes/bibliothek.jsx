@@ -95,7 +95,7 @@ export default function BibliothekPage() {
     const name = watchedFile?.[0]?.originFileObj?.name || watchedFile?.[0]?.name || '';
     if (!name.toLowerCase().endsWith('.pdf')) return;
     const stem = name.replace(/\.pdf$/i, '');
-    const autoTitle = stem.replace(/(?:[_\s]cropped)+$/i, '').trim();
+    const autoTitle = stem.replace(/_/g, ' ').replace(/(?:[_\s]cropped)+$/i, '').trim();
     uploadForm.setFieldsValue({ title: autoTitle || stem.trim() });
   }, [watchedFile, uploadForm]);
 

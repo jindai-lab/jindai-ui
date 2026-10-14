@@ -43,7 +43,7 @@ export default function BibItemDisplay({ item, itemType, onEdit, onView, onShowD
                 {item.authors?.map(author => (
                   <Tag
                     key={author}
-                    style={{ cursor: 'pointer', color: 'var(--primary-color)' }}
+                    style={{ cursor: 'pointer', color: 'var(--primary)' }}
                     onClick={(e) => {
                       e.stopPropagation();
                       // Clicking an author opens a new window with that
